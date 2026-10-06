@@ -74,6 +74,7 @@ export default {
       const { results } = await env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 ORDER BY collected_at DESC LIMIT 2000').bind(since).all();
       return json({ since, n: results.length, items: results });
     }
+    if (url.pathname === '/cron.json') { const { results } = await env.DB.prepare('SELECT * FROM cron_runs ORDER BY id DESC LIMIT 100').all(); return json(results); }
     if (url.pathname === '/batches.json') { const { results } = await env.DB.prepare('SELECT * FROM batches ORDER BY batch DESC LIMIT 144').all(); return json(results); }
     let m = url.pathname.match(/^\/hourly\/(latest|\d{4}-\d{2}-\d{2}T\d{2})\.json$/);
     if (m) {
@@ -90,7 +91,15 @@ export default {
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
     if (url.pathname === '/') return page(env, url);
-    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', 'POST /ingest'] }, 404);
+    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
-  async scheduled(ev, env, ctx) { ctx.waitUntil(buildHourly(env, hourKey(ev.scheduledTime - 3600_000))); },
+  async scheduled(ev, env, ctx) {
+    // 크론 실행 자체를 D1에 기록(대시보드 로그가 꺼져 있어도 실행 여부·오류를 확인할 수 있게)
+    const hour = hourKey(ev.scheduledTime - 3600_000);
+    ctx.waitUntil((async () => {
+      const sched = new Date(ev.scheduledTime).toISOString(); let status = 'ok', error = null, n = null;
+      try { const d = await buildHourly(env, hour); n = d.n_items; } catch (e) { status = 'error'; error = String(e && e.stack || e).slice(0, 1000); }
+      try { await env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(sched, new Date().toISOString(), hour, status, n, error).run(); } catch (e) { /* 기록 실패는 무시 */ }
+    })());
+  },
 };
