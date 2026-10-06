@@ -78,10 +78,15 @@ export default {
     let m = url.pathname.match(/^\/hourly\/(latest|\d{4}-\d{2}-\d{2}T\d{2})\.json$/);
     if (m) {
       const hour = m[1] === 'latest' ? hourKey(Date.now() - 3600_000) : m[1];
-      const row = url.searchParams.get('rebuild') ? null : await env.DB.prepare('SELECT digest FROM hourly WHERE hour = ?1').bind(hour).first();
-      if (row && m[1] !== 'latest') return json(JSON.parse(row.digest));
-      const d = await buildHourly(env, hour); // latest는 매번 새로 계산(수집이 늦게 들어와도 반영)
-      return json(d);
+      const rebuild = !!url.searchParams.get('rebuild');
+      if (m[1] !== 'latest') {
+        // 특정 시간대 GET은 읽기 전용: 저장된 것만 돌려주고 없으면 404. 쓰기는 ?rebuild=1 로만.
+        if (!rebuild) { const row = await env.DB.prepare('SELECT digest FROM hourly WHERE hour = ?1').bind(hour).first(); return row ? json(JSON.parse(row.digest)) : json({ error: 'no digest stored for ' + hour, hint: 'cron builds it at HH:02; ?rebuild=1 forces a rebuild' }, 404); }
+        return json(await buildHourly(env, hour));
+      }
+      // latest: 저장본 우선, 없으면(크론 전) 계산해 저장
+      const row = rebuild ? null : await env.DB.prepare('SELECT digest FROM hourly WHERE hour = ?1').bind(hour).first();
+      return json(row ? JSON.parse(row.digest) : await buildHourly(env, hour));
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
     if (url.pathname === '/') return page(env, url);
