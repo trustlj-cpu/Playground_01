@@ -179,10 +179,21 @@ def collect_source(src: dict) -> tuple[dict, list[dict], str]:
         return src, [], f"error: {type(e).__name__}: {str(e)[:80]}"
 
 
+TRACK = re.compile(r"^(utm_|fbclid$|gclid$|igshid$|ref$|ref_src$|source$|cmpid$|sr_share$)", re.I)
+
+
+def canon_url(link: str) -> str:
+    """중복 판정용 URL 정규화. 호스트만 소문자, 추적 파라미터만 제거(YouTube v=, DART rcpNo= 같은 식별 쿼리는 유지)."""
+    p = urllib.parse.urlsplit(link.strip())
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(p.query, keep_blank_values=True) if not TRACK.match(k)]
+    q.sort()
+    return urllib.parse.urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/") or "/", urllib.parse.urlencode(q), ""))
+
+
 def dedupe(items: list[dict]) -> list[dict]:
     seen_url, seen_title, out = set(), set(), []
     for it in items:
-        u = re.sub(r"[?#].*$", "", it["link"]).rstrip("/")
+        u = canon_url(it["link"])
         nt = norm_title(it["title"])
         h = hashlib.md5(nt.encode()).hexdigest()
         if u in seen_url or h in seen_title:

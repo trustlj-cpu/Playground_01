@@ -32,8 +32,7 @@ base.MAX_PER_SOURCE = 30
 
 
 def item_id(link: str) -> str:
-    u = re.sub(r"[?#].*$", "", link).rstrip("/").lower()
-    return hashlib.sha1(u.encode()).hexdigest()[:20]
+    return hashlib.sha1(base.canon_url(link).encode()).hexdigest()[:20]
 
 
 def main() -> int:
