@@ -25,7 +25,8 @@ const same = (A, B) => { const s = shared(A.toks, B.toks); return A.field === B.
 export function clusterItems(items) {
   const rows = items.map(it => ({ it, toks: tokens(it.title), field: it.field }));
   // 토큰 많은(정보량 큰) 제목이 대표가 되도록 정렬
-  const order = rows.map((_, i) => i).sort((i, j) => rows[j].toks.size - rows[i].toks.size);
+  const key = r => String(r.it.id || '') + '\u0000' + String(r.it.title || '');
+  const order = rows.map((_, i) => i).sort((i, j) => rows[j].toks.size - rows[i].toks.size || (key(rows[i]) < key(rows[j]) ? -1 : key(rows[i]) > key(rows[j]) ? 1 : 0));
   const clusters = []; // {lead, members}
   for (const i of order) {
     const r = rows[i];
@@ -42,10 +43,10 @@ export function clusterItems(items) {
     const srcs = [...new Set(g.map(x => x.source))]; const ab = new Set(g.filter(x => 'AB'.includes(x.tier)).map(x => x.source));
     const status = ab.size >= 2 ? '복수 수집 경로(A/B ' + ab.size + '곳) — 독립성·사실 확인 필요' : ab.size === 1 ? '단일 수집 경로 — 원자료 확인 필요' : g.some(x => x.tier === 'C') ? '분석/블로그 — 1차 자료 대조 필요' : '미확인(커뮤니티·트렌드) — 팩트체크 필수';
     const kw = new Map(); c.members.forEach(m => m.toks.forEach(t => kw.set(t, (kw.get(t) || 0) + 1)));
-    g.sort((a, b) => String(a.tier).localeCompare(String(b.tier)) || String(b.published_at || '').localeCompare(String(a.published_at || '')));
+    g.sort((a, b) => String(a.tier).localeCompare(String(b.tier)) || String(b.published_at || '').localeCompare(String(a.published_at || '')) || String(a.id || a.title).localeCompare(String(b.id || b.title)));
     const fieldCount = new Map(); g.forEach(x => fieldCount.set(x.field, (fieldCount.get(x.field) || 0) + 1));
     out.push({ topic: c.lead.it.title, keywords: [...kw.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(e => e[0]), field: [...fieldCount.entries()].sort((a, b) => b[1] - a[1])[0][0], n_items: g.length, n_sources: srcs.length, sources: srcs, tier_best: g.map(x => x.tier).sort()[0], status, items: g.map(x => ({ title: x.title, source: x.source, link: x.link, tier: x.tier, published_at: x.published_at })) });
   }
-  out.sort((a, b) => b.n_sources - a.n_sources || b.n_items - a.n_items);
+  out.sort((a, b) => b.n_sources - a.n_sources || b.n_items - a.n_items || (a.topic < b.topic ? -1 : a.topic > b.topic ? 1 : 0));
   return out;
 }
