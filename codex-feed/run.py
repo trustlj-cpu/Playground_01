@@ -12,17 +12,21 @@ del token, key
 collector = Path(__file__).resolve().parents[2] / 'collector'
 os.chdir(collector)
 source_path = Path('issuedrop/sources.yaml')
-known = yaml.safe_load(source_path.read_text())['sources']
+from source_policy import prepare_sources
+cfg = yaml.safe_load(source_path.read_text())
 candidates = yaml.safe_load((Path(__file__).parent / 'sources.yaml').read_text())['sources']
+policy = json.loads((Path(__file__).parent / 'source_policy.json').read_text())
 extra_path = Path('feed/sources_extra.yaml')
 extra = (yaml.safe_load(extra_path.read_text()) or {}).get('sources', []) if extra_path.exists() else []
-urls = {s.get('url') for s in known + extra}
-ids = {s['id'] for s in known + extra}
-for src in candidates:
-    if src['url'] not in urls and src['id'] not in ids:
-        extra.append(src); urls.add(src['url']); ids.add(src['id'])
-# This is the disposable Actions checkout, never the author's branch.
-extra_path.write_text(yaml.safe_dump({'sources': extra}, allow_unicode=True))
+cfg['sources'], notices = prepare_sources(cfg['sources'], extra, candidates, policy)
+# Only the disposable Actions checkout is changed; upstream Claude originals stay intact.
+source_path.write_text(yaml.safe_dump(cfg, allow_unicode=True))
+extra_path.write_text(yaml.safe_dump({'sources': []}))
+for notice in notices:
+    print(notice, file=sys.stderr)
+if os.environ.get('GITHUB_STEP_SUMMARY'):
+    with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+        summary.write('### Source policy\n\n' + '\n'.join('- ' + n for n in notices) + '\n')
 sys.path.insert(0, str(Path('feed').resolve()))
 import collect_fast
 # Keep same-title reports from different publishers for later comparison.
