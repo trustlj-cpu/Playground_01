@@ -28,7 +28,10 @@ export function clusterItems(items) {
   const order = rows.map((_, i) => i).sort((i, j) => rows[j].toks.size - rows[i].toks.size);
   const clusters = []; // {lead, members}
   for (const i of order) {
-    const r = rows[i]; if (r.toks.size < 2) { clusters.push({ lead: r, members: [r] }); continue; }
+    const r = rows[i];
+    // 예측시장·시세 항목은 계약/질문·기간이 달라도 이름이 겹치므로 묶지 않는다(각자 단독)
+    const solo = r.field === '예측시장' || /^\[(예측|코인)\]/.test(String(r.it.title));
+    if (solo || r.toks.size < 2) { clusters.push({ lead: { ...r, toks: new Set() }, members: [r] }); continue; }
     let best = null, bestN = 0;
     for (const c of clusters) { if (c.lead.toks.size < 2 || !same(c.lead, r)) continue; const s = shared(c.lead.toks, r.toks).n; if (s > bestN) { best = c; bestN = s; } }
     if (best) best.members.push(r); else clusters.push({ lead: r, members: [r] });
