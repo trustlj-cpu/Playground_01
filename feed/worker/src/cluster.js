@@ -9,7 +9,7 @@ export function tokens(t) {
   const raw = normTitle(t).match(/[가-힣]{2,}|[A-Za-z][A-Za-z0-9'&.-]{3,}|\d{3,}/g) || [];
   const parts = []; for (const w of raw) { parts.push(w); if (w.includes('-')) for (const p of w.split('-')) if (p.length >= 4) parts.push(p); }
   for (const w1 of parts) {
-    const w0 = w1.replace(/^[.'&-]+|[.'&-]+$/g, '').replace(/'s$/, ''); if (w0.length < 3) continue;
+    const w0 = w1.replace(/^[.'&-]+|[.'&-]+$/g, '').replace(/'s$/, ''); if (!w0 || (!/^[가-힣]+$/.test(w0) && w0.length < 4)) continue; // 한국어는 2자부터, 라틴은 4자부터
     const w = SYN[w0] || w0;
     if (STOP.has(w)) continue;
     if (/^\d+$/.test(w) && w.length === 4 && +w >= 1990 && +w <= 2100) continue; // 연도
