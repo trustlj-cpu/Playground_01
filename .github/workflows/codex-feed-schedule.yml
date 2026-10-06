@@ -19,74 +19,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 7069a8632e649ee8fbb9f983497a216e528be6e6
+          path: scheduler
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: paycheck-page
+          path: collector
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install 'PyYAML==6.0.2'
       - name: Collect public feeds into the deployed news service
+        id: ingest
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           DART_API_KEY: ${{ secrets.DART_API_KEY }}
           FEED_URL: https://dailydrop-feed.trustlj.workers.dev
-        run: |
-          python - <<'PYCODE'
-          import os, hashlib, json, sys
-          from pathlib import Path
-          import yaml
-          token = os.environ.pop('CLOUDFLARE_API_TOKEN', '')
-          account = os.environ.pop('CLOUDFLARE_ACCOUNT_ID', '')
-          if not token or not account:
-              raise SystemExit('Required deployment secrets are missing; no fallback commit will be made.')
-          key = hashlib.sha256(f'dailydrop-ingest:{account}:{token}'.encode()).hexdigest()[:48]
-          print('::add-mask::' + key)
-          os.environ['INGEST_KEY'] = key
-          del token, key
-          source_path = Path('issuedrop/sources.yaml')
-          known = yaml.safe_load(source_path.read_text())['sources']
-          candidates = [
-              dict(id='codex_nasa', name='NASA official', cat='과학', region='US', tier='A', type='rss', url='https://www.nasa.gov/feed/'),
-              dict(id='codex_esa', name='ESA Space Science', cat='과학', region='EU', tier='A', type='rss', url='https://www.esa.int/rssfeed/Our_Activities/Space_Science'),
-              dict(id='codex_sciencedaily', name='ScienceDaily', cat='과학', region='GLB', tier='B', type='rss', url='https://www.sciencedaily.com/rss/all.xml'),
-              dict(id='codex_smithsonian', name='Smithsonian Magazine', cat='문화', region='US', tier='B', type='rss', url='https://www.smithsonianmag.com/rss/latest_articles/'),
-              dict(id='codex_yt_nasa', name='YouTube: NASA official', cat='과학', region='US', tier='A', type='rss', url='https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ'),
-          ]
-          extra_path = Path('feed/sources_extra.yaml')
-          extra = (yaml.safe_load(extra_path.read_text()) or {}).get('sources', []) if extra_path.exists() else []
-          urls = {s.get('url') for s in known + extra}
-          ids = {s['id'] for s in known + extra}
-          for src in candidates:
-              if src['url'] not in urls and src['id'] not in ids:
-                  extra.append(src); urls.add(src['url']); ids.add(src['id'])
-          # This is the disposable Actions checkout, never the author's branch.
-          extra_path.write_text(yaml.safe_dump({'sources': extra}, allow_unicode=True))
-          sys.path.insert(0, str(Path('feed').resolve()))
-          import collect_fast
-          # Keep same-title reports from different publishers for later comparison.
-          def keep_sources(items):
-              seen_url, seen_title, out = set(), set(), []
-              for it in items:
-                  url = collect_fast.base.canon_url(it['link'])
-                  title = (it['source'], collect_fast.base.norm_title(it['title']))
-                  if url in seen_url or title in seen_title:
-                      continue
-                  seen_url.add(url); seen_title.add(title); out.append(it)
-              return out
-          collect_fast.base.dedupe = keep_sources
-          raise SystemExit(collect_fast.main())
-          PYCODE
+        run: python scheduler/codex-feed/run.py
       - name: Verify published collection
+        env:
+          EXPECTED_BATCH: ${{ steps.ingest.outputs.batch }}
         run: |
           python - <<'PYCODE'
-          import json, urllib.request
+          import json, urllib.request, datetime, os
           base = 'https://dailydrop-feed.trustlj.workers.dev'
-          with urllib.request.urlopen(base + '/batches.json', timeout=30) as r:
+          req = urllib.request.Request(base + '/batches.json', headers={'User-Agent': 'Mozilla/5.0 (compatible; DailyDropCollector/1.0)', 'Accept': 'application/json'})
+          with urllib.request.urlopen(req, timeout=30) as r:
               batches = json.load(r)
-          if not batches:
-              raise SystemExit('No collection batch is published.')
+          if not batches or batches[0]['batch'] != os.environ['EXPECTED_BATCH']:
+              raise SystemExit('This run did not publish the expected batch.')
           b = batches[0]
+          age = (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(b['started_at'])).total_seconds()
+          if age < -60 or age > 600:
+              raise SystemExit('Published batch is stale or future-dated.')
           errors = json.loads(b.get('errors') or '[]')
           print('Published batch:', b['batch'], 'new:', b['n_new'], 'configured sources:', b['n_sources'], 'source errors:', len(errors))
           if len(errors) >= b['n_sources']:
