@@ -5,29 +5,7 @@ const kst = iso => { if (!iso) return ''; const d = new Date(new Date(iso).getTi
 const hourKey = d => new Date(d).toISOString().slice(0, 13); // 'YYYY-MM-DDTHH' (UTC)
 const json = (o, status = 200, extra = {}) => new Response(JSON.stringify(o), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', ...extra } });
 
-const STOP = new Set('the a an and or of to in on for with by from at as is are was be this that it its vs via amid after before over under into about says said new will may could would should has have had not no up down out more most less than then 및 등 의 을 를 이 가 은 는 에 에서 로 으로 와 과 도 만 더 또 대한 위한 관련 통해 대해 속보 단독 종합 영상 포토 사진 기자'.split(' '));
-const SYN = { '한은': '한국은행', '연준': 'fed', 'fomc': 'fed', '코스피': 'kospi', '美': '미국', '中': '중국', '日': '일본', 'trump': '트럼프', 'bitcoin': '비트코인', 'btc': '비트코인', 'samsung': '삼성전자', '삼성': '삼성전자', 'nvidia': '엔비디아', '소비자물가': '물가', '물가상승률': '물가' };
-const normTitle = t => t.replace(/\[.*?\]|\(.*?\)|【.*?】/g, ' ').replace(/\s+[-|–—]\s+[^-|–—]{2,20}$/, '').replace(/\s+/g, ' ').trim().toLowerCase();
-const tokens = t => new Set((normTitle(t).match(/[가-힣]{2,}|[A-Za-z][A-Za-z0-9-]{2,}|\d{2,}/g) || []).map(w => SYN[w] || w).filter(w => !STOP.has(w)));
-function shared(a, b) { let n = 0; for (const x of a) if (b.has(x)) n++; for (const x of a) if (!b.has(x)) for (const y of b) if (!a.has(y) && (x.includes(y) || y.includes(x)) && Math.abs(x.length - y.length) <= 4) { n++; break; } return n; }
-
-function clusterItems(items) {
-  const toks = items.map(i => tokens(i.title)); const parent = items.map((_, i) => i);
-  const find = x => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
-  for (let i = 0; i < items.length; i++) { if (toks[i].size < 2) continue; for (let j = i + 1; j < items.length; j++) { const s = shared(toks[i], toks[j]); if ((s >= 2 && items[i].field === items[j].field) || s >= 3) parent[find(i)] = find(j); } }
-  const groups = new Map(); items.forEach((it, i) => { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(it); });
-  const out = [];
-  for (const g of groups.values()) {
-    const srcs = [...new Set(g.map(x => x.source))]; const ab = new Set(g.filter(x => 'AB'.includes(x.tier)).map(x => x.source));
-    const status = ab.size >= 2 ? '복수 수집 경로(A/B ' + ab.size + '곳) — 독립성·사실 확인 필요' : ab.size === 1 ? '단일 수집 경로 — 원자료 확인 필요' : g.some(x => x.tier === 'C') ? '분석/블로그 — 1차 자료 대조 필요' : '미확인(커뮤니티·트렌드) — 팩트체크 필수';
-    const kw = new Map(); g.forEach(x => tokens(x.title).forEach(t => kw.set(t, (kw.get(t) || 0) + 1)));
-    g.sort((a, b) => a.tier.localeCompare(b.tier) || (b.published_at || '').localeCompare(a.published_at || ''));
-    const fieldCount = new Map(); g.forEach(x => fieldCount.set(x.field, (fieldCount.get(x.field) || 0) + 1));
-    out.push({ topic: g[0].title, keywords: [...kw.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(e => e[0]), field: [...fieldCount.entries()].sort((a, b) => b[1] - a[1])[0][0], n_items: g.length, n_sources: srcs.length, sources: srcs, tier_best: [...g.map(x => x.tier)].sort()[0], status, items: g.map(x => ({ title: x.title, source: x.source, link: x.link, tier: x.tier, published_at: x.published_at })) });
-  }
-  out.sort((a, b) => b.n_sources - a.n_sources || b.n_items - a.n_items);
-  return out;
-}
+import { clusterItems } from './cluster.js';
 
 async function buildHourly(env, hour) { // hour: 'YYYY-MM-DDTHH' UTC
   const from = hour + ':00:00.000Z', to = new Date(new Date(from).getTime() + 3600_000).toISOString();
@@ -100,14 +78,14 @@ export default {
     let m = url.pathname.match(/^\/hourly\/(latest|\d{4}-\d{2}-\d{2}T\d{2})\.json$/);
     if (m) {
       const hour = m[1] === 'latest' ? hourKey(Date.now() - 3600_000) : m[1];
-      const row = await env.DB.prepare('SELECT digest FROM hourly WHERE hour = ?1').bind(hour).first();
+      const row = url.searchParams.get('rebuild') ? null : await env.DB.prepare('SELECT digest FROM hourly WHERE hour = ?1').bind(hour).first();
       if (row && m[1] !== 'latest') return json(JSON.parse(row.digest));
       const d = await buildHourly(env, hour); // latest는 매번 새로 계산(수집이 늦게 들어와도 반영)
       return json(d);
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
     if (url.pathname === '/') return page(env, url);
-    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json', '/hourly', '/batches.json', 'POST /ingest'] }, 404);
+    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) { ctx.waitUntil(buildHourly(env, hourKey(ev.scheduledTime - 3600_000))); },
 };
