@@ -1,4 +1,4 @@
-// 데일리드롭 피드 Worker: 10분 수집분 저장(D1) → 목록 페이지 / JSON / 1시간 취합본
+// 데일리드롭 피드 Worker (v1.3 — 읽기 전용 digest 경로, 결정적 클러스터링): 10분 수집분 저장(D1) → 목록 페이지 / JSON / 1시간 취합본
 const KST = 9 * 3600 * 1000;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const kst = iso => { if (!iso) return ''; const d = new Date(new Date(iso).getTime() + KST); return d.toISOString().slice(5, 16).replace('T', ' '); };

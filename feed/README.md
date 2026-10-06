@@ -18,6 +18,9 @@ GitHub Actions (*/10)  →  feed/collect_fast.py  →  POST /ingest  →  Cloudf
 
 비밀키(INGEST_KEY)는 배포 워크플로가 토큰에서 파생해 Worker 비밀로 넣고, 수집 워크플로가 같은 식으로 파생합니다. 따로 등록할 것 없음.
 
+## 소스 적용 순서
+`issuedrop/sources.yaml` + `feed/sources_extra.yaml` 을 읽은 뒤, main의 `codex-feed/source_policy.json`(교체·중단 정책, 사유 포함)이 **최종 적용**된다. 실제로 수집되는 소스 목록은 Actions 실행 로그의 요약이 기준.
+
 ## 소스 추가 (Codex)
 `issuedrop/sources.yaml` 또는 `feed/sources_extra.yaml` 에 같은 형식으로 추가:
 ```yaml
@@ -25,6 +28,9 @@ sources:
   - {id: yt_xxx, name: "유튜브 ○○ 채널", cat: 경제, region: KR, tier: C, type: rss, url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC..."}
 ```
 tier: A 공식·1차자료 / B 주요 매체 / C 분석·블로그·유튜브 / D 커뮤니티·SNS(팩트체크 필수).
+
+## 취합본 경로
+`GET /hourly/YYYY-MM-DDTHH.json` 은 읽기 전용(저장본 없으면 404). 생성은 매시 02분 크론, `?rebuild=1`, 그리고 `/hourly/latest.json`에 저장본이 없을 때만.
 
 ## 취합본 형식 (`/hourly/latest.json`)
 `{hour, hour_kst, n_items, by_field, sources[{source,n}], clusters[{topic, keywords, field, n_items, n_sources, tier_best, status, items[]}]}`
