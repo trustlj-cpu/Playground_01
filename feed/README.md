@@ -36,5 +36,9 @@ tier: A 공식·1차자료 / B 주요 매체 / C 분석·블로그·유튜브 / 
 `{hour, hour_kst, n_items, by_field, sources[{source,n}], clusters[{topic, keywords, field, n_items, n_sources, tier_best, status, items[]}]}`
 status: `확인(독립 소스 2+)` → 1면 후보 / `단일 소스` → 원자료 확인 후 / `분석/블로그` / `미확인(커뮤니티·트렌드)`.
 
+## 깃허브 예약이 안 돌 때 (대체 스케줄러)
+Worker 크론 `*/10`이 `GH_DISPATCH_TOKEN`(fine-grained PAT, 이 저장소만, Actions: Read and write)이 있으면 `codex-feed-schedule.yml`을 workflow_dispatch로 호출한다. 토큰이 없으면 `cron_runs`에 `skipped(no token)`만 남기고 아무것도 하지 않는다.
+설정: Cloudflare 대시보드 → Workers & Pages → dailydrop-feed → Settings → Variables and Secrets → `GH_DISPATCH_TOKEN` 추가(Secret). 또는 `wrangler secret put GH_DISPATCH_TOKEN`.
+
 ## 한도 (무료 플랜)
 D1 쓰기 10만 행/일 (예상 1~2만), Worker 요청 10만/일, Actions 월 2,000분 (10분 크론 ≈ 144회 × ~1.5분 = 월 6,500분 → **공개 저장소면 무제한, 비공개면 초과**). 비공개 유지 시 크론을 `*/20` 으로 낮추거나 저장소를 공개로.
