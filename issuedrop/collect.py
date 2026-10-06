@@ -145,6 +145,13 @@ def tokens(t: str) -> set[str]:
     return {w.lower() for w in words if w.lower() not in STOP}
 
 
+def clean_link(link: str) -> str:
+    """피드가 흘린 찌꺼기 제거: 마크다운 잔재 '](...)', 앞뒤 공백·따옴표, http(s) 아닌 값."""
+    link = (link or "").strip().strip('"\'')
+    link = re.split(r"\]\(|\s", link, 1)[0]
+    return link if re.match(r"^https?://[^\s<>]+$", link) else ""
+
+
 def collect_source(src: dict) -> tuple[dict, list[dict], str]:
     try:
         if src["type"] == "gnews":
@@ -166,6 +173,7 @@ def collect_source(src: dict) -> tuple[dict, list[dict], str]:
             items = parse_feed(raw)
         out = []
         for it in items[:MAX_PER_SOURCE]:
+            it["link"] = clean_link(it.get("link", ""))
             if not it["title"] or not it["link"]:
                 continue
             d = _parse_date(it["published"])
