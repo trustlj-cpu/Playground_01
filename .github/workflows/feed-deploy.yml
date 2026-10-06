@@ -1,0 +1,27 @@
+name: feed-worker-deploy
+
+on:
+  push:
+    paths:
+      - "feed/worker/**"
+      - ".github/workflows/feed-deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Deploy Worker + set INGEST_KEY
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        working-directory: feed/worker
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN 없음 — 저장소 Settings → Secrets 에 등록하면 자동 배포됩니다."; exit 0; fi
+          npx --yes wrangler@4 deploy
+          printf 'dailydrop-ingest:%s:%s' "$CLOUDFLARE_ACCOUNT_ID" "$CLOUDFLARE_API_TOKEN" | sha256sum | cut -c1-48 | npx --yes wrangler@4 secret put INGEST_KEY
