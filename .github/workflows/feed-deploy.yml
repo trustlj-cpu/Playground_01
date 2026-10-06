@@ -23,5 +23,12 @@ jobs:
         working-directory: feed/worker
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN 없음 — 저장소 Settings → Secrets 에 등록하면 자동 배포됩니다."; exit 0; fi
+          # 토큰 '형식'만 진단 (값은 절대 출력하지 않음)
+          python3 - <<'PY'
+          import os,re
+          t=os.environ["CLOUDFLARE_API_TOKEN"]; a=os.environ.get("CLOUDFLARE_ACCOUNT_ID","")
+          print(f"[진단] 토큰 길이={len(t)} 공백포함={' ' in t} 줄바꿈포함={chr(10) in t or chr(13) in t} 따옴표포함={any(c in t for c in chr(34)+chr(39))} 'Bearer'포함={'bearer' in t.lower()} 'curl'포함={'curl' in t.lower()} 허용문자만={bool(re.fullmatch(r'[A-Za-z0-9_-]+',t))}")
+          print(f"[진단] 계정ID 길이={len(a)} 16진수32자={bool(re.fullmatch(r'[0-9a-f]{32}',a))}")
+          PY
           npx --yes wrangler@4 deploy
           printf 'dailydrop-ingest:%s:%s' "$CLOUDFLARE_ACCOUNT_ID" "$CLOUDFLARE_API_TOKEN" | sha256sum | cut -c1-48 | npx --yes wrangler@4 secret put INGEST_KEY
