@@ -19,7 +19,7 @@ function clusterItems(items) {
   const out = [];
   for (const g of groups.values()) {
     const srcs = [...new Set(g.map(x => x.source))]; const ab = new Set(g.filter(x => 'AB'.includes(x.tier)).map(x => x.source));
-    const status = ab.size >= 2 ? '확인(독립 소스 2+)' : ab.size === 1 ? '단일 소스' : g.some(x => x.tier === 'C') ? '분석/블로그 — 1차 자료 대조 필요' : '미확인(커뮤니티·트렌드) — 팩트체크 필수';
+    const status = ab.size >= 2 ? '복수 수집 경로(A/B ' + ab.size + '곳) — 독립성·사실 확인 필요' : ab.size === 1 ? '단일 수집 경로 — 원자료 확인 필요' : g.some(x => x.tier === 'C') ? '분석/블로그 — 1차 자료 대조 필요' : '미확인(커뮤니티·트렌드) — 팩트체크 필수';
     const kw = new Map(); g.forEach(x => tokens(x.title).forEach(t => kw.set(t, (kw.get(t) || 0) + 1)));
     g.sort((a, b) => a.tier.localeCompare(b.tier) || (b.published_at || '').localeCompare(a.published_at || ''));
     const fieldCount = new Map(); g.forEach(x => fieldCount.set(x.field, (fieldCount.get(x.field) || 0) + 1));
@@ -37,7 +37,7 @@ async function buildHourly(env, hour) { // hour: 'YYYY-MM-DDTHH' UTC
   const digest = { hour, hour_kst: kst(from).slice(0, 11) + '시', built_at: new Date().toISOString(), n_items: results.length, by_field,
     sources: Object.entries(srcCount).sort((a, b) => b[1] - a[1]).map(([source, n]) => ({ source, n })),
     clusters: clusterItems(results),
-    how_to_use: '콘텐츠 제작 에이전트: clusters 상위부터 검토. status가 확인(독립 소스 2+)인 것만 1면 후보. 단일 소스는 원자료 확인 후 사용.' };
+    how_to_use: '콘텐츠 제작 에이전트: clusters 상위부터 검토. 수집 경로 수(n_sources)는 사실 확인이 아니라 우선순위 신호다. 1면 후보로 올리기 전에 반드시 원자료(발표 기관 원문) 또는 서로 다른 취재원의 보도를 직접 대조할 것. 같은 통신사 기사를 받아쓴 매체들은 독립 소스가 아니다.' };
   await env.DB.prepare('INSERT OR REPLACE INTO hourly (hour, built_at, n_items, digest) VALUES (?1, ?2, ?3, ?4)').bind(hour, digest.built_at, results.length, JSON.stringify(digest)).run();
   return digest;
 }
