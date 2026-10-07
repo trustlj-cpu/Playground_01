@@ -6,38 +6,39 @@ import { Preferences } from '@capacitor/preferences';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { App } from '@capacitor/app';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { SITE, FEED, mergeEditions, transformEditionHtml, parseEditionUrl, editionFilePath } from './remote-pure.mjs';
+import { SITE, FEED, REGIONS, regionIndexUrl, mergeEditions, transformEditionHtml, parseEditionUrl, editionFilePath } from './remote-pure.mjs';
 
 const K_INDEX = 'dailydrop.remoteIndex.v1', K_PUSH = 'dailydrop.push.v1', K_TOKEN = 'dailydrop.pushToken.v1';
 const native = () => Capacitor.isNativePlatform();
 
 // 캐시된 원격 목록(네트워크 없음) — 시작 시 보관 표시 복원에 쓴다
-export async function getCachedRemoteIndex() {
-  try { const v = (await readPreference(K_INDEX)).value; return v ? (JSON.parse(v).editions || []) : []; } catch { return []; }
+const indexKey = region => region && region !== 'KR' ? `${K_INDEX}.${region}` : K_INDEX;
+export async function getCachedRemoteIndex(region = 'KR') {
+  try { const v = (await readPreference(indexKey(region))).value; return v ? (JSON.parse(v).editions || []) : []; } catch { return []; }
 }
 // 원격 목록: 성공하면 캐시 갱신, 실패하면 캐시(없으면 [])를 돌려준다 — 오프라인 초기화를 막지 않음
-export async function loadRemoteIndex({ timeoutMs = 8000 } = {}) {
+export async function loadRemoteIndex({ timeoutMs = 8000, region = 'KR' } = {}) {
   let cached = [];
-  try { const v = (await readPreference(K_INDEX)).value; if (v) cached = JSON.parse(v).editions || []; } catch {}
+  try { const v = (await readPreference(indexKey(region))).value; if (v) cached = JSON.parse(v).editions || []; } catch {}
   try {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
-    const r = await fetch(`${SITE}/editions.json`, { cache: 'no-store', signal: ctl.signal }); clearTimeout(t);
+    const r = await fetch(regionIndexUrl(region), { cache: 'no-store', signal: ctl.signal }); clearTimeout(t);
     if (!r.ok) throw new Error('index ' + r.status);
     const j = await r.json(); const editions = Array.isArray(j.editions) ? j.editions : [];
-    try { await Preferences.set({ key: K_INDEX, value: JSON.stringify({ at: Date.now(), editions }) }); } catch {}
+    try { await Preferences.set({ key: indexKey(region), value: JSON.stringify({ at: Date.now(), editions }) }); } catch {}
     return { editions, fresh: true };
   } catch (e) { return { editions: cached, fresh: false, error: String(e && e.message || e) }; }
 }
 
-export { mergeEditions, parseEditionUrl };
+export { mergeEditions, parseEditionUrl, REGIONS };
 
 // 원격 호를 기기에 저장하고 iframe에서 열 수 있는 주소를 돌려준다. 저장본이 있으면 네트워크를 쓰지 않는다.
 const editionDownloads = createSingleFlight();
 export function ensureEditionSrc(edition, options = {}) {
-  return editionDownloads(edition.date, () => loadEditionSrc(edition, options));
+  return editionDownloads(`${edition.region || 'KR'}:${edition.date}`, () => loadEditionSrc(edition, options));
 }
 async function loadEditionSrc(edition, { frameSrc } = {}) {
-  const path = editionFilePath(edition.date);
+  const path = editionFilePath(edition.date, edition.region || 'KR');
   const fs = frameSrc || new URL('frame.js', location.href).href;
   if (native()) {
     try { const st = await Filesystem.stat({ path, directory: Directory.Data }); if (st && st.uri) return Capacitor.convertFileSrc(st.uri); } catch {}

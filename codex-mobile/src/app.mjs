@@ -4,12 +4,17 @@ import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { decodeSaved,toggleSaved,externalURL } from './state.mjs';
-import { loadRemoteIndex, getCachedRemoteIndex, mergeEditions, ensureEditionSrc, getPushState, pushConfigured, enablePush, disablePush, bindPushTap, bindDeepLinks } from './remote.mjs';
+import { loadRemoteIndex, getCachedRemoteIndex, mergeEditions, ensureEditionSrc, getPushState, pushConfigured, enablePush, disablePush, bindPushTap, bindDeepLinks, REGIONS } from './remote.mjs';
+import { defaultRegion } from './remote-pure.mjs';
 const APP_VERSION='0.2.0';
 const $=s=>document.querySelector(s), frame=$('#reader'), notice=$('#notice');
 const bundled=await (await fetch('editions.json')).json();
 // 캐시된 원격 호까지 합친 뒤 보관 표시를 복원(원격 호 보관이 사라지지 않게)
-let editions=mergeEditions(bundled,await getCachedRemoteIndex()), latest=editions.at(-1); let selected=latest.date, tab='today', saved=[];
+// 국가판: 저장된 설정 → 없으면 기기 언어. 번들 호는 한국판에만 있고, 미국판·일본판은 받아온 호만 쓴다.
+let region='KR';try{const v=(await readPreference('dailydrop.region.v1')).value;region=REGIONS[v]?v:defaultRegion(navigator.language);}catch{region=defaultRegion(navigator.language);}
+const bundledFor=r=>r==='KR'?bundled:[];
+let editions=mergeEditions(bundledFor(region),await getCachedRemoteIndex(region),region), latest=editions.at(-1)||bundled.at(-1); let selected=latest.date, tab='today', saved=[];
+const regionNotice={US:'미국판 1호는 10월 8일 저녁에 나옵니다. 그때까지는 한국판을 보여 드립니다.',JP:'日本版 第1号は10月8日夕方に出ます。それまでは韓国版を表示します。'};
 try{saved=decodeSaved((await readPreference('dailydrop.saved.v1')).value,editions);}catch{notice.textContent='보관함을 불러오지 못했습니다. 이번 실행에서 읽기는 가능합니다.';}
 function updateSave(){const e=editions.find(e=>e.date===selected);$('#save').hidden=!e||tab==='saved';$('#save').textContent=saved.includes(selected)?'보관 해제':'호 보관';$('#save').setAttribute('aria-pressed',String(saved.includes(selected)));$('#edition-label').textContent=e?`제${e.no}호 · ${e.date} · ${e.source==='remote'?'받아온 호':'오프라인 사본'}`:{archive:'지난 호 · 오프라인 사본',glossary:'용어사전 · 오프라인 사본',saved:'이 기기의 보관함'}[tab]??'';}
 let showSeq=0;
@@ -25,15 +30,25 @@ $('#save').addEventListener('click',async()=>{if(!selected)return;const next=tog
 window.addEventListener('message',e=>{if(e.source!==frame.contentWindow||e.origin!==location.origin)return;const m=e.data;if(m?.type==='external')openExternal(m.url);if(m?.type==='page'){if(!/^\/content\//.test(m.path)&&!/\/editions\/\d{4}-\d{2}-\d{2}\.html$/.test(m.path))return;/* Blob URL(UUID 경로) 등 알 수 없는 경로는 무시 — show()가 정한 날짜 유지 */const match=/^\/content\/(\d{4}-\d{2}-\d{2})\//.exec(m.path)||/\/editions\/(\d{4}-\d{2}-\d{2})\.html$/.exec(m.path);selected=match&&editions.some(x=>x.date===match[1])?match[1]:m.path==='/content/index.html'?latest.date:null;if(selected)tab='today';else if(m.path.startsWith('/content/archive/'))tab='archive';else if(m.path.startsWith('/content/glossary/'))tab='glossary';else tab='info';document.querySelectorAll('[data-tab]').forEach(b=>{if(b.dataset.tab===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});updateSave();}});
 if(Capacitor.isNativePlatform())App.addListener('backButton',()=>{if(appOptions.open){appOptions.open=false;return;}const doc=frame.contentDocument;const tip=doc?.getElementById('tip');const overlay=doc?.getElementById('ov');if(tip&&!tip.hidden){tip.hidden=true;return;}if(overlay&&!overlay.hidden){doc.getElementById('close')?.click();return;}if(tab!=='today'||selected!==latest.date){show('today');return;}App.exitApp();});
 frame.addEventListener('load',()=>{frame.contentDocument?.addEventListener('click',()=>{appOptions.open=false;});if(!frame.contentDocument?.body?.textContent?.trim())notice.textContent='신문을 불러오지 못했습니다. 지난 호 메뉴에서 다시 선택해 주세요.';});
+// 국가판 선택: 설정 저장 → 그 판의 호 목록으로 교체(없으면 안내 후 한국판 유지) → 최신호 표시
+function paintRegion(){document.querySelectorAll('[data-region]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.region===region)));}
+async function switchRegion(next){if(!REGIONS[next])return;region=next;try{await Preferences.set({key:'dailydrop.region.v1',value:next});}catch{}
+  const r=await loadRemoteIndex({region:next}).catch(()=>({editions:[]}));const merged=mergeEditions(bundledFor(next),r.editions,next);
+  if(!merged.length){notice.textContent=regionNotice[next]||'아직 발행된 호가 없습니다.';editions=mergeEditions(bundled,await getCachedRemoteIndex('KR'),'KR');latest=editions.at(-1);}
+  else{editions=merged;latest=editions.at(-1);notice.textContent=`${REGIONS[next].label}으로 바꿨습니다.`;}
+  paintRegion();appOptions.open=false;show('today');}
+document.querySelectorAll('[data-region]').forEach(b=>b.addEventListener('click',()=>switchRegion(b.dataset.region)));
+paintRegion();
+if(!editions.length||(region!=='KR'&&editions.every(e=>e.source==='bundle'))){editions=mergeEditions(bundled,[],'KR');latest=editions.at(-1);selected=latest.date;notice.textContent=regionNotice[region]||'';}
 show('today');
 // 새 호 갱신: 실패해도 번들로 계속 동작. latest가 바뀌면 안내 + 백그라운드로 미리 받아 둔다.
-async function refreshEditions(){const r=await loadRemoteIndex();if(!r.editions.length)return;const merged=mergeEditions(bundled,r.editions);const prevLatest=latest.date;editions=merged;latest=editions.at(-1);if(latest.date!==prevLatest){notice.textContent=`새 호(제${latest.no}호 · ${latest.date})가 나왔습니다. 최근 호를 누르면 열립니다.`;ensureEditionSrc(latest).catch(()=>{});}if(tab==='saved')renderSaved();updateSave();}
+async function refreshEditions(){const r=await loadRemoteIndex({region});if(!r.editions.length)return;const merged=mergeEditions(bundledFor(region),r.editions,region);const prevLatest=latest.date;editions=merged;latest=editions.at(-1);if(latest.date!==prevLatest){notice.textContent=`새 호(제${latest.no}호 · ${latest.date})가 나왔습니다. 최근 호를 누르면 열립니다.`;ensureEditionSrc(latest).catch(()=>{});}if(tab==='saved')renderSaved();updateSave();}
 refreshEditions().catch(()=>{});setInterval(()=>refreshEditions().catch(()=>{}),30*60*1000);
 // 알림 켜기/끄기
 const pushBtn=$('#push');
 async function paintPush(){pushBtn.hidden=!Capacitor.isNativePlatform();if(!pushConfigured()){pushBtn.textContent='알림 준비 중';pushBtn.disabled=true;pushBtn.setAttribute('aria-pressed','false');pushBtn.title='이 빌드에는 알림 설정이 포함되지 않았습니다.';return;}const st=await getPushState();pushBtn.textContent=st==='on'?'알림 끄기':'알림 켜기';pushBtn.setAttribute('aria-pressed',String(st==='on'));}
 pushBtn.addEventListener('click',async()=>{if(!pushConfigured())return;pushBtn.disabled=true;try{if(await getPushState()==='on'){const r=await disablePush();notice.textContent=r.ok?'저녁판 알림을 껐습니다.':'알림 서버에 연결하지 못해 아직 켜져 있습니다. 잠시 후 다시 눌러 주세요.';}else{const r=await enablePush({appVersion:APP_VERSION,onOpenEdition:d=>openByDate(d)});notice.textContent=r.ok?'저녁판이 나오면 알려 드립니다.':{denied:'알림 권한이 꺼져 있습니다. 설정에서 허용해 주세요.',unsupported:'이 환경에서는 알림을 지원하지 않습니다.','server-error':'알림 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.','not-configured':'이 빌드에는 알림 설정이 포함되지 않았습니다.'}[r.state]||'알림을 켜지 못했습니다.';}}catch{notice.textContent='알림 설정을 바꾸지 못했습니다.';}pushBtn.disabled=false;paintPush();});
 paintPush();
-function openByDate(d){if(d==='latest')d=latest.date;if(editions.some(e=>e.date===d))show('today',d);else refreshEditions().then(()=>{if(editions.some(e=>e.date===d))show('today',d);}).catch(()=>{});}
+function openByDate(d){if(typeof d==='string'&&d.includes(':')){const [r,dd]=d.split(':');if(REGIONS[r]&&r!==region){switchRegion(r).then(()=>openByDate(dd));return;}d=dd;}if(d==='latest')d=latest.date;if(editions.some(e=>e.date===d))show('today',d);else refreshEditions().then(()=>{if(editions.some(e=>e.date===d))show('today',d);}).catch(()=>{});}
 bindPushTap(openByDate);
 bindDeepLinks(openByDate);

@@ -1,15 +1,20 @@
 // 네트워크·플러그인 없이 테스트 가능한 순수 함수들 (remote.mjs가 사용)
 export const SITE = 'https://dailydrop.kr';
 export const FEED = 'https://feed.dailydrop.kr';
+// 국가판: 각 판은 그 나라 국내 뉴스 + 글로벌 뉴스. KR은 루트, US/JP는 /us/ /jp/ 아래. 앱 셸 문구는 당분간 한국어.
+export const REGIONS = { KR: { prefix: '', lang: 'ko', label: '한국판' }, US: { prefix: 'us/', lang: 'en', label: '미국판' }, JP: { prefix: 'jp/', lang: 'ja', label: '일본판' } };
+export const regionIndexUrl = region => `${SITE}/${REGIONS[region]?.prefix || ''}editions.json`;
+// 기기 언어로 기본 판을 고른다: 일본어→JP, 영어→US, 그 외(한국어 포함)→KR. 설정에서 바꾸면 그 값이 우선.
+export function defaultRegion(locale) { const l = String(locale || '').toLowerCase(); if (l.startsWith('ja')) return 'JP'; if (l.startsWith('en')) return 'US'; return 'KR'; }
 
 // 번들(앱에 포함) + 원격(editions.json) 목록을 날짜 기준으로 합친다. 번들이 우선, 원격 전용은 source:'remote'.
-export function mergeEditions(bundled, remote) {
-  const out = new Map();
-  for (const e of bundled || []) if (/^\d{4}-\d{2}-\d{2}$/.test(e.date)) out.set(e.date, { ...e, source: 'bundle' });
+export function mergeEditions(bundled, remote, region = 'KR') {
+  const out = new Map(); const prefix = REGIONS[region]?.prefix || '';
+  for (const e of bundled || []) if (/^\d{4}-\d{2}-\d{2}$/.test(e.date)) out.set(e.date, { ...e, region, source: 'bundle' });
   for (const e of remote || []) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date) || out.has(e.date)) continue;
-    const html = typeof e.html === 'string' && e.html.startsWith(SITE + '/') ? e.html : `${SITE}/${e.date}/index.html`;
-    out.set(e.date, { date: e.date, no: Number(e.no) || 0, blurb: String(e.blurb || ''), html, source: 'remote' });
+    const html = typeof e.html === 'string' && e.html.startsWith(SITE + '/') ? e.html : `${SITE}/${prefix}${e.date}/index.html`;
+    out.set(e.date, { date: e.date, no: Number(e.no) || 0, blurb: String(e.blurb || ''), html, region, source: 'remote' });
   }
   return [...out.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -37,15 +42,16 @@ export function transformEditionHtml(html, frameSrc) {
   return h;
 }
 
-// https://dailydrop.kr/2026-10-07/ → '2026-10-07', 루트 → 'latest', 그 외/다른 호스트 → null
+// https://dailydrop.kr/2026-10-07/ → '2026-10-07', 루트 → 'latest'; 국가판은 'US:2026-10-08' / 'JP:latest' 꼴; 그 외/다른 호스트 → null
 export function parseEditionUrl(url) {
   try {
     const u = new URL(url);
     if (u.protocol !== 'https:' || !['dailydrop.kr', 'www.dailydrop.kr'].includes(u.hostname)) return null; // 앱링크 설정과 동일한 호스트만
-    const m = u.pathname.match(/^\/(\d{4}-\d{2}-\d{2})\/?$/); // 날짜 경로 전체 일치(…/2026-10-07/foo 는 제외)
-    if (m) return m[1];
+    const m = u.pathname.match(/^\/(?:(us|jp)\/)?(\d{4}-\d{2}-\d{2})\/?$/); // 날짜 경로 전체 일치(…/2026-10-07/foo 는 제외)
+    if (m) return m[1] ? `${m[1].toUpperCase()}:${m[2]}` : m[2];
+    const r = u.pathname.match(/^\/(us|jp)\/?$/); if (r) return `${r[1].toUpperCase()}:latest`;
     return (u.pathname === '/' || u.pathname === '') ? 'latest' : null;
   } catch { return null; }
 }
 
-export const editionFilePath = date => `editions/${date}.html`;
+export const editionFilePath = (date, region = 'KR') => `editions/${region === 'KR' ? '' : region.toLowerCase() + '-'}${date}.html`;
