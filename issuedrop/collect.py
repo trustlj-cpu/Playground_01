@@ -187,13 +187,17 @@ def collect_source(src: dict) -> tuple[dict, list[dict], str]:
         return src, [], f"error: {type(e).__name__}: {str(e)[:80]}"
 
 
-TRACK = re.compile(r"^(utm_|fbclid$|gclid$|igshid$|ref$|ref_src$|source$|cmpid$|sr_share$|xy$)", re.I)  # xy=: FinancialJuice 배포 채널 표시(1/rss) — 같은 기사가 두 번 저장되던 원인
+TRACK = re.compile(r"^(utm_|fbclid$|gclid$|igshid$|ref$|ref_src$|source$|cmpid$|sr_share$)", re.I)
+# 사이트별 추적 파라미터(해당 호스트에서만 제거). financialjuice xy=1/rss: 배포 채널 표시 — 같은 기사가 두 번 저장되던 원인
+HOST_TRACK = {"financialjuice.com": re.compile(r"^xy$", re.I)}
 
 
 def canon_url(link: str) -> str:
     """중복 판정용 URL 정규화. 호스트만 소문자, 추적 파라미터만 제거(YouTube v=, DART rcpNo= 같은 식별 쿼리는 유지)."""
     p = urllib.parse.urlsplit(link.strip())
-    q = [(k, v) for k, v in urllib.parse.parse_qsl(p.query, keep_blank_values=True) if not TRACK.match(k)]
+    host = p.netloc.lower().split(":")[0]
+    ht = next((rx for h, rx in HOST_TRACK.items() if host == h or host.endswith("." + h)), None)
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(p.query, keep_blank_values=True) if not TRACK.match(k) and not (ht and ht.match(k))]
     q.sort()
     return urllib.parse.urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/") or "/", urllib.parse.urlencode(q), ""))
 
