@@ -9,6 +9,10 @@ import { SITE, FEED, mergeEditions, transformEditionHtml, parseEditionUrl, editi
 const K_INDEX = 'dailydrop.remoteIndex.v1', K_PUSH = 'dailydrop.push.v1', K_TOKEN = 'dailydrop.pushToken.v1';
 const native = () => Capacitor.isNativePlatform();
 
+// 캐시된 원격 목록(네트워크 없음) — 시작 시 보관 표시 복원에 쓴다
+export async function getCachedRemoteIndex() {
+  try { const v = (await Preferences.get({ key: K_INDEX })).value; return v ? (JSON.parse(v).editions || []) : []; } catch { return []; }
+}
 // 원격 목록: 성공하면 캐시 갱신, 실패하면 캐시(없으면 [])를 돌려준다 — 오프라인 초기화를 막지 않음
 export async function loadRemoteIndex({ timeoutMs = 8000 } = {}) {
   let cached = [];

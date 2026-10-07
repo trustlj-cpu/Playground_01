@@ -21,4 +21,7 @@ test('deep link parsing', () => {
   assert.equal(parseEditionUrl('https://dailydrop.kr/glossary/'), null);
   assert.equal(parseEditionUrl('http://dailydrop.kr/2026-10-07/'), null);
   assert.equal(parseEditionUrl('https://example.com/2026-10-07/'), null);
+  assert.equal(parseEditionUrl('https://evil.dailydrop.kr/2026-10-07/'), null);
+  assert.equal(parseEditionUrl('https://dailydrop.kr/2026-10-07/extra'), null);
+  assert.equal(parseEditionUrl('https://dailydrop.kr/2026-10-07'), '2026-10-07');
 });

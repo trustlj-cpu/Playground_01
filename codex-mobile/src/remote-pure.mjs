@@ -31,8 +31,8 @@ export function transformEditionHtml(html, frameSrc) {
 export function parseEditionUrl(url) {
   try {
     const u = new URL(url);
-    if (!/(^|\.)dailydrop\.kr$/.test(u.hostname) || u.protocol !== 'https:') return null;
-    const m = u.pathname.match(/^\/(\d{4}-\d{2}-\d{2})\/?/);
+    if (u.protocol !== 'https:' || !['dailydrop.kr', 'www.dailydrop.kr'].includes(u.hostname)) return null; // 앱링크 설정과 동일한 호스트만
+    const m = u.pathname.match(/^\/(\d{4}-\d{2}-\d{2})\/?$/); // 날짜 경로 전체 일치(…/2026-10-07/foo 는 제외)
     if (m) return m[1];
     return (u.pathname === '/' || u.pathname === '') ? 'latest' : null;
   } catch { return null; }

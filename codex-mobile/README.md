@@ -55,3 +55,7 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk 
 - https://support.google.com/googleplay/android-developer/answer/6112435?hl=ko
 - https://support.google.com/googleplay/android-developer/answer/14151465?hl=ko (신규 개인 계정: 최소 12명·연속 14일)
 - https://capacitorjs.com/docs/apis/preferences (UserDefaults 사유 CA92.1)
+
+## 원격 호의 신뢰 범위 (2026-10-07 통합 메모)
+- 앱이 내려받아 여는 HTML은 `mergeEditions`가 `https://dailydrop.kr/` 아래 주소만 허용하고 TLS로 받는다. 즉 번들 콘텐츠(같은 사이트 빌드)와 같은 신뢰 수준이며, 제3자 HTML은 열지 않는다.
+- 그 HTML의 inline script는 iframe(same-origin)에서 실행되므로 이론상 parent에 접근할 수 있다. 사이트 배포 권한이 곧 앱 콘텐츠 권한이라는 뜻이라, 사이트 저장소·Cloudflare 토큰 관리가 앱 보안의 일부다. 더 좁히려면 원격 호에 `allow-same-origin` 없는 샌드박스를 쓰고 frame.js 연동을 postMessage('*')+검증으로 바꾸는 방안이 있다(미적용).
