@@ -1,7 +1,7 @@
 # Android 체크리스트 (kr.dailydrop.app)
 
 ## 빌드(코덱스 맥)
-- Android SDK: platform 35, build-tools 35.x, cmdline-tools. JDK 17(Capacitor 8 권장).
+- Android SDK: compile/target SDK 36, build-tools 36.x, cmdline-tools. JDK 21 (codex-mobile 프로젝트 기준).
 - `cd android && ./gradlew assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk` (사장님 폰 설치본, '출처를 알 수 없는 앱' 허용 필요).
 - 출시용: `./gradlew bundleRelease` → AAB. 서명키는 Play App Signing 사용(업로드 키만 로컬 보관, 저장소에 올리지 않음). 업로드 키 SHA-256 지문을 `site/app.json`의 `android.sha256_cert_fingerprints`에 넣으면 assetlinks.json이 생성됨(Play App Signing 쓰면 **Play 콘솔의 '앱 서명 키' 지문**도 함께 넣을 것).
 
