@@ -52,6 +52,8 @@ def fetch(url: str) -> bytes:
 def gnews_url(q: str, hl: str = "ko") -> str:
     if hl == "en":
         return "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=en-US&gl=US&ceid=US:en"
+    if hl == "ja":
+        return "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=ja&gl=JP&ceid=JP:ja"
     return "https://news.google.com/rss/search?q=" + urllib.parse.quote(q) + "&hl=ko&gl=KR&ceid=KR:ko"
 
 
