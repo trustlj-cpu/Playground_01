@@ -25,3 +25,9 @@ test('deep link parsing', () => {
   assert.equal(parseEditionUrl('https://dailydrop.kr/2026-10-07/extra'), null);
   assert.equal(parseEditionUrl('https://dailydrop.kr/2026-10-07'), '2026-10-07');
 });
+
+test('transformEditionHtml injects the in-app header compaction CSS once', () => {
+  const out = transformEditionHtml('<html><head></head><body><div class="sheet"></div></body></html>', '/frame.js');
+  assert.equal((out.match(/id="dd-inapp"/g) || []).length, 1);
+  assert.ok(out.indexOf('dd-inapp') < out.indexOf('</head>'));
+});

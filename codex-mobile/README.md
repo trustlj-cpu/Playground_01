@@ -59,3 +59,6 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk 
 ## 원격 호의 신뢰 범위 (2026-10-07 통합 메모)
 - 앱이 내려받아 여는 HTML은 `mergeEditions`가 `https://dailydrop.kr/` 아래 주소만 허용하고 TLS로 받는다. 즉 번들 콘텐츠(같은 사이트 빌드)와 같은 신뢰 수준이며, 제3자 HTML은 열지 않는다.
 - 그 HTML의 inline script는 iframe(same-origin)에서 실행되므로 이론상 parent에 접근할 수 있다. 사이트 배포 권한이 곧 앱 콘텐츠 권한이라는 뜻이라, 사이트 저장소·Cloudflare 토큰 관리가 앱 보안의 일부다. 더 좁히려면 원격 호에 `allow-same-origin` 없는 샌드박스를 쓰고 frame.js 연동을 postMessage('*')+검증으로 바꾸는 방안이 있다(미적용).
+
+## 앱 안 호 상단 압축 (`IN_APP_CSS`)
+`src/remote-pure.mjs`의 `IN_APP_CSS`가 호 HTML `<head>`에 들어간다 — 원격으로 받은 호는 `transformEditionHtml`에서, 번들 1~3호는 `scripts/build.mjs`에서(호 페이지 `index.html`·`YYYY-MM-DD/index.html`만, 용어사전·소개 등은 제외). 사이트 메뉴(.dd-nav)와 안내문은 숨기고 제호 한 줄 → 코스피·환율 한 줄 → 날짜줄 순으로 접어 첫 기사가 390px 화면에서 약 220px 아래부터 보이게 한다. dailydrop.kr 자체 화면은 바뀌지 않는다.

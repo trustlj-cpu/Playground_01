@@ -15,13 +15,31 @@ export function mergeEditions(bundled, remote) {
 }
 
 // 원격 호 HTML을 앱 안에서 열 수 있게 손본다: 외부 폰트 링크 제거, 사이트 내부 링크를 절대 주소로(앱이 가로채 외부/호 이동 처리), CSP, frame.js 주입
+// 앱 안(iframe)에서만 적용되는 호 상단 압축 CSS. 사이트 메뉴·지표 귀(ears)·안내문은 숨기고
+// 제호 한 줄 + 얇은 날짜줄만 남겨 첫 기사가 바로 보이게 한다(NYT식). 사이트(dailydrop.kr) 자체는 그대로.
+export const IN_APP_CSS = `<style id="dd-inapp">
+.dd-nav{display:none!important}
+.sheet>header .ears{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 12px}
+.sheet>header .mast{order:0;flex:1 0 100%}
+.sheet>header .ear{order:1;display:block;border:0;padding:0;margin-top:4px;max-width:none;font-size:10.5px;line-height:1.3;color:var(--mute)}
+.sheet>header .ear b{display:inline;font-size:12px;margin-right:4px}
+.sheet>header .ear.r{text-align:right}
+.sheet>header .mast h1{font-size:clamp(34px,10.5vw,56px);letter-spacing:-.05em}
+.sheet>header .mast .sub{display:none}
+.sheet>header .dateline{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 10px;margin-top:6px;padding:4px 0;font-size:11px}
+.sheet>header .dateline b{font-size:12px}
+.sheet>header .dateline>span:last-child{display:none}
+body{padding-top:0!important}
+.sheet{padding-top:8px!important}
+</style>`;
+
 export function transformEditionHtml(html, frameSrc) {
   let h = String(html || '');
   h = h.replace(/<link[^>]*href="https:\/\/fonts\.googleapis\.com[^>]*>/g, '');
   h = h.replace(/href="\/(?!\/)/g, `href="${SITE}/`);
   h = h.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/g, '');
   const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">`;
-  h = h.includes('</head>') ? h.replace('</head>', csp + '</head>') : csp + h;
+  h = h.includes('</head>') ? h.replace('</head>', csp + IN_APP_CSS + '</head>') : csp + IN_APP_CSS + h;
   const inj = `<script src="${frameSrc}"></script>`;
   h = h.includes('</body>') ? h.replace('</body>', inj + '</body>') : h + inj;
   return h;
