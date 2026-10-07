@@ -60,5 +60,5 @@ fs.copyFileSync(path.join(__dirname, 'og.png'), path.join(OUT, 'og.png'));
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
 fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/archive/', '/glossary/', '/about/', '/subscribe/', ...editions.map(e => `/${e.date}/`)].map(u => `<url><loc>${SITE}${u}</loc></url>`).join('')}</urlset>`);
 // www → 루트, 그리고 임시 workers.dev → dailydrop.kr 리다이렉트(Cloudflare _redirects)
-fs.writeFileSync(path.join(OUT, '_redirects'), `https://www.dailydrop.kr/* ${SITE}/:splat 301\nhttps://dailydrop-site.trustlj.workers.dev/* ${SITE}/:splat 301\n`);
+// 호스트 리다이렉트(www·workers.dev → dailydrop.kr)는 src/index.js 에서 처리(_redirects 는 상대 경로만 허용)
 console.log('built', fs.readdirSync(OUT).join(' '), '| terms', terms.length);
