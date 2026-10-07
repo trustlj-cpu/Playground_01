@@ -14,7 +14,7 @@ const bundled=await (await fetch('editions.json')).json();
 let region='KR';try{const v=(await readPreference('dailydrop.region.v1')).value;region=REGIONS[v]?v:defaultRegion(navigator.language);}catch{region=defaultRegion(navigator.language);}
 const bundledFor=r=>r==='KR'?bundled:[];
 let editions=mergeEditions(bundledFor(region),await getCachedRemoteIndex(region),region), latest=editions.at(-1)||bundled.at(-1); let selected=latest.date, tab='today', saved=[];
-const regionNotice={US:'미국판 1호는 10월 8일 저녁에 나옵니다. 그때까지는 한국판을 보여 드립니다.',JP:'日本版 第1号は10月8日夕方に出ます。それまでは韓国版を表示します。'};
+const regionNotice={US:'미국판 호 목록을 받아오지 못했습니다. 인터넷에 연결되면 자동으로 받아옵니다. 그때까지는 한국판을 보여 드립니다.',JP:'日本版の号一覧を取得できませんでした。接続後に自動で取得します。それまでは韓国版を表示します。'};
 try{saved=decodeSaved((await readPreference('dailydrop.saved.v1')).value,editions);}catch{notice.textContent='보관함을 불러오지 못했습니다. 이번 실행에서 읽기는 가능합니다.';}
 function updateSave(){paintTranslate();const e=editions.find(e=>e.date===selected);$('#save').hidden=!e||tab==='saved';$('#save').textContent=saved.includes(selected)?'보관 해제':'호 보관';$('#save').setAttribute('aria-pressed',String(saved.includes(selected)));$('#edition-label').textContent=e?`제${e.no}호 · ${e.date} · ${e.source==='remote'?'받아온 호':'오프라인 사본'}`:{archive:'지난 호 · 오프라인 사본',glossary:'용어사전 · 오프라인 사본',saved:'이 기기의 보관함'}[tab]??'';}
 // 번역 보기: 기기 언어(ko/en/ja)로 번역본이 있는 호에서만 켜진다. 설정은 기기에 저장.
