@@ -3,14 +3,18 @@ const STOP = new Set(`the a an and or of to in on for with by from at as is are 
 및 등 의 을 를 이 가 은 는 에 에서 로 으로 와 과 도 만 더 또 대한 위한 관련 통해 대해 속보 단독 종합 영상 포토 사진 기자 경찰 수사 조사 체포 소환 논란 파장 발언 대가 할인 파격 무슨 발매 싱글 신곡 컴백 앨범 음원 활동 목표가 목표주가 증권 증권사 보고서 컨센서스 실적 분기 특징주 장초반 강세 약세 상향 하향 상회 하회 추정치 기대감 하나증권 kb증권 nh투자증권 삼성증권 미래에셋 키움증권 신한투자증권 대신증권 한국투자증권 유안타증권 메리츠증권 매수 매도 주가 종목 시장 금리 영업익 매출 순이익 어닝 인상 인하 동결 전망 예상 가능성 우려 기대 영향 확대 축소 감소 증가 급등 급락 상승 하락 최고 최저 사상 역대 처음 첫 아파트 주택 부동산 집값 가격 경매 매매 전세 월세 거래 지역 서울시 수도권 두 세 네 하나 둘 셋 올해 내년 작년 지난해 이번주 다음주 오늘 내일 어제 현재 최근 뉴스 오늘 내일 어제 발표 확인 가능 전망 이번 지난 올해 내년 작년 최고 최대 최초 역대 처음 다시 계속 위해 때문 이후 이전 전체 관계자 입장 밝혔다 밝혀 나타났다 것으로 한다 했다 있다 없다 된다 됐다 한국 미국 정부 국내 세계 글로벌 시장 기업 업계 사람 사용 서비스 공개 출시 진행 예정 추진 검토 논란 우려 기대 효과 결과 이유 방법 상황 문제`.split(/\s+/));
 const SYN = { '한은': '한국은행', '연준': 'fed', 'fomc': 'fed', '코스피': 'kospi', '美': '미국', '中': '중국', '日': '일본', 'trump': '트럼프', 'bitcoin': '비트코인', 'btc': '비트코인', 'samsung': '삼성전자', '삼성': '삼성전자', 'nvidia': '엔비디아', '소비자물가': '물가', '물가상승률': '물가', '트럼프': '트럼프' };
 const PREFIX = /^(financialjuice|odd lots|breaking|exclusive|watch|live|update|opinion|analysis|explainer|factbox|속보|단독|종합|포토|영상|르포|사설|칼럼|기고|인터뷰)\s*[:：|·-]\s*/i;
-export const normTitle = t => String(t || '').replace(/\[.*?\]|\(.*?\)|【.*?】/g, ' ').trim().replace(PREFIX, '').replace(/\s+[-|–—]\s+[^-|–—]{2,30}$/, '').replace(/\s+/g, ' ').trim().toLowerCase();
+const ACR_STOP = new Set('us uk eu un the and for its new top says said day big how why who may can has had are was one two ceo'.split(' '));
+const normCase = t => String(t || '').replace(/\[.*?\]|\(.*?\)|【.*?】/g, ' ').trim().replace(PREFIX, '').replace(/\s+[-|–—]\s+(?:(?!\s[-|–—]\s)[^|–—]){2,40}$/, '').replace(/\s+/g, ' ').trim();
+export const normTitle = t => normCase(t).toLowerCase();
 export function tokenList(t) { return [...tokens(t)]; } // 삽입 순서 = 제목 내 등장 순서
 export function tokens(t) {
   const out = new Set();
-  const raw = normTitle(t).match(/[가-힣]{2,}|[A-Za-z][A-Za-z0-9'&.-]{3,}|\d{3,}/g) || [];
+  const raw = normTitle(t).match(/\d{1,4}-[A-Za-z]{2,}|[가-힣]{2,}|[A-Za-z][A-Za-z0-9'&.-]{3,}|\d{3,}/g) || [];
   const parts = []; for (const w of raw) { parts.push(w); if (w.includes('-')) for (const p of w.split('-')) if (p.length >= 4) parts.push(p); }
-  for (const w1 of parts) {
-    const w0 = w1.replace(/^[.'&-]+|[.'&-]+$/g, '').replace(/'s$/, ''); if (!w0 || (!/^[가-힣]+$/.test(w0) && w0.length < 4)) continue; // 한국어는 2자부터, 라틴은 4자부터
+  // 2~3자 약어(BoE·SNB·Fed·ECB·FX)는 원문 대소문자에서만 식별 — 소문자화 전 제목에서 뽑아 약한 토큰으로 추가
+  const acr = new Set((normCase(t).match(/(?<![A-Za-z0-9&.'가-힣-])[A-Z][A-Za-z]{1,2}(?![A-Za-z0-9&.'가-힣-])/g) || []).map(x => x.toLowerCase()).filter(x => !ACR_STOP.has(x)));
+  for (const w1 of [...parts, ...acr]) {
+    const w0 = w1.replace(/^[.'&-]+|[.'&-]+$/g, '').replace(/'s$/, ''); if (!w0 || (!/^[가-힣]+$/.test(w0) && w0.length < 4 && !acr.has(w0))) continue; // 한국어는 2자부터, 라틴은 4자부터(원문 약어 예외)
     const w = SYN[w0] || w0;
     if (STOP.has(w)) continue;
     if (/^\d+$/.test(w) && w.length === 4 && +w >= 1990 && +w <= 2100) continue; // 연도
@@ -24,15 +28,18 @@ const GEO = new Set('russia russian ukraine ukrainian china chinese taiwan japan
 // df: 이번 묶음 입력 전체에서 토큰이 등장한 제목 수. 희귀 토큰(≤3개 제목)이 두 제목 모두 앞 2토큰(주어 자리)에 있으면 하나만 겹쳐도 같은 사건 신호.
 const isRare = (x, df) => df && (df.get(x) || 0) <= 3 && !GEO.has(x) && (isKo(x) ? x.length >= 3 : (x.length >= 5 || /\d/.test(x)));
 export function shared(a, b, df, leadA, leadB) {
-  let n = 0, strong = 0, rare = 0;
-  for (const x of a) if (b.has(x)) { n++; if (!GEO.has(x) && (x.length >= 4 || /\d/.test(x) || (isKo(x) && x.length >= 3))) strong++; if (isRare(x, df) && leadA && leadB && leadA.has(x) && leadB.has(x)) rare++; }
+  let n = 0, strong = 0, rare = 0, exact = 0;
+  for (const x of a) if (b.has(x)) { n++; if (isKo(x) || x.length >= 4 || /\d/.test(x)) exact++; if (!GEO.has(x) && (x.length >= 4 || /\d/.test(x) || (isKo(x) && x.length >= 3))) strong++; if (isRare(x, df) && leadA && leadB && leadA.has(x) && leadB.has(x)) rare++; }
   for (const x of a) if (!b.has(x) && isKo(x) && x.length >= 3) for (const y of b) if (!a.has(y) && isKo(y) && y.length >= 3 && (x.includes(y) || y.includes(x))) { n++; break; }
-  return { n, strong, rare };
+  return { n, strong, rare, exact }; // exact: 부분일치·2~3자 약어 제외 정확 겹침
 }
 // 같은 분야: 강한 토큰(지명 제외, 4자+/숫자/한국어) 2개, 또는 3개 겹침 중 강한 것 1개 이상. 다른 분야: 3개 이상 전부 강한 토큰.
 const BROAD = new Set(['한국뉴스', '국제', '금융경제', '테크', '인플루언서', '트렌드', '사회', '문화', '정치', '경제']);
 // 같은 좁은 분야: 강한 2개 또는 3개 겹침+강한 1개. 넓은 분야(종합 뉴스): 강한 2개 또는 4개 겹침+강한 1개. 다른 분야: 3개 전부 강한 토큰.
-const same = (A, B, df) => { const s = shared(A.toks, B.toks, df, A.lead, B.lead); if (A.field !== B.field) return s.n >= 3 && s.strong >= 3; const broad = BROAD.has(A.field); return (s.n >= 2 && s.strong >= 2) || (s.n >= (broad ? 4 : 3) && s.strong >= 1) || (s.rare >= 1 && s.n >= 2); }; // 희귀 주어 + 다른 겹침 1개 이상(같은 인물의 다른 사건 분리)
+// 짧은 정형 제목(각 4토큰 이하: 데이터 표·지표 안내)은 한쪽에만 있는 토큰(한국어 부분일치 없음)이 하나라도 있으면 다른 항목 — BoE/SNB 금리확률, 30/60일 상관행렬, 코스닥×기관/거래소×외국인 표
+const onlyIn = (a, b) => { let k = 0; for (const x of a) { if (b.has(x)) continue; let part = false; if (isKo(x) && x.length >= 3) for (const y of b) if (isKo(y) && y.length >= 3 && (x.includes(y) || y.includes(x))) { part = true; break; } if (!part) k++; } return k; };
+const shortDistinct = (A, B) => A.toks.size <= 4 && B.toks.size <= 4 && (onlyIn(A.toks, B.toks) > 0 || onlyIn(B.toks, A.toks) > 0);
+const same = (A, B, df) => { if (shortDistinct(A, B)) return false; const s = shared(A.toks, B.toks, df, A.lead, B.lead); if (A.field !== B.field) return s.n >= 3 && s.strong >= 3; const broad = BROAD.has(A.field); return (s.n >= 2 && s.strong >= 2) || (s.n >= (broad ? 4 : 3) && s.strong >= 1) || (s.rare >= 1 && s.exact >= 2); }; // 희귀 주어 규칙은 부분일치(총괄부회장에⊃총괄) 불인정 // 희귀 주어 + 다른 겹침 1개 이상(같은 인물의 다른 사건 분리)
 export function clusterItems(items) {
   const rows = items.map(it => { const list = tokenList(it.title); return { it, toks: new Set(list), lead: new Set(list.slice(0, 2)), field: it.field }; });
   const df = new Map(); rows.forEach(r => r.toks.forEach(t => df.set(t, (df.get(t) || 0) + 1)));
