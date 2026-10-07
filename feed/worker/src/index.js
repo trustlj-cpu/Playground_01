@@ -95,17 +95,20 @@ export default {
     return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
-    if (ev.cron === '*/10 * * * *') {
-      // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 수집 워크플로를 호출. 없으면 조용히 기록만.
+    // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
+    // GitHub schedule은 기본 브랜치(main)의 워크플로만 실행하므로, paycheck-page에만 있는 issuedrop.yml(KST 06/12/18시 자료보고서)도 여기서 호출한다.
+    const DISPATCH = { '*/10 * * * *': { wf: 'codex-feed-schedule.yml', ref: 'main', tag: 'dispatch' }, '0 21,3,9 * * *': { wf: 'issuedrop.yml', ref: 'paycheck-page', tag: 'dispatch:issuedrop' } };
+    if (DISPATCH[ev.cron]) {
+      const { wf, ref, tag } = DISPATCH[ev.cron];
       ctx.waitUntil((async () => {
         const sched = new Date(ev.scheduledTime).toISOString(); let status = 'skipped(no token)', error = null;
         if (env.GH_DISPATCH_TOKEN) {
           try {
-            const r = await fetch('https://api.github.com/repos/trustlj-cpu/Playground_01/actions/workflows/codex-feed-schedule.yml/dispatches', { method: 'POST', headers: { 'authorization': 'Bearer ' + env.GH_DISPATCH_TOKEN, 'accept': 'application/vnd.github+json', 'user-agent': 'dailydrop-feed-worker', 'content-type': 'application/json' }, body: JSON.stringify({ ref: 'main' }) });
+            const r = await fetch('https://api.github.com/repos/trustlj-cpu/Playground_01/actions/workflows/' + wf + '/dispatches', { method: 'POST', headers: { 'authorization': 'Bearer ' + env.GH_DISPATCH_TOKEN, 'accept': 'application/vnd.github+json', 'user-agent': 'dailydrop-feed-worker', 'content-type': 'application/json' }, body: JSON.stringify({ ref }) });
             status = r.status === 204 ? 'dispatched' : 'error'; if (r.status !== 204) error = 'HTTP ' + r.status + ' ' + (await r.text()).slice(0, 300);
           } catch (e) { status = 'error'; error = String(e).slice(0, 500); }
         }
-        try { await env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(sched, new Date().toISOString(), 'dispatch', status, null, error).run(); } catch (e) {}
+        try { await env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(sched, new Date().toISOString(), tag, status, null, error).run(); } catch (e) {}
       })());
       return;
     }
