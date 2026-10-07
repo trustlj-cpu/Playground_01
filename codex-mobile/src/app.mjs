@@ -3,7 +3,7 @@ import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { decodeSaved,toggleSaved,externalURL } from './state.mjs';
-import { loadRemoteIndex, getCachedRemoteIndex, mergeEditions, ensureEditionSrc, getPushState, enablePush, disablePush, bindPushTap, bindDeepLinks } from './remote.mjs';
+import { loadRemoteIndex, getCachedRemoteIndex, mergeEditions, ensureEditionSrc, getPushState, pushConfigured, enablePush, disablePush, bindPushTap, bindDeepLinks } from './remote.mjs';
 const APP_VERSION='0.2.0';
 const $=s=>document.querySelector(s), frame=$('#reader'), notice=$('#notice');
 const bundled=await (await fetch('editions.json')).json();
@@ -27,8 +27,8 @@ async function refreshEditions(){const r=await loadRemoteIndex();if(!r.editions.
 refreshEditions().catch(()=>{});setInterval(()=>refreshEditions().catch(()=>{}),30*60*1000);
 // 알림 켜기/끄기
 const pushBtn=$('#push');
-async function paintPush(){const st=await getPushState();pushBtn.hidden=!Capacitor.isNativePlatform();pushBtn.textContent=st==='on'?'알림 끄기':'알림 켜기';pushBtn.setAttribute('aria-pressed',String(st==='on'));}
-pushBtn.addEventListener('click',async()=>{pushBtn.disabled=true;try{if(await getPushState()==='on'){const r=await disablePush();notice.textContent=r.ok?'저녁판 알림을 껐습니다.':'알림 서버에 연결하지 못해 아직 켜져 있습니다. 잠시 후 다시 눌러 주세요.';}else{const r=await enablePush({appVersion:APP_VERSION,onOpenEdition:d=>openByDate(d)});notice.textContent=r.ok?'저녁판이 나오면 알려 드립니다.':{denied:'알림 권한이 꺼져 있습니다. 설정에서 허용해 주세요.',unsupported:'이 환경에서는 알림을 지원하지 않습니다.','server-error':'알림 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'}[r.state]||'알림을 켜지 못했습니다.';}}catch{notice.textContent='알림 설정을 바꾸지 못했습니다.';}pushBtn.disabled=false;paintPush();});
+async function paintPush(){pushBtn.hidden=!Capacitor.isNativePlatform();if(!pushConfigured()){pushBtn.textContent='알림 준비 중';pushBtn.disabled=true;pushBtn.setAttribute('aria-pressed','false');pushBtn.title='이 빌드에는 알림 설정이 포함되지 않았습니다.';return;}const st=await getPushState();pushBtn.textContent=st==='on'?'알림 끄기':'알림 켜기';pushBtn.setAttribute('aria-pressed',String(st==='on'));}
+pushBtn.addEventListener('click',async()=>{if(!pushConfigured())return;pushBtn.disabled=true;try{if(await getPushState()==='on'){const r=await disablePush();notice.textContent=r.ok?'저녁판 알림을 껐습니다.':'알림 서버에 연결하지 못해 아직 켜져 있습니다. 잠시 후 다시 눌러 주세요.';}else{const r=await enablePush({appVersion:APP_VERSION,onOpenEdition:d=>openByDate(d)});notice.textContent=r.ok?'저녁판이 나오면 알려 드립니다.':{denied:'알림 권한이 꺼져 있습니다. 설정에서 허용해 주세요.',unsupported:'이 환경에서는 알림을 지원하지 않습니다.','server-error':'알림 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.','not-configured':'이 빌드에는 알림 설정이 포함되지 않았습니다.'}[r.state]||'알림을 켜지 못했습니다.';}}catch{notice.textContent='알림 설정을 바꾸지 못했습니다.';}pushBtn.disabled=false;paintPush();});
 paintPush();
 function openByDate(d){if(d==='latest')d=latest.date;if(editions.some(e=>e.date===d))show('today',d);else refreshEditions().then(()=>{if(editions.some(e=>e.date===d))show('today',d);}).catch(()=>{});}
 bindPushTap(openByDate);

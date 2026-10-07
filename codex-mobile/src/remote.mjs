@@ -56,9 +56,17 @@ export async function removeEditionFile(date) {
 async function fetchText(url) { const r = await fetch(url, { cache: 'no-store' }); if (!r.ok) throw new Error('download ' + r.status); return r.text(); }
 
 // 푸시: 결과를 돌려준다({ok, state, error}). 네트워크 실패를 성공으로 보고하지 않는다.
+// 빌드 플래그(esbuild define). 설정 없는 빌드에서는 register()를 절대 호출하지 않는다 — Firebase 미설정 시 네이티브 측 예외가 JS catch로 안 막힘(코덱스 지적).
+export function pushConfigured() {
+  const p = Capacitor.getPlatform();
+  if (p === 'android') return typeof __PUSH_ANDROID__ !== 'undefined' && __PUSH_ANDROID__ === true;
+  if (p === 'ios') return typeof __PUSH_IOS__ !== 'undefined' && __PUSH_IOS__ === true;
+  return false;
+}
 export async function getPushState() { try { return (await Preferences.get({ key: K_PUSH })).value === 'on' ? 'on' : 'off'; } catch { return 'off'; } }
 export async function enablePush({ appVersion = '0.1.0', onOpenEdition } = {}) {
   if (!native() || !Capacitor.isPluginAvailable('PushNotifications')) return { ok: false, state: 'unsupported' };
+  if (!pushConfigured()) return { ok: false, state: 'not-configured' };
   let perm = await PushNotifications.checkPermissions();
   if (perm.receive === 'prompt' || perm.receive === 'prompt-with-rationale') perm = await PushNotifications.requestPermissions();
   if (perm.receive !== 'granted') return { ok: false, state: 'denied' };
@@ -87,7 +95,7 @@ export async function disablePush() {
 }
 // 앱이 다시 열릴 때 알림 탭 처리를 다시 연결(권한·토큰은 이미 있음)
 export function bindPushTap(onOpenEdition) {
-  if (!native() || !Capacitor.isPluginAvailable('PushNotifications')) return;
+  if (!native() || !Capacitor.isPluginAvailable('PushNotifications') || !pushConfigured()) return;
   PushNotifications.addListener('pushNotificationActionPerformed', a => { const d = (a && a.notification && a.notification.data) || {}; if (d.edition) onOpenEdition(String(d.edition)); });
 }
 
