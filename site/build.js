@@ -42,7 +42,7 @@ const TAPE = (date, region = 'KR') => {
 
 // 빈칸 메우기 풀(pool.json, 호별 여분 단신). 페이지에 숨겨 두고 balance.js가 짧은 열 바닥에 끼워 넣는다.
 const POOL = fs.existsSync(path.join(__dirname, 'pool.json')) ? JSON.parse(fs.readFileSync(path.join(__dirname, 'pool.json'), 'utf8')) : {};
-const POOLHTML = (date) => { const items = POOL[date] || []; if (!items.length) return ''; return `<ul class="pool" hidden>${items.map(x => `<li><b>${esc(x.t)}</b>${x.s ? `<span>${esc(x.s)}</span>` : ''}</li>`).join('')}</ul>`; };
+const POOLHTML = (date, region = 'KR') => { const items = POOL[`${region}:${date}`] || (region === 'KR' ? POOL[date] : []) || []; if (!items.length) return ''; return `<ul class="pool" hidden>${items.map(x => `<li><b>${esc(x.t)}</b>${x.s ? `<span>${esc(x.s)}</span>` : ''}</li>`).join('')}</ul>`; };
 // 조판 균형: 데스크톱(≥860px)에서 같은 줄(.grid/.strip)의 열 높이를 재서 짧은 열 바닥에 풀 단신을 끼워 넣고, 그래도 남는 차이는 열을 늘려 바닥을 맞춘다. 창 크기가 바뀌면 다시.
 const BALANCE = `<script>(function(){var mq=window.matchMedia('(min-width:860px)');var pool=document.querySelector('.pool');var items=pool?Array.prototype.slice.call(pool.children):[];
 function reset(){document.querySelectorAll('.filler').forEach(function(f){f.remove();});document.querySelectorAll('.col').forEach(function(c){c.style.minHeight='';});}
@@ -63,7 +63,7 @@ for (const e of editions) {
   let html = fs.readFileSync(e.file, 'utf8');
   const m = html.match(/const G = (\{[\s\S]*?\n  \});\n/); if (m) { const G = new Function('return ' + m[1])(); for (const [k, v] of Object.entries(G)) if (!glossary[k]) glossary[k] = { ...v, first: e.date, no: e.no }; }
   const R = REGIONS[e.region || 'KR']; const title = R.title(e.no, e.date);
-  const page = HEAD(title, R.desc, `/${R.prefix}${e.date}/`, R.lang) + NAV('/' + R.prefix, e.region || 'KR') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(html, R.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>${R.place}, ${R.date(e.date)}</b><span>${R.edition(e.no)}</span></div>${TAPE(e.date, e.region || 'KR')}</header>`) + POOLHTML(e.date) + NYTCSS + BALANCE + '</body></html>';
+  const page = HEAD(title, R.desc, `/${R.prefix}${e.date}/`, R.lang) + NAV('/' + R.prefix, e.region || 'KR') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(html, R.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>${R.place}, ${R.date(e.date)}</b><span>${R.edition(e.no)}</span></div>${TAPE(e.date, e.region || 'KR')}</header>`) + POOLHTML(e.date, e.region || 'KR') + NYTCSS + BALANCE + '</body></html>';
   const dir = path.join(OUT, R.prefix, e.date); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, 'index.html'), page);
 }
 const byRegion = r => editions.filter(e => (e.region || 'KR') === r);
