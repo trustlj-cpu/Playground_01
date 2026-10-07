@@ -13,7 +13,7 @@ GitHub Actions (*/10)  →  feed/collect_fast.py  →  POST /ingest  →  Cloudf
 2. GitHub 저장소 → Settings → Secrets and variables → Actions:
    - `CLOUDFLARE_API_TOKEN` = 1의 토큰
    - `CLOUDFLARE_ACCOUNT_ID` = 대시보드 Workers & Pages 화면 오른쪽 "Account ID"
-3. Actions 탭 → `feed-worker-deploy` → Run workflow. 끝나면 `https://dailydrop-feed.<계정서브도메인>.workers.dev` 가 열립니다.
+3. Actions 탭 → `feed-worker-deploy` → Run workflow. 끝나면 `https://feed.dailydrop.kr` (= dailydrop-feed.trustlj.workers.dev) 가 열립니다.
    이후 10분마다 `feed-collect-10min` 이 자동으로 채웁니다.
 
 비밀키(INGEST_KEY)는 배포 워크플로가 토큰에서 파생해 Worker 비밀로 넣고, 수집 워크플로가 같은 식으로 파생합니다. 따로 등록할 것 없음.
