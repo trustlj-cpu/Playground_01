@@ -187,7 +187,7 @@ def collect_source(src: dict) -> tuple[dict, list[dict], str]:
         return src, [], f"error: {type(e).__name__}: {str(e)[:80]}"
 
 
-TRACK = re.compile(r"^(utm_|fbclid$|gclid$|igshid$|ref$|ref_src$|source$|cmpid$|sr_share$)", re.I)
+TRACK = re.compile(r"^(utm_|fbclid$|gclid$|igshid$|ref$|ref_src$|source$|cmpid$|sr_share$|xy$)", re.I)  # xy=: FinancialJuice 배포 채널 표시(1/rss) — 같은 기사가 두 번 저장되던 원인
 
 
 def canon_url(link: str) -> str:

@@ -66,7 +66,8 @@ export default {
         const res = await env.DB.batch(items.slice(i, i + 100).map(it => stmt.bind(it.id, it.title, it.link, it.source, it.field || '기타', it.tier || 'C', it.published_at || null, now, p.batch, it.summary || null)));
         res.forEach(r => n_new += r.meta?.changes || 0);
       }
-      await env.DB.prepare('INSERT OR REPLACE INTO batches (batch,started_at,n_fetched,n_new,n_sources,errors) VALUES (?1,?2,?3,?4,?5,?6)').bind(p.batch, p.started_at || now, p.n_fetched || items.length, n_new, p.n_sources || 0, JSON.stringify(p.errors || []).slice(0, 4000)).run();
+      // 같은 10분 배치에 수집이 두 번 들어와도(Worker dispatch + GitHub schedule 중복) 기록을 덮어쓰지 않고 n_new를 누적, n_fetched는 최대값, errors는 마지막 실행 것
+      await env.DB.prepare('INSERT INTO batches (batch,started_at,n_fetched,n_new,n_sources,errors) VALUES (?1,?2,?3,?4,?5,?6) ON CONFLICT(batch) DO UPDATE SET n_new = batches.n_new + excluded.n_new, n_fetched = max(batches.n_fetched, excluded.n_fetched), n_sources = max(batches.n_sources, excluded.n_sources), errors = excluded.errors').bind(p.batch, p.started_at || now, p.n_fetched || items.length, n_new, p.n_sources || 0, JSON.stringify(p.errors || []).slice(0, 4000)).run();
       return json({ ok: true, batch: p.batch, received: items.length, new: n_new });
     }
     if (url.pathname === '/items.json') {
