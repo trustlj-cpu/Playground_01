@@ -21,7 +21,7 @@ for (const e of editions) {
   let html = fs.readFileSync(e.file, 'utf8');
   const m = html.match(/const G = (\{[\s\S]*?\n  \});\n/); if (m) { const G = new Function('return ' + m[1])(); for (const [k, v] of Object.entries(G)) if (!glossary[k]) glossary[k] = { ...v, first: e.date, no: e.no }; }
   const title = `데일리드롭 제${e.no}호 · ${fmt(e.date)} 저녁판`;
-  const page = HEAD(title, '국내외 전 분야 이슈를 매일 한 장에. 기사를 누르면 펼쳐지고 점선 단어를 누르면 뜻이 뜹니다.', `/${e.date}/`) + NAV('/') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} 데일리드롭</span><b>서울, ${fmt(e.date)}</b><span>제${e.no}호 · 저녁판</span></div></header>`) + NYTCSS + '</body></html>';
+  const page = HEAD(title, '국내외 전 분야 이슈를 매일 한 장에. 기사를 누르면 펼쳐지고 점선 단어를 누르면 뜻이 뜹니다.', `/${e.date}/`) + NAV('/') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>서울, ${fmt(e.date)}</b><span>제${e.no}호 · 저녁판</span></div></header>`) + NYTCSS + '</body></html>';
   const dir = path.join(OUT, e.date); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, 'index.html'), page);
 }
 const latest = editions[editions.length - 1];
@@ -54,7 +54,7 @@ fs.writeFileSync(path.join(OUT, 'subscribe', 'index.html'), HEAD('데일리드�
 
 // ── 공통 자산
 fs.writeFileSync(path.join(OUT, 'favicon.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#f3eee2"/><text x="50%" y="56%" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-weight="900" font-size="40" fill="#1b1a17">드</text><circle cx="52" cy="50" r="5" fill="#8d2f22"/></svg>`);
-fs.writeFileSync(path.join(OUT, 'manifest.webmanifest'), JSON.stringify({ name: '데일리드롭', short_name: '데일리드롭', start_url: '/', display: 'standalone', background_color: '#f3eee2', theme_color: '#f3eee2', icons: [{ src: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }] }));
+fs.writeFileSync(path.join(OUT, 'manifest.webmanifest'), JSON.stringify({ name: 'DailyDrop', short_name: 'DailyDrop', start_url: '/', display: 'standalone', background_color: '#f3eee2', theme_color: '#f3eee2', icons: [{ src: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any' }] }));
 fs.writeFileSync(path.join(OUT, 'icon-512.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#f3eee2"/><text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-weight="900" font-size="300" fill="#1b1a17">드</text><circle cx="410" cy="400" r="36" fill="#8d2f22"/></svg>`);
 fs.writeFileSync(path.join(OUT, '404.html'), HEAD('데일리드롭 — 없는 페이지', '') + FONTS + BASECSS + NAV('') + `<main><h1>이 면은 없습니다</h1><p><a class="btn" href="/">오늘 1면으로 →</a></p></main></body></html>`);
 fs.copyFileSync(path.join(__dirname, 'og.png'), path.join(OUT, 'og.png'));
