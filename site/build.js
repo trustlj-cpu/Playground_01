@@ -33,7 +33,7 @@ const TAPE = (date, region = 'KR') => {
     if (!q) return `<span class="q na"><b>${label}</b><em>—</em></span>`;
     const d = kind === 'fx' ? 1 : kind === 'fxjpy' ? 2 : kind === 'pct' ? 2 : 2; const up = q.chg > 0, down = q.chg < 0; const unit = kind === 'usd' ? '$' : '';
     const tri = down ? '▼' : up ? '▲' : '－';
-    const chgTxt = q.chg == null ? '' : kind === 'fx' ? Math.abs(q.chg).toFixed(1) + '원' : kind === 'fxjpy' ? Math.abs(q.chg).toFixed(2) + '円' : kind === 'pct' ? Math.abs(q.chg).toFixed(2) + 'bp' : Math.abs(q.chg).toFixed(2) + '%';
+    const chgTxt = q.chg == null ? '' : kind === 'fx' ? Math.abs(q.chg).toFixed(1) + '원' : kind === 'fxjpy' ? Math.abs(q.chg).toFixed(2) + '円' : kind === 'pct' ? Math.round(Math.abs(q.chg) * 100) + 'bp' : Math.abs(q.chg).toFixed(2) + '%';
     const val = kind === 'pct' ? fmtNum(q.v, 2) + '%' : unit + fmtNum(q.v, d);
     return `<span class="q${down ? ' dn' : up ? ' upp' : ''}"><b>${label}</b><em>${val}</em><i><u>${tri}</u><span>${chgTxt}</span></i><small>${q.asof || ''}</small></span>`;
   };
