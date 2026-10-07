@@ -1,3 +1,4 @@
+import { readPreference } from './preferences.mjs';
 import { Preferences } from '@capacitor/preferences';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
@@ -9,7 +10,7 @@ const $=s=>document.querySelector(s), frame=$('#reader'), notice=$('#notice');
 const bundled=await (await fetch('editions.json')).json();
 // 캐시된 원격 호까지 합친 뒤 보관 표시를 복원(원격 호 보관이 사라지지 않게)
 let editions=mergeEditions(bundled,await getCachedRemoteIndex()), latest=editions.at(-1); let selected=latest.date, tab='today', saved=[];
-try{saved=decodeSaved((await Preferences.get({key:'dailydrop.saved.v1'})).value,editions);}catch{notice.textContent='보관함을 불러오지 못했습니다. 이번 실행에서 읽기는 가능합니다.';}
+try{saved=decodeSaved((await readPreference('dailydrop.saved.v1')).value,editions);}catch{notice.textContent='보관함을 불러오지 못했습니다. 이번 실행에서 읽기는 가능합니다.';}
 function updateSave(){const e=editions.find(e=>e.date===selected);$('#save').hidden=!e||tab==='saved';$('#save').textContent=saved.includes(selected)?'보관 해제':'호 보관';$('#save').setAttribute('aria-pressed',String(saved.includes(selected)));$('#edition-label').textContent=e?`제${e.no}호 · ${e.date} · ${e.source==='remote'?'받아온 호':'오프라인 사본'}`:{archive:'지난 호 · 오프라인 사본',glossary:'용어사전 · 오프라인 사본',saved:'이 기기의 보관함'}[tab]??'';}
 let showSeq=0;
 function show(next,date){const seq=++showSeq;tab=next;selected=date??(next==='today'?latest.date:null);document.querySelectorAll('[data-tab]').forEach(b=>b.dataset.tab===tab?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));frame.hidden=next==='saved';$('#saved').hidden=next!=='saved';if(next==='saved'){renderSaved();}else{const e=editions.find(x=>x.date===selected);if(e&&e.source==='remote'){frame.removeAttribute('src');notice.textContent='호를 불러오는 중…';ensureEditionSrc(e).then(src=>{if(seq!==showSeq)return;frame.src=src;notice.textContent='';}).catch(()=>{if(seq!==showSeq)return;notice.textContent='이 호를 아직 받지 못했습니다. 인터넷 연결 후 다시 눌러 주세요.';});}else{frame.src=selected?`content/${selected}/index.html`:`content/${next}/index.html`;}}updateSave();}

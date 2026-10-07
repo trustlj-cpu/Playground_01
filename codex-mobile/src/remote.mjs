@@ -1,3 +1,5 @@
+import { createSingleFlight } from './single-flight.mjs';
+import { readPreference } from './preferences.mjs';
 // 원격 갱신·오프라인 저장·푸시·딥링크 (Capacitor 8, 정적 import — esbuild 번들에 플러그인 포함)
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
@@ -11,12 +13,12 @@ const native = () => Capacitor.isNativePlatform();
 
 // 캐시된 원격 목록(네트워크 없음) — 시작 시 보관 표시 복원에 쓴다
 export async function getCachedRemoteIndex() {
-  try { const v = (await Preferences.get({ key: K_INDEX })).value; return v ? (JSON.parse(v).editions || []) : []; } catch { return []; }
+  try { const v = (await readPreference(K_INDEX)).value; return v ? (JSON.parse(v).editions || []) : []; } catch { return []; }
 }
 // 원격 목록: 성공하면 캐시 갱신, 실패하면 캐시(없으면 [])를 돌려준다 — 오프라인 초기화를 막지 않음
 export async function loadRemoteIndex({ timeoutMs = 8000 } = {}) {
   let cached = [];
-  try { const v = (await Preferences.get({ key: K_INDEX })).value; if (v) cached = JSON.parse(v).editions || []; } catch {}
+  try { const v = (await readPreference(K_INDEX)).value; if (v) cached = JSON.parse(v).editions || []; } catch {}
   try {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
     const r = await fetch(`${SITE}/editions.json`, { cache: 'no-store', signal: ctl.signal }); clearTimeout(t);
@@ -30,7 +32,11 @@ export async function loadRemoteIndex({ timeoutMs = 8000 } = {}) {
 export { mergeEditions, parseEditionUrl };
 
 // 원격 호를 기기에 저장하고 iframe에서 열 수 있는 주소를 돌려준다. 저장본이 있으면 네트워크를 쓰지 않는다.
-export async function ensureEditionSrc(edition, { frameSrc } = {}) {
+const editionDownloads = createSingleFlight();
+export function ensureEditionSrc(edition, options = {}) {
+  return editionDownloads(edition.date, () => loadEditionSrc(edition, options));
+}
+async function loadEditionSrc(edition, { frameSrc } = {}) {
   const path = editionFilePath(edition.date);
   const fs = frameSrc || new URL('frame.js', location.href).href;
   if (native()) {
@@ -63,7 +69,7 @@ export function pushConfigured() {
   if (p === 'ios') return typeof __PUSH_IOS__ !== 'undefined' && __PUSH_IOS__ === true;
   return false;
 }
-export async function getPushState() { try { return (await Preferences.get({ key: K_PUSH })).value === 'on' ? 'on' : 'off'; } catch { return 'off'; } }
+export async function getPushState() { try { return (await readPreference(K_PUSH)).value === 'on' ? 'on' : 'off'; } catch { return 'off'; } }
 export async function enablePush({ appVersion = '0.1.0', onOpenEdition } = {}) {
   if (!native() || !Capacitor.isPluginAvailable('PushNotifications')) return { ok: false, state: 'unsupported' };
   if (!pushConfigured()) return { ok: false, state: 'not-configured' };
@@ -85,7 +91,7 @@ export async function enablePush({ appVersion = '0.1.0', onOpenEdition } = {}) {
 }
 // 끄기: 서버 해제가 성공했을 때만 토큰·상태를 지운다. 실패하면 상태 'on' 유지 → 사용자가 다시 시도할 수 있다.
 export async function disablePush() {
-  let token = null; try { token = (await Preferences.get({ key: K_TOKEN })).value; } catch {}
+  let token = null; try { token = (await readPreference(K_TOKEN)).value; } catch {}
   if (token) {
     try { const r = await fetch(`${FEED}/push/unregister`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) }); if (!r.ok) return { ok: false, state: 'on', error: 'unregister ' + r.status }; }
     catch (e) { return { ok: false, state: 'on', error: String(e && e.message || e) }; }
