@@ -5,7 +5,9 @@ const SYN = { '한은': '한국은행', '연준': 'fed', 'fomc': 'fed', '코스�
 const PREFIX = /^(financialjuice|odd lots|breaking|exclusive|watch|live|update|opinion|analysis|explainer|factbox|속보|단독|종합|포토|영상|르포|사설|칼럼|기고|인터뷰)\s*[:：|·-]\s*/i;
 const ACR_STOP = new Set('us uk eu un the and for its new top says said day big how why who may can has had are was one two ceo pm mr ms dr we he it in on at to of by'.split(' '));
 const normCase = t => String(t || '').replace(/\[.*?\]|\(.*?\)|【.*?】/g, ' ').trim().replace(PREFIX, '').replace(/\s+[-|–—]\s+(?:(?!\s[-|–—]\s)[^|–—]){2,40}$/, '').replace(/\s+/g, ' ').trim();
-export const normTitle = t => normCase(t).toLowerCase();
+// 매체·섹션 꼬리표 제거: '… | 政治・経済 | 東洋経済オンライン', '… - 연합뉴스TV' 같은 꼬리는 같은 매체 기사끼리 묶이게 만든다
+export const stripTail = t => String(t).replace(/(\s*[|｜]\s*[^|｜]{1,32})+\s*$/u, '').replace(/^(.{12,}?)\s+[-–]\s+(\S+(?:\s\S+){0,2})$/u, (m, head, tail) => tail.length <= 28 ? head : m);
+export const normTitle = t => normCase(stripTail(t)).toLowerCase();
 export function tokenList(t) { return [...tokens(t)]; } // 삽입 순서 = 제목 내 등장 순서
 export function tokens(t) {
   const out = new Set();
