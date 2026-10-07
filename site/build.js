@@ -20,11 +20,11 @@ const TAPE = (date) => {
   const m = MARKETS[date]; if (!m) return '';
   const cell = (label, q, kind) => {
     if (!q) return `<span class="q na"><b>${label}</b><em>—</em></span>`;
-    const d = kind === 'fx' ? 1 : 2; const up = q.chg > 0, down = q.chg < 0;
+    const d = kind === 'fx' ? 1 : 2; const up = q.chg > 0, down = q.chg < 0; const unit = kind === 'usd' ? '$' : '';
     const chg = q.chg == null ? '' : kind === 'fx' ? `${down ? '▼' : up ? '▲' : ''}${Math.abs(q.chg).toFixed(1)}원` : `${down ? '▼' : up ? '▲' : ''}${Math.abs(q.chg).toFixed(2)}%`;
-    return `<span class="q${down ? ' dn' : up ? ' upp' : ''}"><b>${label}</b><em>${fmtNum(q.v, d)}</em><i>${chg}</i><small>${q.asof || ''}</small></span>`;
+    return `<span class="q${down ? ' dn' : up ? ' upp' : ''}"><b>${label}</b><em>${unit}${fmtNum(q.v, d)}</em><i>${chg}</i><small>${q.asof || ''}</small></span>`;
   };
-  return `<div class="tape" aria-label="시세">${cell('S&amp;P 500', m.sp500)}${cell('나스닥', m.nasdaq)}${cell('코스피', m.kospi)}${cell('코스닥', m.kosdaq)}${cell('원/달러', m.usdkrw, 'fx')}</div>`;
+  return `<div class="tape" aria-label="시세">${cell('S&amp;P 500', m.sp500)}${cell('나스닥', m.nasdaq)}${cell('코스피', m.kospi)}${cell('코스닥', m.kosdaq)}${cell('원/달러', m.usdkrw, 'fx')}${cell('WTI', m.wti, 'usd')}${cell('금', m.gold, 'usd')}</div>`;
 };
 const NYTCSS = '<style id="nyt">' + fs.readFileSync(path.join(__dirname, 'nyt.css'), 'utf8') + '</style>';
 const FONTS = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">`;
