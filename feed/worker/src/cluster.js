@@ -23,7 +23,7 @@ export function tokens(t) {
   return out;
 }
 const isKo = w => /^[가-힣]+$/.test(w);
-const GEO = new Set('russia russian ukraine ukrainian china chinese taiwan japan japanese korea korean north south iran iranian israel israeli gaza palestinian europe european france french germany german britain british england spain spanish italy india indian brazil saudi arabia yemen houthi houthis syria iraq turkey turkish america american asian asia african africa sudan sudanese hong kong hongkong taipei shanghai singapore washington beijing moscow kyiv tokyo seoul london paris berlin 미국 중국 일본 북한 한국 러시아 우크라이나 이란 이스라엘 유럽 대만 인도 브라질 사우디 예멘 후티 중동 서울 워싱턴 베이징 모스크바 도쿄'.split(' '));
+const GEO = new Set('russia russian ukraine ukrainian china chinese taiwan japan japanese korea korean north south iran iranian israel israeli gaza palestinian europe european france french germany german britain british england spain spanish italy india indian brazil saudi arabia yemen houthi houthis syria iraq turkey turkish america american asian asia african africa sudan sudanese occupied west hong kong hongkong taipei shanghai singapore washington beijing moscow kyiv tokyo seoul london paris berlin 미국 중국 일본 북한 한국 러시아 우크라이나 이란 이스라엘 유럽 대만 인도 브라질 사우디 예멘 후티 중동 서울 워싱턴 베이징 모스크바 도쿄'.split(' '));
 // 두 토큰 집합의 '의미 있는' 겹침 수. 한국어는 3자 이상 부분 일치 허용(소비자물가⊃물가 X: 2자 금지), 라틴은 정확 일치만.
 // df: 이번 묶음 입력 전체에서 토큰이 등장한 제목 수. 희귀 토큰(≤3개 제목)이 두 제목 모두 앞 2토큰(주어 자리)에 있으면 하나만 겹쳐도 같은 사건 신호.
 // 한 시간에 8개 이상 제목에 나오는 '뜨거운' 토큰(삼성전자·반도체·누리호·AI)끼리만 겹치면 같은 사건 근거로 부족 — 뜨겁지 않은 강한 토큰이 최소 1개는 있어야 함
@@ -41,7 +41,10 @@ const BROAD = new Set(['한국뉴스', '국제', '금융경제', '테크', '인�
 // 짧은 정형 제목(각 4토큰 이하: 데이터 표·지표 안내)은 한쪽에만 있는 토큰(한국어 부분일치 없음)이 하나라도 있으면 다른 항목 — BoE/SNB 금리확률, 30/60일 상관행렬, 코스닥×기관/거래소×외국인 표
 const onlyIn = (a, b) => { let k = 0; for (const x of a) { if (b.has(x)) continue; let part = false; if (isKo(x) && x.length >= 3) for (const y of b) if (isKo(y) && y.length >= 3 && (x.includes(y) || y.includes(x))) { part = true; break; } if (!part) k++; } return k; };
 const shortDistinct = (A, B) => A.toks.size <= 4 && B.toks.size <= 4 && (onlyIn(A.toks, B.toks) > 0 || onlyIn(B.toks, A.toks) > 0);
-const same = (A, B, df) => { if (shortDistinct(A, B)) return false; const s = shared(A.toks, B.toks, df, A.lead, B.lead); if (A.field !== B.field) return s.n >= 3 && s.strong >= 3; const broad = BROAD.has(A.field); return (s.n >= 2 && s.strong >= 2 && s.strongCool >= 1) || (s.nonGeo >= (broad ? 4 : 3) && s.strong >= 1) || (s.rare >= 1 && s.exact >= 2); }; // 희귀 주어 규칙은 부분일치(총괄부회장에⊃총괄) 불인정 // 희귀 주어 + 다른 겹침 1개 이상(같은 인물의 다른 사건 분리)
+// 같은 속보 티커(FinancialJuice) 두 줄에 서로 다른 수치만 있으면 각각 다른 데이터 포인트(ECB 회사채 213.5bn vs 공공채 1,654.8bn, 독일 산업생산 MoM vs YoY) — 정확 겹침 3개 미만이면 묶지 않음. 수치 없는 발언 인용(같은 연설의 여러 줄)은 그대로 묶인다
+const figs = t => new Set((String(t || '').match(/\d[\d,.]*\d|\d/g) || []).map(x => x.replace(/[,.]+$/, '')));
+const tickerDiff = (A, B) => { if (!A.it || !B.it || A.it.source !== B.it.source || !/financialjuice/i.test(String(A.it.source || '') + String(A.it.link || ''))) return false; const fa = figs(A.it.title), fb = figs(B.it.title); return fa.size > 0 && fb.size > 0 && ![...fa].some(x => fb.has(x)); };
+const same = (A, B, df) => { if (shortDistinct(A, B)) return false; const s = shared(A.toks, B.toks, df, A.lead, B.lead); if (A.field !== B.field) return s.n >= 3 && s.strong >= 3; const broad = BROAD.has(A.field); if (tickerDiff(A, B) && s.exact < 3) return false; return (s.n >= 2 && s.strong >= 2 && s.strongCool >= 1) || (s.nonGeo >= (broad ? 4 : 3) && s.strong >= 1) || (s.rare >= 1 && s.exact >= 2); }; // 희귀 주어 규칙은 부분일치(총괄부회장에⊃총괄) 불인정 // 희귀 주어 + 다른 겹침 1개 이상(같은 인물의 다른 사건 분리)
 export function clusterItems(items) {
   const rows = items.map(it => { const list = tokenList(it.title); return { it, toks: new Set(list), lead: new Set(list.slice(0, 2)), field: it.field }; });
   const df = new Map(); rows.forEach(r => r.toks.forEach(t => df.set(t, (df.get(t) || 0) + 1)));
