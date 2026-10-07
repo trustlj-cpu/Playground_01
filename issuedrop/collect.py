@@ -179,7 +179,7 @@ def collect_source(src: dict) -> tuple[dict, list[dict], str]:
             d = _parse_date(it["published"])
             if d and (NOW - d).total_seconds() > WINDOW_HOURS * 3600:
                 continue
-            out.append({**it, "source": src["id"], "source_name": src["name"], "cat": src["cat"], "tier": src["tier"],
+            out.append({**it, "source": src["id"], "source_name": src["name"], "cat": src["cat"], "tier": src["tier"], "region": src.get("region") or "GLB", "lang": src.get("lang"),
                         "region": src.get("region", ""), "published": d.isoformat() if d else "",
                         "summary": re.sub(r"<[^>]+>", " ", it.get("summary", ""))[:300]})
         return src, out, "ok"

@@ -35,6 +35,9 @@ def item_id(link: str) -> str:
     return hashlib.sha1(base.canon_url(link).encode()).hexdigest()[:20]
 
 
+# 지역 → 기본 언어(소스 yaml에 lang이 없을 때). KR 한국어, JP 일본어, 그 외 영어
+LANG_BY_REGION = {"KR": "ko", "JP": "ja", "CN": "zh"}
+
 def main() -> int:
     now = dt.datetime.now(dt.timezone.utc)
     batch = now.strftime("%Y-%m-%dT%H:") + f"{now.minute // 10 * 10:02d}"
@@ -58,6 +61,7 @@ def main() -> int:
         "id": item_id(it["link"]), "title": it["title"][:300], "link": it["link"][:1000],
         "source": it["source_name"], "field": it["cat"], "tier": it["tier"],
         "published_at": it["published"] or None, "summary": (it.get("summary") or "")[:300] or None,
+        "region": it.get("region") or "GLB", "lang": it.get("lang") or LANG_BY_REGION.get(it.get("region") or "GLB", "en"),
     } for it in items]
     payload = {"batch": batch, "started_at": now.isoformat(), "n_fetched": n_fetched,
                "n_sources": len(sources), "n_ok": ok, "errors": errors[:40], "items": payload_items}

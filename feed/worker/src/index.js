@@ -93,9 +93,9 @@ export default {
       if (!env.INGEST_KEY || req.headers.get('authorization') !== 'Bearer ' + env.INGEST_KEY) return json({ error: 'unauthorized' }, 401);
       const p = await req.json(); const now = new Date().toISOString(); const items = (p.items || []).slice(0, 3000);
       let n_new = 0;
-      const stmt = env.DB.prepare('INSERT OR IGNORE INTO items (id,title,link,source,field,tier,published_at,collected_at,batch,summary) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)');
+      const stmt = env.DB.prepare('INSERT OR IGNORE INTO items (id,title,link,source,field,tier,published_at,collected_at,batch,summary,region,lang) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)');
       for (let i = 0; i < items.length; i += 100) {
-        const res = await env.DB.batch(items.slice(i, i + 100).map(it => stmt.bind(it.id, it.title, it.link, it.source, it.field || '기타', it.tier || 'C', it.published_at || null, now, p.batch, it.summary || null)));
+        const res = await env.DB.batch(items.slice(i, i + 100).map(it => stmt.bind(it.id, it.title, it.link, it.source, it.field || '기타', it.tier || 'C', it.published_at || null, now, p.batch, it.summary || null, it.region || 'GLB', it.lang || null)));
         res.forEach(r => n_new += r.meta?.changes || 0);
       }
       // 같은 10분 배치에 수집이 두 번 들어와도(Worker dispatch + GitHub schedule 중복) 기록을 덮어쓰지 않고 n_new를 누적, n_fetched는 최대값, errors는 마지막 실행 것
