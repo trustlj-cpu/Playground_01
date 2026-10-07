@@ -161,10 +161,10 @@ const SETTINGS = (r) => { const R = REGIONS[r]; const T = SETTINGS_TXT[R.lang]; 
 .cgrp h3{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute,#6f6f6f);margin:14px 0 6px;font-weight:700}
 .crow{display:grid;grid-template-columns:28px 1fr auto;grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--rule-2,#dcdcdc);border-bottom:0;color:inherit;text-decoration:none}
 .crow:last-child{border-bottom:1px solid var(--rule-2,#dcdcdc)}
-.crow .flag{grid-row:1/3;font-size:22px;line-height:1}
-.crow b{font-size:15px;line-height:1.3}.crow b small{font-weight:400;color:var(--mute,#6f6f6f);margin-left:6px;font-size:12px}
-.crow .meta{grid-column:2;font-size:12px;color:var(--mute,#6f6f6f)}
-.crow em{grid-row:1/3;font-style:normal;font-size:10.5px;letter-spacing:.14em;color:var(--mute,#6f6f6f)}
+.crow .flag{grid-column:1;grid-row:1/3;font-size:22px;line-height:1}
+.crow b{grid-column:2;grid-row:1;font-size:15px;line-height:1.3}.crow b small{font-weight:400;color:var(--mute,#6f6f6f);margin-left:6px;font-size:12px}
+.crow .meta{grid-column:2;grid-row:2;font-size:12px;color:var(--mute,#6f6f6f)}
+.crow em{grid-column:3;grid-row:1/3;text-align:right;font-style:normal;font-size:10.5px;letter-spacing:.14em;color:var(--mute,#6f6f6f)}
 .crow.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}.crow.on em{color:var(--red,#8d2f22);font-weight:700}
 .crow.on + .crow{border-top-color:var(--ink)}
 .crow.soon{opacity:.55;pointer-events:none}
