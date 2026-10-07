@@ -36,7 +36,7 @@ export function shared(a, b, df, leadA, leadB) {
   return { n, strong, rare, exact, nonGeo, strongCool }; // strongCool: 이번 입력에서 8개 미만 제목에 나오는 강한 토큰 수 // exact: 부분일치·지명·2~3자 약어 제외 정확 겹침, nonGeo: 지명 제외 겹침
 }
 // 같은 분야: 강한 토큰(지명 제외, 4자+/숫자/한국어) 2개, 또는 3개 겹침 중 강한 것 1개 이상. 다른 분야: 3개 이상 전부 강한 토큰.
-const BROAD = new Set(['한국뉴스', '국제', '금융경제', '테크', '인플루언서', '트렌드', '사회', '문화', '정치', '경제']);
+const BROAD = new Set(['한국뉴스', '미국뉴스', '일본뉴스', '국제', '금융경제', '테크', '인플루언서', '트렌드', '사회', '문화', '정치', '경제']);
 // 같은 좁은 분야: 강한 2개 또는 3개 겹침+강한 1개. 넓은 분야(종합 뉴스): 강한 2개 또는 4개 겹침+강한 1개. 다른 분야: 3개 전부 강한 토큰.
 // 짧은 정형 제목(각 4토큰 이하: 데이터 표·지표 안내)은 한쪽에만 있는 토큰(한국어 부분일치 없음)이 하나라도 있으면 다른 항목 — BoE/SNB 금리확률, 30/60일 상관행렬, 코스닥×기관/거래소×외국인 표
 const onlyIn = (a, b) => { let k = 0; for (const x of a) { if (b.has(x)) continue; let part = false; if (isKo(x) && x.length >= 3) for (const y of b) if (isKo(y) && y.length >= 3 && (x.includes(y) || y.includes(x))) { part = true; break; } if (!part) k++; } return k; };
