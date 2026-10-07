@@ -7,7 +7,8 @@ import { loadRemoteIndex, getCachedRemoteIndex, mergeEditions, ensureEditionSrc,
 const APP_VERSION='0.2.0';
 const $=s=>document.querySelector(s), frame=$('#reader'), notice=$('#notice');
 const bundled=await (await fetch('editions.json')).json();
-let editions=mergeEditions(bundled,await getCachedRemoteIndex()), latest=editions.at(-1); // 캐시된 원격 호까지 합친 뒤 보관 표시를 복원(원격 호 보관이 사라지지 않게) let selected=latest.date, tab='today', saved=[];
+// 캐시된 원격 호까지 합친 뒤 보관 표시를 복원(원격 호 보관이 사라지지 않게)
+let editions=mergeEditions(bundled,await getCachedRemoteIndex()), latest=editions.at(-1); let selected=latest.date, tab='today', saved=[];
 try{saved=decodeSaved((await Preferences.get({key:'dailydrop.saved.v1'})).value,editions);}catch{notice.textContent='보관함을 불러오지 못했습니다. 이번 실행에서 읽기는 가능합니다.';}
 function updateSave(){const e=editions.find(e=>e.date===selected);$('#save').hidden=!e||tab==='saved';$('#save').textContent=saved.includes(selected)?'보관 해제':'호 보관';$('#save').setAttribute('aria-pressed',String(saved.includes(selected)));$('#edition-label').textContent=e?`제${e.no}호 · ${e.date} · ${e.source==='remote'?'받아온 호':'오프라인 사본'}`:{archive:'지난 호 · 오프라인 사본',glossary:'용어사전 · 오프라인 사본',saved:'이 기기의 보관함'}[tab]??'';}
 let showSeq=0;
