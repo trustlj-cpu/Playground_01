@@ -43,7 +43,8 @@ export function clusterItems(items) {
   for (const i of order) {
     const r = rows[i];
     // 예측시장·시세 항목은 계약/질문·기간이 달라도 이름이 겹치므로 묶지 않는다(각자 단독)
-    const solo = r.field === '예측시장' || /^\[(예측|코인)\]/.test(String(r.it.title));
+    // 예측시장·시세·논문(arXiv)은 항목 하나가 곧 독립 단위 — 같은 주제라도 묶지 않는다
+    const solo = r.field === '예측시장' || /^\[(예측|코인)\]/.test(String(r.it.title)) || /arxiv/i.test(String(r.it.source || '')) || /arxiv\.org/i.test(String(r.it.link || ''));
     if (solo || r.toks.size < 2) { clusters.push({ lead: { ...r, toks: new Set() }, members: [r] }); continue; }
     let best = null, bestN = 0;
     for (const c of clusters) { if (c.lead.toks.size < 2 || !same(c.lead, r, df)) continue; const s = shared(c.lead.toks, r.toks, df, c.lead.lead, r.lead).n; if (s > bestN) { best = c; bestN = s; } }
