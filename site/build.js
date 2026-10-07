@@ -18,6 +18,12 @@ const REGIONS = {
   US: { prefix: 'us/', lang: 'en', place: 'NEW YORK', date: d => { const [y, m, dd] = d.split('-').map(Number); return `${EN_DAY[dayIdx(d)].slice(0, 3)}., ${EN_MON[m - 1].slice(0, 3)}. ${dd}, ${y}`.toUpperCase(); }, edition: n => `No. ${n} · Evening`, latest: 'Latest', archive: 'Past editions', glossary: 'Glossary', about: 'About', subscribe: 'Subscribe', inside: 'INSIDE', filler: 'In brief', tapeNote: 'Indexes, WTI and gold: latest U.S. close', tape: [['S&amp;P 500', 'sp500'], ['Nasdaq', 'nasdaq'], ['Dow', 'dow'], ['10-yr', 'us10y', 'pct'], ['WTI', 'wti', 'usd'], ['Gold', 'gold', 'usd']], title: (n, d) => `DailyDrop U.S. No. ${n} · ${EN_MON[+d.slice(5, 7) - 1]} ${+d.slice(8, 10)}, ${d.slice(0, 4)}`, desc: 'The day in the United States and the world on one front page. Tap a story to unfold it; tap a dotted word for its meaning.', soon: d => `The first U.S. edition publishes on the evening of ${EN_MON[+d.slice(5, 7) - 1]} ${+d.slice(8, 10)}, ${d.slice(0, 4)}.` },
   JP: { prefix: 'jp/', lang: 'ja', place: '東京', date: d => { const [y, m, dd] = d.split('-').map(Number); return `${y}年${m}月${dd}日（${JA_DAY[dayIdx(d)]}）`; }, edition: n => `第${n}号・夕刊`, latest: '最新号', archive: 'バックナンバー', glossary: '用語集', about: '紹介', subscribe: '購読', inside: '紙面から', filler: '短信', tapeNote: '米国指数・WTI・金は直近の米国市場終値', tape: [['日経平均', 'nikkei'], ['TOPIX', 'topix'], ['ドル円', 'usdjpy', 'fxjpy'], ['S&amp;P 500', 'sp500'], ['WTI', 'wti', 'usd'], ['金', 'gold', 'usd']], title: (n, d) => `DailyDrop 日本版 第${n}号・${d.slice(0, 4)}年${+d.slice(5, 7)}月${+d.slice(8, 10)}日 夕刊`, desc: '日本と世界の一日を新聞一面にまとめる夕刊。記事を押すと開き、点線の語を押すと意味が出ます。', soon: d => `日本版 第1号は ${d.slice(0, 4)}年${+d.slice(5, 7)}月${+d.slice(8, 10)}日 夕方に発行します。` },
 };
+// 번역판 표기: 지역(US/JP)의 호를 다른 언어로 볼 때 날짜·호수·색인·단신 라벨
+const LOC = {
+  ko: { place: { US: '뉴욕', JP: '도쿄', KR: '서울' }, date: fmt, edition: n => `제${n}호 · 저녁판`, inside: '안에서', filler: '단신' },
+  en: { place: { US: 'NEW YORK', JP: 'TOKYO', KR: 'SEOUL' }, date: d => REGIONS.US.date(d), edition: n => `No. ${n} · Evening`, inside: 'INSIDE', filler: 'In brief' },
+  ja: { place: { US: 'ニューヨーク', JP: '東京', KR: 'ソウル' }, date: d => REGIONS.JP.date(d), edition: n => `第${n}号・夕刊`, inside: '紙面から', filler: '短信' },
+};
 const REGION_SWITCH = (cur) => `<div class="dd-regions" aria-label="Editions">${['KR', 'US', 'JP'].map(r => `<a href="/${REGIONS[r].prefix}?r=${r}"${r === cur ? ' aria-current="true"' : ''}>${r}</a>`).join('')}</div>`;
 const LANGNAME = { ko: '한국어', en: 'English', ja: '日本語' };
 const LANG_SWITCH = (variants, cur) => variants && variants.length > 1 ? `<div class="dd-langs" aria-label="Language">${variants.map(([l, h]) => `<a href="${h}"${l === cur ? ' aria-current="true"' : ''} lang="${l}">${LANGNAME[l] || l}</a>`).join('')}</div>` : '';
@@ -75,12 +81,6 @@ for (const e of editions) {
     const tdir = path.join(dir, l); fs.mkdirSync(tdir, { recursive: true }); fs.writeFileSync(path.join(tdir, 'index.html'), tpage.replace('<body>', `<body data-filler="${L.filler}">`));
   }
 }
-// 번역판 표기: 지역(US/JP)의 호를 다른 언어로 볼 때 날짜·호수·색인·단신 라벨
-const LOC = {
-  ko: { place: { US: '뉴욕', JP: '도쿄', KR: '서울' }, date: fmt, edition: n => `제${n}호 · 저녁판`, inside: '안에서', filler: '단신' },
-  en: { place: { US: 'NEW YORK', JP: 'TOKYO', KR: 'SEOUL' }, date: d => REGIONS.US.date(d), edition: n => `No. ${n} · Evening`, inside: 'INSIDE', filler: 'In brief' },
-  ja: { place: { US: 'ニューヨーク', JP: '東京', KR: 'ソウル' }, date: d => REGIONS.JP.date(d), edition: n => `第${n}号・夕刊`, inside: '紙面から', filler: '短信' },
-};
 const byRegion = r => editions.filter(e => (e.region || 'KR') === r);
 const latest = byRegion('KR')[byRegion('KR').length - 1];
 fs.writeFileSync(path.join(OUT, 'index.html'), fs.readFileSync(path.join(OUT, latest.date, 'index.html'), 'utf8').replace(`${SITE}/${latest.date}/`, `${SITE}/`));
