@@ -42,3 +42,9 @@ Worker 크론 `*/10`이 `GH_DISPATCH_TOKEN`(fine-grained PAT, 이 저장소만, 
 
 ## 한도 (무료 플랜)
 D1 쓰기 10만 행/일 (예상 1~2만), Worker 요청 10만/일, Actions 월 2,000분 (10분 크론 ≈ 144회 × ~1.5분 = 월 6,500분 → **공개 저장소면 무제한, 비공개면 초과**). 비공개 유지 시 크론을 `*/20` 으로 낮추거나 저장소를 공개로.
+
+## 푸시 토큰 (앱)
+- `POST https://feed.dailydrop.kr/push/register` body `{"token":"<APNs/FCM token>","platform":"ios|android|web","app_version":"1.0.0"}` → `{ok:true}`. 같은 토큰 재등록은 last_seen 갱신.
+- `POST /push/unregister` body `{"token":"..."}` → active=0.
+- 저장: D1 `push_tokens(token PK, platform, app_version, created_at, last_seen, active)`. 토큰 외 개인정보 없음.
+- 발송(APNs HTTP/2 + FCM v1)은 다음 단계: 인증키(.p8)·서비스 계정은 Worker 시크릿으로만 보관, 저장소·파티에 올리지 않는다. 트리거는 site-deploy가 새 호를 올린 뒤 `POST /push/send`(INGEST_KEY) 예정.
