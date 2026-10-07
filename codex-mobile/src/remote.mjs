@@ -71,12 +71,15 @@ export async function enablePush({ appVersion = '0.1.0', onOpenEdition } = {}) {
   PushNotifications.addListener('pushNotificationActionPerformed', a => { const d = (a && a.notification && a.notification.data) || {}; if (d.edition && onOpenEdition) onOpenEdition(String(d.edition)); });
   return { ok: true, state: 'on' };
 }
+// 끄기: 서버 해제가 성공했을 때만 토큰·상태를 지운다. 실패하면 상태 'on' 유지 → 사용자가 다시 시도할 수 있다.
 export async function disablePush() {
   let token = null; try { token = (await Preferences.get({ key: K_TOKEN })).value; } catch {}
-  let serverOk = true;
-  if (token) { try { const r = await fetch(`${FEED}/push/unregister`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) }); serverOk = r.ok; } catch { serverOk = false; } }
+  if (token) {
+    try { const r = await fetch(`${FEED}/push/unregister`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) }); if (!r.ok) return { ok: false, state: 'on', error: 'unregister ' + r.status }; }
+    catch (e) { return { ok: false, state: 'on', error: String(e && e.message || e) }; }
+  }
   try { await Preferences.set({ key: K_PUSH, value: 'off' }); await Preferences.remove({ key: K_TOKEN }); } catch {}
-  return { ok: true, state: 'off', serverOk };
+  return { ok: true, state: 'off' };
 }
 // 앱이 다시 열릴 때 알림 탭 처리를 다시 연결(권한·토큰은 이미 있음)
 export function bindPushTap(onOpenEdition) {
