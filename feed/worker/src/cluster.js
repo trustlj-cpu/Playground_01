@@ -23,7 +23,7 @@ export function tokens(t) {
   return out;
 }
 const isKo = w => /^[가-힣]+$/.test(w) || /^[\u4e00-\u9fff\u30a0-\u30ff]+$/.test(w); // 한글 또는 일본어(한자·가타카나) 토큰
-const GEO = new Set('russia russian ukraine ukrainian china chinese taiwan japan japanese korea korean north south iran iranian israel israeli gaza palestinian europe european france french germany german britain british england spain spanish italy india indian brazil saudi arabia yemen houthi houthis syria iraq turkey turkish america american asian asia african africa sudan sudanese occupied west nigeria nigerian hong kong hongkong taipei shanghai singapore washington beijing moscow kyiv tokyo seoul london paris berlin 미국 중국 일본 북한 한국 러시아 우크라이나 이란 이스라엘 유럽 대만 인도 브라질 사우디 예멘 후티 중동 서울 워싱턴 베이징 모스크바 도쿄'.split(' '));
+const GEO = new Set('트럼프 trump biden 바이든 russia russian ukraine ukrainian china chinese taiwan japan japanese korea korean north south iran iranian israel israeli gaza palestinian europe european france french germany german britain british england spain spanish italy india indian brazil saudi arabia yemen houthi houthis syria iraq turkey turkish america american asian asia african africa sudan sudanese occupied west nigeria nigerian hong kong hongkong taipei shanghai singapore washington beijing moscow kyiv tokyo seoul london paris berlin 미국 중국 일본 북한 한국 러시아 우크라이나 이란 이스라엘 유럽 대만 인도 브라질 사우디 예멘 후티 중동 서울 워싱턴 베이징 모스크바 도쿄'.split(' '));
 // 두 토큰 집합의 '의미 있는' 겹침 수. 한국어는 3자 이상 부분 일치 허용(소비자물가⊃물가 X: 2자 금지), 라틴은 정확 일치만.
 // df: 이번 묶음 입력 전체에서 토큰이 등장한 제목 수. 희귀 토큰(≤3개 제목)이 두 제목 모두 앞 2토큰(주어 자리)에 있으면 하나만 겹쳐도 같은 사건 신호.
 // 한 시간에 8개 이상 제목에 나오는 '뜨거운' 토큰(삼성전자·반도체·누리호·AI)끼리만 겹치면 같은 사건 근거로 부족 — 뜨겁지 않은 강한 토큰이 최소 1개는 있어야 함
