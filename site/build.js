@@ -24,7 +24,7 @@ const TAPE = (date) => {
     const chg = q.chg == null ? '' : kind === 'fx' ? `${down ? '▼' : up ? '▲' : ''}${Math.abs(q.chg).toFixed(1)}원` : `${down ? '▼' : up ? '▲' : ''}${Math.abs(q.chg).toFixed(2)}%`;
     return `<span class="q${down ? ' dn' : up ? ' upp' : ''}"><b>${label}</b><em>${unit}${fmtNum(q.v, d)}</em><i>${chg}</i><small>${q.asof || ''}</small></span>`;
   };
-  return `<div class="tape" aria-label="시세">${cell('S&amp;P 500', m.sp500)}${cell('나스닥', m.nasdaq)}${cell('코스피', m.kospi)}${cell('코스닥', m.kosdaq)}${cell('원/달러', m.usdkrw, 'fx')}${cell('WTI', m.wti, 'usd')}${cell('금', m.gold, 'usd')}</div>`;
+  return `<div class="tape" aria-label="시세">${cell('S&amp;P 500', m.sp500)}${cell('나스닥', m.nasdaq)}${cell('코스피', m.kospi)}${cell('코스닥', m.kosdaq)}${cell('원/달러', m.usdkrw, 'fx')}${cell('WTI', m.wti, 'usd')}</div>`;
 };
 
 // 빈칸 메우기 풀(pool.json, 호별 여분 단신). 페이지에 숨겨 두고 balance.js가 짧은 열 바닥에 끼워 넣는다.
