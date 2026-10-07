@@ -185,10 +185,15 @@ export default {
       ctx.waitUntil((async () => {
         const sched = new Date(ev.scheduledTime).toISOString(); let status = 'skipped(no token)', error = null;
         if (env.GH_DISPATCH_TOKEN) {
-          try {
-            const r = await fetch('https://api.github.com/repos/trustlj-cpu/Playground_01/actions/workflows/' + wf + '/dispatches', { method: 'POST', headers: { 'authorization': 'Bearer ' + env.GH_DISPATCH_TOKEN, 'accept': 'application/vnd.github+json', 'user-agent': 'dailydrop-feed-worker', 'content-type': 'application/json' }, body: JSON.stringify({ ref }) });
-            status = r.status === 204 ? 'dispatched' : 'error'; if (r.status !== 204) error = 'HTTP ' + r.status + ' ' + (await r.text()).slice(0, 300);
-          } catch (e) { status = 'error'; error = String(e).slice(0, 500); }
+          // GitHub가 5xx/네트워크 오류를 돌려주면 2초·5초 뒤 최대 2번 더 시도(15:10 UTC HTTP 500으로 회차 하나가 비었음). 4xx는 재시도 안 함.
+          for (let attempt = 0; attempt < 3; attempt++) {
+            if (attempt) await new Promise(res => setTimeout(res, attempt === 1 ? 2000 : 5000));
+            try {
+              const r = await fetch('https://api.github.com/repos/trustlj-cpu/Playground_01/actions/workflows/' + wf + '/dispatches', { method: 'POST', headers: { 'authorization': 'Bearer ' + env.GH_DISPATCH_TOKEN, 'accept': 'application/vnd.github+json', 'user-agent': 'dailydrop-feed-worker', 'content-type': 'application/json' }, body: JSON.stringify({ ref }) });
+              if (r.status === 204) { status = attempt ? 'dispatched(retry ' + attempt + ')' : 'dispatched'; error = null; break; }
+              status = 'error'; error = 'HTTP ' + r.status + ' ' + (await r.text()).slice(0, 300); if (r.status < 500) break;
+            } catch (e) { status = 'error'; error = String(e).slice(0, 500); }
+          }
         }
         try { await env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(sched, new Date().toISOString(), tag, status, null, error).run(); } catch (e) {}
       })());
