@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package kr.dailydrop.app;
 
 import static org.junit.Assert.*;
 
