@@ -32,7 +32,7 @@ export function shared(a, b, df, leadA, leadB) {
 // 같은 분야: 강한 토큰(지명 제외, 4자+/숫자/한국어) 2개, 또는 3개 겹침 중 강한 것 1개 이상. 다른 분야: 3개 이상 전부 강한 토큰.
 const BROAD = new Set(['한국뉴스', '국제', '금융경제', '테크', '인플루언서', '트렌드', '사회', '문화', '정치', '경제']);
 // 같은 좁은 분야: 강한 2개 또는 3개 겹침+강한 1개. 넓은 분야(종합 뉴스): 강한 2개 또는 4개 겹침+강한 1개. 다른 분야: 3개 전부 강한 토큰.
-const same = (A, B, df) => { const s = shared(A.toks, B.toks, df, A.lead, B.lead); if (A.field !== B.field) return s.n >= 3 && s.strong >= 3; const broad = BROAD.has(A.field); return (s.n >= 2 && s.strong >= 2) || (s.n >= (broad ? 4 : 3) && s.strong >= 1) || (s.rare >= 1 && s.n >= 1); };
+const same = (A, B, df) => { const s = shared(A.toks, B.toks, df, A.lead, B.lead); if (A.field !== B.field) return s.n >= 3 && s.strong >= 3; const broad = BROAD.has(A.field); return (s.n >= 2 && s.strong >= 2) || (s.n >= (broad ? 4 : 3) && s.strong >= 1) || (s.rare >= 1 && s.n >= 2); }; // 희귀 주어 + 다른 겹침 1개 이상(같은 인물의 다른 사건 분리)
 export function clusterItems(items) {
   const rows = items.map(it => { const list = tokenList(it.title); return { it, toks: new Set(list), lead: new Set(list.slice(0, 2)), field: it.field }; });
   const df = new Map(); rows.forEach(r => r.toks.forEach(t => df.set(t, (df.get(t) || 0) + 1)));
