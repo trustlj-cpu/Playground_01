@@ -1,0 +1,73 @@
+name: feed-probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Probe candidate feeds (US/JP) and print status + item counts
+        run: |
+          cat > feeds.txt <<'LIST'
+US nyt_home https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
+US nyt_world https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+US nyt_us https://rss.nytimes.com/services/xml/rss/nyt/US.xml
+US nyt_biz https://rss.nytimes.com/services/xml/rss/nyt/Business.xml
+US nyt_tech https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml
+US wapo_world https://feeds.washingtonpost.com/rss/world
+US wapo_politics https://feeds.washingtonpost.com/rss/politics
+US wapo_national https://feeds.washingtonpost.com/rss/national
+US npr_top https://feeds.npr.org/1001/rss.xml
+US npr_world https://feeds.npr.org/1004/rss.xml
+US cbs_main https://www.cbsnews.com/latest/rss/main
+US nbc_top https://feeds.nbcnews.com/nbcnews/public/news
+US abc_top https://abcnews.go.com/abcnews/topstories
+US politico https://www.politico.com/rss/politicopicks.xml
+US axios https://api.axios.com/feed/
+US usatoday https://rssfeeds.usatoday.com/usatoday-newstopstories
+US wsj_world https://feeds.a.dj.com/rss/RSSWorldNews.xml
+US wsj_markets https://feeds.a.dj.com/rss/RSSMarketsMain.xml
+US wsj_us https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml
+US latimes https://www.latimes.com/rss2.0.xml
+US thehill https://thehill.com/feed/
+US fox https://moxie.foxnews.com/google-publisher/latest.xml
+US atlantic https://www.theatlantic.com/feed/all/
+US guardian_us https://www.theguardian.com/us-news/rss
+US pbs https://www.pbs.org/newshour/feeds/rss/headlines
+US bloomberg_gn https://news.google.com/rss/search?q=site:bloomberg.com+when:1d&hl=en-US&gl=US&ceid=US:en
+US ap_gn https://news.google.com/rss/search?q=site:apnews.com+when:1d&hl=en-US&gl=US&ceid=US:en
+US reuters_gn https://news.google.com/rss/search?q=site:reuters.com+when:1d&hl=en-US&gl=US&ceid=US:en
+JP nhk_cat0 https://www.nhk.or.jp/rss/news/cat0.xml
+JP nhk_new https://news.web.nhk/n-data/conf/na/rss/cat0.xml
+JP nhk_cat1 https://www.nhk.or.jp/rss/news/cat1.xml
+JP nhk_cat4 https://www.nhk.or.jp/rss/news/cat4.xml
+JP nhk_cat5 https://www.nhk.or.jp/rss/news/cat5.xml
+JP nhk_cat6 https://www.nhk.or.jp/rss/news/cat6.xml
+JP yahoo_top https://news.yahoo.co.jp/rss/topics/top-picks.xml
+JP yahoo_dom https://news.yahoo.co.jp/rss/topics/domestic.xml
+JP yahoo_world https://news.yahoo.co.jp/rss/topics/world.xml
+JP yahoo_biz https://news.yahoo.co.jp/rss/topics/business.xml
+JP yahoo_it https://news.yahoo.co.jp/rss/topics/it.xml
+JP asahi https://www.asahi.com/rss/asahi/newsheadlines.rdf
+JP mainichi https://mainichi.jp/rss/etc/mainichi-flash.rss
+JP jiji https://www.jiji.com/rss/ranking.rdf
+JP itmedia https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml
+JP toyokeizai https://toyokeizai.net/list/feed/rss
+JP japantimes https://www.japantimes.co.jp/feed/
+JP sankei https://www.sankei.com/rss/news/flash.xml
+JP nhkworld https://www3.nhk.or.jp/nhkworld/en/news/all/
+JP yomiuri_gn https://news.google.com/rss/search?q=site:yomiuri.co.jp+when:1d&hl=ja&gl=JP&ceid=JP:ja
+JP nikkei_gn https://news.google.com/rss/search?q=site:nikkei.com+when:1d&hl=ja&gl=JP&ceid=JP:ja
+JP kyodo_gn https://news.google.com/rss/search?q=site:nordot.app+when:1d&hl=ja&gl=JP&ceid=JP:ja
+LIST
+          while read R ID U; do
+            code=$(curl -sS -m 15 -o f.xml -w "%{http_code}" -A "Mozilla/5.0 (compatible; DailyDropCollector/1.0)" -L "$U" 2>/dev/null || echo ERR)
+            n=$(grep -c -E "<item|<entry" f.xml 2>/dev/null || echo 0)
+            t=$(grep -o -m1 -E "<title>[^<]{3,80}" f.xml 2>/dev/null | head -2 | tail -1 | sed 's/<title>//')
+            echo "PROBE $R $ID $code items=$n first=$t"
+          done < feeds.txt
