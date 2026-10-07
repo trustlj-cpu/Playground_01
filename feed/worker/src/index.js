@@ -53,6 +53,21 @@ ${body || '<p>아직 수집된 항목이 없습니다.</p>'}
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
 
+
+// APNs 인증 토큰(ES256 JWT). 키는 Worker 시크릿 APNS_KEY_PEM(.p8 내용)에서만 읽는다.
+let _apnsJwt = null;
+async function apnsJwt(env) {
+  if (_apnsJwt && Date.now() - _apnsJwt.t < 50 * 60_000) return _apnsJwt.v;
+  const pem = env.APNS_KEY_PEM.replace(/-----[A-Z ]+-----/g, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  const b64u = o => btoa(typeof o === 'string' ? o : String.fromCharCode(...new Uint8Array(o))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const head = b64u(JSON.stringify({ alg: 'ES256', kid: env.APNS_KEY_ID })), claims = b64u(JSON.stringify({ iss: env.APNS_TEAM_ID, iat: Math.floor(Date.now() / 1000) }));
+  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(head + '.' + claims));
+  _apnsJwt = { t: Date.now(), v: head + '.' + claims + '.' + b64u(sig) };
+  return _apnsJwt.v;
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -80,6 +95,33 @@ export default {
       else await env.DB.prepare('UPDATE push_tokens SET active = 0, last_seen = ?2 WHERE token = ?1').bind(token, now).run();
       return json({ ok: true });
     }
+    // 저녁판 발행 푸시. INGEST_KEY 필요. 같은 호(edition)는 한 번만 보냄(push_sends). APNS 시크릿(APNS_KEY_PEM·APNS_KEY_ID·APNS_TEAM_ID) 없으면 skipped.
+    if (url.pathname === '/push/send' && req.method === 'POST') {
+      if (!env.INGEST_KEY || req.headers.get('authorization') !== 'Bearer ' + env.INGEST_KEY) return json({ error: 'unauthorized' }, 401);
+      let p; try { p = await req.json(); } catch (e) { return json({ error: 'bad json' }, 400); }
+      const edition = String(p.edition || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(edition)) return json({ error: 'edition YYYY-MM-DD required' }, 400);
+      const title = String(p.title || '데일리드롭 저녁판').slice(0, 80), body = String(p.body || '').slice(0, 200), link = String(p.url || ('https://dailydrop.kr/' + edition + '/')).slice(0, 300);
+      const now = new Date().toISOString();
+      const ins = await env.DB.prepare('INSERT OR IGNORE INTO push_sends (edition, sent_at, title) VALUES (?1, ?2, ?3)').bind(edition, now, title).run();
+      if (!(ins.meta && ins.meta.changes)) return json({ ok: true, skipped: 'already sent', edition });
+      const { results: toks } = await env.DB.prepare("SELECT token, platform FROM push_tokens WHERE active = 1").all();
+      const out = { ok: true, edition, ios: { sent: 0, failed: 0, skipped: null }, android: { sent: 0, skipped: 'fcm not configured' } };
+      const ios = toks.filter(t => t.platform === 'ios');
+      if (!env.APNS_KEY_PEM || !env.APNS_KEY_ID || !env.APNS_TEAM_ID) out.ios.skipped = 'apns not configured';
+      else if (ios.length) {
+        const jwt = await apnsJwt(env);
+        const host = env.APNS_SANDBOX ? 'https://api.sandbox.push.apple.com' : 'https://api.push.apple.com';
+        const payload = JSON.stringify({ aps: { alert: { title, body }, sound: 'default', 'thread-id': 'edition' }, url: link, edition });
+        for (const t of ios) {
+          try {
+            const r = await fetch(host + '/3/device/' + t.token, { method: 'POST', headers: { authorization: 'bearer ' + jwt, 'apns-topic': env.APNS_TOPIC || 'kr.dailydrop.app', 'apns-push-type': 'alert', 'apns-priority': '10', 'apns-expiration': String(Math.floor(Date.now() / 1000) + 6 * 3600), 'content-type': 'application/json' }, body: payload });
+            if (r.ok) out.ios.sent++; else { out.ios.failed++; const txt = await r.text(); if (r.status === 410 || /BadDeviceToken|Unregistered/.test(txt)) await env.DB.prepare('UPDATE push_tokens SET active = 0 WHERE token = ?1').bind(t.token).run(); }
+          } catch (e) { out.ios.failed++; }
+        }
+      }
+      try { await env.DB.prepare('UPDATE push_sends SET result = ?2 WHERE edition = ?1').bind(edition, JSON.stringify(out).slice(0, 2000)).run(); } catch (e) {}
+      return json(out);
+    }
     if (url.pathname === '/items.json') {
       const since = url.searchParams.get('since') || new Date(Date.now() - 6 * 3600_000).toISOString();
       const { results } = await env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 ORDER BY collected_at DESC LIMIT 2000').bind(since).all();
@@ -102,7 +144,7 @@ export default {
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
     if (url.pathname === '/') return page(env, url);
-    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', 'POST /push/register', 'POST /push/unregister', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
+    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.

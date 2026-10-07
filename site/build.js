@@ -59,6 +59,18 @@ fs.writeFileSync(path.join(OUT, '404.html'), HEAD('데일리드롭 — 없는 �
 fs.copyFileSync(path.join(__dirname, 'og.png'), path.join(OUT, 'og.png'));
 // 앱용 호 목록(공개 JSON). 앱은 이 파일을 폴링해 새 호를 받는다.
 fs.writeFileSync(path.join(OUT, 'editions.json'), JSON.stringify({ site: SITE, generated_at: new Date().toISOString(), latest: latest.date, editions: [...editions].reverse().map(e => ({ date: e.date, no: e.no, title: `제 ${e.no} 호 · ${fmt(e.date)} 저녁판`, blurb: e.blurb || '', url: `${SITE}/${e.date}/`, html: `${SITE}/${e.date}/index.html` })) }, null, 1));
+// 앱 딥링크(universal links / app links): site/app.json에 Team ID·서명 지문이 채워진 경우에만 생성
+try {
+  const app = JSON.parse(fs.readFileSync(path.join(path.dirname(spec), 'app.json'), 'utf8'));
+  const wk = path.join(OUT, '.well-known'); fs.mkdirSync(wk, { recursive: true });
+  if (app.ios && app.ios.teamId && app.ios.bundleId) {
+    const appID = `${app.ios.teamId}.${app.ios.bundleId}`;
+    fs.writeFileSync(path.join(wk, 'apple-app-site-association'), JSON.stringify({ applinks: { details: [{ appIDs: [appID], components: [{ '/': '/20*/', comment: '호별 고정 주소' }, { '/': '/', comment: '최신호' }, { '/': '/archive/' }, { '/': '/glossary/' }] }] }, webcredentials: { apps: [appID] } }));
+  }
+  if (app.android && app.android.package && (app.android.sha256_cert_fingerprints || []).length) {
+    fs.writeFileSync(path.join(wk, 'assetlinks.json'), JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: app.android.package, sha256_cert_fingerprints: app.android.sha256_cert_fingerprints } }]));
+  }
+} catch (e) { console.warn('app.json skipped:', e.message); }
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
 // 개인정보처리방침: 앱스토어/플레이스토어 제출 요건(공개 URL). 계정·가입 없음, 수집 최소.
 fs.writeFileSync(path.join(OUT, 'privacy', 'index.html'), HEAD('데일리드롭 개인정보처리방침', '데일리드롭 웹·앱의 개인정보 처리 원칙.', '/privacy/') + FONTS + BASECSS + NAV('/about/') + `<main><h1>개인정보처리방침</h1><p class="mute">시행일 2026년 10월 7일 · 적용 범위: dailydrop.kr 웹사이트와 데일리드롭 iOS·Android 앱</p>
