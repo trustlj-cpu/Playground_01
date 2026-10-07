@@ -70,6 +70,16 @@ export default {
       await env.DB.prepare('INSERT INTO batches (batch,started_at,n_fetched,n_new,n_sources,errors) VALUES (?1,?2,?3,?4,?5,?6) ON CONFLICT(batch) DO UPDATE SET n_new = batches.n_new + excluded.n_new, n_fetched = max(batches.n_fetched, excluded.n_fetched), n_sources = max(batches.n_sources, excluded.n_sources), errors = excluded.errors').bind(p.batch, p.started_at || now, p.n_fetched || items.length, n_new, p.n_sources || 0, JSON.stringify(p.errors || []).slice(0, 4000)).run();
       return json({ ok: true, batch: p.batch, received: items.length, new: n_new });
     }
+    // 앱 푸시 토큰 등록/해제(APNs·FCM 발송은 별도 단계). 토큰 외 개인정보 없음. 해제 시 active=0 → 다음 정리 때 삭제.
+    if ((url.pathname === '/push/register' || url.pathname === '/push/unregister') && req.method === 'POST') {
+      let p; try { p = await req.json(); } catch (e) { return json({ error: 'bad json' }, 400); }
+      const token = String(p.token || '').trim(), platform = String(p.platform || '').toLowerCase();
+      if (!token || token.length > 512 || !['ios', 'android', 'web'].includes(platform)) return json({ error: 'token/platform required' }, 400);
+      const now = new Date().toISOString();
+      if (url.pathname === '/push/register') await env.DB.prepare('INSERT INTO push_tokens (token, platform, app_version, created_at, last_seen, active) VALUES (?1, ?2, ?3, ?4, ?4, 1) ON CONFLICT(token) DO UPDATE SET platform = excluded.platform, app_version = excluded.app_version, last_seen = excluded.last_seen, active = 1').bind(token, platform, String(p.app_version || '').slice(0, 40) || null, now).run();
+      else await env.DB.prepare('UPDATE push_tokens SET active = 0, last_seen = ?2 WHERE token = ?1').bind(token, now).run();
+      return json({ ok: true });
+    }
     if (url.pathname === '/items.json') {
       const since = url.searchParams.get('since') || new Date(Date.now() - 6 * 3600_000).toISOString();
       const { results } = await env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 ORDER BY collected_at DESC LIMIT 2000').bind(since).all();
@@ -92,7 +102,7 @@ export default {
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
     if (url.pathname === '/') return page(env, url);
-    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
+    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', 'POST /push/register', 'POST /push/unregister', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
