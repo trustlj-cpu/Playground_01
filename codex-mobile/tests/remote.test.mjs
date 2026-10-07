@@ -1,5 +1,5 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
-import { mergeEditions, transformEditionHtml, parseEditionUrl, defaultRegion, regionIndexUrl, editionFilePath } from '../src/remote-pure.mjs';
+import { mergeEditions, transformEditionHtml, parseEditionUrl, defaultRegion, regionIndexUrl, editionFilePath, translationFor, targetLang } from '../src/remote-pure.mjs';
 const bundled = [{ date: '2026-10-05', no: 1, blurb: 'a' }, { date: '2026-10-07', no: 3, blurb: 'c' }];
 test('merge keeps bundled first, adds remote-only, sorts by date, ignores bad dates', () => {
   const m = mergeEditions(bundled, [{ date: '2026-10-07', no: 3, blurb: 'dup' }, { date: '2026-10-08', no: 4, blurb: 'd', html: 'https://dailydrop.kr/2026-10-08/index.html' }, { date: 'x' }]);
@@ -39,4 +39,15 @@ test('regions: default from locale, index urls, deep links, file paths', () => {
   assert.equal(editionFilePath('2026-10-08', 'US'), 'editions/us-2026-10-08.html'); assert.equal(editionFilePath('2026-10-07'), 'editions/2026-10-07.html');
   const m = mergeEditions([], [{ date: '2026-10-08', no: 1 }], 'US');
   assert.equal(m[0].html, 'https://dailydrop.kr/us/2026-10-08/index.html'); assert.equal(m[0].region, 'US');
+});
+
+test('translations: remote index entries carry same-site translation urls; translationFor skips the edition language', () => {
+  const remote = [{ date: '2026-10-07', no: 1, html: 'https://dailydrop.kr/us/2026-10-07/index.html', translations: { ko: { html: 'https://dailydrop.kr/us/2026-10-07/ko/index.html' }, xx: { html: 'https://evil.example/x.html' } } }];
+  const [e] = mergeEditions([], remote, 'US');
+  assert.deepEqual(e.translations, { ko: 'https://dailydrop.kr/us/2026-10-07/ko/index.html' });
+  assert.equal(translationFor(e, 'ko'), 'https://dailydrop.kr/us/2026-10-07/ko/index.html');
+  assert.equal(translationFor(e, 'en'), null);
+  assert.equal(translationFor({ ...e, region: 'KR' }, 'ko'), null);
+  assert.equal(editionFilePath('2026-10-07', 'US', 'ko'), 'editions/us-2026-10-07.ko.html');
+  assert.equal(targetLang('ja-JP'), 'ja'); assert.equal(targetLang('fr'), 'en');
 });

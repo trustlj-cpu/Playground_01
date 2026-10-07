@@ -14,7 +14,8 @@ export function mergeEditions(bundled, remote, region = 'KR') {
   for (const e of remote || []) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date) || out.has(e.date)) continue;
     const html = typeof e.html === 'string' && e.html.startsWith(SITE + '/') ? e.html : `${SITE}/${prefix}${e.date}/index.html`;
-    out.set(e.date, { date: e.date, no: Number(e.no) || 0, blurb: String(e.blurb || ''), html, region, source: 'remote' });
+    const translations = {}; for (const [l, t] of Object.entries(e.translations || {})) { const th = t && typeof t.html === 'string' ? t.html : null; if (th && th.startsWith(SITE + '/') && /^[a-z]{2}$/.test(l)) translations[l] = th; }
+    out.set(e.date, { date: e.date, no: Number(e.no) || 0, blurb: String(e.blurb || ''), html, region, source: 'remote', translations });
   }
   return [...out.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -54,4 +55,8 @@ export function parseEditionUrl(url) {
   } catch { return null; }
 }
 
-export const editionFilePath = (date, region = 'KR') => `editions/${region === 'KR' ? '' : region.toLowerCase() + '-'}${date}.html`;
+export const editionFilePath = (date, region = 'KR', lang = null) => `editions/${region === 'KR' ? '' : region.toLowerCase() + '-'}${date}${lang ? '.' + lang : ''}.html`;
+// 기기 언어 → 번역 대상 언어(ko/en/ja), 그 판의 원어와 같으면 번역 불필요
+export const targetLang = (locale = 'ko') => { const l = String(locale || '').toLowerCase().slice(0, 2); return ['ko', 'en', 'ja'].includes(l) ? l : 'en'; };
+export const REGION_LANG = { KR: 'ko', US: 'en', JP: 'ja' };
+export const translationFor = (edition, lang) => edition && edition.translations && REGION_LANG[edition.region || 'KR'] !== lang ? edition.translations[lang] || null : null;

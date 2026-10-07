@@ -35,21 +35,22 @@ export { mergeEditions, parseEditionUrl, REGIONS };
 // 원격 호를 기기에 저장하고 iframe에서 열 수 있는 주소를 돌려준다. 저장본이 있으면 네트워크를 쓰지 않는다.
 const editionDownloads = createSingleFlight();
 export function ensureEditionSrc(edition, options = {}) {
-  return editionDownloads(`${edition.region || 'KR'}:${edition.date}`, () => loadEditionSrc(edition, options));
+  return editionDownloads(`${edition.region || 'KR'}:${edition.date}${options.lang ? ':' + options.lang : ''}`, () => loadEditionSrc(edition, options));
 }
-async function loadEditionSrc(edition, { frameSrc } = {}) {
-  const path = editionFilePath(edition.date, edition.region || 'KR');
+async function loadEditionSrc(edition, { frameSrc, lang = null } = {}) {
+  const src = lang && edition.translations && edition.translations[lang] ? edition.translations[lang] : edition.html; const useLang = src === edition.html ? null : lang;
+  const path = editionFilePath(edition.date, edition.region || 'KR', useLang);
   const fs = frameSrc || new URL('frame.js', location.href).href;
   if (native()) {
     try { const st = await Filesystem.stat({ path, directory: Directory.Data }); if (st && st.uri) return Capacitor.convertFileSrc(st.uri); } catch {}
-    const html = transformEditionHtml(await fetchText(edition.html), fs);
+    const html = transformEditionHtml(await fetchText(src), fs);
     const w = await Filesystem.writeFile({ path, directory: Directory.Data, data: html, encoding: Encoding.UTF8, recursive: true });
     return Capacitor.convertFileSrc(w.uri);
   }
   // 웹 미리보기: localStorage 캐시 + Blob URL (교차 출처라 뒤로가기·메시지 연동은 제한됨)
-  const key = 'dailydrop.edition.' + edition.date; let html = null;
+  const key = 'dailydrop.edition.' + (edition.region && edition.region !== 'KR' ? edition.region + ':' : '') + edition.date + (useLang ? ':' + useLang : ''); let html = null;
   try { html = localStorage.getItem(key); } catch {}
-  if (!html) { html = transformEditionHtml(await fetchText(edition.html), fs); try { localStorage.setItem(key, html); } catch {} }
+  if (!html) { html = transformEditionHtml(await fetchText(src), fs); try { localStorage.setItem(key, html); } catch {} }
   return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
 }
 export async function hasEditionFile(date) {
