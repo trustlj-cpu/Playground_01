@@ -68,6 +68,23 @@ async function apnsJwt(env) {
   return _apnsJwt.v;
 }
 
+// FCM v1 액세스 토큰(서비스 계정 JSON은 Worker 시크릿 FCM_SERVICE_ACCOUNT에만). RS256 JWT → OAuth2 토큰, 50분 캐시.
+let _fcmTok = null;
+async function fcmAccessToken(env) {
+  if (_fcmTok && Date.now() - _fcmTok.t < 50 * 60_000) return _fcmTok;
+  const sa = JSON.parse(env.FCM_SERVICE_ACCOUNT);
+  const pem = sa.private_key.replace(/-----[A-Z ]+-----/g, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const b64u = o => btoa(typeof o === 'string' ? o : String.fromCharCode(...new Uint8Array(o))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64u(JSON.stringify({ alg: 'RS256', typ: 'JWT' })), claims = b64u(JSON.stringify({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/firebase.messaging', aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 }));
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(head + '.' + claims));
+  const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + head + '.' + claims + '.' + b64u(sig) });
+  if (!r.ok) throw new Error('fcm oauth ' + r.status + ' ' + (await r.text()).slice(0, 200));
+  const j = await r.json(); _fcmTok = { t: Date.now(), v: j.access_token, project: sa.project_id }; return _fcmTok;
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -105,7 +122,7 @@ export default {
       const ins = await env.DB.prepare('INSERT OR IGNORE INTO push_sends (edition, sent_at, title) VALUES (?1, ?2, ?3)').bind(edition, now, title).run();
       if (!(ins.meta && ins.meta.changes)) return json({ ok: true, skipped: 'already sent', edition });
       const { results: toks } = await env.DB.prepare("SELECT token, platform FROM push_tokens WHERE active = 1").all();
-      const out = { ok: true, edition, ios: { sent: 0, failed: 0, skipped: null }, android: { sent: 0, skipped: 'fcm not configured' } };
+      const out = { ok: true, edition, ios: { sent: 0, failed: 0, skipped: null }, android: { sent: 0, failed: 0, skipped: null } };
       const ios = toks.filter(t => t.platform === 'ios');
       if (!env.APNS_KEY_PEM || !env.APNS_KEY_ID || !env.APNS_TEAM_ID) out.ios.skipped = 'apns not configured';
       else if (ios.length) {
@@ -118,6 +135,19 @@ export default {
             if (r.ok) out.ios.sent++; else { out.ios.failed++; const txt = await r.text(); if (r.status === 410 || /BadDeviceToken|Unregistered/.test(txt)) await env.DB.prepare('UPDATE push_tokens SET active = 0 WHERE token = ?1').bind(t.token).run(); }
           } catch (e) { out.ios.failed++; }
         }
+      }
+      const and = toks.filter(t => t.platform === 'android');
+      if (!env.FCM_SERVICE_ACCOUNT) out.android.skipped = 'fcm not configured';
+      else if (and.length) {
+        try {
+          const tok = await fcmAccessToken(env);
+          for (const t of and) {
+            try {
+              const r = await fetch('https://fcm.googleapis.com/v1/projects/' + tok.project + '/messages:send', { method: 'POST', headers: { authorization: 'Bearer ' + tok.v, 'content-type': 'application/json' }, body: JSON.stringify({ message: { token: t.token, notification: { title, body }, data: { url: link, edition }, android: { priority: 'high', notification: { channel_id: 'edition', click_action: 'OPEN_EDITION' } } } }) });
+              if (r.ok) out.android.sent++; else { out.android.failed++; const txt = await r.text(); if (r.status === 404 || /UNREGISTERED|INVALID_ARGUMENT/.test(txt)) await env.DB.prepare('UPDATE push_tokens SET active = 0 WHERE token = ?1').bind(t.token).run(); }
+            } catch (e) { out.android.failed++; }
+          }
+        } catch (e) { out.android.skipped = String(e).slice(0, 200); }
       }
       try { await env.DB.prepare('UPDATE push_sends SET result = ?2 WHERE edition = ?1').bind(edition, JSON.stringify(out).slice(0, 2000)).run(); } catch (e) {}
       return json(out);
