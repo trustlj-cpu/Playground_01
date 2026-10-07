@@ -61,7 +61,7 @@ const FONTS = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?fa
 const glossary = {}; // term → {f,d,w,first:date,no}
 for (const e of editions) {
   let html = fs.readFileSync(e.file, 'utf8');
-  const m = html.match(/const G = (\{[\s\S]*?\n  \});\n/); if (m) { const G = new Function('return ' + m[1])(); for (const [k, v] of Object.entries(G)) if (!glossary[k]) glossary[k] = { ...v, first: e.date, no: e.no }; }
+  const m = html.match(/const G = (\{[\s\S]*?\n  \});\n/); if (m && (e.region || 'KR') === 'KR') { const G = new Function('return ' + m[1])(); for (const [k, v] of Object.entries(G)) if (!glossary[k]) glossary[k] = { ...v, first: e.date, no: e.no }; }
   const R = REGIONS[e.region || 'KR']; const title = R.title(e.no, e.date);
   const page = HEAD(title, R.desc, `/${R.prefix}${e.date}/`, R.lang) + NAV('/' + R.prefix, e.region || 'KR') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(html, R.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>${R.place}, ${R.date(e.date)}</b><span>${R.edition(e.no)}</span></div>${TAPE(e.date, e.region || 'KR')}</header>`) + POOLHTML(e.date, e.region || 'KR') + NYTCSS + BALANCE + '</body></html>';
   const dir = path.join(OUT, R.prefix, e.date); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, 'index.html'), page);
@@ -87,7 +87,7 @@ for (const r of ['US', 'JP']) {
 
 // ── 보관함
 fs.mkdirSync(path.join(OUT, 'archive'));
-fs.writeFileSync(path.join(OUT, 'archive', 'index.html'), HEAD('데일리드롭 지난 호', '데일리드롭 모든 호 보관함', '/archive/') + FONTS + BASECSS + NAV('/archive/') + `<main><h1>지난 호</h1><p class="mute">매일 저녁 한 장. 최신호가 맨 위.</p>${[...editions].reverse().map(e => `<a class="card" href="/${e.date}/"><b>제 ${e.no} 호 · ${fmt(e.date)} 저녁판</b><span class="mute">${esc(e.blurb || '')}</span></a>`).join('')}</main></body></html>`);
+fs.writeFileSync(path.join(OUT, 'archive', 'index.html'), HEAD('데일리드롭 지난 호', '데일리드롭 모든 호 보관함', '/archive/') + FONTS + BASECSS + NAV('/archive/') + `<main><h1>지난 호</h1><p class="mute">매일 저녁 한 장. 최신호가 맨 위.</p>${[...byRegion('KR')].reverse().map(e => `<a class="card" href="/${e.date}/"><b>제 ${e.no} 호 · ${fmt(e.date)} 저녁판</b><span class="mute">${esc(e.blurb || '')}</span></a>`).join('')}</main></body></html>`);
 
 // ── 용어사전 (검색)
 const terms = Object.entries(glossary).sort((a, b) => a[0].localeCompare(b[0], 'ko'));
@@ -116,7 +116,7 @@ fs.writeFileSync(path.join(OUT, '404.html'), HEAD('데일리드롭 — 없는 �
 fs.copyFileSync(path.join(__dirname, 'og.png'), path.join(OUT, 'og.png'));
 fs.cpSync(path.join(__dirname, 'brand'), path.join(OUT, 'brand'), { recursive: true });
 // 앱용 호 목록(공개 JSON). 앱은 이 파일을 폴링해 새 호를 받는다.
-fs.writeFileSync(path.join(OUT, 'editions.json'), JSON.stringify({ site: SITE, generated_at: new Date().toISOString(), latest: latest.date, editions: [...editions].reverse().map(e => ({ date: e.date, no: e.no, title: `제 ${e.no} 호 · ${fmt(e.date)} 저녁판`, blurb: e.blurb || '', url: `${SITE}/${e.date}/`, html: `${SITE}/${e.date}/index.html` })) }, null, 1));
+fs.writeFileSync(path.join(OUT, 'editions.json'), JSON.stringify({ site: SITE, generated_at: new Date().toISOString(), latest: latest.date, editions: [...byRegion('KR')].reverse().map(e => ({ date: e.date, no: e.no, title: `제 ${e.no} 호 · ${fmt(e.date)} 저녁판`, blurb: e.blurb || '', url: `${SITE}/${e.date}/`, html: `${SITE}/${e.date}/index.html` })) }, null, 1));
 // 앱 딥링크(universal links / app links): site/app.json에 Team ID·서명 지문이 채워진 경우에만 생성
 try {
   const app = JSON.parse(fs.readFileSync(path.join(path.dirname(spec), 'app.json'), 'utf8'));
