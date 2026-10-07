@@ -26,6 +26,18 @@ const TAPE = (date) => {
   };
   return `<div class="tape" aria-label="시세">${cell('S&amp;P 500', m.sp500)}${cell('나스닥', m.nasdaq)}${cell('코스피', m.kospi)}${cell('코스닥', m.kosdaq)}${cell('원/달러', m.usdkrw, 'fx')}${cell('WTI', m.wti, 'usd')}${cell('금', m.gold, 'usd')}</div>`;
 };
+
+// 빈칸 메우기 풀(pool.json, 호별 여분 단신). 페이지에 숨겨 두고 balance.js가 짧은 열 바닥에 끼워 넣는다.
+const POOL = fs.existsSync(path.join(__dirname, 'pool.json')) ? JSON.parse(fs.readFileSync(path.join(__dirname, 'pool.json'), 'utf8')) : {};
+const POOLHTML = (date) => { const items = POOL[date] || []; if (!items.length) return ''; return `<ul class="pool" hidden>${items.map(x => `<li><b>${esc(x.t)}</b>${x.s ? `<span>${esc(x.s)}</span>` : ''}</li>`).join('')}</ul>`; };
+// 조판 균형: 데스크톱(≥860px)에서 같은 줄(.grid/.strip)의 열 높이를 재서 짧은 열 바닥에 풀 단신을 끼워 넣고, 그래도 남는 차이는 열을 늘려 바닥을 맞춘다. 창 크기가 바뀌면 다시.
+const BALANCE = `<script>(function(){var mq=window.matchMedia('(min-width:860px)');var pool=document.querySelector('.pool');var items=pool?Array.prototype.slice.call(pool.children):[];
+function reset(){document.querySelectorAll('.filler').forEach(function(f){f.remove();});document.querySelectorAll('.col').forEach(function(c){c.style.minHeight='';});}
+function rows(){return Array.prototype.slice.call(document.querySelectorAll('main.grid, .strip'));}
+function cols(row){return Array.prototype.slice.call(row.children).filter(function(c){return c.classList.contains('col')&&c.offsetParent!==null;});}
+function balance(){reset();if(!mq.matches)return;var used=0;rows().forEach(function(row){var cs=cols(row);if(cs.length<2)return;row.style.alignItems='start';var tops={};cs.forEach(function(c){var t=c.offsetTop;(tops[t]=tops[t]||[]).push(c);});Object.keys(tops).forEach(function(t){var line=tops[t];if(line.length<2)return;var max=Math.max.apply(null,line.map(function(c){return c.offsetHeight;}));line.forEach(function(c){var gap=max-c.offsetHeight;if(gap<48||used>=items.length)return;var box=document.createElement('div');box.className='fill filler';var h=document.createElement('h5');h.textContent='단신';box.appendChild(h);var ul=document.createElement('ul');ul.className='briefs';box.appendChild(ul);c.appendChild(box);while(used<items.length){var li=items[used].cloneNode(true);ul.appendChild(li);if(c.offsetHeight>max){ul.removeChild(li);break;}used++;}if(!ul.children.length)box.remove();});var max2=Math.max.apply(null,line.map(function(c){return c.offsetHeight;}));line.forEach(function(c){c.style.minHeight=max2+'px';});});row.style.alignItems='';});}
+var t;function run(){clearTimeout(t);t=setTimeout(balance,60);}
+if(document.readyState==='complete')run();else window.addEventListener('load',run);window.addEventListener('resize',run);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(run);})();</script>`;
 const NYTCSS = '<style id="nyt">' + fs.readFileSync(path.join(__dirname, 'nyt.css'), 'utf8') + '</style>';
 const FONTS = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">`;
 
@@ -35,7 +47,7 @@ for (const e of editions) {
   let html = fs.readFileSync(e.file, 'utf8');
   const m = html.match(/const G = (\{[\s\S]*?\n  \});\n/); if (m) { const G = new Function('return ' + m[1])(); for (const [k, v] of Object.entries(G)) if (!glossary[k]) glossary[k] = { ...v, first: e.date, no: e.no }; }
   const title = `데일리드롭 제${e.no}호 · ${fmt(e.date)} 저녁판`;
-  const page = HEAD(title, '국내외 전 분야 이슈를 매일 한 장에. 기사를 누르면 펼쳐지고 점선 단어를 누르면 뜻이 뜹니다.', `/${e.date}/`) + NAV('/') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,").replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>서울, ${fmt(e.date)}</b><span>제${e.no}호 · 저녁판</span></div>${TAPE(e.date)}</header>`) + NYTCSS + '</body></html>';
+  const page = HEAD(title, '국내외 전 분야 이슈를 매일 한 장에. 기사를 누르면 펼쳐지고 점선 단어를 누르면 뜻이 뜹니다.', `/${e.date}/`) + NAV('/') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,").replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>서울, ${fmt(e.date)}</b><span>제${e.no}호 · 저녁판</span></div>${TAPE(e.date)}</header>`) + POOLHTML(e.date) + NYTCSS + BALANCE + '</body></html>';
   const dir = path.join(OUT, e.date); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, 'index.html'), page);
 }
 const latest = editions[editions.length - 1];
