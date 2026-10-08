@@ -1,0 +1,444 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>69,946.86円</b>日経平均 · 10/5 大引け · 大幅反発（+1,637.40円、+2.40%）、場中に一時7万円台</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>157.66円</b>ドル円 · 10/5 17時 東京 · 157円65〜67銭、前週末比8銭の円安（日中157.44〜158.17円）</div>
+    </div>
+    <div class="dateline"><span>第 1 号 · 夕刊</span><b>2026年10月5日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="diet">
+      <div class="kick">政治·財政<span>原資料 ✓ 首相演説（報道中継） · 報道照合 ✓ 6社</span></div>
+      <h2 class="hl">臨時国会召集。首相「食料品の消費税1%、赤字国債に頼らず」</h2>
+      <p class="deck">第222臨時国会が開会し、会期は12月12日までの69日間。高市首相は所信表明演説で、来年4月から2年間、飲食料品の税率を8%から1%に下げる法案を最優先に掲げた。財源の中身は示さなかった</p>
+      <div class="body">
+        <p>第222臨時国会が10月5日に召集され、高市早苗首相は同日、衆参両院の本会議で所信表明演説を行った。9月の内閣改造で発足した第2次高市改造内閣にとって、初めての国会論戦になる。会期は12月12日までの69日間で、政府は21本の法案を出す予定だ。首相は演説で「経世済民」を掲げ、経済の力で暮らしを守ると述べた。時事通信は、首相が経済成長を最優先に据えたと伝えている。物価高が長引くなかで、まず家計の負担を目に見える形で軽くしたいという考えだ。最も重く位置づけたのは、飲食料品の消費税率を2027年4月から2年間、いまの軽減税率8%から1%に下げる法案だ。あわせて所得に応じた支援金を出し、家計に「ゆとり」をつくると訴えた。財源は赤字国債に頼らずに確保するとして、「心配には及ばない」と語った。物価、税収、金利、利払い費の動きを見ながら国債の発行を管理し、今年を「責任ある積極財政」の元年にするとも述べた。年末までに国内投資を促す5年間の行動計画をまとめ、経済安全保障、サイバー防御、AI、半導体に重点を置く考えも示した。減税と投資を同時に進め、成長で税収を増やすという筋書きだ。外食は軽減税率の対象外のため、店で食べる食事の税率は10%のまま残る。</p>
+        <p>ただ、何で穴を埋めるのかは語られなかった。北海道新聞は社説で、首相が具体的な財源に触れず、2年後に税率を戻すことにも言及しなかったと批判した。税収減の見積もりは報道で幅があり、琉球新報は年約5兆円、秋田魁新報は国と地方で2年間に約10兆円とみる。共同通信は、日本の財政がすでにG7で最も弱いとされる中での約束だと指摘した。野党は、来年4月からでは目の前の物価高にすぐ効かないと批判している。国会の構図も楽ではない。与党は衆院で3分の2を持つが、参院では少数だ。前の国会から継続審議になっている衆院議員定数削減法案の行方も焦点になる。野党は、地元会合での道路予算をめぐる発言を5日に撤回した簗和生農相の資質を追及し、首相の任命責任を問う構えだ。各党の代表質問は衆院が7・8日、参院が8・9日。13日以降は衆参の予算委員会に首相が出る見通しで、財源の説明が最初の関門になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>8%→1%</b><span>飲食料品の消費税率。2027年4月から2年間の時限措置</span></div>
+        <div><b>69日間</b><span>臨時国会の会期。12月12日まで</span></div>
+        <div><b>21本</b><span>政府が今国会に提出を予定する法案の数</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="okinawa">
+      <div class="kick">政治·沖縄<span>原資料 ✓ 知事発言（報道中継） · 報道照合 ✓ 4社</span></div>
+      <h3 class="hl">沖縄知事と那覇市長、米軍トップに連名で抗議。米側から明確な謝罪なし</h3>
+      <figure>
+        <svg viewBox="0 0 320 150" role="img" aria-label="10月3日の事件から10月7日の知事上京予定までの経過">
+          <text x="10" y="16" font-family="Noto Sans JP,sans-serif" font-size="11" style="fill:var(--mute)">事件から抗議までの経過（報道ベース）</text>
+          <line x1="20" y1="40" x2="300" y2="40" style="stroke:var(--rule)" stroke-width="1"/>
+          <circle cx="40" cy="40" r="5" style="fill:var(--ink)"/>
+          <circle cx="125" cy="40" r="5" style="fill:var(--ink)"/>
+          <circle cx="210" cy="40" r="6" style="fill:var(--red)"/>
+          <circle cx="285" cy="40" r="5" style="fill:none;stroke:var(--ink)" stroke-width="1.5"/>
+          <text x="40" y="60" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10.5" style="fill:var(--ink)">10.3</text>
+          <text x="40" y="73" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" style="fill:var(--mute)">ホテルで事件</text>
+          <text x="125" y="60" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10.5" style="fill:var(--ink)">10.4</text>
+          <text x="125" y="73" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" style="fill:var(--mute)">上等兵を逮捕</text>
+          <text x="210" y="60" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10.5" font-weight="700" style="fill:var(--red)">10.5</text>
+          <text x="210" y="73" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" style="fill:var(--mute)">送検・連名抗議</text>
+          <text x="285" y="60" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10.5" style="fill:var(--ink)">10.7</text>
+          <text x="285" y="73" text-anchor="middle" font-family="Noto Sans JP,sans-serif" font-size="10" style="fill:var(--mute)">上京（予定）</text>
+          <text x="10" y="108" font-family="Noto Serif JP,serif" font-size="26" font-weight="900" style="fill:var(--ink)">抗議先 4 か所</text>
+          <text x="10" y="124" font-family="Noto Sans JP,sans-serif" font-size="10.5" style="fill:var(--mute)">四軍調整官・米総領事・沖縄防衛局・外務省沖縄大使</text>
+          <text x="10" y="144" font-family="Noto Sans JP,sans-serif" font-size="10" style="fill:var(--mute)">資料: 琉球新報・共同・赤旗（10/4〜5）。容疑者は否認。</text>
+        </svg>
+        <figcaption>四軍調整官は在沖縄の陸海空・海兵隊を束ねる米軍の代表。県と那覇市がそろって県庁に呼び出すのは、最も重い抗議の形の一つだ。</figcaption>
+      </figure>
+      <div class="one">
+        <p>那覇市のホテルで39歳の女性が殺害され、所持品を奪われた事件で、沖縄県の古謝玄太知事と那覇市の知念覚市長は10月5日、在沖米軍トップの四軍調整官と在沖米国総領事を県庁に呼び、連名で抗議した。事件は3日未明に起き、女性の首にはひも状のもので絞められた痕があったと報じられている。知事らは日米地位協定の見直しを含め、実効性のある抜本的な対策を求めた。琉球新報によると、米側は捜査への協力を示したが、事件への明確な謝罪はなかった。知事は同日、沖縄防衛局長と外務省の沖縄担当大使にも抗議し、「綱紀粛正、人権教育が全く機能していないと言わざるを得ない」と述べた。県警は4日、米軍普天間飛行場所属の海兵隊上等兵（20）を強盗殺人容疑で緊急逮捕し、5日に送検した。容疑者は「私は知りません」と否認していると伝えられる。知事は7日にも上京し、首相らに再発防止を求める方針だ。県内では前日から市民の集会が開かれ、反発は広がっている。米軍関係者による事件は過去にも繰り返され、そのたびに再発防止が約束されてきた。今回も同じ言葉で終わるのかが問われている。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>身柄の引き渡し<i>外交·法</i></b><p>米兵が事件を起こしたとき、起訴前に日本側が身柄を持てるかどうか。日米地位協定では、基地内に逃げ込めば起訴まで米側が拘束するのが原則。今回は県警が先に逮捕しており、捜査は日本側の手で進んでいる。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="yana"><b>簗農相、「道路予算カット」発言を撤回し陳謝 — 辞任は否定</b><em>5月の地元会合で、選挙で応援しなかった首長の市町の道路予算を「大幅にカットした」と発言。国交省は削減の事実を否定している。</em><span>政治 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="brazil"><b>ブラジル大統領選、ルラ氏とフラビオ・ボルソナロ氏の決選投票へ</b><em>4日の第1回投票で誰も過半数に届かず。99.8%開票でボルソナロ氏47.03%、ルラ氏45.16%。決選投票は25日。</em><span>国際 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="usjobs"><b>米9月雇用、2.9万人増どまり — 予想の9万人を大きく下回る</b><em>2日発表。失業率は4.2%に上昇。市場ではFRBが10月の利上げを見送るとの見方が強まり、5日の東京株高につながった。</em><span>世界経済 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="fx"><b>東京円、157円台後半 — 午後に158円台から押し戻し</b><em>午後5時は1ドル＝157円65〜67銭、前週末比8銭の円安。一時158円17銭まで円安が進んだが、続かなかった。</em><span>為替 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="asiad"><b>アジア大会閉幕、日本は金83個・メダル269個で最多</b><em>愛知・名古屋で16日間。金は1966年バンコク大会の78個を60年ぶりに更新。金の数は中国の169個に次ぐ2位。</em><span>スポーツ · ✓ 共同配信2紙</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="nobel">
+      <div class="kick">科学<span>原資料 ✓ カロリンスカ研究所発表（報道中継） · 報道照合 ✓ 5社</span></div>
+      <h3 class="hl">ノーベル医学賞は「光遺伝学」の3氏。光で神経細胞を入れたり切ったり</h3>
+      <div class="body">
+        <p>スウェーデンのカロリンスカ研究所は10月5日、2026年のノーベル生理学・医学賞を、米スタンフォード大学のカール・ダイセロス氏（54）、独フンボルト大学のペーター・ヘーゲマン氏（71）、独ビュルツブルク大学のゲオルク・ナーゲル氏（73）の3氏に贈ると発表した。授賞理由は「光駆動型イオンチャネルと光遺伝学に関する発見」。ヘーゲマン氏とナーゲル氏は、単細胞の藻類が光に反応する仕組みを担うタンパク質、チャネルロドプシンを突き止めた。</p>
+        <p>ダイセロス氏はこのタンパク質の遺伝子を神経細胞に組み込み、光を当てると神経の信号が出るようにした。2005年にラットの神経細胞で示し、のちに生きたマウスの脳でも実現した。ノーベル委員会は、生きた脳の中で一つ一つの神経細胞の働きを切り替えられるようになったと説明している。いまは記憶や行動、精神・神経の病気の回路を調べる標準の道具で、網膜の病気で視力を失った人に光を取り戻す試みにも使われる。賞金1,200万クローナを3氏で分ける。日本人の受賞はなく、昨年の医学賞は大阪大学の坂口志文氏らだった。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="kingu">
+      <div class="kick">社会·テクノロジー<span>原資料 ✓ 物語コーポレーション発表（報道中継） · 報道照合 ✓ 4社</span></div>
+      <h3 class="hl">焼肉きんぐのアプリ会員1,078万件が流出。登録者のほぼ全員</h3>
+      <div class="body">
+        <p>外食大手の物語コーポレーションは10月5日、焼肉チェーン「焼肉きんぐ」の公式アプリの会員管理システムが不正アクセスを受け、会員1,078万8,963件の情報が漏えいしたと発表した。アプリの登録数は1,080万8,784件で、ほぼ全員にあたる。漏れたのは会員番号、アプリに登録した氏名、メールアドレス、電話番号の四つだ。</p>
+        <p>ログインパスワード、生年月日、性別、郵便番号、ポイントを含む利用履歴は含まれず、決済情報はもともと持っていないという。同社は2日に不正アクセスを確認して通信を遮断し、3日に漏えいを確かめた。5日時点で、情報が公開されたり悪用されたりした事実は確認されていない。原因と侵入の経路は調査中だ。不正アクセスの確認から公表までは3日。パスワードが無事でも、氏名とメールと電話番号がそろえば、店を名乗るもっともらしい詐欺の連絡を作るには十分だ。会社を名乗るメールやSMSが届いても、リンクは開かず公式アプリから確かめたい。ほかのサービスと同じパスワードを使っているなら、この機会に変えておくと安心だ。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="mkt">
+      <div class="kick">経済·市場<span>原資料 ✓ 東証終値（報道中継） · 報道照合 ✓ 5社</span></div>
+      <h3 class="hl">日経平均1,637円高、場中に3カ月ぶり7万円台。米雇用の弱さで利上げ観測が後退</h3>
+      <div class="body">
+        <p>10月5日の東京株式市場で日経平均株価は大幅に反発し、前週末比1,637円40銭（2.40%）高の6万9,946円86銭で取引を終えた。取引時間中には7万72円13銭まで上がり、7月6日以来ほぼ3カ月ぶりに7万円台を回復したが、終値では届かなかった。TOPIXは54.22ポイント高の4,145.22。東証プライムの売買代金は概算で7兆7,509億円だった。</p>
+        <p>きっかけは前週末の米国だ。2日発表の9月の米雇用統計で就業者数の伸びが2.9万人と、市場予想の9万人を大きく下回った。FRBの早期利上げ観測が後退し、ニューヨーク株が上がった流れが東京に及んだ。上げを引っ張ったのは東京エレクトロン、ファーストリテイリング、ソフトバンクグループなどの値がさ株で、株式情報サイトの集計では上げ幅のうち1,084円分を4銘柄が占めた。値上がりは860銘柄、値下がりは633銘柄。指数ほど上昇の裾野は広くない。フィスコは、25日移動平均からの離れ方が買われ過ぎの目安を超えたとして、短期の調整にも注意を促している。終値で7万円台に乗せられるかが次の節目だ。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>米雇用統計は7・8月分も合計6万人下方修正。9月分の増加と差し引きすると、3カ月で3.1万人の減少になる計算<span>FTポートフォリオ・ピクテ</span></li>
+        <li>那覇市の県民広場で4日、市民約160人が緊急集会を開き黙とう。東京・新宿でも同じ夜に、追悼と抗議の集会が開かれた<span>琉球新報・赤旗</span></li>
+        <li>簗農相の発言をめぐり、井林辰憲国交相は2日「報道のような形で道路予算が削減された事実はない」と説明していた<span>共同・NHK</span></li>
+        <li>日経平均の25日移動平均からの上方乖離率は6.50%。買われ過ぎの目安とされる5%を上回り、過熱感も意識される<span>フィスコ（ザイFX）</span></li>
+        <li>アジア大会の日本のメダル269個は、1994年広島大会の218個を大きく上回った。次回は4年後、カタールのドーハで開く<span>共同（熊本日日・秋田魁）</span></li>
+        <li>ブラジルの決選投票は10月25日。勝者が中南米最大の経済と人口2億1,400万人の国を、今後4年間率いる<span>AP・Euronews</span></li>
+      </ul><div class="house">毎晩7分、一面を一枚 — 購読案内は『紹介』から</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「日経平均、7万円台で引けた。」</b> <span>7万円を超えたのは取引時間中（高値70,072円）だけ。終値は69,946円で、7万円台の終値ではない。</span></div>
+        <div><b>「食料品の消費税がゼロになる。」</b> <span>法案は8%を1%に下げる内容。「実質ゼロ」と書く社説はあるが、税率は1%。開始は来年4月、期間は2年。</span></div>
+        <div><b>「沖縄知事、5日に首相と面会。」</b> <span>5日の抗議先は米軍・米総領事・防衛局・外務省。首相への要請は7日にも上京して行う方針で、本紙はまだ確認していない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>あす見るもの</h4>
+        <div><b>10/6 火</b><span>ノーベル物理学賞（日本時間18時45分以降） · 日経平均が終値で7万円台に乗るか · 焼肉きんぐの原因の続報。</span><b>今週</b><span>7・8日 衆院代表質問、8・9日 参院 — 財源の中身と簗農相 · 7日にも沖縄知事が上京し首相に要請。</span><b>読者へ</b><span>消費税1%は来年4月から。いまの買い物は変わらない。見るのは、代表質問で首相が財源を数字で言うかどうか。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・経済・法・科学の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    diet:{kick:"政治·財政 · 原資料 ✓ 首相演説（報道中継） · 報道照合 ✓ 6社",title:"臨時国会召集。首相「食料品の消費税1%、赤字国債に頼らず」",
+      what:"第222臨時国会が10月5日に召集され、高市早苗首相は衆参両院の本会議で所信表明演説を行った。9月の内閣改造後、第2次高市改造内閣として初の国会論戦で、会期は12月12日までの69日間。政府は21本の法案を提出する予定だ。首相は「経世済民」を掲げ、最重要課題として、飲食料品の消費税率を2027年4月から2年間、軽減税率の8%から1%に下げる法案の成立を挙げた。所得に応じた支援金とあわせて家計に「ゆとり」を生むと訴えた。財源は赤字国債に頼らずに確保するとし、「心配には及ばない」と述べたが、具体的な項目は示さなかった。物価・税収・金利・利払い費を見ながら国債発行を管理する「責任ある積極財政」を掲げ、年末までに国内投資を促す5年間の行動計画をまとめる考えも示した。代表質問は衆院が7・8日、参院が8・9日。",
+      why:"消費税は誰もが毎日払う税だ。食料品が1%になれば、食費の多い家計ほど負担は軽くなる。一方で税収は大きく減る。琉球新報の社説は年約5兆円、秋田魁新報の社説は国と地方で2年間に約10兆円と見積もる。日本の財政はG7で最も弱いとされ、長期金利も高い。新しい国債に頼らないと言いながら財源の中身を言わないことは、市場が最も嫌う組み合わせになり得る。与党は参院で少数のため、法案を通すには野党の協力も要る。",
+      me:"いまのレシートは何も変わらない。減税が始まるのは来年4月で、終わるのは2年後だ。家計で覚えておくのは二つ。外食は対象外で10%のまま、持ち帰りや食料品の買い物が対象になる見通しであること。そして2年後に税率が戻るなら、その前に駆け込み需要と値札の付け替えが来ることだ。",
+      a:"物価高が続く中で、食料品に絞った減税は所得の低い世帯ほど効く。支援金と組み合わせる設計も筋が通る。赤字国債に頼らないと明言した点は、財政への配慮として評価できる。",
+      b:"財源を示さない「心配には及ばない」は説明になっていない。2年後に戻すのかどうかも語られなかった。期限付き減税は延長圧力が強く、結局は国債頼みになるという見方が市場には根強い。",
+      say:"きょうの一文は「心配には及ばない」。安心させる言葉だが、数字が付いていない。見るべきは7日からの代表質問で、首相が財源の項目と金額を一つでも言うかどうか。言えなければ、この国会の論点は減税の是非から財源の信用へ移る。",
+      src:"NHK（召集・所信表明） · 共同通信（熊本日日、Bernama配信） · 時事通信（nippon.com） · 北海道新聞 社説 · 琉球新報 社説 · 秋田魁新報 社説 · QNA（すべて10/5） · 首相官邸の演説全文の直接確認は未完了"},
+    okinawa:{kick:"政治·沖縄 · 原資料 ✓ 知事発言（報道中継） · 報道照合 ✓ 4社",title:"沖縄知事と那覇市長、米軍トップに連名で抗議。米側から明確な謝罪なし",
+      what:"那覇市のホテルで39歳の女性が殺害され所持品を奪われた事件で、沖縄県の古謝玄太知事と那覇市の知念覚市長は10月5日、在沖米軍トップの四軍調整官と在沖米国総領事を県庁に呼び、連名で抗議した。日米地位協定の見直しを含む実効性のある抜本的対策を求めた。琉球新報によると、米側は捜査への協力を表明したが、明確な謝罪はなかった。知事は同日、沖縄防衛局長と外務省沖縄担当大使にも抗議し、「綱紀粛正、人権教育が全く機能していない」と述べた。県警は4日、米軍普天間飛行場所属の海兵隊上等兵（20）を強盗殺人容疑で緊急逮捕し、5日に送検した。容疑者は否認していると報じられている。知事は7日にも上京して首相らに抗議・要請する方針。",
+      why:"沖縄では米軍関係者の事件が繰り返され、そのたびに綱紀粛正と再発防止が約束されてきた。今回は県と那覇市がそろって米軍トップを呼び、地位協定の見直しまで踏み込んだ。米側が謝罪しなかったことで、県内の反発はさらに強まる可能性がある。7日の上京で政府がどう応じるかが、次の局面を決める。",
+      me:"日米地位協定は沖縄だけでなく全国の米軍基地に共通するルールだ。運用が変われば、本土の基地周辺にも影響する。事件の捜査は日本の警察が逮捕から進めている点も押さえておきたい。",
+      a:"県の要求は具体的だ。再発防止策の点検と協議の場の設定は、政府がすぐにできる。",
+      b:"抗議と約束が繰り返されるだけでは何も変わらない。地位協定そのものに手を付けない限り、同じことが起きるという声は強い。",
+      say:"きょうの事実は「謝罪がなかった」の一点だ。見るべきは7日の上京で、首相が具体的な日付を伴う対応を示すかどうか。言葉だけで終われば、県議会の決議と県民集会が続くことになる。",
+      src:"琉球新報（5日の抗議、米側の対応、逮捕・否認） · 共同通信（熊本日日、神奈川新聞配信） · しんぶん赤旗（すべて10/4〜5） · 容疑者の氏名は本紙では記さない"},
+    yana:{kick:"政治 · 報道照合 ✓ 3社 · 発言は当事者に帰属",title:"簗農相、「道路予算カット」発言を撤回し陳謝 — 辞任は否定",
+      what:"簗和生農林水産相は10月5日、5月24日に栃木県大田原市の自民党支部の懇親会で、衆院選で自身を応援しなかった首長がいる那須烏山市と那珂川町について「本年度の道路予算は大幅にカットした」と述べた発言を撤回し、陳謝した。週刊新潮が音声データをもとに報じていた。簗氏は2日の会見で発言を認め「誤解を招く言いぶりだった」と釈明し、国交省への働きかけは否定、辞任もしない考えを示していた。井林辰憲国交相は2日、報道のような削減の事実はないと説明している。",
+      why:"大臣が予算を選挙の見返りに使ったと受け取れる発言で、事実かどうかにかかわらず行政の公正さへの信頼に関わる。召集日に撤回したのは国会での追及を和らげる狙いとみられるが、野党は首相の任命責任も問う構えだ。",
+      me:"道路予算は自治体の暮らしに直結する。配分の基準が政治的な好き嫌いで動くなら、それは全ての住民の問題になる。",
+      a:"",b:"",
+      say:"発言は「誇張」だったのか、実際に何かが動いたのか。国交省の否定と本人の撤回だけでは決着しない。国会で配分の記録が出てくるかを見る。",
+      src:"NHK（10/5 撤回・陳謝） · 共同通信（秋田魁新報、熊本日日、10/2） · 週刊新潮（報道の出発点、本紙未確認）"},
+    brazil:{kick:"国際 · 報道照合 ✓ 4社 · 得票率は選挙裁判所集計の報道に帰属",title:"ブラジル大統領選、ルラ氏とフラビオ・ボルソナロ氏の決選投票へ",
+      what:"ブラジル大統領選の第1回投票が10月4日（現地時間）に行われ、どの候補も有効票の過半数に届かなかった。選挙裁判所の集計（開票率99.8%）では、右派のフラビオ・ボルソナロ上院議員が約5,600万票（47.03%）、現職で左派のルラ大統領が約5,370万票（45.16%）。両氏が10月25日の決選投票に進む。ボルソナロ氏は「ブラジルは変化を望んでいる」と述べ、ルラ氏は結果を「予想外」と語った。",
+      why:"中南米最大の経済で人口2億1,400万人の国の進路が決まる。APは、ボルソナロ氏が勝てば中南米で米国の影響力が強まり、ルラ氏が勝てば中国との関係を深める路線が続くと分析している。",
+      me:"ブラジルは日本にとって大豆・鉄鉱石・鶏肉の重要な調達先で、日系人社会も大きい。資源価格と為替を通じて、遠くの選挙が日本の食卓に届くことがある。",
+      a:"",b:"",
+      say:"現職が第1回投票で2位に回ったことが、きょうの意味だ。決選投票までの3週間、第3位以下の候補の票がどちらに流れるかを見る。",
+      src:"AP（AJC掲載） · NPR（WUNC・セントルイス公共ラジオ） · Euronews · Africanews（10/4〜5） · 選挙裁判所の確定値は未確認"},
+    usjobs:{kick:"世界経済 · 報道照合 ✓ 4社 · 数値は米労働省発表に帰属（原文の直接確認は未完了）",title:"米9月雇用、2.9万人増どまり — 予想の9万人を大きく下回る",
+      what:"米労働省が10月2日に発表した9月の雇用統計で、非農業部門の就業者数は前月比2.9万人増にとどまり、市場予想の9万人増（集計によっては8.4万人）を大きく下回った。失業率は4.2%に上がり、予想の4.1%を上回った。8月分は13.3万人増に、7月分は1.0万人減に下方修正された。平均時給は前年同月比3.0%増と伸びが鈍った。予測市場カルシでは、FRBが10月に金利を据え置く確率が85%まで上がった。",
+      why:"FRBは原油高による物価上昇を警戒し、利上げを探っていた。雇用が止まりかければ、利上げの理由は弱まる。週明け5日の東京市場で日経平均が1,637円上がったのは、この統計が出発点だ。",
+      me:"米国の金利が上がりにくくなれば、ドル高円安の圧力は和らぐ方向に働く。ただ5日のドル円は157円台後半で、まだ大きくは動いていない。",
+      a:"AI関連の製造業や建設は堅調で、労働参加率も上がった。数字ほど弱くないという見方もある。",
+      b:"3カ月を平均すると雇用の伸びはほぼゼロだ。景気の減速は始まっている。",
+      say:"覚える数字は「2.9万人」。次に見るのは10月下旬のFOMCで、利上げ見送りが本当に決まるかどうか。",
+      src:"ピクテ（10/5） · First Trust（FTポートフォリオ） · XTB · investingLive（10/2） · CNN日本版"},
+    fx:{kick:"為替 · 報道照合 ✓ 3社 · 午後5時の値は共同通信の東京円に帰属",title:"東京円、157円台後半 — 午後に158円台から押し戻し",
+      what:"10月5日の東京外国為替市場で、円相場は午後5時時点で1ドル＝157円65〜67銭となり、前週末に比べて8銭の円安ドル高だった（共同通信）。日中は157円44銭から158円17銭の範囲で動き、昼過ぎに158円台に乗せたが、午後は材料に乏しく押し戻された。",
+      why:"米雇用統計で米国の利上げ観測が後退し、ドル高の勢いは鈍っている。一方で日本株高は円売りにつながりやすく、二つの力が打ち消し合った一日だった。",
+      me:"輸入品やガソリンの値段に効くのはこの水準だ。158円台に定着するかどうかが、年末の物価の目安になる。",
+      a:"",b:"",
+      say:"動いたのは日中の73銭だけで、方向は出ていない。次の材料は米国の物価統計と、日本の代表質問で出る財政の説明だ。",
+      src:"共同通信「東京円」（琉球新報配信） · ウエルスアドバイザー（Yahoo!ファイナンス） · みんかぶFX · 財経新聞（すべて10/5）"},
+    asiad:{kick:"スポーツ · 報道照合 ✓ 共同配信2紙 · 他社の独立照合は一部",title:"アジア大会閉幕、日本は金83個・メダル269個で最多",
+      what:"愛知・名古屋アジア大会が10月4日夜の閉会式で16日間の日程を終えた。日本は金83、銀95、銅91の計269個で、金は1966年バンコク大会の78個を60年ぶりに更新、メダル総数も1994年広島大会の218個を上回り、いずれも過去最多となった。金の数は中国の169個に次ぐ2位で、3位は韓国の39個。日本開催は32年ぶり3度目。次回は4年後にドーハで開かれる。",
+      why:"自国開催の利点を数字で示した大会だった。井上康生団長は、宿泊や食事、試合会場で周到に準備したことを成果の理由に挙げた。",
+      me:"2年後のロス五輪に向けて、どの競技の金が五輪種目と重なるかを見ると、今回の数字の意味がわかる。",
+      a:"",b:"",
+      say:"数字は「60年ぶり」。地元の力を差し引いたとき何が残るかは、次のドーハで分かる。",
+      src:"共同通信（熊本日日、秋田魁新報配信、10/4） · 日本選手団の会見（報道中継）"},
+    nobel:{kick:"科学 · 原資料 ✓ カロリンスカ研究所発表（報道中継） · 報道照合 ✓ 5社",title:"ノーベル医学賞は「光遺伝学」の3氏。光で神経細胞を入れたり切ったり",
+      what:"スウェーデンのカロリンスカ研究所は10月5日、2026年のノーベル生理学・医学賞を、米スタンフォード大学のカール・ダイセロス氏（54）、独フンボルト大学のペーター・ヘーゲマン氏（71）、独ビュルツブルク大学のゲオルク・ナーゲル氏（73）に贈ると発表した。授賞理由は「光駆動型イオンチャネルと光遺伝学に関する発見」。ヘーゲマン氏とナーゲル氏は、単細胞の藻類で光を受けて働くタンパク質チャネルロドプシンを解明した。ダイセロス氏はこれを神経細胞に組み込み、2005年にラットの神経細胞で、光で信号を起こせることを示した。賞金は1,200万スウェーデンクローナで、3氏で分ける。",
+      why:"脳の中の特定の神経細胞だけを、光で狙ってオン・オフできるようになった。ノーベル委員会は、生きた脳で個々の神経細胞の活動を切り替えられるようになったと説明している。記憶、恐怖、依存、うつなどの回路の研究がここから大きく進んだ。網膜の病気で視力を失った人に光への反応を取り戻す臨床の試みも始まっている。",
+      me:"すぐ使える治療ではない。ただ、精神・神経の病気の薬がどこに効くのかを確かめる研究の多くが、この道具の上に立っている。数年先の新薬のニュースの裏に、この3人の名前がある。",
+      a:"基礎研究（藻類のタンパク質）と応用（神経科学の道具）が一本でつながった、典型的な受賞だ。",
+      b:"道具の発明に対する授賞で、病気の治療としての成果はこれから。患者への応用はまだ限られる。",
+      say:"覚える言葉は「チャネルロドプシン」。藻が光に向かって泳ぐための部品が、脳を調べる鍵になった。あすの物理学賞から、ノーベル賞ウィークが続く。",
+      src:"新華社 · Al Jazeera · NPR（WUNC・GPB） · Newsweek日本版 · Digital Today（すべて10/5） · ノーベル財団公式ページ"},
+    kingu:{kick:"社会·テクノロジー · 原資料 ✓ 物語コーポレーション発表（報道中継） · 報道照合 ✓ 4社",title:"焼肉きんぐのアプリ会員1,078万件が流出。登録者のほぼ全員",
+      what:"物語コーポレーションは10月5日、「焼肉きんぐ」公式アプリの会員管理システムが第三者の不正アクセスを受け、会員1,078万8,963件の会員番号、氏名（アプリ登録名）、メールアドレス、電話番号が漏えいしたと発表した。アプリ登録数1,080万8,784件のほぼ全員にあたる。ログインパスワード、生年月日、性別、郵便番号、保有ポイントを含む店舗利用履歴は含まれず、決済情報は保有していない。同社は2日に不正アクセスを確認して通信を遮断し、3日に漏えいを確認した。5日時点で情報の公開や不正利用は確認されておらず、原因は調査中。",
+      why:"件数の大きさより、登録者のほぼ全員分が一度に取られた点が重い。氏名・メール・電話番号がそろえば、店を名乗るもっともらしい詐欺メールやSMSが作れる。",
+      me:"アプリを使っているなら、「ポイント失効」「クーポン当選」などを装ったメールやSMSのリンクは開かない。確認は公式アプリから。ほかのサービスと同じパスワードを使っていれば、念のため変えておく。",
+      a:"確認から3日で件数と項目を明示して公表した。初動は早い。",
+      b:"なぜ一つの入口から全会員分を取れる設計だったのか。原因の説明がない限り、再発の不安は残る。",
+      say:"きょうの数字は「1,078万件」ではなく「ほぼ全員」。見るべきは、同社が原因を言葉で説明する日だ。それまで、届くメールは疑っていい。",
+      src:"ASCII（週刊アスキー） · 日本食糧新聞 · NHK（「1000万余り」と表記） · ロケットボーイズ（すべて10/5〜6） · 会社発表原文の直接確認は未完了"},
+    mkt:{kick:"経済·市場 · 原資料 ✓ 東証終値（報道中継） · 報道照合 ✓ 5社",title:"日経平均1,637円高、場中に3カ月ぶり7万円台。米雇用の弱さで利上げ観測が後退",
+      what:"10月5日の東京株式市場で日経平均株価は前週末比1,637円40銭（2.40%）高の6万9,946円86銭で取引を終え、大幅に反発した。始値は6万9,113円74銭、高値は7万72円13銭で、取引時間中に7月6日以来ほぼ3カ月ぶりの7万円台を回復したが、終値では届かなかった。TOPIXは54.22ポイント高の4,145.22。東証プライムの売買代金は概算7兆7,509億円、値上がり860、値下がり633、変わらず53。前週末2日に発表された9月の米雇用統計が市場予想を大きく下回り、FRBの早期利上げ観測が後退したことで米国株が上がり、東京でもAI・半導体関連が買われた。東京エレクトロン、ファーストリテイリング、ソフトバンクグループなど値がさ4銘柄で上げ幅のうち1,084円分を占めたとの集計がある。",
+      why:"上げ幅の6割強が4銘柄によるもので、指数の数字ほど相場全体は強くない。フィスコは25日移動平均からの上方乖離率が6.50%と買われ過ぎの目安5%を超えたと指摘しており、短期の調整に注意が要る。",
+      me:"日経平均に連動する投信やiDeCoは、きょう一日で2%強増えたはずだ。ただ中身は値がさ株の上げで、自分の持つ個別株が同じように上がったとは限らない。",
+      a:"米利上げの懸念が和らぎ、AI需要という業績の裏付けもある。7万円台の回復は自然な流れだ。",
+      b:"4銘柄で1,000円以上を稼いだ上げは脆い。乖離率も高く、7万円は目先の天井になり得る。",
+      say:"きょうの言葉は「場中に7万円」。終値ではまだ届いていない。見るべきは、あす以降に終値で7万円台に乗せたとき、値上がり銘柄の数が値下がりを大きく上回るかどうかだ。",
+      src:"時事通信（Yahoo） · 共同通信（神奈川新聞、佐賀新聞配信） · 株探 · ザイFX（フィスコ） · TBLアドバイザリー · メディアIR（すべて10/5） · JPX原データの直接照合は未完了"},
+  };
+
+  const G = {
+    "臨時国会":{f:"政治",d:"通常国会とは別に、内閣の判断などで開かれる国会。会期は召集のたびに衆参両院の議決で決める。",w:"第222臨時国会が10月5日に召集され、会期は12月12日までの69日間。"},
+    "所信表明演説":{f:"政治",d:"臨時国会や新しい内閣の発足時に、首相が衆参両院の本会議で政権の基本方針を述べる演説。通常国会では施政方針演説と呼ぶ。",w:"高市首相は食料品の消費税1%と、赤字国債に頼らない財源確保を訴えた。"},
+    "軽減税率":{f:"税",d:"消費税の標準税率10%に対し、飲食料品（酒類・外食を除く）と新聞に適用される低い税率。いまは8%。",w:"この8%を2027年4月から2年間、1%に下げる法案が今国会の最重要法案になった。"},
+    "赤字国債":{f:"財政",d:"税収などで足りない一般の経費を賄うために国が発行する借金の証書。財政法では原則禁止で、毎年特例法を作って発行している。",w:"首相は消費税減税の財源をこれに頼らないと明言したが、代わりの財源は示さなかった。"},
+    "責任ある積極財政":{f:"財政",d:"高市政権が掲げる財政運営の考え方。成長のための支出はためらわず、物価や金利、利払い費を見て国債発行を管理するとする。",w:"首相は今年をその「元年」にすると述べた。"},
+    "継続審議":{f:"政治",d:"会期中に議決されなかった法案を、次の国会に引き継いで審議すること。議院の議決で決める。",w:"衆院議員定数削減法案は前の国会から継続審議になっており、今国会での成否が焦点だ。"},
+    "代表質問":{f:"政治",d:"首相の演説に対し、各党の代表が本会議で質問すること。国会論戦の最初の山場になる。",w:"衆院が7・8日、参院が8・9日。財源と閣僚の資質が論点になる見通し。"},
+    "予算委員会":{f:"政治",d:"予算を審議する委員会。実際には外交・経済・不祥事など幅広いテーマで、首相や閣僚に一問一答で質問できる場になる。",w:"13日以降、衆参の予算委員会に首相が出席する見通しだ。"},
+    "経済安全保障":{f:"経済·安全保障",d:"半導体やエネルギー、重要技術などを他国に依存しすぎないようにし、経済の手段で国の安全を守る考え方。",w:"首相は年末までの5年間の国内投資行動計画で重点分野の一つに挙げた。"},
+    "四軍調整官":{f:"安全保障",d:"沖縄に駐留する米陸軍・海軍・空軍・海兵隊の調整役で、在沖米軍の事実上のトップ。通常は海兵隊の中将が務める。",w:"知事と那覇市長が県庁に呼んで連名で抗議した。米側から明確な謝罪はなかった。"},
+    "日米地位協定":{f:"外交·法",d:"在日米軍の法的な地位を定めた日米間の協定。米軍人の裁判権や身柄の扱い、基地の管理などを規定する。1960年以来、本文は改定されていない。",w:"知事らは事件を受け、この協定の見直しを含む抜本的な対策を求めた。"},
+    "綱紀粛正":{f:"行政·軍",d:"組織の規律を引き締め、不正や不祥事を防ぐこと。米軍関係者の事件のたびに米側が約束してきた言葉でもある。",w:"知事は「綱紀粛正、人権教育が全く機能していない」と述べた。"},
+    "送検":{f:"法",d:"警察が捜査した事件を検察官に送ること。逮捕した容疑者は48時間以内に送らなければならない。",w:"県警は4日に逮捕した海兵隊上等兵を5日に送検した。"},
+    "光遺伝学":{f:"生命科学",d:"光に反応するタンパク質の遺伝子を特定の神経細胞に組み込み、光を当ててその細胞の活動をオン・オフする技術。オプトジェネティクスとも呼ぶ。",w:"今年のノーベル生理学・医学賞の授賞理由そのものだ。"},
+    "チャネルロドプシン":{f:"生命科学",d:"緑藻などが持つ、光を受けるとイオンを通す穴（チャネル）が開くタンパク質。藻が光の方向へ泳ぐために使う。",w:"ヘーゲマン氏とナーゲル氏が解明し、ダイセロス氏が神経細胞の光スイッチに使った。"},
+    "カロリンスカ研究所":{f:"科学",d:"スウェーデン・ストックホルムの医科大学。ノーベル生理学・医学賞の選考と発表を担う。",w:"10月5日、光遺伝学の3氏への授賞を発表した。"},
+    "不正アクセス":{f:"テクノロジー·法",d:"正当な権限なくシステムに入り込むこと。不正アクセス禁止法で処罰される。盗んだ認証情報でログインする手口も含む。",w:"焼肉きんぐのアプリの会員管理システムが受け、会員のほぼ全員の情報が流出した。"},
+    "日経平均":{f:"金融",d:"東証プライムの代表的な225銘柄の株価を平均した指数。値がさ株の影響が大きく、少数の銘柄で大きく動くことがある。",w:"10月5日は1,637円高の69,946円。取引時間中に約3カ月ぶりの7万円台をつけた。"},
+    "TOPIX":{f:"金融",d:"東証株価指数。幅広い銘柄の時価総額を指数化したもので、日経平均より市場全体の動きを映す。",w:"5日は54.22ポイント高の4,145.22。上昇率は日経平均の半分程度だった。"},
+    "売買代金":{f:"金融",d:"その日に売買が成立した株の金額の合計。市場の活発さを示し、大きいほど多くの投資家が参加していることを意味する。",w:"5日の東証プライムは概算7兆7,509億円だった。"},
+    "値がさ株":{f:"金融",d:"株価の水準が高い銘柄。日経平均は株価の単純平均に近い計算をするため、値がさ株の上下が指数を大きく動かす。",w:"東京エレクトロンやファーストリテイリングなど4銘柄で、上げ幅の1,084円分を占めた。"},
+    "雇用統計":{f:"経済·国際",d:"米労働省が毎月第1金曜日に発表する雇用の統計。非農業部門の就業者数と失業率が中心で、FRBの金融政策を左右する。",w:"9月分は就業者2.9万人増と予想を大きく下回り、利上げ観測を後退させた。"},
+    "利上げ観測":{f:"金融",d:"中央銀行が近く政策金利を引き上げるだろうという市場の見方。強まれば株安・通貨高、弱まれば株高になりやすい。",w:"米雇用の弱さでFRBの早期利上げ観測が後退し、日米の株高につながった。"},
+    "乖離率":{f:"金融",d:"株価や指数が移動平均線からどれだけ離れているかを示す割合。大きく上に離れると買われ過ぎの目安とされる。",w:"日経平均の25日移動平均からの上方乖離率は6.50%と、目安の5%を超えた。"},
+    "決選投票":{f:"政治·国際",d:"第1回投票で過半数を得た候補がいないとき、上位2人で改めて行う投票。",w:"ブラジル大統領選はルラ氏とボルソナロ氏の決選投票が10月25日に行われる。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
