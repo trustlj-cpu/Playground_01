@@ -7,6 +7,11 @@ export default {
       url.hostname = CANON; url.protocol = 'https:'; url.port = '';
       return Response.redirect(url.toString(), 301);
     }
+    // 1면 실시간 시세: 같은 도메인으로 피드 Worker 시세를 전달(20초 캐시). 페이지는 /api/quotes.json 만 부른다.
+    if (url.pathname === '/api/quotes.json') {
+      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/quotes.json', { cf: { cacheTtl: 20, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=20' } }); }
+      catch (e) { return new Response('{"q":{}}', { status: 502, headers: { 'content-type': 'application/json' } }); }
+    }
     // 국가판 라우팅. live.json(빌드 산출물) = 현재 발행 중인 나라 목록 [{code,prefix}].
     // ?r=XX 로 고르면 쿠키(dd_region)에 기억. 쿠키가 없고 루트(/)로 들어오면 접속 국가(Cloudflare cf.country)의 판으로.
     // 그 나라 판이 아직 없으면 한국 접속자는 한국판, 그 외는 영어판(미국판).
