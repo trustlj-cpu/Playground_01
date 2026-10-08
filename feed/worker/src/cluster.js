@@ -11,7 +11,7 @@ const LANG_STOP = {
   fr: new Set('le la les des du de et en un une pour sur banque banques centrale taux au aux dans est sont par avec plus pas qui que ont été être après avant contre selon face sous entre leur leurs cette ces son ses nouveau nouvelle nouvelles direct vidéo vidéos photos info infos actualité alerte exclusif annonce annonces annoncé déclare veut faut fait faire peut deux trois premier première milliards millions euros ministre président présidente chef janvier février mars avril juin juillet août septembre octobre novembre décembre lundi mardi mercredi jeudi vendredi samedi dimanche'.split(' ')),
 };
 // 중국어(번체) 일반어 2자 토큰 — 바이그램은 모두 '강한' 토큰이라 흔한 서술어가 겹치면 오병합된다
-const ZH_STOP = new Set('快訊 快讯 最新 即時 獨家 直播 影音 圖輯 新聞 記者 報導 報道 表示 指出 宣布 強調 今天 今日 昨天 明天 今年 去年 明年 目前 一個 我們 他們 什麼 沒有 可能 已經 因為 如果 但是 這個 相關 重要 持續 發布 公布 消息 民眾 國內 國際 總統 總理 部長 院長 主席 首相 政府 官員 立委 市長 上漲 下跌 大漲 大跌 新高 新低 億元 萬元 美元 台股 股市 市場 影響 可能 回應 曝光 網友 不是 一年 今年 首度 首次 再度 正式 完成 開始 提出 進行 推動 預計 預估 傳出 痛批 怒批 喊話 有望'.split(' '));
+const ZH_STOP = new Set('營收 營業額 月減 月增 年減 年增 創新高 新高 歷史 同期 前三季 第三季 第3季 上半年 下半年 季報 月報 表現 看好 獲利 出貨 動能 強勁 預期 優於 飆增 大增 成長 衰退 快訊 快讯 最新 即時 獨家 直播 影音 圖輯 新聞 記者 報導 報道 表示 指出 宣布 強調 今天 今日 昨天 明天 今年 去年 明年 目前 一個 我們 他們 什麼 沒有 可能 已經 因為 如果 但是 這個 相關 重要 持續 發布 公布 消息 民眾 國內 國際 總統 總理 部長 院長 主席 首相 政府 官員 立委 市長 上漲 下跌 大漲 大跌 新高 新低 億元 萬元 美元 台股 股市 市場 影響 可能 回應 曝光 網友 不是 一年 今年 首度 首次 再度 正式 完成 開始 提出 進行 推動 預計 預估 傳出 痛批 怒批 喊話 有望'.split(' '));
 // 중국어 문장 분절자: 이 글자에서 끊고 남은 조각만 바이그램(的·在·是…를 낀 가짜 바이그램 방지)
 const ZH_SPLIT = /[的在是了和與与及將将對对為为從从被把也都就而並并於于]/u;
 // 중국어 표기 정규화·기관/지명 → 기존 토큰(지명은 GEO 영어형으로 모아 약한 토큰이 되게). 2자는 바이그램 단위로, 3자 이상은 구절로 먼저 떼어 낸다.
