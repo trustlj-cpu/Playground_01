@@ -100,7 +100,7 @@ function f(v,d){return v.toLocaleString('en-US',{minimumFractionDigits:d,maximum
 function hm(ts){var d=new Date(ts),n=new Date();var t=d.toLocaleTimeString(L==='ko'?'ko-KR':L==='ja'?'ja-JP':'en-US',{hour:'2-digit',minute:'2-digit'});return d.toDateString()===n.toDateString()?t:(d.getMonth()+1)+'/'+d.getDate()+' '+t;}
 function paint(j){var tape=document.querySelector('.tape');if(!tape||!j||!j.q)return;var last=0;
 tape.querySelectorAll('.q[data-k]').forEach(function(c){var q=j.q[c.getAttribute('data-k')];if(!q||q.v==null||!isFinite(q.v))return;var k=c.getAttribute('data-kind')||'';var v=+q.v,ch=+q.chg||0;
-var val=k==='pct'?f(v,2)+'%':(k==='usd'?'$':'')+f(v,k==='fx'?1:2);var a=Math.abs(ch);var ct=k==='fx'?a.toFixed(1)+'원':k==='fxjpy'?a.toFixed(2)+'円':k==='pct'?Math.round(a*100)+'bp':a.toFixed(2)+'%';
+var val=k==='pct'?f(v,2)+'%':(k==='usd'?'$':'')+f(v,k==='rate'?4:k==='fx'?1:2);var a=Math.abs(ch);var ct=k==='fx'?a.toFixed(1)+'원':k==='fxjpy'?a.toFixed(2)+'円':k==='pct'?Math.round(a*100)+'bp':a.toFixed(2)+'%';
 var em=c.querySelector('em'),u=c.querySelector('i u'),sp=c.querySelector('i span'),sm=c.querySelector('small');if(em)em.textContent=val;if(u)u.textContent=ch<0?'▼':ch>0?'▲':'－';if(sp)sp.textContent=ct;if(sm)sm.textContent='';
 c.classList.remove('na','dn','upp');if(ch<0)c.classList.add('dn');else if(ch>0)c.classList.add('upp');if(q.ts>last)last=q.ts;});
 if(last){tape.setAttribute('data-note',N.replace('{t}',hm(last)));tape.classList.add('live');}}
