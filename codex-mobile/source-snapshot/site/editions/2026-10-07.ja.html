@@ -1,0 +1,446 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>6,803.90</b>KOSPI · 10/7 終値 · 2日続落（−1.98%）</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>1,340.4ウォン</b>ウォン/ドル · 10/7 · 3.2ウォンのウォン高</div>
+    </div>
+    <div class="dateline"><span>第3号 · 夕刊</span><b>2026年10月7日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="nuri">
+      <div class="kick">科学・宇宙<span>原資料 ✓ 宇宙航空庁ブリーフィング · 報道照合 ✓ 7社</span></div>
+      <h2 class="hl">ヌリ号、衛星15基を載せて4回連続成功。<br>今回は「群れで飛ばす」初の試験だった</h2>
+      <p class="deck">正午12時25分に打ち上げ、超小型群集衛星5基はすべて目標軌道へ。キューブサットは10基中9基が分離、1基は未射出。交信は夕方までに3基を確認</p>
+      <div class="body">
+        <p>韓国型ロケット「ヌリ号（누리호）」が10月7日正午12時25分、羅老（ナロ）宇宙センターから5回目の打ち上げに臨み、衛星15基を軌道に乗せた。主搭載は国家安全保障・災害監視用の超小型群集衛星2〜6号（5基）、副搭載は大学・企業のキューブサット10基だ。群集衛星5基はすべて計画どおり分離し、キューブサットは9基が分離、1基は射出されなかったと宇宙航空庁が明らかにした。午後1時8分ごろ6号が南極の世宗（セジョン）基地と初交信に成功し、3号（午後3時27分、北極スバールバル地上局）と4号も続いて交信した。残る衛星の交信は、軌道を一周するごとに順次確認される。</p>
+        <p>ヌリ号は2回目（2022年）から5回目まで4回連続で成功し、累積成功率は80%になった。宇宙航空庁長は「信頼性が一段階上がった」と述べ、6回目の打ち上げを来年下半期に、2032年まで毎年1回以上の打ち上げを目標として示した。4回目からはハンファエアロスペースが体系総合企業として製作と打ち上げ運用に参加している。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>15基</b><span>搭載衛星。群集衛星5基すべて軌道投入、キューブサット9/10分離</span></div>
+        <div><b>80%</b><span>ヌリ号の累積成功率。初回失敗の後、2〜5回目は連続成功</span></div>
+        <div><b>3基</b><span>夕方までに交信を確認した群集衛星（6号・3号・4号）。残りは順次確認</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="oil">
+      <div class="kick">経済・公正取引<span>報道照合 ✓ 8社 · 審査官意見の段階、両社は否認</span></div>
+      <h3 class="hl">戦争の4年、ガソリン価格は2社で決めたのか。<br>SKエネルギー・HD現代オイルバンク、44兆ウォン談合の審判台</h3>
+      <figure>
+        <svg viewBox="0 0 320 150" role="img" aria-label="談合容疑の期間は2022年2月から2026年3月、関連売上高44兆1000億ウォン、2社のシェア49.1%">
+          <text x="10" y="16" font-family="Noto Sans KR,sans-serif" font-size="11" style="fill:var(--mute)">公取委審査官が見た「情報交換」の期間</text>
+          <rect x="10" y="26" width="300" height="14" style="fill:var(--paper-2);stroke:var(--rule)" stroke-width="1"/>
+          <rect x="22" y="26" width="276" height="14" style="fill:var(--ink)"/>
+          <text x="22" y="56" font-family="Noto Sans KR,sans-serif" font-size="10.5" style="fill:var(--ink)">2022.2 ロシア・ウクライナ戦争直前</text>
+          <text x="298" y="56" text-anchor="end" font-family="Noto Sans KR,sans-serif" font-size="10.5" style="fill:var(--ink)">2026.3 米・イラン戦争直後</text>
+          <text x="10" y="86" font-family="Noto Serif KR,serif" font-size="26" font-weight="900" style="fill:var(--ink)">44兆1000億</text>
+          <text x="10" y="102" font-family="Noto Sans KR,sans-serif" font-size="10.5" style="fill:var(--mute)">関連売上高（ガソリン・軽油・灯油） · 課徴金はこの金額を基準に算定</text>
+          <text x="10" y="128" font-family="Noto Serif KR,serif" font-size="20" font-weight="700" style="fill:var(--red)">49.1%</text>
+          <text x="78" y="128" font-family="Noto Sans KR,sans-serif" font-size="10.5" style="fill:var(--ink)">2社の昨年の国内ガソリン・軽油・灯油シェア合計</text>
+          <text x="10" y="144" font-family="Noto Sans KR,sans-serif" font-size="10" style="fill:var(--mute)">資料: 公取委審査報告書を引用した報道（聯合・イーデイリー・電子新聞 10/7）。違法かどうかは未確定。</text>
+        </svg>
+        <figcaption>「審議着手」は検察でいえば起訴の段階だ。有罪ではなく、裁判が始まったという意味。課徴金「最大4兆6000億」は売上高に上限料率を掛けた単純計算値だ。</figcaption>
+      </figure>
+      <div class="one">
+        <p>公正取引委員会の審査官は、SKエネルギーとHD現代オイルバンクが2022年2月から今年3月まで約4年間、ガソリン・軽油・灯油の入金価格・確定価格・販売方針の情報をやり取りし、今年3月には2回にわたり価格そのものを合意した形跡があると見て、是正命令と課徴金の意見を出した。HD現代オイルバンクは「談合の事実は一切ない」、SKエネルギーは「誠実に説明する」との立場だ。結論は委員会の審議の後に出る。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>談合<i>公正取引</i></b><p>競争すべき会社同士が価格・数量・取引条件をひそかに合わせること。価格を直接合意しなくても、敏感な価格情報を互いに知らせる「情報交換」だけで、2021年からは法律違反になり得る。きょうの事件の核心がまさにこの条項だ。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="mkt"><b>外国人3兆ウォン売り、KOSPI 6,803 — きのう「2日続けば趨勢」と書いた</b><em>−1.98%、KOSDAQ 898（−2.34%）。外国人は3兆1095億ウォンの売り越し。それでも為替は1ドル=1,340.4ウォンへとウォン高に動いた。</em><span>経済 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="lg"><b>LG電子、第3四半期の営業利益7818億ウォン、累計で初の4兆ウォン突破</b><em>暫定値のため、売上高・事業部別の数字は今月末。あすのサムスン電子と並べて見れば「製造業の第3四半期」が一枚になる。</em><span>企業 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="messi"><b>メッシ、208試合目にして最後のアルゼンチン代表戦 — ベナン戦3-0、1ゴール2アシスト</b><em>モヌメンタルに8万5000人、前半10分にスタンディングオベーションで試合が中断。通算126ゴールで21年を閉じた。</em><span>スポーツ · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="nobel"><b>ノーベル化学賞にカガンと硤合 — 「左手・右手の分子」が自ら一方に偏る秘密</b><em>フランスのアンリ・カガン（95）と日本の硤合憲三。不斉合成における非線形効果と自己触媒の発見。生命がなぜ片方の手の分子しか使わないのかの手がかり。</em><span>科学 · ✓ 7社</span></div>
+      <div class="it story" tabindex="0" data-id="ss"><b>サムスン電子、第3四半期暫定決算をあす発表 — 証券界の営業利益予想は100兆ウォン前後</b><em>四半期営業利益100兆ウォンは初めて。2日間で外国人が4兆8000億ウォン売ったのが「利益確定」だったかどうかは、ここで分かれる。</em><span>予告 · 予想値は証券会社に帰属</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="gukgam">
+      <div class="kick">政治<span>報道照合 ✓ 4社 · 発言は当事者に帰属</span></div>
+      <h3 class="hl">国政監査2日目 — 法司委は「7分に1度の怒号」、保健福祉委は年金と人工妊娠中絶薬</h3>
+      <div class="body">
+        <p>10の常任委員会が開かれた2日目、法制司法委員会（法司委）の大法院（最高裁）国政監査では7分に1度の割合で騒ぎを制止する発言が出て、委員長の発言が全体の3分の1だったとする分析報道があった。「国民の力」の金泰圭（キム・テギュ）議員が発言権停止の後、会議場の外で委員長に向けた言葉（「フクロウ岩でひっかかれたのか」など）をめぐり、与党は「退出」を要求した。国防委員会はDMZの地雷事故をめぐって「初の地雷除去」対「遅れ・隠蔽」で割れた。</p>
+        <p>騒ぎの記事の裏に実質があった。保健福祉委員会の初日は、国民年金の資産比率再調整（リバランス）の猶予と、人工妊娠中絶薬の導入問題を扱った。私の年金が株式をより長く持ち続けるのか、医療現場が変わるのか、という問題だ。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="yoon">
+      <div class="kick">裁判所<span>報道照合 ✓ 6社 · 判決要旨に帰属</span></div>
+      <h3 class="hl">「明泰均の無償世論調査」尹錫悦氏、二審で無罪 — 一審の懲役2年が覆った</h3>
+      <div class="body">
+        <p>ソウル高裁刑事7部（具會根〈ク・フェグン〉部長判事）は、政治資金法違反の罪に問われた尹錫悦（ユン・ソンニョル）前大統領と明泰均（ミョン・テギュン）氏に無罪を言い渡した。一審は懲役2年と1年6月。裁判部は「世論調査を無償で実施・提供すると定めた合意・要請・協議があったという証拠が全くない」とし、政治資金寄付の故意を認めるのは難しいとした。受け取ったのは金ではなく、世論動向の把握・政治的助言・有力政治家の紹介といった「政治的利益」だという判断だ。</p>
+        <p>同じ罪に問われた金建希（キム・ゴンヒ）夫人も先に無罪だった。一審と二審が同じ事実を正反対に読んだ事件であり、大法院の判断が基準になる。尹前大統領の内乱などほかの裁判とは別だ。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="mdl">
+      <div class="kick">安全保障<span>報道照合 ✓ 5社 · 国防部の国政監査答弁に帰属</span></div>
+      <h3 class="hl">「線を越えた」を文書に残すことにした。国防部、北朝鮮のMDL侵犯で国連軍司令部との共同調査を推進</h3>
+      <div class="body">
+        <p>国防部は10月7日、国会国防委員会の国政監査で、北朝鮮が「国境線要塞化」工事の過程で軍事境界線（MDL）を越えた行為について、休戦協定の管理責任を負う国連軍司令部と共同調査を行って違反かどうかを公式化し、北朝鮮に「休戦協定違反通知」を送って中止と原状回復を促すと明らかにした。先月21日、陸軍第25師団の将兵がDMZ捜索中に北朝鮮軍の地雷で負傷した事故の後続措置という性格だ。北朝鮮外務省が「1ミリでも侵犯すれば強力に対応する」としたのに対し、政府は「相応の措置」で応じた。</p>
+        <p>国政監査の場では、与党が「初のDMZ地雷除去」の成果を、野党が「遅れた調査・隠蔽の試み」をそれぞれ強調した。一面になった「空の銃での警戒」論争も同じ場で再び出た。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>韓国銀行の国際担当副総裁補にチェ・ヨンジュ氏、経済研究院長にユン・ギョンス国際局長を内定<span>聯合・朝鮮</span></li>
+        <li>ボストン・ダイナミクスの新CEOにアマゾン出身のロヒット・プラサド氏 — 現代自動車グループ、「フィジカルAI」を加速<span>韓経・SBS</span></li>
+        <li>大韓航空の操縦士労組、労働争議の調停申請を取り下げ — スト危機はひとまず回避<span>SBS</span></li>
+        <li>インド中央銀行、2023年以来初のレポ金利（政策金利）引き上げ — 食品物価・原油高・ルピー安。主要国の金融政策が緩和に向かう中で利上げした初の大国。引き上げ幅は原文未確認<span>日経・CNBC・ロイター</span></li>
+        <li>サムスン電子の半導体特別成果給、来年3月末ごろ支給、税金49.5% — 労組は0.2〜1%の共同寄付を推進<span>聯合・SBS・東亜</span></li>
+        <li>9月のソウル・マンション競売落札価格率94.7% — 1年7カ月ぶりの低水準<span>韓国経済</span></li>
+        <li>白翎島（ペンニョンド）沖で違法操業の中国漁船2隻を拿捕<span>朝鮮日報</span></li>
+        <li>「2人死亡」の仁川マンホール事故、仁川環境公団前理事長ら18人を送致<span>京郷新聞</span></li>
+      </ul><div class="house">毎晩7分、一面を一枚 — 購読案内は『紹介』から</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「ヌリ号、完璧な成功。」</b> <span>打ち上げ・軌道投入は成功。キューブサット1基が未射出、衛星の交信は夕方までに3基のみ確認。</span></div>
+        <div><b>「製油会社の談合で課徴金4兆6000億。」</b> <span>審査官意見の段階。4.6兆は上限の単純計算値で、委員会の結論前。</span></div>
+        <div><b>「北朝鮮のMDL侵犯、挑発切迫の信号。」</b> <span>確認されたのは要塞化工事中の越線と地雷事故。共同調査の結果はまだない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>あす見るもの</h4>
+        <div><b>10/8 木</b><span>サムスン電子第3四半期暫定決算（午前） · ノーベル文学賞（韓国時間夕方） · 国政監査3日目 · ヌリ号の残る衛星の交信確認。</span><b>今週</b><span>公取委の審議日程が公開されるか · 国連軍司令部の共同調査着手の発表 · 外国人が3日続けて売るか。</span><b>読者へ</b><span>一つだけ選ぶなら、あす午前のサムスン電子の営業利益の数字だ。100兆ウォンを超えるかが、KOSPI 7000再挑戦の鍵になる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    nuri:{kick:"科学・宇宙 · 原資料 ✓ 宇宙航空庁ブリーフィング · 報道照合 ✓ 7社",title:"ヌリ号、衛星15基を載せて4回連続成功。今回は「群れで飛ばす」初の試験だった",
+      what:"ヌリ号5回目の打ち上げは10月7日正午12時25分、全羅南道高興（コフン）の羅老宇宙センターで行われた。1段・2段分離、高度通過、衛星分離まで予定の手順どおりに進み、宇宙航空庁は「計画されたすべての飛行手順を正常に遂行した」と発表した。搭載衛星は15基で過去最多だ。主搭載は超小型群集衛星2〜6号（5基）、副搭載は大学・企業が作ったキューブサット10基。群集衛星5基はすべて目標軌道への軌道投入に成功し、キューブサットは9基が分離、1基は射出されなかった。午後1時8分ごろ群集衛星6号が南極の世宗基地と初交信し、3号は午後3時27分に北極スバールバルの地上局と、4号も続いて交信に成功した。残る衛星の交信は軌道周期に沿って順次確認中だ。ヌリ号の累積成功率は80%（5回中4回）。宇宙航空庁長は6回目の打ち上げを来年下半期に、2032年まで毎年1回以上の打ち上げを目標として示した。",
+      why:"今回の打ち上げの本当の試験は「一度に複数の衛星を、異なるタイミングで切り離すこと」だった。群集衛星は複数の機体が同じ軌道面で間隔を置いて回ってこそ、同じ地域を1日に何度も撮影できる。そのためにはロケットが衛星を順番に、正確な間隔で射出しなければならない。衛星が多いほど、同じ場所を再び撮る再訪周期が短くなる。それをやり遂げたことが、「4回連続成功」より意味のある部分だ。国内初の群集衛星の軌道投入である。",
+      me:"すぐに変わることはないが、群集衛星2〜6号は国家安全保障・災害監視用だ。来年以降、山火事・洪水・北朝鮮の動向写真の更新周期が短くなる。そして「毎年1回の打ち上げ」が守られれば、韓国が自国の衛星を自国のロケットで上げることはニュースではなく日程表になる。",
+      a:"4回連続成功に群集射出までやり遂げた。ロケットは信頼性がすべてだが、その信頼性が数字（80%）として上がった。商業打ち上げ市場に一歩近づいた。",
+      b:"キューブサット1基が未射出で、交信確認はまだ一部だ。成功率80%は5回の標本にすぎない。海外の商業ロケットと比べれば費用・頻度ともにまだ遠い。祝うのはいいが、「宇宙強国」のような言葉は早い。",
+      say:"きょう覚えておく文は「群集衛星5基すべて軌道投入」だ。ロケットが上がった写真より、衛星5基が列をなして回る絵が今回の打ち上げの本質である。あす見るものは残る衛星の交信と、未射出キューブサット1基の原因説明。それが出てこそ「成功」の範囲が定まる。",
+      src:"原資料 ✓ 宇宙航空庁打ち上げブリーフィング（聯合速報中継） · 聯合ニュース AKR20261007100551017・AKR20261007119752017 · ファイナンシャルニュース（交信） · ソプル（서플、3号交信） · 韓国経済（4号交信） · 京郷 · 朝鮮 · ニュースピム（大統領視聴）（いずれも10/7） · 未射出キューブサットの原因は未発表"},
+    oil:{kick:"経済・公正取引 · 報道照合 ✓ 8社 · 審査官意見の段階、両社は否認",title:"戦争の4年、ガソリン価格は2社で決めたのか。SKエネルギー・HD現代オイルバンク、44兆ウォン談合の審判台",
+      what:"公正取引委員会が、SKエネルギーとHD現代オイルバンクのガソリン・軽油・灯油価格談合容疑事件について審議手続きに着手した。審査官（調査担当）は、両社がロシア・ウクライナ戦争直前の2022年2月から米国・イラン戦争直後の今年3月まで約4年間、入金価格・確定価格・販売方針といった価格情報を交換し、今年3月初めには2回にわたり具体的な入金価格をいくらにするか合意した形跡を確認したと見た。関連売上高は44兆1000億ウォン、両社の昨年の国内ガソリン・軽油・灯油市場シェア合計は49.1%だ。審査官は「重大な違反」と見て、是正命令と課徴金賦課の意見を出した。課徴金は単純計算で最大4兆6000億ウォン台と推算されるとの報道があるが、実際の金額と違法かどうかは委員会の審議を経て決まる。HD現代オイルバンクは「価格を談合した事実は一切ない」、SKエネルギーは「事実関係と会社の立場を誠実に説明する」と明らかにした。両社は事後情報の単純な共有にすぎなかったという立場だ。",
+      why:"戦争で原油価格が揺れた4年だ。国際原油価格が上がるときガソリンスタンドの価格は早く上がり、下がるときはゆっくり下がるという実感が、この期間ずっとあった。その実感の一部が「2社が情報を合わせた結果」だったのかが争点だ。そして2021年改正の公正取引法は、価格を直接合意しなくても敏感な価格情報をやり取りする「情報交換」だけで談合と見なせるようにした。この条項が大型事件に正面から適用される珍しい事例である。",
+      me:"ガソリンを入れるすべての人の問題だ。ただし、きょう結論が出たわけではない。審議 → 議決 →（不服なら）行政訴訟まで、通常1〜2年かかる。課徴金が出ても、その金が消費者に戻る仕組みではない。消費者が取り戻すには別途の損害賠償訴訟が必要で、それは公取委の結論が出た後のことだ。",
+      a:"シェアの半分を持つ2社が4年間価格情報をやり取りしたなら、それ自体が市場を壊したということだ。情報交換禁止条項はまさにこうした場合のために作られたもので、44兆という数字がその重さを示している。",
+      b:"製油会社は原油調達価格・為替・税金がほぼ同じで、価格が似た動きをするのは自然だ。「事後情報の共有」と「価格合意」は法的に全く違う重さを持つ。審査官意見は一方の主張であり、委員会が覆した前例も少なくない。",
+      say:"「44兆談合」という見出しの44兆は、談合で稼いだ金ではなく、その期間の売上高全体だ。課徴金の上限を計算する基準にすぎない。きょう確認されたのは、公取委が裁判を開くことにしたという事実と、2社が否認しているという事実の二つだけ。見るべきは審議期日と、「3月の2回の合意」の証拠が何として公開されるかだ。",
+      src:"聯合ニュース AKR20261007079801002（総合） · イーデイリー · 電子新聞 · イートゥデイ · 世界日報 · グローバルエコノミック · ニュースウェイ（両社の立場） · 忠清日報（いずれも10/7） · 公取委審査報告書の原文は非公開、報道に帰属"},
+    mdl:{kick:"安全保障 · 報道照合 ✓ 5社 · 国防部の国政監査答弁に帰属",title:"「線を越えた」を文書に残すことにした。国防部、北朝鮮のMDL侵犯で国連軍司令部との共同調査を推進",
+      what:"国防部は10月7日、国会国防委員会の国政監査業務報告で、北朝鮮が「国境線要塞化」工事の過程で軍事境界線（MDL）を侵犯した行為について、国連軍司令部と共同調査を行って休戦協定違反かどうかを公式化し、北朝鮮に違反通知を送って「違反行為の中止と原状回復」を促す方策を推進すると明らかにした。国防部は「休戦協定に明示された緩衝地帯を縮小・解体する北朝鮮の行為に対し、休戦管理の責任を負う国連軍司令部と連携した対応をする」とした。先月21日に陸軍第25師団の将兵がDMZ捜索作戦中に北朝鮮軍の地雷で負傷した事故の後続措置だ。北朝鮮外務省は「1ミリでも侵犯すれば強力に対応する」とし、政府は「相応の措置」を警告した。国政監査では与党が「初のDMZ地雷除去」の成果を、野党が「遅れた調査・隠蔽の試み」をそれぞれ強調した。",
+      why:"「北朝鮮が線を越えた」という言葉は、これまで韓国軍の主張だった。国連軍司令部が共同で調査して違反と結論づければ、それは休戦協定当事者の公式記録になる。北朝鮮が受け入れるはずはないが、記録が残るか残らないかで、次の衝突のときに責任を問う出発点が違ってくる。地雷事故を「韓国軍の責任論」から「北朝鮮の違反論」へ戻そうとする政府の選択でもある。",
+      me:"接境地域の緊張は高まるが、すぐに生活に触れるものはない。ただし北朝鮮が「強力な対応」を口にし、韓国が「相応の措置」を口にする局面では、小さな事故が大きなニュースになる時期が当分続く。国政監査の国防委が終わる今月末まで、この話題は毎日出てくる。",
+      a:"休戦協定違反を国連軍司令部とともに確認して通知するのは、最も正統的な対応だ。感情的な応酬より記録を残す側が、長い目で見れば強い。",
+      b:"共同調査と通知は、北朝鮮がすでに数十回無視してきた手続きだ。地雷で負傷した将兵の問題の本質は韓国側の警戒・捜索手順だったのに、北朝鮮の責任の公式化で焦点が移る効果がある。",
+      say:"きょうの文は「違反通知」だ。見るべきは、国連軍司令部が共同調査の着手を自らの名前で発表するか、そしてその結果に「越線」のほかに地雷の埋設位置が含まれるかだ。北朝鮮の反応はいつも同じなので、それはニュースではない。",
+      src:"世界日報 20261007506043 · オーマイニュース A0003273319 · 月曜新聞 · デジタルタイムズ（北朝鮮外務省・政府の警告） · 天地日報（国政監査の攻防） · 韓国経済・京郷・東亜（フィード）（いずれも10/7） · 国防部業務報告の原文は直接確認未完了"},
+    yoon:{kick:"裁判所 · 報道照合 ✓ 6社 · 判決要旨に帰属",title:"「明泰均の無償世論調査」尹錫悦氏、二審で無罪 — 一審の懲役2年が覆る",
+      what:"ソウル高裁刑事7部（具會根部長判事）は10月7日、政治資金法違反の罪で起訴された尹錫悦前大統領と政治ブローカーの明泰均氏に、控訴審で無罪を言い渡した。一審はそれぞれ懲役2年、1年6月だった。裁判部は「尹前大統領夫妻と明氏の間に、世論調査を無償で実施・提供すると定めた合意・要請・協議があったという証拠が全くない」とし、「政治資金寄付についての故意を認めるのは難しい」とした。受け取ったのは金銭的利益ではなく、世論動向の把握、政治的助言、有力政治家の紹介といった政治的利益だと見た。同じ罪に問われた金建希夫人も先に無罪となっている。尹前大統領には内乱などほかの事件の裁判が残っている。",
+      why:"「ただの世論調査＝政治資金」という一審の枠組みを二審が否定した。金が動いていない便宜の提供を政治資金と見なせるのかという問いで、二審は「合意が立証されなければならない」側に立った。大法院がどちらを選ぶかによって、今後の政界の「無償サービス」全般に基準が生まれる。",
+      me:"直接触れるものはない。ただし尹前大統領関連の裁判はいくつにも分かれており、この無罪がほかの事件（内乱など）とは無関係だという点は、区別して読む必要がある。",
+      a:"刑事裁判は証拠で行う。合意の証拠がないのに一審が有罪を出したのは無理だったという指摘は、最初からあった。",
+      b:"無償の世論調査が選挙過程で使われたという事実関係に争いはないのに、これを政治資金ではなく「政治的利益」と見れば法の空白が生じる。大法院の判断と立法補完の要求が出るだろう。",
+      say:"一審と二審が同じ事実を前に正反対に読んだ。それ自体がニュースだ。見るべきは検察の上告の有無と、大法院が「無償サービス」を政治資金と見るかどうかの基準。尹前大統領のほかの裁判と混ぜて読むと間違える。",
+      src:"ニュースピム 20261007001092（総合） · 韓国日報 · 文化日報 · ソウル経済 · ハフポスト・コリア · ニュース1（宣告予告）（いずれも10/7） · 判決文の原文は未確認"},
+    mkt:{kick:"経済 · 報道照合 ✓ 4社 · 取引所の数値は報道に帰属",title:"外国人3兆ウォン売り、KOSPI 6,803 — きのう「2日続けば趨勢」と書いた",
+      what:"10月7日のKOSPIは137.49ポイント（1.98%）安の6,803.90、KOSDAQは21.49ポイント（2.34%）安の898.43で取引を終えた。外国人は3兆1095億ウォンを売り越し、きのう（1兆7509億ウォン）より売りの規模を広げた。サムスン電子は1.29%安の26万8500ウォン、SKハイニックスは2.82%安の172万3000ウォン。あすのサムスン電子第3四半期暫定決算の発表を前にした様子見と、米国金利の反発が背景に挙げられた。ウォン・ドル相場は3.2ウォンのウォン高の1ドル=1,340.4ウォンで、9月10日以来のウォン高水準だ。",
+      why:"きのうの第2号で「あす外国人がまた売れば趨勢、買えば雑音」と書いた。また売り、しかも多く売った。ただし為替はむしろウォン高に動いた。外国人が売った金がドルとなって出ていったなら為替はウォン安に動くはずだが、逆だ。輸出企業のドル売りとドル安が重なった結果だという解釈が多い。「売った」と「去った」はまだ別の言葉だ。",
+      me:"半導体比率の高い口座は2日連続で損失が見えただろう。あす午前のサムスン電子の数字が分岐点だ。証券界の予想は営業利益100兆ウォン前後、売上高200兆ウォン以上。数字が予想より良ければきょうの売りは「決算前の利益確定」として、悪ければ「趨勢転換」として読まれ始める。",
+      a:"2日合わせて4兆8000億ウォンは明確な信号だ。2銘柄に寄りかかった指数の弱点が表れている。",
+      b:"決算発表前日の売りは毎年見るパターンだ。為替が安定しているというのは、資金流出ではなく銘柄の入れ替えだという意味かもしれない。",
+      say:"きのう書いた基準に従えば、きょうは趨勢だ。ただし為替が逆に動いたので、「去った」とまでは言えない。あす午前にサムスン電子の数字が出れば、この2日間の名前が決まる。",
+      src:"ニュースピム 20261007001012（大引け概況） · イーデイリー（外為） · ソウル経済 · 聯合ニュース AKR20261007145851008（フィード）（いずれも10/7） · KRX原資料との直接照合は未完了"},
+    lg:{kick:"企業 · 報道照合 ✓ 2社 · 会社の暫定開示に帰属",title:"LG電子、第3四半期の営業利益7818億ウォン、累計で初の4兆ウォン突破",
+      what:"LG電子が10月7日に発表した第3四半期暫定決算で、営業利益7818億ウォンを記録した。1〜3四半期の累計営業利益が初めて4兆ウォンを超えた。事業部別の数字と売上高は今月末の確定決算で出る。",
+      why:"家電会社の業績が良いということは、消費が持ちこたえているという信号でもあり、LG電子が家電以外の事業（車載電装・冷暖房空調・サブスクリプション）へ利益構造を変えてきたという意味でもある。どちらが大きかったかは確定決算で確認される。",
+      me:"株主でなければ直接触れるものはない。あすのサムスン電子の数字と並べて見れば、「韓国の大型製造業の第3四半期」が一枚に描かれる。",
+      a:"関税・為替の逆風の中での累計4兆ウォンは、体質改善の証拠だ。",
+      b:"暫定値は営業利益の一行だ。どの事業が稼いだのか分からない状態での評価は早い。",
+      say:"数字一行で評価しないのが原則。確定決算でどの事業が稼いだのかを見て、もう一度書く。",
+      src:"SBS経済 N1008786958 · 京郷新聞 202610071341001（いずれも10/7） · 開示原文の直接確認は未完了"},
+    messi:{kick:"スポーツ · 報道照合 ✓ 5社",title:"メッシ、208試合目にして最後のアルゼンチン代表戦 — ベナン戦3-0、1ゴール2アシスト",
+      what:"リオネル・メッシ（39）が10月6日（現地時間）、ブエノスアイレスのモヌメンタルで行われたベナンとの親善試合で、アルゼンチン代表として最後の試合に臨んだ。アルゼンチンが3-0で勝ち、メッシはコーナーキックでオタメンディの先制点を演出し、後半にニコ・パスのゴールをアシストした後、ペナルティーキックで3点目を決めた。代表通算208試合126ゴール。前半10分には観客のスタンディングオベーションで試合が一時中断した。2005年のデビューから21年、2022年ワールドカップとコパ・アメリカ2回の優勝が代表キャリアの頂点だ。",
+      why:"スポーツのニュースだが、8万5000人が一人を送り出すために集まった場面は、それ自体がきょうの国際ニュースだった。アルジャジーラ・DW・AP・ロイターがそろって一面に載せた。",
+      me:"ない。ただし「一人の最後」をこのように執り行うやり方は、記憶しておく価値がある。",
+      a:"",b:"",
+      say:"スポーツ面ではなく一面に置いた理由は一つだ。きょう世界中のニュースが同じ写真を使った。",
+      src:"フォックススポーツ · ガルフニュース · AP（グーグルニュース） · ロイター（グーグルニュース） · 聯合ニュース（グーグルニュース韓国スポーツ）（10/6〜7）"},
+    gukgam:{kick:"政治 · 報道照合 ✓ 4社 · 発言は当事者に帰属",title:"国政監査2日目 — 法司委は「7分に1度の怒号」、国防委は地雷の攻防",
+      what:"国政監査2日目の10月7日、10の常任委員会が開かれた。法司委の大法院国政監査では7分に1度の割合で騒ぎを制止する発言が出て、委員長の発言が全体の3分の1を占めたとする分析報道があった。「国民の力」の金泰圭議員が発言権停止の後、会議場の外で委員長に「フクロウ岩でひっかかれたのか」などと言ったと伝えられ、与党が「退出」を要求した。国防委ではDMZの地雷事故をめぐり、与党は「初のDMZ地雷除去」を、野党は「遅れた調査・隠蔽の試み」をそれぞれ強調し、国防部はMDL侵犯に国連軍司令部との共同調査で対応すると答えた。保健福祉委は初日、保健福祉部・疾病管理庁を相手に、国民年金の資産比率再調整（リバランス）の猶予と人工妊娠中絶薬の導入問題を扱った。",
+      why:"国政監査は行政府を検証する場なのに、2日目に最も多く報道されたのは検証の中身ではなく騒ぎだった。世界日報の分析どおり法司委員長の発言が3分の1なら、質疑時間はそれだけ減る。25日間の国政監査が「曺喜大（チョ・ヒデ）国政監査」と「怒号国政監査」に流れれば、経済・民生の常任委員会の質問が埋もれる。",
+      me:"保健福祉委初日の二つのテーマは生活に触れる。国民年金のリバランス猶予は私の年金が株式をより長く持ち続けるという意味で、人工妊娠中絶薬は導入の有無によって医療現場が変わる。騒ぎの記事の裏に隠れたこの二行が、きょうの国政監査の実質だ。",
+      a:"与野党が激しくぶつかるのも国政監査の一部だ。静かな国政監査が良い国政監査とは限らない。",
+      b:"7分に1度の制止なら質疑ではなく争いだ。国民が見たいのは政府の答えであって、議員の話術ではない。",
+      say:"きょうの国政監査で覚えておくべきは怒号ではなく、保健福祉委の二行（年金リバランス猶予・人工妊娠中絶薬）だ。あすからは騒ぎの記事より、各常任委員会で政府が「やる」と答えた文を集めて見ていく。",
+      src:"世界日報 20261007516563（[単独] 7分に1度） · マネートゥデイ（金泰圭発言・与党の反応） · OBS · 天地日報（10常任委・国防委の攻防） · 薬師公論・看護師新聞（保健福祉委の議題）（いずれも10/7） · 会議録の直接確認は未完了"},
+    nobel:{kick:"科学 · 報道照合 ✓ 7社（聯合・朝鮮・東亜・韓経・京郷・DW・SCMP） · 王立科学アカデミー原文の直接確認は未完了",title:"ノーベル化学賞にカガンと硤合 — 「左手・右手の分子」が自ら一方に偏る秘密",
+      what:"スウェーデン王立科学アカデミーは10月7日、2026年のノーベル化学賞をフランスのアンリ・カガン（95、パリ南大学名誉教授）と日本の硤合憲三（東京理科大学）に授与すると発表した。業績は「不斉有機合成における非線形効果と自己触媒の発見」。賞金1200万クローナ（約16億ウォン）を分ける。多くの分子は左手と右手のように鏡像の対（キラリティー）として存在するが、カガンは触媒の純度と生成物の純度が比例しない「非線形効果」を、硤合は反応生成物が自ら触媒となってごく小さな一方への偏りをほぼ100%にまで育てる「自己触媒反応（硤合反応）」を発見した。",
+      why:"生命体はアミノ酸は左手型、糖は右手型だけを使う。なぜ一方だけが残ったのかは100年を超える謎だった。硤合反応は「最初のごく小さな偏りが自ら増幅される」ことを実験で示したほぼ唯一の例であり、生命の起源の仮説に化学的根拠を与えた。産業的には、薬の鏡像異性体（一方は薬、一方は毒という場合がある）を純粋に作る技術の根だ。",
+      me:"すぐにはない。ただし「ノーベル賞＝最新技術」ではなく、数十年前の発見が遅れて認められるパターンが、今年の科学3賞（光遺伝学・アイスキューブ・不斉自己触媒）に共通する。95歳の受賞者はそのパターンの極端な例だ。",
+      a:"有機化学の教科書の一章を作った発見だ。生命の起源という大きな問いに実験で答えた珍しい例。",
+      b:"医薬合成に直接使われる野依・シャープレスの2001年の賞と比べれば、応用までの距離が遠いという評価もあり得る。",
+      say:"きょう覚えておく文は「ごく小さな偏りが自ら大きくなる」だ。化学実験室の話だが、生命がなぜ左利きなのかについての最も確からしい答えでもある。王立科学アカデミーの原文説明が翻訳されれば、あすの号で改めて整理する。",
+      src:"聯合ニュース AKR20261007191100009（第1報） · 朝鮮日報（不斉分子合成の難題） · 東亜日報 · 韓国経済（非線形効果） · 京郷新聞 · DW · SCMP · ETVバーラト・デブディスコース（ロイター転載）（いずれも10/7 18:45〜19:00） · ウィキペディア（人物背景） · 王立科学アカデミー原文の直接確認は未完了"},
+    ss:{kick:"予告 · 証券界の予想値に帰属",title:"サムスン電子、第3四半期暫定決算をあす発表 — 証券界の営業利益予想は100兆ウォン前後",
+      what:"サムスン電子が10月8日午前、第3四半期の暫定決算を発表する。証券界の予想は売上高200兆ウォン以上、営業利益100兆〜110兆ウォン台だったが、最近の為替の逆風を理由に104兆ウォン前後へ引き下げたところもある。四半期営業利益100兆ウォンは初めてだ。暫定決算は売上高・営業利益の二行だけが出て、事業部別の数字は今月末の確定決算で公開される。",
+      why:"KOSPI 7000の鍵だ。外国人が2日間で4兆8000億ウォンを売った理由が「決算前の利益確定」なのか「趨勢転換」なのかが、この数字で分かれる。",
+      me:"国民年金とほぼすべての国内株式型ファンドがサムスン電子を最も多く保有している。株主でなくても、私の年金の四半期成績表でもある。",
+      a:"",b:"",
+      say:"あす10時前後に二行が出る。100兆ウォンを超えれば「史上初」、超えなければ「予想下回り」。どちらにせよ、きょうの外国人売りの意味が定まる瞬間だ。",
+      src:"マネートゥデイ · イートゥデイ · ソウル経済 · 済州交通福祉新聞（10/5〜7） · 予想値は証券会社に帰属、実際の数字はあす"},
+  };
+
+  // ───── 用語集: 本文・ポップアップ内の用語に点線の下線、押すと説明
+  const G = {
+    "群集衛星":{f:"宇宙",d:"複数の小型衛星を同じ軌道に間隔を置いて飛ばし、一つの体系のように運用する方式。1基なら1日1回しか通らない地域を複数基が交代で通るため、再訪周期が短くなる。",w:"ヌリ号5回目の主搭載衛星2〜6号の5基がこれだ。国内初の群集衛星の軌道投入が今回の打ち上げの核心成果である。"},
+    "キューブサット":{f:"宇宙",d:"縦横10cmの立方体（1U）を基本単位として作る超小型衛星。大学・スタートアップが安く速く作り、技術検証に使う。",w:"ヌリ号5回目の副搭載衛星10基。9基が分離し、1基は射出されなかった。"},
+    "軌道投入":{f:"宇宙",d:"衛星を目標の高度と角度の軌道に正確に乗せること。ロケットの任務はここで終わり、その後は衛星が自ら姿勢を整えて交信しなければならない。",w:"「軌道投入成功」と「交信成功」は別の段階だ。きょう前者は15基中14基、後者は夕方までに3基の確認。"},
+    "地上局":{f:"宇宙",d:"衛星と電波で交信する地上施設。衛星が頭上を通るときだけ通信できるため、極地の地上局がよく使われる。",w:"6号は南極の世宗基地、3号は北極スバールバルの地上局と初交信した。極地に地上局があれば極軌道衛星と毎周回会える。"},
+    "成功率":{f:"宇宙",d:"全打ち上げ回数のうち任務を達成した割合。ロケット事業で顧客が最初に見る数字だ。",w:"ヌリ号は5回中4回成功で80%。標本が小さく、1度の失敗で数字が大きく変わる点は併せて見る必要がある。"},
+    "再訪周期":{f:"宇宙",d:"衛星が同じ地点を再び撮影できるまでにかかる時間。衛星の数が多いほど短くなる。",w:"群集衛星5基がすべて動けば、一つの地域を1日に何度も見られる。災害・安全保障の監視では、この周期がそのまま性能だ。"},
+    "談合":{f:"公正取引",d:"競争すべき会社同士が価格・数量・取引条件をひそかに合わせること。2021年からは価格を直接合意しなくても、敏感な価格情報をやり取りする「情報交換」だけで違反になり得る。",w:"SKエネルギー・HD現代オイルバンク事件の核心がこの「情報交換」条項だ。両社は事後情報の単純な共有だったと反論している。"},
+    "公正取引委員会":{f:"行政・経済",d:"企業の談合・独占・不公正行為を調査し制裁する政府機関。調査する審査官と判断する委員会が分かれており、準司法機関と呼ばれる。",w:"きょうの「審議着手」は、審査官が調査を終えて委員会に事件を送ったという意味。検察の起訴に当たる。"},
+    "審議":{f:"行政・法",d:"公取委の委員が審査官の調査結果と企業の反論を聞き、違法かどうかと制裁の水準を決める手続き。裁判所の裁判に当たる。",w:"44兆談合事件はいまこの段階に入った。結論まで通常数カ月、不服なら行政訴訟で1〜2年さらにかかる。"},
+    "課徴金":{f:"行政・経済",d:"法律違反で得た利益を取り上げるために政府が課す金銭制裁。談合は関連売上高の一定比率（上限20%）まで課すことができる。",w:"「最大4兆6000億」は44兆1000億に上限料率を掛けた単純計算値だ。実際の金額は委員会が決める。"},
+    "関連売上高":{f:"公正取引",d:"違反行為が影響を及ぼした商品・期間の売上の合計。課徴金を計算する基準になる。",w:"「44兆談合」の44兆は談合で稼いだ金ではなく、4年間のガソリン・軽油・灯油の売上全体だ。"},
+    "軍事境界線":{f:"安全保障",d:"1953年の休戦協定で引かれた南北の実質的な境界線（MDL）。この線から南北へ各2kmが非武装地帯（DMZ）だ。",w:"北朝鮮が「国境線要塞化」工事中にこの線を越えたというのが国防部の判断で、国連軍司令部と共同調査して公式化するという。"},
+    "国連軍司令部":{f:"安全保障・国際",d:"朝鮮戦争の際に創設された多国籍軍の司令部（国連軍）。現在は休戦協定の管理とDMZ出入りの統制が主な任務だ。",w:"休戦協定違反を「公式」にできる当事者が国連軍司令部だ。だから国防部は単独調査ではなく共同調査を選んだ。"},
+    "休戦協定":{f:"安全保障・国際",d:"1953年7月27日に国連軍・北朝鮮軍・中国軍が署名した戦闘停止の協定。平和協定ではないため、法的に朝鮮半島はいまも戦争中断の状態にある。",w:"「休戦協定違反通知」は、この協定の管理手続きに従って相手に送る公式文書だ。北朝鮮はたいてい受け取りを拒む。"},
+    "政治資金法":{f:"法・政治",d:"政治家が金を受け取り使う方法を定めた法律。法が定めた方式（後援会・寄託など）の外で受け取った金品・利益は処罰対象だ。",w:"「ただの世論調査」がここで言う政治資金なのかが尹錫悦・明泰均事件の争点で、二審は違うと見た。"},
+    "控訴審":{f:"法",d:"一審判決に不服で改めて受ける2度目の裁判（二審）。事実関係と法の適用の両方を見直す。その次の大法院（三審）は法の適用だけを見る。",w:"尹前大統領の事件は一審有罪、二審無罪に割れた。検察が上告すれば大法院が法理を定める。"},
+    "政策金利":{f:"金融",d:"中央銀行が決める政策上の金利。市中の貸出・預金金利の出発点になる。インドでは「レポ金利」と呼ぶ。",w:"インド中央銀行が2023年以来初めて引き上げた。原油高が新興国の物価を先に直撃しているという信号だ。"},
+    "暫定決算":{f:"企業・会計",d:"四半期決算が締まる前に会社が先に出す、売上高・営業利益の二行だけの速報。確定決算は通常3〜4週間後、事業部別の数字とともに出る。",w:"LG電子がきょう、サムスン電子があす発表する。二行だけなので、「なぜ良かったのか」は確定決算まで待たなければならない。"},
+    "KOSPI":{f:"金融",d:"韓国取引所の有価証券市場に上場する全銘柄の時価総額を、1980年1月4日（=100）を基準に指数化したもの。サムスン電子・SKハイニックスの比率が大きく、2銘柄が指数を引っ張る。",w:"きょう6,803.90（−1.98%）。きのう7000を割り込んだのに続き2日続落。あすのサムスン電子暫定決算が方向を決める。"},
+    "売り越し":{f:"金融",d:"売った金額が買った金額より多い状態。「外国人売り越し3兆」なら、外国人全体が買った分より3兆ウォン多く売ったという意味。",w:"きのうの1兆7509億に続き、きょう3兆1095億。第2号で「2日連続なら趨勢」と書いた条件が満たされた。"},
+    "ウォン・ドル相場":{f:"金融",d:"1ドルを買うのにかかるウォンの金額。数字が下がればウォンの価値が上がったということ（ウォン高）。",w:"外国人が3兆売ったのに相場は3.2ウォン下がって1,340.4ウォン。売った金がドルとなって出ていっていない信号なので、「韓国を去った」と読むには早い。"},
+    "国政監査":{f:"政治・国会",d:"国会が毎年、定期国会の期間に行政府と公共機関の業務を監査する制度。今年は10月6日から30日までの25日間、常任委員会ごとに被監査機関を分けて行う。",w:"2日目は10の常任委員会。法司委は騒ぎ、国防委は地雷の攻防、保健福祉委は年金・人工妊娠中絶薬が議題だった。"},
+    "リバランス":{f:"金融・年金",d:"資産比率の再調整。株式が上がって目標比率を超えれば一部を売って債券などに移す機械的なルール。国民年金はこのルールに従って国内株式を売ってきた。",w:"「猶予」は当分その売りを止めるという意味。KOSPIの需給で国民年金が売り手の役割を休むことになる。"},
+    "営業利益":{f:"企業・会計",d:"売上高から原価と販売管理費を引いた利益。本業で稼いだ金なので、会社の実力を最もよく示す数字として使われる。",w:"LG電子は第3四半期7818億、累計4兆突破。サムスン電子はあす、四半期営業利益100兆突破の可否が焦点だ。"},
+    "キラリティー":{f:"化学",d:"左手と右手のように、鏡に映せば同じだが重ね合わせることはできない分子の性質。二つの鏡像を「異性体」と呼び、体内の酵素は二つを全く別の物質として扱う。",w:"今年の化学賞の出発点。薬の中には一方の鏡像は薬で他方は有害という場合があり、一方だけを作る「不斉合成」が産業的にも重要だ。"},
+    "自己触媒":{f:"化学",d:"反応の生成物がその反応自体を促す触媒になる現象。生成物が増えるほど反応が速くなるフィードバックが生じる。",w:"硤合反応はこれに「鏡像の一方だけを増幅」が加わった例。ごく小さな偏りがほぼ100%にまで大きくなる。"},
+    "非線形効果":{f:"化学",d:"触媒の鏡像純度と生成物の純度が比例しない現象。純度50%の触媒から90%の生成物が出ることもある（正の非線形効果）。",w:"カガンが1986年に報告した現象。「触媒が完璧でなくても結果は完璧に近づき得る」という意味なので、生命の起源仮説に使われる。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
+</body>
+</html>
