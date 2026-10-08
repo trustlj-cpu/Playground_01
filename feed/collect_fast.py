@@ -35,9 +35,11 @@ def item_id(link: str) -> str:
     return hashlib.sha1(base.canon_url(link).encode()).hexdigest()[:20]
 
 
-# 지역 → 기본 언어(소스 yaml에 lang이 없을 때). KR 한국어, JP 일본어, DE 독일어, FR 불어, TW 번체 중국어, 그 외 영어
-# (CA·IN은 영어/불어·힌디가 섞이므로 소스별 lang 사용)
-LANG_BY_REGION = {"KR": "ko", "JP": "ja", "CN": "zh", "DE": "de", "FR": "fr", "TW": "zh-TW"}
+# 지역 → 기본 언어(소스 yaml에 lang이 없을 때). KR 한국어, JP 일본어, DE 독일어, FR 불어, TW 번체 중국어,
+# BR 포르투갈어, MX·ES 스페인어, IT 이탈리아어, NL 네덜란드어, 그 외(SG 포함) 영어
+# (CA·IN·CH는 영어/불어·힌디, 독/불/이탈리아어가 섞이므로 소스별 lang 사용)
+LANG_BY_REGION = {"KR": "ko", "JP": "ja", "CN": "zh", "DE": "de", "FR": "fr", "TW": "zh-TW",
+                  "BR": "pt", "MX": "es", "ES": "es", "IT": "it", "NL": "nl"}
 
 def main() -> int:
     now = dt.datetime.now(dt.timezone.utc)

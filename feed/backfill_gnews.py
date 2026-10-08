@@ -36,6 +36,13 @@ REGIONS = {
     "AU": {"hl": "en-AU", "gl": "AU", "ceid": "AU:en", "tz": 11, "sites": [("abc.net.au", "en"), ("smh.com.au", "en"), ("theage.com.au", "en"), ("sbs.com.au", "en"), ("afr.com", "en"), ("theguardian.com/australia-news", "en")]},
     "CA": {"hl": "en-CA", "gl": "CA", "ceid": "CA:en", "tz": -4, "sites": [("cbc.ca", "en"), ("theglobeandmail.com", "en"), ("ctvnews.ca", "en"), ("thestar.com", "en"), ("globalnews.ca", "en"), ("ledevoir.com", "fr"), ("ici.radio-canada.ca", "fr")]},
     "TW": {"hl": "zh-TW", "gl": "TW", "ceid": "TW:zh-Hant", "tz": 8, "sites": [("cna.com.tw", "zh-TW"), ("ltn.com.tw", "zh-TW"), ("udn.com", "zh-TW"), ("pts.org.tw", "zh-TW"), ("taipeitimes.com", "en"), ("focustaiwan.tw", "en")]},
+    "SG": {"hl": "en-SG", "gl": "SG", "ceid": "SG:en", "tz": 8, "sites": [("channelnewsasia.com", "en"), ("straitstimes.com", "en"), ("businesstimes.com.sg", "en"), ("todayonline.com", "en"), ("mothership.sg", "en"), ("mas.gov.sg", "en")]},
+    "BR": {"hl": "pt-BR", "gl": "BR", "ceid": "BR:pt-419", "tz": -3, "sites": [("g1.globo.com", "pt"), ("folha.uol.com.br", "pt"), ("estadao.com.br", "pt"), ("valor.globo.com", "pt"), ("agenciabrasil.ebc.com.br", "pt"), ("oglobo.globo.com", "pt"), ("cnnbrasil.com.br", "pt")]},
+    "MX": {"hl": "es-419", "gl": "MX", "ceid": "MX:es-419", "tz": -6, "sites": [("eluniversal.com.mx", "es"), ("milenio.com", "es"), ("elfinanciero.com.mx", "es"), ("proceso.com.mx", "es"), ("jornada.com.mx", "es"), ("eleconomista.com.mx", "es"), ("expansion.mx", "es")]},
+    "IT": {"hl": "it", "gl": "IT", "ceid": "IT:it", "tz": 2, "sites": [("ansa.it", "it"), ("rainews.it", "it"), ("corriere.it", "it"), ("repubblica.it", "it"), ("ilsole24ore.com", "it"), ("lastampa.it", "it"), ("ilpost.it", "it")]},
+    "ES": {"hl": "es", "gl": "ES", "ceid": "ES:es", "tz": 2, "sites": [("rtve.es", "es"), ("elpais.com", "es"), ("elmundo.es", "es"), ("expansion.com", "es"), ("europapress.es", "es"), ("lavanguardia.com", "es"), ("abc.es", "es")]},
+    "NL": {"hl": "nl", "gl": "NL", "ceid": "NL:nl", "tz": 2, "sites": [("nos.nl", "nl"), ("nu.nl", "nl"), ("volkskrant.nl", "nl"), ("nrc.nl", "nl"), ("fd.nl", "nl"), ("telegraaf.nl", "nl"), ("trouw.nl", "nl")]},
+    "CH": {"hl": "de", "gl": "CH", "ceid": "CH:de", "tz": 2, "sites": [("srf.ch", "de"), ("nzz.ch", "de"), ("tagesanzeiger.ch", "de"), ("rts.ch", "fr"), ("letemps.ch", "fr"), ("rsi.ch", "it"), ("swissinfo.ch/eng", "en")]},
 }
 
 
