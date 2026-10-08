@@ -219,7 +219,7 @@ const QUOTE_SYMBOLS = {
   kospi: ['^KS11', 'pctchg'], kosdaq: ['^KQ11', 'pctchg'], usdkrw: ['KRW=X', 'abs'],
   nikkei: ['^N225', 'pctchg'], topix: ['^TOPX', 'pctchg'], usdjpy: ['JPY=X', 'abs'],
   ftse: ['^FTSE', 'pctchg'], dax: ['^GDAXI', 'pctchg'], cac40: ['^FCHI', 'pctchg'], nifty: ['^NSEI', 'pctchg'], asx200: ['^AXJO', 'pctchg'], tsx: ['^GSPTSE', 'pctchg'], taiex: ['^TWII', 'pctchg'], smi: ['^SSMI', 'pctchg'], ftsemib: ['FTSEMIB.MI', 'pctchg'], ibov: ['^BVSP', 'pctchg'],
-  gbpusd: ['GBPUSD=X', 'abs'], eurusd: ['EURUSD=X', 'abs'], usdinr: ['INR=X', 'abs'], audusd: ['AUDUSD=X', 'abs'], usdcad: ['CAD=X', 'abs'], usdtwd: ['TWD=X', 'abs'], usdchf: ['CHF=X', 'abs'], usdbrl: ['BRL=X', 'abs'],
+  gbpusd: ['GBPUSD=X', 'pctchg'], eurusd: ['EURUSD=X', 'pctchg'], usdinr: ['INR=X', 'pctchg'], audusd: ['AUDUSD=X', 'pctchg'], usdcad: ['CAD=X', 'pctchg'], usdtwd: ['TWD=X', 'pctchg'], usdchf: ['CHF=X', 'pctchg'], usdbrl: ['BRL=X', 'pctchg'],
 };
 async function refreshQuotes(env) {
   await env.DB.prepare('CREATE TABLE IF NOT EXISTS quotes (k TEXT PRIMARY KEY, sym TEXT, v REAL, chg REAL, prev REAL, ts INTEGER, state TEXT, src TEXT, err TEXT, fetched_at INTEGER)').run();
