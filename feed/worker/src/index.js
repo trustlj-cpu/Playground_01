@@ -157,6 +157,7 @@ export default {
       const { results } = await env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 ORDER BY collected_at DESC LIMIT 2000').bind(since).all();
       return json({ since, n: results.length, items: results });
     }
+    if (url.pathname === '/quotes.json') { const { results } = await env.DB.prepare('SELECT k, v, chg, prev, ts, state FROM quotes').all().catch(() => ({ results: [] })); const q = {}; let up = 0; for (const r of results) { q[r.k] = { v: r.v, chg: r.chg, prev: r.prev, ts: r.ts, state: r.state }; up = Math.max(up, r.ts || 0); } return new Response(JSON.stringify({ updated: up, q }), { headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=30' } }); }
     if (url.pathname === '/cron.json') { const { results } = await env.DB.prepare('SELECT * FROM cron_runs ORDER BY id DESC LIMIT 100').all(); return json(results); }
     if (url.pathname === '/batches.json') { const { results } = await env.DB.prepare('SELECT * FROM batches ORDER BY batch DESC LIMIT 144').all(); return json(results); }
     let m = url.pathname.match(/^\/hourly\/(latest|\d{4}-\d{2}-\d{2}T\d{2})\.json$/);
@@ -177,6 +178,7 @@ export default {
     return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
+    if (ev.cron === '* * * * *') { ctx.waitUntil(refreshQuotes(env).catch(() => {})); return; }
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
     // GitHub schedule은 기본 브랜치(main)의 워크플로만 실행하므로, paycheck-page에만 있는 issuedrop.yml(KST 06/12/18시 자료보고서)도 여기서 호출한다.
     const DISPATCH = { '*/10 * * * *': { wf: 'codex-feed-schedule.yml', ref: 'main', tag: 'dispatch' }, '0 21,3,9 * * *': { wf: 'issuedrop.yml', ref: 'paycheck-page', tag: 'dispatch:issuedrop' } };
@@ -208,3 +210,31 @@ export default {
     })());
   },
 };
+
+// ── 1면 시세줄 실시간 연동: 1분마다 공개 시세(야후 파이낸스 차트 API, 지연될 수 있음)를 받아 D1 quotes에 저장.
+// 키는 site/markets.json·1면 시세줄과 같은 이름. chg = 지수·원자재는 전일 대비 %, 환율은 절대값(원·엔), 금리는 %p.
+const QUOTE_SYMBOLS = {
+  sp500: ['^GSPC', 'pctchg'], nasdaq: ['^IXIC', 'pctchg'], dow: ['^DJI', 'pctchg'], us10y: ['^TNX', 'abs'], wti: ['CL=F', 'pctchg'], gold: ['GC=F', 'pctchg'],
+  kospi: ['^KS11', 'pctchg'], kosdaq: ['^KQ11', 'pctchg'], usdkrw: ['KRW=X', 'abs'],
+  nikkei: ['^N225', 'pctchg'], topix: ['^TPX', 'pctchg'], usdjpy: ['JPY=X', 'abs'],
+  ftse: ['^FTSE', 'pctchg'], dax: ['^GDAXI', 'pctchg'], cac40: ['^FCHI', 'pctchg'], nifty: ['^NSEI', 'pctchg'], asx200: ['^AXJO', 'pctchg'], tsx: ['^GSPTSE', 'pctchg'], taiex: ['^TWII', 'pctchg'], smi: ['^SSMI', 'pctchg'], ftsemib: ['FTSEMIB.MI', 'pctchg'], ibov: ['^BVSP', 'pctchg'],
+  gbpusd: ['GBPUSD=X', 'abs'], eurusd: ['EURUSD=X', 'abs'], usdinr: ['INR=X', 'abs'], audusd: ['AUDUSD=X', 'abs'], usdcad: ['CAD=X', 'abs'], usdtwd: ['TWD=X', 'abs'], usdchf: ['CHF=X', 'abs'], usdbrl: ['BRL=X', 'abs'],
+};
+async function refreshQuotes(env) {
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS quotes (k TEXT PRIMARY KEY, sym TEXT, v REAL, chg REAL, prev REAL, ts INTEGER, state TEXT, src TEXT, err TEXT, fetched_at INTEGER)').run();
+  const now = Date.now(); const stmts = [];
+  await Promise.all(Object.entries(QUOTE_SYMBOLS).map(async ([k, [sym, mode]]) => {
+    try {
+      const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?range=1d&interval=5m', { headers: { 'user-agent': 'Mozilla/5.0 (compatible; DailyDropBot/1.0; +https://dailydrop.kr)' }, cf: { cacheTtl: 30 } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const m = (((await r.json()).chart || {}).result || [])[0]?.meta; if (!m || m.regularMarketPrice == null) throw new Error('no meta');
+      const v = +m.regularMarketPrice, prev = +(m.chartPreviousClose ?? m.previousClose); if (!isFinite(v) || !isFinite(prev) || !prev) throw new Error('bad numbers');
+      const chg = mode === 'abs' ? +(v - prev).toFixed(4) : +((v / prev - 1) * 100).toFixed(2);
+      const ts = (m.regularMarketTime || 0) * 1000; const state = m.marketState || (now - ts < 20 * 60_000 ? 'REGULAR' : 'CLOSED');
+      stmts.push(env.DB.prepare('INSERT INTO quotes (k, sym, v, chg, prev, ts, state, src, err, fetched_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,NULL,?9) ON CONFLICT(k) DO UPDATE SET sym=?2, v=?3, chg=?4, prev=?5, ts=?6, state=?7, src=?8, err=NULL, fetched_at=?9').bind(k, sym, v, chg, prev, ts, state, 'yahoo', now));
+    } catch (e) {
+      stmts.push(env.DB.prepare('INSERT INTO quotes (k, sym, err, fetched_at) VALUES (?1,?2,?3,?4) ON CONFLICT(k) DO UPDATE SET err=?3, fetched_at=?4').bind(k, sym, String(e).slice(0, 200), now));
+    }
+  }));
+  if (stmts.length) await env.DB.batch(stmts);
+}
