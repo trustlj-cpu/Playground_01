@@ -7,9 +7,9 @@ const json = (o, status = 200, extra = {}) => new Response(JSON.stringify(o), { 
 
 import { clusterItems } from './cluster.js';
 
-async function buildHourly(env, hour) { // hour: 'YYYY-MM-DDTHH' UTC
+async function buildHourly(env, hour) { // hour: 'YYYY-MM-DDTHH' UTC · 지난 날짜 채우기(backfill, batch …:bf-XX)는 시간 다이제스트에서 뺀다(한꺼번에 수천 건이 들어와 행 크기 한도 초과)
   const from = hour + ':00:00.000Z', to = new Date(new Date(from).getTime() + 3600_000).toISOString();
-  const { results } = await env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 AND collected_at < ?2 ORDER BY collected_at, id').bind(from, to).all();
+  const { results } = await env.DB.prepare("SELECT * FROM items WHERE collected_at >= ?1 AND collected_at < ?2 AND batch NOT LIKE '%:bf-%' ORDER BY collected_at, id").bind(from, to).all();
   const by_field = {}; results.forEach(r => by_field[r.field] = (by_field[r.field] || 0) + 1);
   const srcCount = {}; results.forEach(r => srcCount[r.source] = (srcCount[r.source] || 0) + 1);
   const digest = { hour, hour_kst: kst(from).slice(0, 11) + '시', built_at: new Date().toISOString(), n_items: results.length, by_field,
