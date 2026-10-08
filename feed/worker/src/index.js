@@ -157,6 +157,7 @@ export default {
       const { results } = await env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 ORDER BY collected_at DESC LIMIT 2000').bind(since).all();
       return json({ since, n: results.length, items: results });
     }
+    if (url.pathname === '/quotes/refresh' && req.method === 'POST') { if ((req.headers.get('authorization') || '') !== 'Bearer ' + env.INGEST_KEY) return json({ error: 'unauthorized' }, 401); try { const r = await refreshQuotes(env); return json(r); } catch (e) { return json({ error: String(e && e.stack || e).slice(0, 1000) }, 500); } }
     if (url.pathname === '/quotes.json') { const { results } = await env.DB.prepare('SELECT k, v, chg, prev, ts, state FROM quotes').all().catch(() => ({ results: [] })); const q = {}; let up = 0; for (const r of results) { q[r.k] = { v: r.v, chg: r.chg, prev: r.prev, ts: r.ts, state: r.state }; up = Math.max(up, r.ts || 0); } return new Response(JSON.stringify({ updated: up, q }), { headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=30' } }); }
     if (url.pathname === '/cron.json') { const { results } = await env.DB.prepare('SELECT * FROM cron_runs ORDER BY id DESC LIMIT 100').all(); return json(results); }
     if (url.pathname === '/batches.json') { const { results } = await env.DB.prepare('SELECT * FROM batches ORDER BY batch DESC LIMIT 144').all(); return json(results); }
@@ -178,7 +179,7 @@ export default {
     return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
-    if (ev.cron === '* * * * *') { ctx.waitUntil(refreshQuotes(env).catch(() => {})); return; }
+    if (ev.cron === '* * * * *') { ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
     // GitHub schedule은 기본 브랜치(main)의 워크플로만 실행하므로, paycheck-page에만 있는 issuedrop.yml(KST 06/12/18시 자료보고서)도 여기서 호출한다.
     const DISPATCH = { '*/10 * * * *': { wf: 'codex-feed-schedule.yml', ref: 'main', tag: 'dispatch' }, '0 21,3,9 * * *': { wf: 'issuedrop.yml', ref: 'paycheck-page', tag: 'dispatch:issuedrop' } };
@@ -237,4 +238,6 @@ async function refreshQuotes(env) {
     }
   }));
   if (stmts.length) await env.DB.batch(stmts);
+  const { results } = await env.DB.prepare('SELECT k, v, chg, err FROM quotes ORDER BY k').all();
+  return { at: new Date(now).toISOString(), n: results.length, ok: results.filter(r => r.v != null && !r.err).length, rows: results };
 }
