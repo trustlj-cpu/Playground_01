@@ -31,3 +31,12 @@ Target-language presets:
 Validate: `node -e "const h=require('fs').readFileSync(process.argv[1],'utf8');const m=h.match(/const G = (\{[\s\S]*?\n  \});\n/);if(!m)throw 'G';const g=new Function('return '+m[1])();const a=h.match(/const A = (\{[\s\S]*?\n  \});\n/);if(!a)throw 'A';const A=new Function('return '+a[1])();const ids=[...h.matchAll(/data-id=\"([^\"]+)\"/g)].map(x=>x[1]);console.log('ok',Object.keys(g).length,'terms',Object.keys(A).length,'A', ids.filter(i=>!A[i]))" FILE` and a Playwright load (executablePath /opt/pw-browsers/chromium-1194/chrome-linux/chrome, viewport 390 and 1280) with zero pageerrors, click first .story → #ov visible, count a.term links, confirm no leftover source-language text (grep for Hangul / kana as appropriate, excluding proper nouns in parentheses). Report headlines, term count, validation output, file size. Commit and push only the translation file, per the standing-role protocol above. Do not touch other files.
 
 Morning editions: editions dated 2026-10-09 or later are MORNING editions (아침판 / Morning / 朝刊). For them use morning wording in fixed labels: house line "Seven minutes every morning…" / 「毎朝7分…」 / 매일 아침; the what-to-watch block is about TODAY (오늘 볼 것 / What to watch today / きょう見るもの). Translate whatever the source says; never turn a morning edition into an evening one.
+
+# Quality bar (owner: "번역 잘해야 함")
+Before committing each translation, do a second pass against the source, section by section, and fix everything you find:
+1. Completeness: every paragraph, brief, index item, rumor/next row, A entry field and G entry is translated; nothing dropped or summarized.
+2. Accuracy: every number, date, currency amount, percentage, name and title matches the source (diff the digits). No added facts, no softened or sharpened claims; hedges ("reportedly", "unconfirmed") stay.
+3. Natural prose: reads like a native newspaper in the target language (not word-for-word). Headlines follow target-language headline conventions; consistent register (KO 해라체, JA 常体).
+4. Terminology: proper nouns and institutions use the established target-language names (e.g. 연방준비제도/FRB, 닛케이평균/日経平均, 국채 10년물); same term the same way throughout; glossary keys match the body text exactly.
+5. Leftovers: no untranslated source-language text except proper nouns in parentheses.
+In your reply, list the issues the second pass fixed (or "none").
