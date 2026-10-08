@@ -86,7 +86,7 @@ async function fcmAccessToken(env) {
 }
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response(null, { headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } });
     if (url.pathname === '/ingest' && req.method === 'POST') {
@@ -158,7 +158,7 @@ export default {
       return json({ since, n: results.length, items: results });
     }
     if (url.pathname === '/quotes/refresh' && req.method === 'POST') { if ((req.headers.get('authorization') || '') !== 'Bearer ' + env.INGEST_KEY) return json({ error: 'unauthorized' }, 401); try { const r = await refreshQuotes(env); return json(r); } catch (e) { return json({ error: String(e && e.stack || e).slice(0, 1000) }, 500); } }
-    if (url.pathname === '/quotes.json') { const { results } = await env.DB.prepare('SELECT k, v, chg, prev, ts, state FROM quotes').all().catch(() => ({ results: [] })); const q = {}; let up = 0; for (const r of results) { q[r.k] = { v: r.v, chg: r.chg, prev: r.prev, ts: r.ts, state: r.state }; up = Math.max(up, r.ts || 0); } return new Response(JSON.stringify({ updated: up, q }), { headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=30' } }); }
+    if (url.pathname === '/quotes.json') { const { results } = await env.DB.prepare('SELECT k, v, chg, prev, ts, state, fetched_at FROM quotes').all().catch(() => ({ results: [] })); const q = {}; let up = 0, fx = 0; for (const r of results) { q[r.k] = { v: r.v, chg: r.chg, prev: r.prev, ts: r.ts, state: r.state }; up = Math.max(up, r.ts || 0); fx = Math.max(fx, r.fetched_at || 0); } if (Date.now() - fx > 60_000 && ctx) ctx.waitUntil(refreshQuotes(env).catch(() => {}));  // 크론이 안 돌아도 독자가 볼 때 1분 지난 시세면 뒤에서 갱신 return new Response(JSON.stringify({ updated: up, q }), { headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=30' } }); }
     if (url.pathname === '/cron.json') { const { results } = await env.DB.prepare('SELECT * FROM cron_runs ORDER BY id DESC LIMIT 100').all(); return json(results); }
     if (url.pathname === '/batches.json') { const { results } = await env.DB.prepare('SELECT * FROM batches ORDER BY batch DESC LIMIT 144').all(); return json(results); }
     let m = url.pathname.match(/^\/hourly\/(latest|\d{4}-\d{2}-\d{2}T\d{2})\.json$/);
@@ -217,7 +217,7 @@ export default {
 const QUOTE_SYMBOLS = {
   sp500: ['^GSPC', 'pctchg'], nasdaq: ['^IXIC', 'pctchg'], dow: ['^DJI', 'pctchg'], us10y: ['^TNX', 'abs'], wti: ['CL=F', 'pctchg'], gold: ['GC=F', 'pctchg'],
   kospi: ['^KS11', 'pctchg'], kosdaq: ['^KQ11', 'pctchg'], usdkrw: ['KRW=X', 'abs'],
-  nikkei: ['^N225', 'pctchg'], topix: ['^TPX', 'pctchg'], usdjpy: ['JPY=X', 'abs'],
+  nikkei: ['^N225', 'pctchg'], topix: ['^TOPX', 'pctchg'], usdjpy: ['JPY=X', 'abs'],
   ftse: ['^FTSE', 'pctchg'], dax: ['^GDAXI', 'pctchg'], cac40: ['^FCHI', 'pctchg'], nifty: ['^NSEI', 'pctchg'], asx200: ['^AXJO', 'pctchg'], tsx: ['^GSPTSE', 'pctchg'], taiex: ['^TWII', 'pctchg'], smi: ['^SSMI', 'pctchg'], ftsemib: ['FTSEMIB.MI', 'pctchg'], ibov: ['^BVSP', 'pctchg'],
   gbpusd: ['GBPUSD=X', 'abs'], eurusd: ['EURUSD=X', 'abs'], usdinr: ['INR=X', 'abs'], audusd: ['AUDUSD=X', 'abs'], usdcad: ['CAD=X', 'abs'], usdtwd: ['TWD=X', 'abs'], usdchf: ['CHF=X', 'abs'], usdbrl: ['BRL=X', 'abs'],
 };
