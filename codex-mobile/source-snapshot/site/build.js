@@ -7,10 +7,10 @@ const editions = JSON.parse(fs.readFileSync(spec, 'utf8')).map(e => ({ ...e, fil
 const OUT = path.resolve(outArg || process.env.DD_OUT || path.join(__dirname, 'public')); fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
 const SITE = 'https://dailydrop.kr';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-// 저녁판 → 아침판 전환일(06:00 현지 발행). 이 날짜 이상인 호는 아침판 표기, 그 전 호는 저녁판 표기 그대로.
+// 판 표기 전환일: 이 날짜부터 현지시각 6:00판, 그 전 호(1~4호)는 현지시각 18:00판.
 const MORNING_FROM = '2026-10-09';
 const isAM = d => d >= MORNING_FROM;
-const KO_ED = d => isAM(d) ? '현지시각 6:00판' : '저녁판', JA_ED = d => isAM(d) ? '現地時間6:00版' : '夕刊';
+const KO_ED = d => isAM(d) ? '현지시각 6:00판' : '현지시각 18:00판', JA_ED = d => isAM(d) ? '現地時間6:00版' : '現地時間18:00版';
 const KO_DAY = ['일', '월', '화', '수', '목', '금', '토'];
 const fmt = d => { const [y, m, dd] = d.split('-').map(Number); return `${y}년 ${m}월 ${dd}일 ${KO_DAY[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]}요일`; };
 
@@ -67,7 +67,7 @@ fs.writeFileSync(path.join(OUT, 'live.json'), JSON.stringify(COUNTRIES.filter(c 
 // 날짜줄 국가판 전환: '▼ 대한민국' 을 누르면 발행 중인 국가판 목록 + 맨 끝 '전체 국가판 →'(설정 페이지의 30개국 카탈로그). 표기는 보는 언어 기준.
 const EDPICK = (lang, region) => `<details class="dd-ed"><summary aria-label="${esc(T(lang, 'changeEdition'))}"><i aria-hidden="true">▼</i>${esc(COUNTRY(lang, region))}</summary><span class="dd-ed-menu">${COUNTRIES.filter(c => LIVE.has(c.code) || c.phase <= 1 || c.menu).sort((a, b) => new Intl.Collator(lang).compare(SORTKEY(lang, a.code, EDNAME(lang, a.code)), SORTKEY(lang, b.code, EDNAME(lang, b.code)))).map(c => c.code === region ? `<span aria-current="true" data-cc="${c.code}">${esc(EDNAME(lang, c.code))}</span>` : LIVE.has(c.code) ? `<a data-cc="${c.code}" href="/${c.prefix}?r=${c.code}">${esc(EDNAME(lang, c.code))}</a>` : `<span class="dd-ed-soon" data-cc="${c.code}" aria-disabled="true">${esc(EDNAME(lang, c.code))}<small>${esc(T(lang, 'soonShort'))}</small></span>`).join('')}<a class="dd-ed-all" href="/${REGIONS[region].prefix}settings/">${esc(T(lang, 'allEditions'))}</a></span></details>`;
 // 날짜줄 오른쪽 호수 표기: 넓은 화면은 전체('제5호 · 현지시각 6:00판'), 좁은 화면은 짧게('제5호 · 6:00판'). 글자 크기는 그대로.
-const EDPARTS = (lang, full, n, d) => { const sh = isAM(d) ? T(lang, 'editionShort').replace('{n}', n) : full; const m = sh.split(/\s·\s|・/); return m.length === 2 ? m : [sh, '']; };
+const EDPARTS = (lang, full, n, d) => { const sh = T(lang, isAM(d) ? 'editionShort' : 'editionShortPM').replace('{n}', n); const m = sh.split(/\s·\s|・/); return m.length === 2 ? m : [sh, '']; };
 // 날짜줄: PC는 [© 2026 DailyDrop | ▼나라, 날짜 | 제5호 · 현지시각 6:00판], 휴대폰은 [제5호 | ▼나라, 날짜(가운데) | 6:00판] 한 줄. 글자 크기는 그대로.
 const DL_LEFT = (year, lang, full, n, d) => `<small class="cpy">© ${year} DailyDrop</small><small class="eno">${EDPARTS(lang, full, n, d)[0]}</small>`;
 const EDLABEL = (lang, full, n, d) => `<small class="edf">${full}</small><small class="eds">${EDPARTS(lang, full, n, d)[1]}</small>`;
