@@ -77,7 +77,7 @@ const FONTS = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?fa
 // ── 호 페이지: 원본 HTML을 그대로 쓰되 문서 뼈대 + 상단 nav
 const glossary = {}; // term → {f,d,w,first:date,no}
 for (const e of editions) {
-  let html = fs.readFileSync(e.file, 'utf8');
+  let html = fs.readFileSync(e.file, 'utf8').replace(/\s*<\/body>\s*<\/html>\s*$/i, '\n');
   const m = html.match(/const G = (\{[\s\S]*?\n  \});\n/); if (m && (e.region || 'KR') === 'KR') { const G = new Function('return ' + m[1])(); for (const [k, v] of Object.entries(G)) if (!glossary[k]) glossary[k] = { ...v, first: e.date, no: e.no }; }
   const R = REGIONS[e.region || 'KR']; const title = R.title(e.no, e.date);
   const page = HEAD(title, R.desc, `/${R.prefix}${e.date}/`, R.lang) + NAV('/' + R.prefix, e.region || 'KR') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(html, R.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>${R.place}, ${R.date(e.date)}</b><span>${R.edition(e.no)}</span></div>${TAPE(e.date, e.region || 'KR')}</header>`) + POOLHTML(e.date, e.region || 'KR') + NYTCSS + BALANCE + '</body></html>';
@@ -85,7 +85,7 @@ for (const e of editions) {
   const tr = e.translations || {}; const variants = [[R.lang, `/${R.prefix}${e.date}/`], ...Object.keys(tr).map(l => [l, `/${R.prefix}${e.date}/${l}/`])];
   fs.writeFileSync(path.join(dir, 'index.html'), page.replace(/<nav class="dd-nav"[\s\S]*?<\/nav>/, NAV('/' + R.prefix, e.region || 'KR', { variants, cur: R.lang })));
   for (const [l, f] of Object.entries(tr)) {
-    const L = LOC[l]; const th = fs.readFileSync(path.resolve(path.dirname(spec), f), 'utf8');
+    const L = LOC[l]; const th = fs.readFileSync(path.resolve(path.dirname(spec), f), 'utf8').replace(/\s*<\/body>\s*<\/html>\s*$/i, '\n');
     const tpage = HEAD(title, R.desc, `/${R.prefix}${e.date}/${l}/`, l) + NAV('/' + R.prefix, e.region || 'KR', { variants, cur: l }) + th.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(th, L.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>© ${e.date.slice(0, 4)} DailyDrop</span><b>${L.place[e.region || 'KR']}, ${L.date(e.date)}</b><span>${L.edition(e.no)}</span></div>${TAPE(e.date, e.region || 'KR')}</header>`) + NYTCSS + BALANCE + '</body></html>';
     const tdir = path.join(dir, l); fs.mkdirSync(tdir, { recursive: true }); fs.writeFileSync(path.join(tdir, 'index.html'), tpage.replace('<body>', `<body data-filler="${L.filler}">`));
   }
