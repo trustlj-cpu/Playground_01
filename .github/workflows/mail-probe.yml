@@ -1,0 +1,19 @@
+name: mail-probe
+# Cloudflare Email Sending 사용 가능 여부 확인(1회성). 응답 코드만 출력: 10105=요금제 미지원, 10203/10000=도메인 미등록, 10102=토큰 권한 없음, success=발송 가능.
+on:
+  push:
+    branches: [paycheck-page]
+    paths: [".github/workflows/mail-probe.yml"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          curl -sS -m 30 "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/email/sending/send" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'content-type: application/json' \
+            -d '{"from":"no-reply@dailydropnewspaper.com","to":"no-reply@dailydropnewspaper.com","subject":"DailyDrop mail probe","text":"probe"}' | head -c 600; echo
+          curl -sS -m 30 "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subscriptions" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | head -c 400; echo
