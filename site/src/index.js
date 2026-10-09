@@ -29,6 +29,16 @@ export default {
       const region = m && live[m[1]] !== undefined ? m[1] : live[country] !== undefined ? country : (country === 'KR' || !country ? 'KR' : 'US');
       if (region !== 'KR' && live[region] !== undefined) return withCC(Response.redirect(url.origin + '/' + live[region], 302), country);
     }
+    // 예약 발행: schedule.json의 공개 시각(at)이 지난 호가 있으면 그 나라 1면·그 호 페이지를 _sched 사본으로 내보낸다. _sched 직접 접근은 막는다.
+    if (url.pathname.startsWith('/_sched/') || url.pathname === '/schedule.json') return new Response('Not found', { status: 404 });
+    if (request.method === 'GET') {
+      const hit = (await schedule(env, url)).filter(s => s.at <= Date.now() && (url.pathname === '/' + s.prefix || url.pathname === '/' + s.prefix + 'index.html' || url.pathname.startsWith('/' + s.prefix + s.date + '/'))).sort((a, b) => b.at - a.at)[0];
+      if (hit) {
+        const p = url.pathname.replace(/index\.html$/, '');
+        const r = await env.ASSETS.fetch(new Request(url.origin + '/_sched/' + hit.key + p));
+        if (r.ok) { const h = new Headers(r.headers); h.set('cache-control', 'no-cache'); return withCC(new Response(r.body, { status: 200, headers: h }), country); }
+      }
+    }
     const res = await env.ASSETS.fetch(request);
     // 앱·외부에서 읽는 JSON(editions.json 등)은 CORS 허용 + 짧은 캐시
     if (url.pathname === '/.well-known/apple-app-site-association') { const h = new Headers(res.headers); h.set('content-type', 'application/json'); return new Response(res.body, { status: res.status, headers: h }); }
@@ -55,4 +65,11 @@ async function liveRegions(env, url) {
     const list = await r.json(); LIVE = Object.fromEntries(list.map(x => [x.code, x.prefix])); LIVE_AT = Date.now();
   } catch (e) { LIVE = LIVE || { KR: '', US: 'us/', JP: 'jp/' }; }
   return LIVE;
+}
+
+let SCHED = null, SCHED_AT = 0;
+async function schedule(env, url) {
+  if (SCHED && Date.now() - SCHED_AT < 60000) return SCHED;
+  try { const r = await env.ASSETS.fetch(new Request(url.origin + '/schedule.json')); SCHED = r.ok ? await r.json() : []; } catch (e) { SCHED = SCHED || []; }
+  SCHED_AT = Date.now(); return SCHED;
 }

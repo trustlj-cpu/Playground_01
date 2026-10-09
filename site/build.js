@@ -3,7 +3,9 @@
 //   OUT 기본값 site/public (환경변수 DD_OUT 로도 지정). 나라 데이터는 site/countries.json, UI 문구는 site/i18n.json.
 const fs = require('fs'), path = require('path');
 const [, , spec, outArg] = process.argv;
-const editions = JSON.parse(fs.readFileSync(spec, 'utf8')).map(e => ({ ...e, file: path.resolve(path.dirname(spec), e.file) })).sort((a, b) => a.date.localeCompare(b.date));
+// 예약 발행: publish_at(ISO, UTC)이 아직 안 된 호는 이번 빌드에서 뺀다(DD_NOW로 기준 시각 덮어쓰기). 공개 시각이 되면 사이트 Worker가 schedule.js가 만든 _sched 사본을 대신 내보낸다.
+const NOW = Number(process.env.DD_NOW) || Date.now();
+const editions = JSON.parse(fs.readFileSync(spec, 'utf8')).filter(e => !e.publish_at || Date.parse(e.publish_at) <= NOW).map(e => ({ ...e, file: path.resolve(path.dirname(spec), e.file) })).sort((a, b) => a.date.localeCompare(b.date));
 const OUT = path.resolve(outArg || process.env.DD_OUT || path.join(__dirname, 'public')); fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
 const SITE = 'https://dailydrop.kr';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
