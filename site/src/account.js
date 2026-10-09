@@ -70,6 +70,8 @@ const isAdmin = (env, u) => !!u && u.email_verified === 1 && adminList(env).incl
 // 발송 경로: Cloudflare Email Service 바인딩(EMAIL, MAIL_LIVE='1' 일 때) 우선, 없으면 Resend 키
 const cfMail = env => !!(env.EMAIL && env.MAIL_LIVE === '1' && env.MAIL_FROM);
 const verifyOn = env => cfMail(env) || !!(env.RESEND_API_KEY && env.MAIL_FROM);
+// 인증 메일이 켜져 있으면, 이메일 인증을 마쳐야 회원으로 쓴다(사장님 10/9: 코드 입력해야 가입 완료). 그 전엔 '가입 대기'.
+const active = (env, u) => !!u && (!verifyOn(env) || u.email_verified === 1);
 const publicUser = (env, u) => ({ id: u.id, email: u.email, name: u.name || '', method: u.google_sub && u.pw_hash ? 'both' : u.google_sub ? 'google' : 'email', verified: u.email_verified === 1, admin: isAdmin(env, u), created_at: u.created_at });
 
 async function afterLogin(env, req, u) {
@@ -78,6 +80,7 @@ async function afterLogin(env, req, u) {
   // 오래된 세션 정리(가끔)
   if (Math.random() < 0.05) await env.UDB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(Date.now()).run();
   const cookies = await newSession(env, req, u.id);
+  if (!active(env, u)) return withCookies(json({ ok: true, pending: true, email: u.email, user: null, verify: true }), cookies);
   return withCookies(json({ ok: true, user: publicUser(env, { ...u, role }), verify: verifyOn(env) }), cookies);
 }
 
@@ -136,6 +139,7 @@ export async function handleAccount(request, env, url, ctx) {
     if (p === '/api/auth/config' && m === 'GET') return json({ google: env.GOOGLE_CLIENT_ID || null, verify: verifyOn(env) });
     if (p === '/api/me') {
       const u = await currentUser(env, request);
+      if (m === 'GET' && u && !active(env, u)) return json({ user: null, pending: true, email: u.email, verify: true });
       if (m === 'GET') return u ? json({ user: publicUser(env, u), verify: verifyOn(env) }) : withCookies(json({ user: null }), request.headers.get('cookie') && cookieOf(request, HINT) ? clearCookies() : []);
       if (m === 'DELETE') {
         if (!u) return err(401, 'auth');
@@ -161,7 +165,16 @@ export async function handleAccount(request, env, url, ctx) {
       if (!isEmail(email)) return err(400, 'email');
       if (pw.length < 8 || pw.length > 200) return err(400, 'password');
       if (await limited(env, request)) return err(429, 'rate');
-      const exists = await env.UDB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+      // 인증을 끝내지 않은 채 48시간이 지난 가입 대기 계정은 정리
+      if (verifyOn(env)) await env.UDB.prepare("DELETE FROM users WHERE email_verified = 0 AND google_sub IS NULL AND created_at < ?").bind(Date.now() - 48 * 3600e3).run().catch(() => {});
+      const exists = await env.UDB.prepare('SELECT id, email_verified, google_sub FROM users WHERE email = ?').bind(email).first();
+      // 인증 전(가입 대기) 계정이면 다시 가입하는 것으로 보고 비밀번호를 새로 받고 코드를 다시 보낸다
+      if (exists && verifyOn(env) && exists.email_verified !== 1 && !exists.google_sub) {
+        const salt2 = rand(16); const hash2 = await pbkdf2(pw, salt2, PBKDF2_ITER);
+        const r2 = await env.UDB.prepare('UPDATE users SET name = ?, pw_hash = ?, pw_salt = ?, pw_iter = ? WHERE id = ? RETURNING *').bind(name || null, hash2, b64(salt2), PBKDF2_ITER, exists.id).first();
+        try { await sendCode(env, email); } catch (e) { }
+        return afterLogin(env, request, r2);
+      }
       // 계정 존재 여부를 드러내지 않는 문구(이미 있으면 로그인 안내 — 같은 오류 코드)
       if (exists) return err(409, 'signup_failed');
       const salt = rand(16); const hash = await pbkdf2(pw, salt, PBKDF2_ITER); const now = Date.now();
@@ -177,6 +190,7 @@ export async function handleAccount(request, env, url, ctx) {
       // 계정이 없어도 같은 시간만큼 계산(응답 시간으로 가입 여부를 알 수 없게)
       const h = await pbkdf2(pw, u && u.pw_salt ? unb64(u.pw_salt) : DUMMY_SALT, (u && u.pw_iter) || PBKDF2_ITER);
       if (!u || !u.pw_hash || !same(h, u.pw_hash)) return err(401, 'invalid_login');
+      if (!active(env, u)) { try { await sendCode(env, u.email); } catch (e) { } }
       return afterLogin(env, request, u);
     }
     if (p === '/api/auth/google' && m === 'POST') {
@@ -237,7 +251,7 @@ export async function handleAccount(request, env, url, ctx) {
 // ── 북마크
 const RE_REGION = /^[A-Z]{2}$/, RE_DATE = /^\d{4}-\d{2}-\d{2}$/, RE_LANG = /^[A-Za-z]{2,3}(-[A-Za-z]{2,4})?$/;
 async function bookmarks(req, env, url) {
-  const u = await currentUser(env, req); if (!u) return err(401, 'auth');
+  const u = await currentUser(env, req); if (!u || !active(env, u)) return err(401, 'auth');
   const m = req.method;
   if (m === 'GET') {
     const kind = url.searchParams.get('kind');
