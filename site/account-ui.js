@@ -233,6 +233,7 @@ document.getElementById('del-y').addEventListener('click',function(){var b=this;
 <h2 class="sec">회원</h2>
 <section class="kpis" id="members" aria-label="회원"></section>
 <section class="card2"><h2>일별 신규 가입</h2><div class="chart" id="csign"></div></section>
+<section class="card2 wide"><h2>회원 목록 <small class="mute" id="mcount"></small></h2><div class="mtbl" id="mlist"></div></section>
 <h2 class="sec">북마크</h2>
 <section class="kpis" id="bmk" aria-label="북마크"></section>
 <div class="cols">
@@ -261,7 +262,8 @@ const ADMIN_CSS = `<style>
 .kpi{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:12px 14px 10px;min-width:0}
 .kpi .k{font:12px "Noto Sans KR",sans-serif;color:var(--mute);letter-spacing:.04em}.kpi .v{font:900 28px/1.2 "Noto Serif KR",Georgia,serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:4px 0 2px}.kpi .s{font:12px "Noto Sans KR",sans-serif;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .d{font:700 12px "Noto Sans KR",sans-serif;font-variant-numeric:tabular-nums;margin-left:4px}.d.up{color:var(--red)}.d.dn{color:var(--ink-2)}.d.eq{color:var(--mute)}
-.card2{border-top:1px solid var(--ink);padding:10px 0 14px;min-width:0}.card2 h2{font-size:15px;margin:0 0 10px;border:0;padding:0}.card2 h2 small{font:400 11px "Noto Sans KR",sans-serif;color:var(--mute);letter-spacing:.04em;margin-left:6px}
+.card2{border-top:1px solid var(--ink);padding:10px 0 14px;min-width:0}
+.mtbl{overflow-x:auto}.mtbl table{width:100%;border-collapse:collapse;font-size:12.5px}.mtbl th,.mtbl td{text-align:left;padding:6px 8px;border-bottom:1px dotted var(--rule-2,#dcdcdc);white-space:nowrap}.mtbl th{font-weight:600;color:var(--mute)}.mtbl .num{font-variant-numeric:tabular-nums}.card2 h2{font-size:15px;margin:0 0 10px;border:0;padding:0}.card2 h2 small{font:400 11px "Noto Sans KR",sans-serif;color:var(--mute);letter-spacing:.04em;margin-left:6px}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 28px}.cols .wide{grid-column:1/-1}
 .sec{font-size:20px;margin:30px 0 12px;border-bottom:2px solid var(--ink);padding-bottom:6px}
 .bars{display:grid;gap:4px;font:13px "Noto Sans KR",sans-serif}
@@ -312,7 +314,7 @@ var DM={};D.daily.forEach(function(x){DM[x.day]=x;});var dp=days(D.from,D.today)
 chart('cday',dp,'bar',function(p){return md(p.d);},function(p){return '<b>'+p.d+'</b>PV '+n(p.v)+' · UV '+n(p.uv);});
 bars('b-regions',D.regions,function(r){return rname(r.k);});bars('b-langs',D.langs,function(r){return lname(r.k);});bars('b-clients',D.clients,function(r){return CL[r.k]||r.k;});bars('b-devices',D.devices,function(r){return DV[r.k]||r.k;});
 bars('b-pages',D.pages,function(r){return '<a href="'+esc(r.k)+'">'+esc(r.k)+'</a>';},{html:1});bars('b-refs',D.refs);bars('b-countries',D.countries,function(r){return rname(r.k);});
-var M=D.members;$('members').innerHTML=kpi('전체 회원',M.total)+kpi('이메일 인증',M.verified)+kpi('Google 연결',M.google)+kpi('7일 활동 회원',M.active7);
+var M=D.members;$('members').innerHTML=kpi('전체 회원',M.total)+kpi('이메일 인증',M.verified)+kpi('Google 연결',M.google)+kpi('7일 활동 회원',M.active7);var ML=M.list||[],fd=function(t){if(!t)return '—';var d=new Date(t+9*3600e3);return d.toISOString().slice(0,16).replace('T',' ')};$('mcount').textContent=ML.length+'명'+(M.total>ML.length?' (최근 '+ML.length+'명)':'');$('mlist').innerHTML=ML.length?'<table><thead><tr><th>이메일</th><th>이름</th><th>인증</th><th>Google</th><th>가입 (KST)</th><th>마지막 로그인</th></tr></thead><tbody>'+ML.map(function(u){return '<tr><td>'+esc(u.email)+'</td><td>'+esc(u.name||'')+'</td><td>'+(u.v?'인증':'미인증')+'</td><td>'+(u.g?'연결':'')+'</td><td class="num">'+fd(u.c)+'</td><td class="num">'+fd(u.l)+'</td></tr>'}).join('')+'</tbody></table>':'<p class="mute">아직 가입자가 없습니다.</p>';
 var SM={};M.signups.forEach(function(x){SM[x.day]=x.n;});chart('csign',days(D.from,D.today).map(function(d){return {d:d,v:SM[d]||0};}),'bar',function(p){return md(p.d);},function(p){return '<b>'+p.d+'</b>신규 가입 '+n(p.v)+'명';});
 var BK={article:{n:0,users:0},term:{n:0,users:0}};D.bookmarks.kinds.forEach(function(k){BK[k.k]=k;});$('bmk').innerHTML=kpi('기사 북마크',BK.article.n,undefined,n(BK.article.users)+'명이 저장')+kpi('용어 북마크',BK.term.n,undefined,n(BK.term.users)+'명이 저장');
 bars('b-barts',D.bookmarks.articles,function(r){return '<a href="'+esc(r.url||('/'+r.date+'/'))+'">'+esc(rname(r.region).split(' ')[0]+' '+r.date+' · '+(r.title||r.ref))+'</a>';},{html:1});

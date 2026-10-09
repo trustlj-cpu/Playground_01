@@ -327,6 +327,8 @@ async function stats(env, url) {
     one('SELECT COUNT(DISTINCT user_id) AS n FROM pageviews WHERE user_id IS NOT NULL AND day >= ?', dayAdd(today, -6)),
   ]);
   const sIn = (a, b) => signups.filter(x => x.day >= a && x.day <= b).reduce((s, x) => s + x.n, 0);
+  // 회원 목록(관리자 화면 전용, 최근 가입 순 500명): 이메일·이름·인증·Google·가입/마지막 로그인 시각만. 비밀번호 해시 등은 내보내지 않는다.
+  const { results: mlist } = await env.UDB.prepare('SELECT email, name, email_verified AS v, (google_sub IS NOT NULL) AS g, created_at AS c, last_login_at AS l FROM users ORDER BY created_at DESC LIMIT 500').all().catch(() => ({ results: [] }));
   return {
     ok: true, range, today, from, generated_at: now, tz: 'Asia/Seoul',
     totals: {
@@ -335,7 +337,7 @@ async function stats(env, url) {
     },
     daily, hourly: hourly.map(x => ({ t: x.h * 3600e3 - KST, pv: x.pv, uv: x.uv })),
     regions, langs, clients, devices, pages, refs, countries,
-    members: { total: (members && members.n) || 0, verified: (verified && verified.n) || 0, google: (google && google.n) || 0, active7: (active && active.n) || 0, signups: signups.filter(x => x.day >= from) },
+    members: { list: mlist || [], total: (members && members.n) || 0, verified: (verified && verified.n) || 0, google: (google && google.n) || 0, active7: (active && active.n) || 0, signups: signups.filter(x => x.day >= from) },
     bookmarks: { kinds: bmk, articles: topArt, terms: topTerm },
     note: '용어 클릭 순위는 피드 Worker(/api/term/top)에 있어 여기 D1과 분리돼 있습니다.',
   };
