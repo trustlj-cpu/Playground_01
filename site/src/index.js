@@ -52,7 +52,7 @@ export default {
     // 예약 발행: schedule.json의 공개 시각(at)이 지난 호가 있으면 그 나라 1면·그 호 페이지를 _sched 사본으로 내보낸다. _sched 직접 접근은 막는다.
     if (url.pathname.startsWith('/_sched/') || url.pathname === '/schedule.json') return new Response('Not found', { status: 404 });
     if (request.method === 'GET') {
-      const hit = (await schedule(env, url)).filter(s => s.at <= Date.now() && (url.pathname === '/' + s.prefix || url.pathname === '/' + s.prefix + 'index.html' || url.pathname.startsWith('/' + s.prefix + s.date + '/'))).sort((a, b) => b.at - a.at)[0];
+      const hit = (await schedule(env, url)).filter(s => s.at <= Date.now() && (url.pathname === '/' + s.prefix || url.pathname === '/' + s.prefix + 'index.html' || url.pathname.startsWith('/' + s.prefix + s.date + '/') || url.pathname === '/' + s.prefix + 'editions.json')).sort((a, b) => b.at - a.at)[0];
       if (hit) {
         const p = url.pathname.replace(/index\.html$/, '');
         const r = await env.ASSETS.fetch(new Request(url.origin + '/_sched/' + hit.key + p));

@@ -17,6 +17,8 @@ if (sched.length) {
     fs.mkdirSync(path.join(dst, prefix), { recursive: true });
     fs.copyFileSync(path.join(ALL, prefix, 'index.html'), path.join(dst, prefix, 'index.html'));
     fs.cpSync(path.join(ALL, prefix, e.date), path.join(dst, prefix, e.date), { recursive: true });
+    // 앱·외부가 읽는 그 나라 호 목록(editions.json)도 공개 시각에 맞춰 바뀌게: 이 호까지만 남긴 사본
+    try { const ej = JSON.parse(fs.readFileSync(path.join(ALL, prefix, 'editions.json'), 'utf8')); if (Array.isArray(ej.editions)) { ej.editions = ej.editions.filter(x => !x.date || x.date <= e.date); if (ej.latest && ej.latest > e.date) ej.latest = e.date; } fs.writeFileSync(path.join(dst, prefix, 'editions.json'), JSON.stringify(ej)); } catch (err) { }
     out.push({ key, at: Date.parse(e.publish_at), prefix, date: e.date });
   }
 }
