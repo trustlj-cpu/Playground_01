@@ -160,6 +160,15 @@ export default {
       return json(out);
     }
     // 긴급속보 띠(사이트 1면): 그 판 나라 속보 + 국제(GLB) 속보는 모든 판 공통(사장님 10/9) 중 제목에 속보 표시가 있는 것. 최신순 8건, 제목 중복 제거
+    // Jev 그림자 채점 수동 실행(배포 직후 확인용, INGEST_KEY 필요): POST /jev/run?hour=YYYY-MM-DDTHH — 저장된 그 시간 다이제스트로 채점
+    if (url.pathname === '/jev/run' && req.method === 'POST') {
+      if ((req.headers.get('authorization') || '') !== 'Bearer ' + env.INGEST_KEY) return json({ error: 'unauthorized' }, 401);
+      const hour = (url.searchParams.get('hour') || '').slice(0, 13); const row = await env.DB.prepare('SELECT digest FROM hourly WHERE hour = ?1').bind(hour).first();
+      if (!row) return json({ error: 'no digest for hour', hour }, 404);
+      const r = await jevShadow(env, hour, JSON.parse(row.digest));
+      const { results } = await env.DB.prepare('SELECT region, title, front, brk, err FROM jev WHERE hour = ?1 ORDER BY region, front DESC').bind(hour).all().catch(() => ({ results: [] }));
+      return json({ hour, enabled: !!env.TYPESAFE_API_KEY, ...r, rows: results });
+    }
     // Jev 그림자 채점 결과 보기: /jev.json?hour=YYYY-MM-DDTHH&region=KR (hour 없으면 최근)
     if (url.pathname === '/jev.json') {
       const hour = (url.searchParams.get('hour') || '').slice(0, 13), region = (url.searchParams.get('region') || '').toUpperCase().slice(0, 4);
