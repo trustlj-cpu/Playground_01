@@ -22,7 +22,7 @@ function hit(){try{if(navigator.doNotTrack==='1'||window.doNotTrack==='1'||navig
 var p=location.pathname;if(APP){var c=d.querySelector('link[rel=canonical]');try{p=new URL(c.href).pathname;}catch(e){}}
 var b=JSON.stringify({path:p,region:(nav&&nav.getAttribute('data-r'))||'',lang:d.documentElement.lang||'',ref:APP?'':d.referrer||'',client:APP?'app':'web'});
 if(!APP&&navigator.sendBeacon&&navigator.sendBeacon('/api/hit',b))return;
-fetch((APP?'https://dailydrop.kr':'')+'/api/hit',{method:'POST',body:b,keepalive:true,credentials:APP?'omit':'same-origin',headers:{'content-type':'text/plain'}}).catch(function(){});}catch(e){}}
+fetch((APP?'https://dailydropnewspaper.com':'')+'/api/hit',{method:'POST',body:b,keepalive:true,credentials:APP?'omit':'same-origin',headers:{'content-type':'text/plain'}}).catch(function(){});}catch(e){}}
 if(d.readyState==='complete')setTimeout(hit,0);else window.addEventListener('load',function(){setTimeout(hit,0);});})();</script>`;
 
 // 메뉴 계정 칸: 정적 HTML은 '로그인', 스크립트가 로그인 상태면 '마이페이지'로 바꾼다.
@@ -240,7 +240,7 @@ document.getElementById('del-y').addEventListener('click',function(){var b=this;
 <section class="card2"><h2>많이 북마크한 용어</h2><div id="b-bterms"></div></section>
 <section class="card2"><h2>독자가 많이 누른 용어 <small>최신 한국판 · 오늘의 단어 집계</small></h2><div id="b-clicks"></div></section>
 </div>
-<p class="mute foot">순방문자(UV)는 날짜별 익명 해시(IP·브라우저·날짜)로 셉니다. 여러 날 합계는 '일별 순방문자의 합'입니다. IP 원문은 저장하지 않으며 DNT·GPC를 켠 방문, 봇은 집계하지 않습니다. 앱 집계는 앱 화면 보안 정책(connect-src)에 dailydrop.kr이 허용돼야 들어옵니다.</p>
+<p class="mute foot">순방문자(UV)는 날짜별 익명 해시(IP·브라우저·날짜)로 셉니다. 여러 날 합계는 '일별 순방문자의 합'입니다. IP 원문은 저장하지 않으며 DNT·GPC를 켠 방문, 봇은 집계하지 않습니다. 앱 집계는 앱 화면 보안 정책(connect-src)에 dailydropnewspaper.com이 허용돼야 들어옵니다.</p>
 </div>
 </main><script>${ADMIN_JS(latestKR)}</script></body></html>`);
 };

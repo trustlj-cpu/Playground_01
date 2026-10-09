@@ -124,7 +124,7 @@ export default {
       if (!env.INGEST_KEY || req.headers.get('authorization') !== 'Bearer ' + env.INGEST_KEY) return json({ error: 'unauthorized' }, 401);
       let p; try { p = await req.json(); } catch (e) { return json({ error: 'bad json' }, 400); }
       const edition = String(p.edition || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(edition)) return json({ error: 'edition YYYY-MM-DD required' }, 400);
-      const title = String(p.title || '데일리드롭 저녁판').slice(0, 80), body = String(p.body || '').slice(0, 200), link = String(p.url || ('https://dailydrop.kr/' + edition + '/')).slice(0, 300);
+      const title = String(p.title || '데일리드롭 저녁판').slice(0, 80), body = String(p.body || '').slice(0, 200), link = String(p.url || ('https://dailydropnewspaper.com/' + edition + '/')).slice(0, 300);
       const now = new Date().toISOString();
       const ins = await env.DB.prepare('INSERT OR IGNORE INTO push_sends (edition, sent_at, title) VALUES (?1, ?2, ?3)').bind(edition, now, title).run();
       if (!(ins.meta && ins.meta.changes)) return json({ ok: true, skipped: 'already sent', edition });

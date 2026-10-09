@@ -1,11 +1,12 @@
-// 데일리드롭 사이트 Worker: 정적 자산 서빙 + 호스트 리다이렉트(www·임시 주소 → dailydrop.kr) + 회원·북마크·방문 통계 API(account.js)
+// 데일리드롭 사이트 Worker: 정적 자산 서빙 + 호스트 리다이렉트(www·임시 주소 → dailydropnewspaper.com) + 회원·북마크·방문 통계 API(account.js)
 import { handleAccount } from './account.js';
-const CANON = 'dailydrop.kr';
+const CANON = 'dailydropnewspaper.com';
+const OLD_HOSTS = new Set(['dailydrop.kr', 'www.dailydrop.kr', 'thedailydrop.today', 'www.thedailydrop.today', 'www.dailydropnewspaper.com']);
 const ACCOUNT_API = /^\/api\/(auth\/|me$|bookmarks$|hit$|admin\/)/;
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (url.hostname !== CANON && (url.hostname === 'www.' + CANON || url.hostname.endsWith('.workers.dev'))) {
+    if (url.hostname !== CANON && (OLD_HOSTS.has(url.hostname) || url.hostname.endsWith('.workers.dev'))) {
       url.hostname = CANON; url.protocol = 'https:'; url.port = '';
       return Response.redirect(url.toString(), 301);
     }
