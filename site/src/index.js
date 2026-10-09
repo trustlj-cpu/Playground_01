@@ -61,6 +61,8 @@ export default {
     const res = await env.ASSETS.fetch(request);
     // 앱·외부에서 읽는 JSON(editions.json 등)은 CORS 허용 + 짧은 캐시
     if (url.pathname === '/.well-known/apple-app-site-association') { const h = new Headers(res.headers); h.set('content-type', 'application/json'); return new Response(res.body, { status: res.status, headers: h }); }
+    // 브랜드 자산(종이 질감·로고·로고 폰트)은 모든 페이지가 같이 쓰므로 브라우저에 1주일 캐시 → 판 전환 때 다시 받지 않음
+    if (res.ok && url.pathname.startsWith('/brand/')) { const h = new Headers(res.headers); h.set('cache-control', 'public, max-age=604800, stale-while-revalidate=86400'); return new Response(res.body, { status: res.status, headers: h }); }
     if (url.pathname.endsWith('.json')) { const h = new Headers(res.headers); h.set('access-control-allow-origin', '*'); h.set('cache-control', 'public, max-age=120'); return new Response(res.body, { status: res.status, headers: h }); }
     return withCC(res, country);
   },
