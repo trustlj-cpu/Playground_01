@@ -44,8 +44,12 @@ into about says said new will may could would should has have had not no yes up 
 
 
 # ───────────────────────── fetch
-def fetch(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
+BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36"
+
+
+def fetch(url: str, ua: str | None = None) -> bytes:
+    # 텔레그램 공개 채널 미리보기(t.me/s/)는 봇 UA에 게시글 없는 빈 껍데기를 준다 → 브라우저 UA로 요청
+    req = urllib.request.Request(url, headers={"User-Agent": ua or UA, "Accept": "*/*", "Accept-Language": "en-US,en;q=0.8"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         return r.read()
 
@@ -198,7 +202,7 @@ def collect_source(src: dict) -> tuple[dict, list[dict], str]:
                 return src, [], "skipped(no key)"
             today = NOW.astimezone(dt.timezone(dt.timedelta(hours=9))).strftime("%Y%m%d")
             url = f"{url}?crtfc_key={key}&bgn_de={today}&page_count=50"
-        raw = fetch(url)
+        raw = fetch(url, BROWSER_UA if (src["type"] == "telegram" or src.get("browser_ua") or "substack.com" in url or "pib.gov.in" in url) else None)
         if src["type"] == "json":
             items = parse_json(raw, src["parser"])
         elif src["type"] == "dart":
