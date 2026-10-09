@@ -1,12 +1,16 @@
-// 데일리드롭 사이트 Worker: 정적 자산 서빙 + 호스트 리다이렉트(www·임시 주소 → dailydrop.kr)
+// 데일리드롭 사이트 Worker: 정적 자산 서빙 + 호스트 리다이렉트(www·임시 주소 → dailydrop.kr) + 회원·북마크·방문 통계 API(account.js)
+import { handleAccount } from './account.js';
 const CANON = 'dailydrop.kr';
+const ACCOUNT_API = /^\/api\/(auth\/|me$|bookmarks$|hit$|admin\/)/;
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.hostname !== CANON && (url.hostname === 'www.' + CANON || url.hostname.endsWith('.workers.dev'))) {
       url.hostname = CANON; url.protocol = 'https:'; url.port = '';
       return Response.redirect(url.toString(), 301);
     }
+    // 회원(로그인·가입·마이페이지)·북마크·방문 비콘·관리자 통계: D1(UDB)
+    if (ACCOUNT_API.test(url.pathname)) return handleAccount(request, env, url, ctx);
     // 1면 실시간 시세: 같은 도메인으로 피드 Worker 시세를 전달(20초 캐시). 페이지는 /api/quotes.json 만 부른다.
     if (url.pathname === '/api/quotes.json') {
       try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/quotes.json', { cf: { cacheTtl: 20, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=20' } }); }
