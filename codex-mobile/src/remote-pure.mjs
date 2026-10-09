@@ -5,7 +5,8 @@ export const FEED = 'https://feed.dailydrop.kr';
 export const REGIONS = { KR: { prefix: '', lang: 'ko', label: '한국판' }, US: { prefix: 'us/', lang: 'en', label: '미국판' }, JP: { prefix: 'jp/', lang: 'ja', label: '일본판' } };
 export const regionIndexUrl = region => `${SITE}/${REGIONS[region]?.prefix || ''}editions.json`;
 // 기기 언어로 기본 판을 고른다: 일본어→JP, 영어→US, 그 외(한국어 포함)→KR. 설정에서 바꾸면 그 값이 우선.
-export function defaultRegion(locale) { const l = String(locale || '').toLowerCase(); if (l.startsWith('ja')) return 'JP'; if (l.startsWith('en')) return 'US'; return 'KR'; }
+// 기기 언어로 첫 판 고르기: 한국어=한국판, 일본어=일본판, 그 밖의 언어(앱에 그 나라 판이 없음)=미국판. 언어 정보가 없으면 한국판.
+export function defaultRegion(locale) { const l = String(locale || '').toLowerCase(); if (!l || l.startsWith('ko')) return 'KR'; if (l.startsWith('ja')) return 'JP'; return 'US'; }
 
 // 번들(앱에 포함) + 원격(editions.json) 목록을 날짜 기준으로 합친다. 번들이 우선, 원격 전용은 source:'remote'.
 export function mergeEditions(bundled, remote, region = 'KR') {

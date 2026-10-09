@@ -35,7 +35,7 @@ test('transformEditionHtml injects the in-app header compaction CSS once', () =>
 });
 
 test('regions: default from locale, index urls, deep links, file paths', () => {
-  assert.equal(defaultRegion('ja-JP'), 'JP'); assert.equal(defaultRegion('en-US'), 'US'); assert.equal(defaultRegion('ko-KR'), 'KR'); assert.equal(defaultRegion(undefined), 'KR');
+  assert.equal(defaultRegion('ja-JP'), 'JP'); assert.equal(defaultRegion('en-US'), 'US'); assert.equal(defaultRegion('ko-KR'), 'KR'); assert.equal(defaultRegion(undefined), 'KR'); assert.equal(defaultRegion('de-DE'), 'US'); assert.equal(defaultRegion('zh-TW'), 'US'); assert.equal(defaultRegion('fr'), 'US');
   assert.equal(regionIndexUrl('US'), 'https://dailydropnewspaper.com/us/editions.json'); assert.equal(regionIndexUrl('KR'), 'https://dailydropnewspaper.com/editions.json');
   assert.equal(parseEditionUrl('https://dailydropnewspaper.com/us/2026-10-08/'), 'US:2026-10-08'); assert.equal(parseEditionUrl('https://dailydropnewspaper.com/jp/'), 'JP:latest'); assert.equal(parseEditionUrl('https://dailydropnewspaper.com/2026-10-07/'), '2026-10-07');
   assert.equal(editionFilePath('2026-10-08', 'US'), 'editions/us-2026-10-08.html'); assert.equal(editionFilePath('2026-10-07'), 'editions/2026-10-07.html');
