@@ -41,6 +41,23 @@ def item_id(link: str) -> str:
 LANG_BY_REGION = {"KR": "ko", "JP": "ja", "CN": "zh", "DE": "de", "FR": "fr", "TW": "zh-TW",
                   "BR": "pt", "MX": "es", "ES": "es", "IT": "it", "NL": "nl"}
 
+def future_none(p, now):
+    """발행 시각이 1시간 넘게 미래면 버린다(연방의회 의사일정처럼 '예정일'을 발행일로 쓰는 피드가 목록 맨 위로 뜨는 것 방지)."""
+    if not p:
+        return None
+    try:
+        try:
+            t = dt.datetime.fromisoformat(str(p).strip().replace("Z", "+00:00"))
+        except ValueError:
+            import email.utils
+            t = email.utils.parsedate_to_datetime(str(p).strip())
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=dt.timezone.utc)
+        return None if t > now + dt.timedelta(hours=1) else p
+    except Exception:
+        return p
+
+
 def main() -> int:
     now = dt.datetime.now(dt.timezone.utc)
     batch = now.strftime("%Y-%m-%dT%H:") + f"{now.minute // 10 * 10:02d}"
@@ -63,7 +80,7 @@ def main() -> int:
     payload_items = [{
         "id": item_id(it["link"]), "title": it["title"][:300], "link": it["link"][:1000],
         "source": it["source_name"], "field": it["cat"], "tier": it["tier"],
-        "published_at": it["published"] or None, "summary": (it.get("summary") or "")[:300] or None,
+        "published_at": future_none(it["published"], now), "summary": (it.get("summary") or "")[:300] or None,
         "region": it.get("region") or "GLB", "lang": it.get("lang") or LANG_BY_REGION.get(it.get("region") or "GLB", "en"),
     } for it in items]
     payload = {"batch": batch, "started_at": now.isoformat(), "n_fetched": n_fetched,

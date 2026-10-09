@@ -261,7 +261,7 @@ export default {
     const hour = hourKey(ev.scheduledTime - 3600_000);
     ctx.waitUntil((async () => {
       const sched = new Date(ev.scheduledTime).toISOString(); let status = 'ok', error = null, n = null;
-      try { const d = await buildHourly(env, hour); n = d.n_items; try { await jevShadow(env, hour, d); } catch (e) { /* Jev 그림자 채점 실패는 다이제스트에 영향 없음 */ } } catch (e) { status = 'error'; error = String(e && e.stack || e).slice(0, 1000); }
+      try { const d = await buildHourly(env, hour); n = d.n_items; try { await jevShadow(env, hour, d); } catch (e) { /* Jev 그림자 채점 실패는 다이제스트에 영향 없음 */ } try { await env.DB.prepare("DELETE FROM items WHERE rowid IN (SELECT rowid FROM items WHERE collected_at < ?1 LIMIT 20000)").bind(new Date(Date.now() - 21 * 86400_000).toISOString()).run(); } catch (e) { /* 21일 지난 원문 목록 정리(수집원 확대로 DB가 빨리 커짐). 시간 다이제스트는 따로 남는다 */ } } catch (e) { status = 'error'; error = String(e && e.stack || e).slice(0, 1000); }
       try { await env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(sched, new Date().toISOString(), hour, status, n, error).run(); } catch (e) { /* 기록 실패는 무시 */ }
     })());
   },
