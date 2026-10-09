@@ -36,7 +36,7 @@ export function transformEditionHtml(html, frameSrc) {
   h = h.replace(/<link[^>]*href="https:\/\/fonts\.googleapis\.com[^>]*>/g, '');
   h = h.replace(/href="\/(?!\/)/g, `href="${SITE}/`);
   h = h.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/g, '');
-  const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">`;
+  const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src https://dailydrop.kr; object-src 'none'; base-uri 'none'">`;
   h = h.includes('</head>') ? h.replace('</head>', csp + IN_APP_CSS + '</head>') : csp + IN_APP_CSS + h;
   const inj = `<script src="${frameSrc}"></script>`;
   h = h.includes('</body>') ? h.replace('</body>', inj + '</body>') : h + inj;
