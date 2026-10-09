@@ -14,6 +14,7 @@ import concurrent.futures as cf
 import datetime as dt
 import hashlib
 import json
+import html
 import os
 import re
 import sys
@@ -128,6 +129,26 @@ def parse_json(raw: bytes, parser: str) -> list[dict]:
     return out
 
 
+def parse_telegram(raw: bytes, channel: str) -> list[dict]:
+    """텔레그램 공개 채널 웹 미리보기(t.me/s/<채널>)에서 게시글 추출: 본문 앞부분을 제목으로, 링크는 t.me/<채널>/<번호>."""
+    html_ = raw.decode("utf-8", "replace")
+    out = []
+    for m in re.finditer(r'data-post="([^"]+)"(.*?)(?=data-post="|\Z)', html_, re.S):
+        post, body = m.group(1), m.group(2)
+        tm = re.search(r'tgme_widget_message_text[^>]*>(.*?)</div>', body, re.S)
+        if not tm:
+            continue
+        text = re.sub(r"<br\s*/?>", " ", tm.group(1))
+        text = html.unescape(re.sub(r"<[^>]+>", "", text))
+        text = re.sub(r"\s+", " ", text).strip()
+        if not text:
+            continue
+        dm = re.search(r'<time[^>]*datetime="([^"]+)"', body)
+        title = text if len(text) <= 180 else text[:177].rstrip() + "…"
+        out.append({"title": f"[{channel}] {title}", "link": "https://t.me/" + post, "published": dm.group(1) if dm else "", "summary": text[:300]})
+    return out[::-1]  # 최신 글이 먼저
+
+
 def parse_dart(raw: bytes) -> list[dict]:
     data = json.loads(raw)
     return [{"title": f"[공시] {d.get('corp_name')} — {d.get('report_nm')}",
@@ -171,6 +192,8 @@ def collect_source(src: dict) -> tuple[dict, list[dict], str]:
             items = parse_json(raw, src["parser"])
         elif src["type"] == "dart":
             items = parse_dart(raw)
+        elif src["type"] == "telegram":
+            items = parse_telegram(raw, src.get("channel_label") or src["url"].rstrip("/").rsplit("/", 1)[-1])
         else:
             items = parse_feed(raw)
         out = []
