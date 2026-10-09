@@ -123,7 +123,7 @@ module.exports = function build(C) {
 
   // ── /login/: Google로 계속하기 → '또는' → 이메일(로그인/회원가입 전환) → (인증 메일이 켜져 있으면) '이메일을 확인하세요' 단계
   write('login', head('데일리드롭 — 로그인', '데일리드롭 로그인·회원가입', '/login/') + FONTS + BASECSS + PAGE_CSS + navFor('/login/') + `<main class="acc">
-<p class="acc-mast" lang="en" aria-hidden="true">DailyDrop<i>.</i></p>
+<p class="acc-mast"><span class="dd-logo" role="img" aria-label="DailyDrop." style="width:170px;margin:0 auto">DailyDrop.</span></p>
 <section id="step-main">
 <h1 data-t="title">${ko.title}</h1><p class="mute lead" data-t="lead">${ko.lead}</p>
 <hr class="acc-rule">
