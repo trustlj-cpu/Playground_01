@@ -20,17 +20,22 @@ async function buildHourly(env, hour) { // hour: 'YYYY-MM-DDTHH' UTC · 지난 �
   return digest;
 }
 
+const REGION_TABS = [['KR', '🇰🇷', '한국'], ['US', '🇺🇸', '미국'], ['JP', '🇯🇵', '일본'], ['TW', '🇹🇼', '대만'], ['IN', '🇮🇳', '인도'], ['AU', '🇦🇺', '호주'], ['GB', '🇬🇧', '영국'], ['DE', '🇩🇪', '독일'], ['FR', '🇫🇷', '프랑스'], ['CA', '🇨🇦', '캐나다'], ['SG', '🇸🇬', '싱가포르'], ['BR', '🇧🇷', '브라질'], ['MX', '🇲🇽', '멕시코'], ['IT', '🇮🇹', '이탈리아'], ['ES', '🇪🇸', '스페인'], ['NL', '🇳🇱', '네덜란드'], ['CH', '🇨🇭', '스위스'], ['CN', '🇨🇳', '중국'], ['EU', '🇪🇺', 'EU'], ['ME', '🕌', '중동'], ['ASIA', '🌏', '아시아'], ['GLB', '🌐', '국제 공통']];
 async function page(env, url) {
   const hours = Math.min(24, Math.max(1, Number(url.searchParams.get('h') || 6)));
-  const field = url.searchParams.get('field') || '';
+  const field = url.searchParams.get('field') || '', region = url.searchParams.get('region') || '';
   const since = new Date(Date.now() - hours * 3600_000).toISOString();
-  const q = field ? env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 AND field = ?2 ORDER BY batch DESC, tier, published_at DESC LIMIT 1500').bind(since, field)
-                  : env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 ORDER BY batch DESC, tier, published_at DESC LIMIT 1500').bind(since);
-  const [{ results }, { results: batches }, { results: fields }] = await Promise.all([q.all(),
+  const where = 'collected_at >= ?1' + (field ? ' AND field = ?2' : '') + (region ? ` AND region = ?${field ? 3 : 2}` : '');
+  const q = env.DB.prepare(`SELECT * FROM items WHERE ${where} ORDER BY batch DESC, tier, published_at DESC LIMIT 1500`).bind(since, ...(field ? [field] : []), ...(region ? [region] : []));
+  const [{ results }, { results: batches }, { results: fields }, { results: regions }] = await Promise.all([q.all(),
     env.DB.prepare('SELECT * FROM batches ORDER BY batch DESC LIMIT 6').all(),
-    env.DB.prepare('SELECT field, COUNT(*) n FROM items WHERE collected_at >= ?1 GROUP BY field ORDER BY n DESC').bind(since).all()]);
+    env.DB.prepare('SELECT field, COUNT(*) n FROM items WHERE collected_at >= ?1' + (region ? ' AND region = ?2' : '') + ' GROUP BY field ORDER BY n DESC').bind(since, ...(region ? [region] : [])).all(),
+    env.DB.prepare("SELECT COALESCE(region,'GLB') region, COUNT(*) n FROM items WHERE collected_at >= ?1" + (field ? ' AND field = ?2' : '') + ' GROUP BY 1').bind(since, ...(field ? [field] : [])).all()]);
   const groups = new Map(); results.forEach(r => { if (!groups.has(r.batch)) groups.set(r.batch, []); groups.get(r.batch).push(r); });
-  const nav = fields.map(f => `<a href="?h=${hours}&field=${encodeURIComponent(f.field)}"${f.field === field ? ' class="on"' : ''}>${esc(f.field)} ${f.n}</a>`).join(' ');
+  const qs = (o) => { const p = new URLSearchParams({ h: hours, ...(field ? { field } : {}), ...(region ? { region } : {}), ...o }); for (const [k, v] of [...p]) if (!v) p.delete(k); return '?' + p; };
+  const nav = fields.map(f => `<a href="${qs({ field: f.field })}"${f.field === field ? ' class="on"' : ''}>${esc(f.field)} ${f.n}</a>`).join(' ');
+  const rc = new Map(regions.map(x => [x.region, x.n]));
+  const rnav = REGION_TABS.filter(([c]) => rc.has(c)).map(([c, flag, name]) => `<a href="${qs({ region: c })}"${c === region ? ' class="on"' : ''}>${flag} ${esc(name)} ${rc.get(c)}</a>`).join(' ');
   const last = batches[0];
   let body = '';
   for (const [b, rows] of groups) {
@@ -40,13 +45,14 @@ async function page(env, url) {
   const html = `<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>데일리드롭 피드</title>
 <style>body{font:14px/1.5 -apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;margin:0;padding:16px;max-width:1100px;margin-inline:auto;color:#111;background:#fff}
 h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:22px 0 6px;border-bottom:2px solid #111;padding-bottom:3px}h2 small{color:#777;font-weight:400}
-.meta{color:#666;font-size:12.5px}.nav a{display:inline-block;margin:2px 6px 2px 0;color:#333;text-decoration:none;border:1px solid #ccc;padding:1px 7px;border-radius:3px;font-size:12.5px}.nav a.on{background:#111;color:#fff;border-color:#111}
+.meta{color:#666;font-size:12.5px}.nav a{display:inline-block;margin:2px 6px 2px 0;color:#333;text-decoration:none;border:1px solid #ccc;padding:1px 7px;border-radius:3px;font-size:12.5px}.nav a.on{background:#111;color:#fff;border-color:#111}.nav{margin-top:4px}.lb{font-size:12px;color:#777;margin-right:4px;font-weight:600}
 table{width:100%;border-collapse:collapse}td{padding:4px 6px;border-bottom:1px solid #eee;vertical-align:top}td.t{white-space:nowrap;color:#777;font-variant-numeric:tabular-nums;width:72px}td.f{white-space:nowrap;color:#555;width:70px}td.s{color:#777;white-space:nowrap;font-size:12.5px}
 td.g{width:18px;text-align:center;font-weight:700;font-size:12px}.gA{color:#0a6}.gB{color:#06c}.gC{color:#c80}.gD{color:#c33}a{color:#114}
 @media(max-width:640px){td.s,td.f{display:none}}</style>
 <h1>데일리드롭 피드 <span class=meta>· 10분마다 자동 수집 · 최근 ${hours}시간 ${results.length}건</span></h1>
-<div class=meta>마지막 수집 ${last ? esc(kst(last.started_at)) + ` KST · 소스 ${last.n_sources}개 · 신규 ${last.n_new}건` : '아직 없음'} · <a href="/hourly/latest.json">1시간 취합본 JSON</a> · <a href="/items.json">원본 JSON</a> · 창: ${[3, 6, 12, 24].map(h => `<a href="?h=${h}${field ? '&field=' + encodeURIComponent(field) : ''}">${h}h</a>`).join(' ')}</div>
-<div class=nav><a href="?h=${hours}"${field ? '' : ' class="on"'}>전체</a> ${nav}</div>
+<div class=meta>마지막 수집 ${last ? esc(kst(last.started_at)) + ` KST · 소스 ${last.n_sources}개 · 신규 ${last.n_new}건` : '아직 없음'} · <a href="/hourly/latest.json">1시간 취합본 JSON</a> · <a href="/items.json">원본 JSON</a> · 창: ${[3, 6, 12, 24].map(h => `<a href="${qs({ h })}">${h}h</a>`).join(' ')}</div>
+<div class=nav><b class=lb>분야</b> <a href="${qs({ field: '' })}"${field ? '' : ' class="on"'}>전체</a> ${nav}</div>
+<div class=nav><b class=lb>국가판</b> <a href="${qs({ region: '' })}"${region ? '' : ' class="on"'}>전체</a> ${rnav}</div>
 <div class=meta>등급 A 공식·1차자료 / B 주요 매체 / C 분석·블로그 / D 커뮤니티·SNS(팩트체크 필수). 제목·링크만 싣고 본문은 옮기지 않습니다.</div>
 ${body || '<p>아직 수집된 항목이 없습니다.</p>'}
 </html>`;
