@@ -219,6 +219,13 @@ const NYTCSS = '<style id="nyt">' + fs.readFileSync(path.join(__dirname, 'nyt.cs
 // 제호 로고 규칙을 제호 바로 앞에 먼저 깔아 둔다. NYTCSS 는 제호 뒤에 붙어서, 첫 화면에 예전 글자 제호가 잠깐 보였다.
 const MASTCSS = (() => { const L = fs.readFileSync(path.join(__dirname, 'nyt.css'), 'utf8').split('\n'); return '<style id="nytmast">' + L.filter(x => /^(\.ears|\.ear,|\.mast h1|@media \(prefers-color-scheme:dark\)\{:root:not\(\[data-theme="light"\]\) \.mast h1|:root\[data-theme="dark"\] \.mast h1)/.test(x)).join('\n') + '\n@media (max-width:860px){.mast h1{width:min(330px,84vw)}}</style>'; })();
 const EARLY_MAST = h => h.replace('<div class="mast">', MASTCSS + '<div class="mast">');
+// 검색엔진: 호 페이지마다 (1) 원문·번역본끼리 hreflang 상호 연결 (2) 뉴스 기사 구조화 데이터(JSON-LD) (3) 그 호 핵심 3건을 설명문으로.
+const SEO_ALT = variants => variants.map(([l, u]) => `<link rel="alternate" hreflang="${l}" href="${SITE}${u}">`).join('') + `<link rel="alternate" hreflang="x-default" href="${SITE}${variants[0][1]}">`;
+const SEO_LD = (e, title, desc, url, lang) => '<script type="application/ld+json">' + JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: title.slice(0, 110), description: desc, url: SITE + url, mainEntityOfPage: SITE + url, inLanguage: lang, datePublished: e.publish_at || e.date, dateModified: e.publish_at || e.date, image: [SITE + '/og.png'], isAccessibleForFree: true, author: { '@type': 'Organization', name: 'DailyDrop', url: SITE + '/about/' }, publisher: { '@type': 'NewsMediaOrganization', name: 'DailyDrop', url: SITE + '/', logo: { '@type': 'ImageObject', url: SITE + '/brand/icon-512.png', width: 512, height: 512 } } }).replace(/</g, '\\u003c') + '</script>';
+const SEO_HEAD = (page, extra) => page.replace('</head>', extra + '</head>');
+// 나라 1면(최신 호 사본)에는 날짜 페이지용 hreflang 을 남기지 않는다(대표 주소가 다르므로)
+const NOALT = h => h.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*">/g, '');
+const BLURB_DESC = (e, base) => e.blurb ? (e.blurb + ' — ' + base).slice(0, 300) : base;
 const FONTS = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">`;
 
 // ── 호 페이지: 원본 HTML을 그대로 쓰되 문서 뼈대 + 상단 nav
@@ -274,27 +281,28 @@ for (const e of editions) {
   if (REGIONS[e.region || 'KR'].lang === 'ja') html = FURI(html, e.file);
   const m = html.match(/const G = (\{[\s\S]*?\n  \});\n/); if (m) { const gl = (e.region || 'KR') === 'KR' ? glossary : (GLOSS[e.region] ||= {}); const G = new Function('return ' + m[1])(); for (const [k, v] of Object.entries(G)) if (!gl[k]) gl[k] = { ...v, first: e.date, no: e.no }; }
   const R = REGIONS[e.region || 'KR']; const title = R.title(e.no, e.date); const X = EXTRA(e); const rl = editions.filter(x => (x.region || 'KR') === (e.region || 'KR')); const BRKU = rl[rl.length - 1] === e ? null : PUBAT(e);
-  let page = HEAD(title, R.desc(e.date), `/${R.prefix}${e.date}/`, R.lang) + NAV('/' + R.prefix, e.region || 'KR') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(html, R.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>${DL_LEFT(e.date.slice(0, 4), R.lang, e.region || 'KR', e.no, e.date)}</span><b${DLB(R.lang)}>${EDPICK(R.lang, e.region || 'KR')}, ${R.date(e.date)}</b><span>${EDLABEL(R.lang, e.region || 'KR', e.no, e.date)}</span></div>${TAPE(e.date, e.region || 'KR')}</header>`) + POOLHTML(e.date, e.region || 'KR') + NYTCSS + EDPICK_CSS + DATELINE_CSS + LOCFIRST + BALANCE + JUSTIFY + INFLCSS + SVGFIT + (R.lang === 'ja' ? FURICSS : '') + SRCJS(X, R.lang, R.lang) + BREAK(e.region || 'KR', R.lang, BRKU) + WORDJS(e.region || 'KR', e.date, R.lang, html) + ACC.bmScript(e.region || 'KR', e.date, R.lang, `/${R.prefix}${e.date}/`, ACC.pick(I18N, R.lang)) + '</body></html>';
+  const edDesc = BLURB_DESC(e, R.desc(e.date)); let page = HEAD(title, edDesc, `/${R.prefix}${e.date}/`, R.lang) + NAV('/' + R.prefix, e.region || 'KR') + html.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(html, R.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>${DL_LEFT(e.date.slice(0, 4), R.lang, e.region || 'KR', e.no, e.date)}</span><b${DLB(R.lang)}>${EDPICK(R.lang, e.region || 'KR')}, ${R.date(e.date)}</b><span>${EDLABEL(R.lang, e.region || 'KR', e.no, e.date)}</span></div>${TAPE(e.date, e.region || 'KR')}</header>`) + POOLHTML(e.date, e.region || 'KR') + NYTCSS + EDPICK_CSS + DATELINE_CSS + LOCFIRST + BALANCE + JUSTIFY + INFLCSS + SVGFIT + (R.lang === 'ja' ? FURICSS : '') + SRCJS(X, R.lang, R.lang) + BREAK(e.region || 'KR', R.lang, BRKU) + WORDJS(e.region || 'KR', e.date, R.lang, html) + ACC.bmScript(e.region || 'KR', e.date, R.lang, `/${R.prefix}${e.date}/`, ACC.pick(I18N, R.lang)) + '</body></html>';
   page = PLACE_INFL(page, INFL(X, R.lang, R.lang)); page = EARLY_MAST(page);
   const dir = path.join(OUT, R.prefix, e.date); fs.mkdirSync(dir, { recursive: true });
   const tr = e.translations || {}; const variants = [[R.lang, `/${R.prefix}${e.date}/`], ...Object.keys(tr).map(l => [l, `/${R.prefix}${e.date}/${l}/`])];
+  page = SEO_HEAD(page, (variants.length > 1 ? SEO_ALT(variants) : '') + SEO_LD(e, title, edDesc, `/${R.prefix}${e.date}/`, R.lang));
   fs.writeFileSync(path.join(dir, 'index.html'), page.replace(/<nav class="dd-nav"[\s\S]*?<\/nav>/, NAV('/' + R.prefix, e.region || 'KR', { variants, cur: R.lang })));
   for (const [l, f] of Object.entries(tr)) {
     const L = LOC(l); let th = fs.readFileSync(path.resolve(path.dirname(spec), f), 'utf8').replace(/\s*<\/body>\s*<\/html>\s*$/i, '\n'); if (l === 'ja') th = FURI(th, f);
     let tpage = HEAD(TTITLE(l, e.region || 'KR', e.no, e.date), DESC(l, e.region || 'KR', e.date), `/${R.prefix}${e.date}/${l}/`, l) + NAV('/' + R.prefix, e.region || 'KR', { variants, cur: l }) + th.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(th, L.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>${DL_LEFT(e.date.slice(0, 4), l, e.region || 'KR', e.no, e.date)}</span><b${DLB(l)}>${EDPICK(l, e.region || 'KR')}, ${L.date(e.date)}</b><span>${EDLABEL(l, e.region || 'KR', e.no, e.date)}</span></div>${TAPE(e.date, e.region || 'KR', l)}</header>`) + NYTCSS + EDPICK_CSS + DATELINE_CSS + LOCFIRST + BALANCE + JUSTIFY + INFLCSS + SVGFIT + (l === 'ja' ? FURICSS : '') + SRCJS(X, l, R.lang) + BREAK(e.region || 'KR', l, BRKU) + WORDJS(e.region || 'KR', e.date, l, th) + ACC.bmScript(e.region || 'KR', e.date, l, `/${R.prefix}${e.date}/${l}/`, ACC.pick(I18N, l)) + '</body></html>';
-    tpage = PLACE_INFL(tpage, INFL(X, l, R.lang)); tpage = EARLY_MAST(tpage);
+    tpage = PLACE_INFL(tpage, INFL(X, l, R.lang)); tpage = EARLY_MAST(tpage); tpage = SEO_HEAD(tpage, SEO_ALT(variants) + SEO_LD(e, TTITLE(l, e.region || 'KR', e.no, e.date), DESC(l, e.region || 'KR', e.date), `/${R.prefix}${e.date}/${l}/`, l));
     const tdir = path.join(dir, l); fs.mkdirSync(tdir, { recursive: true }); fs.writeFileSync(path.join(tdir, 'index.html'), tpage.replace('<body>', `<body data-filler="${L.filler}">`));
   }
 }
 const byRegion = r => editions.filter(e => (e.region || 'KR') === r);
 const latest = byRegion('KR')[byRegion('KR').length - 1];
-fs.writeFileSync(path.join(OUT, 'index.html'), WITHLIVE(fs.readFileSync(path.join(OUT, latest.date, 'index.html'), 'utf8').replace(`${SITE}/${latest.date}/`, `${SITE}/`), 'KR', 'ko'));
+fs.writeFileSync(path.join(OUT, 'index.html'), WITHLIVE(NOALT(fs.readFileSync(path.join(OUT, latest.date, 'index.html'), 'utf8')).replace(`${SITE}/${latest.date}/`, `${SITE}/`), 'KR', 'ko'));
 const TODAY = new Date().toISOString().slice(0, 10);
 for (const r of REGION_PAGES) {
   const R = REGIONS[r]; const list = byRegion(r); fs.mkdirSync(path.join(OUT, R.prefix), { recursive: true });
   if (list.length) {
     const L = list[list.length - 1];
-    fs.writeFileSync(path.join(OUT, R.prefix, 'index.html'), WITHLIVE(fs.readFileSync(path.join(OUT, R.prefix, L.date, 'index.html'), 'utf8').replace(`${SITE}/${R.prefix}${L.date}/`, `${SITE}/${R.prefix}`), r, R.lang));
+    fs.writeFileSync(path.join(OUT, R.prefix, 'index.html'), WITHLIVE(NOALT(fs.readFileSync(path.join(OUT, R.prefix, L.date, 'index.html'), 'utf8')).replace(`${SITE}/${R.prefix}${L.date}/`, `${SITE}/${R.prefix}`), r, R.lang));
   } else {
     // 아직 호가 없는 판: 제호·날짜줄만 있는 안내 지면(접속 국가 자동 라우팅의 착지점)
     const soonDate = '2026-10-08';
@@ -436,8 +444,11 @@ fs.writeFileSync(path.join(OUT, 'privacy', 'index.html'), HEAD('데일리드롭 
 <p><a class="btn" href="/about/">소개로 돌아가기 →</a></p></main></body></html>`);
 // ── 회원: /login/ · /me/ · /admin/ (검색 제외, sitemap에 넣지 않음)
 ACC({ fs, path, OUT, esc, I18N, HEAD, FONTS, BASECSS, NAV, NAVSCROLL, NAVL, NAV_KEYS, LANGCODE, COUNTRIES, REGIONS, LIVE, latestKR: latest.date });
+// IndexNow(Bing·Naver·Yandex·Seznam 공동): 공개 키 파일. 배포 때 새로 공개된 호 주소를 알린다(site-deploy.yml).
+const INDEXNOW_KEY = '7f0249be94d00919564c3e4df873f106';
+fs.writeFileSync(path.join(OUT, INDEXNOW_KEY + '.txt'), INDEXNOW_KEY);
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /me/\nDisallow: /admin/\nDisallow: /api/\nSitemap: ${SITE}/sitemap.xml\n`);
-fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/archive/', '/glossary/', '/about/', '/privacy/', '/settings/', ...REGION_PAGES.flatMap(r => [`/${REGIONS[r].prefix}`, `/${REGIONS[r].prefix}glossary/`, `/${REGIONS[r].prefix}about/`, `/${REGIONS[r].prefix}settings/`]), ...editions.map(e => `/${REGIONS[e.region || 'KR'].prefix}${e.date}/`)].map(u => `<url><loc>${SITE}${u}</loc></url>`).join('')}</urlset>`);
+fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/archive/', '/glossary/', '/about/', '/privacy/', '/settings/', ...REGION_PAGES.flatMap(r => [`/${REGIONS[r].prefix}`, `/${REGIONS[r].prefix}glossary/`, `/${REGIONS[r].prefix}about/`, `/${REGIONS[r].prefix}settings/`]), ...editions.flatMap(e => [`/${REGIONS[e.region || 'KR'].prefix}${e.date}/`, ...Object.keys(e.translations || {}).map(l => `/${REGIONS[e.region || 'KR'].prefix}${e.date}/${l}/`)].map(u => [u, e.date]))].map(u => Array.isArray(u) ? `<url><loc>${SITE}${u[0]}</loc><lastmod>${u[1]}</lastmod></url>` : `<url><loc>${SITE}${u}</loc></url>`).join('')}</urlset>`);
 // www → 루트, 그리고 임시 workers.dev → dailydropnewspaper.com 리다이렉트(Cloudflare _redirects)
 // 호스트 리다이렉트(www·workers.dev → dailydropnewspaper.com)는 src/index.js 에서 처리(_redirects 는 상대 경로만 허용)
 console.log('built', fs.readdirSync(OUT).join(' '), '| terms', terms.length);
