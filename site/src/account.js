@@ -67,7 +67,9 @@ async function currentUser(env, req) {
 const adminList = env => String(env.ADMIN_EMAILS || '').toLowerCase().split(/[,\s]+/).filter(Boolean);
 // 관리자: ADMIN_EMAILS 목록에 있고 이메일이 인증된 계정(아무나 그 주소로 이메일 가입해 관리자가 되는 것을 막음)
 const isAdmin = (env, u) => !!u && u.email_verified === 1 && adminList(env).includes(String(u.email).toLowerCase());
-const verifyOn = env => !!(env.RESEND_API_KEY && env.MAIL_FROM);
+// 발송 경로: Cloudflare Email Service 바인딩(EMAIL, MAIL_LIVE='1' 일 때) 우선, 없으면 Resend 키
+const cfMail = env => !!(env.EMAIL && env.MAIL_LIVE === '1' && env.MAIL_FROM);
+const verifyOn = env => cfMail(env) || !!(env.RESEND_API_KEY && env.MAIL_FROM);
 const publicUser = (env, u) => ({ id: u.id, email: u.email, name: u.name || '', method: u.google_sub && u.pw_hash ? 'both' : u.google_sub ? 'google' : 'email', verified: u.email_verified === 1, admin: isAdmin(env, u), created_at: u.created_at });
 
 async function afterLogin(env, req, u) {
@@ -113,11 +115,13 @@ export async function verifyGoogleToken(jwt, clientId, keysFn = googleKeys) {
   return payload;
 }
 
-// ── 메일(Resend): 키가 있을 때만
+// ── 메일: Cloudflare Email Service 바인딩 또는 Resend 키가 있을 때만
 async function sendCode(env, email) {
   const code = String(100000 + (new Uint32Array(rand(4).buffer)[0] % 900000));
   await env.UDB.prepare('INSERT INTO email_codes (email, code_hash, expires_at, tries) VALUES (?, ?, ?, 0) ON CONFLICT(email) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, tries = 0').bind(email, await sha256('code:' + email + ':' + code), Date.now() + 15 * 60e3).run();
-  const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' }, body: JSON.stringify({ from: env.MAIL_FROM, to: [email], subject: `DailyDrop 인증 코드 ${code} · verification code`, text: `데일리드롭 인증 코드: ${code}\n15분 동안 유효합니다. 직접 요청하지 않았다면 이 메일은 무시하세요.\n\nYour DailyDrop verification code: ${code} (valid for 15 minutes).` }) });
+  const subject = `DailyDrop 인증 코드 ${code} · verification code`, text = `데일리드롭 인증 코드: ${code}\n15분 동안 유효합니다. 직접 요청하지 않았다면 이 메일은 무시하세요.\n\nYour DailyDrop verification code: ${code} (valid for 15 minutes).`;
+  if (cfMail(env)) { const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(env.MAIL_FROM); await env.EMAIL.send({ from: m ? { email: m[2], name: m[1] || 'DailyDrop' } : env.MAIL_FROM, to: email, subject, text }); return true; }
+  const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' }, body: JSON.stringify({ from: env.MAIL_FROM, to: [email], subject, text }) });
   return r.ok;
 }
 
