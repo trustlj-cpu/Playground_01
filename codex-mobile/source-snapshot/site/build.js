@@ -3,7 +3,9 @@
 //   OUT 기본값 site/public (환경변수 DD_OUT 로도 지정). 나라 데이터는 site/countries.json, UI 문구는 site/i18n.json.
 const fs = require('fs'), path = require('path');
 const [, , spec, outArg] = process.argv;
-const editions = JSON.parse(fs.readFileSync(spec, 'utf8')).map(e => ({ ...e, file: path.resolve(path.dirname(spec), e.file) })).sort((a, b) => a.date.localeCompare(b.date));
+// 예약 발행: publish_at(ISO, UTC)이 아직 안 된 호는 이번 빌드에서 뺀다(DD_NOW로 기준 시각 덮어쓰기). 공개 시각이 되면 사이트 Worker가 schedule.js가 만든 _sched 사본을 대신 내보낸다.
+const NOW = Number(process.env.DD_NOW) || Date.now();
+const editions = JSON.parse(fs.readFileSync(spec, 'utf8')).filter(e => !e.publish_at || Date.parse(e.publish_at) <= NOW).map(e => ({ ...e, file: path.resolve(path.dirname(spec), e.file) })).sort((a, b) => a.date.localeCompare(b.date));
 const OUT = path.resolve(outArg || process.env.DD_OUT || path.join(__dirname, 'public')); fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
 const SITE = 'https://dailydrop.kr';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -120,9 +122,9 @@ go();setInterval(go,30000);document.addEventListener('visibilitychange',go);})()
 const WITHLIVE = (html, region, lang) => html.replace('</body>', () => LIVEQ(lang) + '</body>');
 // 드롭다운(국가판 ▼·언어) 공통: 바깥을 누르거나 Esc를 누르면 닫고, 하나를 열면 다른 하나는 닫는다
 const MENUCLOSE = `<script>(function(){if(window.__ddMenuClose)return;window.__ddMenuClose=1;document.addEventListener('toggle',function(e){var d=e.target;if(d&&d.classList&&d.classList.contains('dd-ed')){var b=d.closest('b');if(b)b.classList.toggle('dd-open',d.open);}},true);var sel='details.dd-ed[open],details.dd-lang[open]';function closeAll(except){document.querySelectorAll(sel).forEach(function(d){if(d!==except)d.removeAttribute('open');});}document.addEventListener('click',function(e){var inside=e.target.closest&&e.target.closest('details.dd-ed,details.dd-lang');closeAll(inside);},true);document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAll(null);});})();</script>`;
-// 상단 메뉴: 모든 국가판이 한국판과 같은 6개 항목(최신호·지난 호·용어사전·소개·구독·설정), 링크는 그 판의 페이지, 라벨은 보는 언어(i18n nav 짧은 표기 → 없으면 기본 라벨).
+// 상단 메뉴: 모든 국가판이 한국판과 같은 5개 항목(최신호·지난 호·용어사전·소개·설정), 링크는 그 판의 페이지, 라벨은 보는 언어(i18n nav 짧은 표기 → 없으면 기본 라벨).
 // 한국판 한국어 페이지는 예전과 같은 출력. 그 밖의 페이지는 휴대폰에서 메뉴가 넘치면 메뉴 줄 안에서만 가로 스크롤(NAVSCROLL).
-const NAV_KEYS = ['latest', 'archive', 'glossary', 'about', 'subscribe', 'settings'];
+const NAV_KEYS = ['latest', 'archive', 'glossary', 'about', 'settings'];
 const NAVL = (l, k) => ((I18N[l] || {}).nav || {})[k] || T(l, k);
 const NAVSCROLL = `<style>.dd-nav .dd-lang{flex-shrink:0}@media(max-width:480px){.dd-nav .dd-links{gap:7px;letter-spacing:.02em;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.dd-nav .dd-links::-webkit-scrollbar{display:none}}</style>`;
 const NAV = (active, region = 'KR', langs = null) => { const R = REGIONS[region]; const base = '/' + R.prefix; const cur = (langs && langs.cur) || R.lang; const plain = region === 'KR' && cur === 'ko'; const links = NAV_KEYS.map((k, i) => [i ? base + k + '/' : base, plain ? R[k] : NAVL(cur, k)]); return `<nav class="dd-nav" aria-label="DailyDrop"><div class="dd-links">${links.map(([h, t]) => `<a href="${h}"${h === active ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</div>${LANG_MENU(cur, langs && langs.variants)}${plain ? '' : NAVSCROLL}</nav>${MENUCLOSE}`; };
@@ -241,7 +243,7 @@ for (const r of REGION_PAGES) {
   page('glossary', `DailyDrop — ${T(l, 'glossary')}`, intro, `<h1>${esc(T(l, 'glossary'))}</h1><p class="mute">${esc(intro)}</p><input type="search" id="q" placeholder="${esc(G.search)}" aria-label="${esc(G.search)}"><div id="list">${terms.map(([k, v]) => `<div class="term" data-k="${esc((k + ' ' + (v.f || '') + ' ' + (v.d || '')).toLowerCase())}"><h3>${esc(k)}${v.f ? `<span class="f">${esc(v.f)}</span>` : ''}</h3><div>${esc(v.d || '')}</div>${v.w ? `<div class="w"><b>${esc(G.here)}</b> ${esc(v.w)}</div>` : ''}<div class="src">${esc(G.first)} · <a href="${base}${v.first}/" style="color:inherit">${esc(num(v.no))} (${v.first})</a></div></div>`).join('')}</div><p class="mute" id="none" hidden>${esc(G.none)}</p><script>const q=document.getElementById('q'),rows=[...document.querySelectorAll('.term')],none=document.getElementById('none');q.addEventListener('input',()=>{const s=q.value.trim().toLowerCase();let n=0;rows.forEach(r=>{const ok=!s||r.dataset.k.includes(s);r.hidden=!ok;if(ok)n++});none.hidden=n>0;});</script>`);
   // 소개
   const A = PG(l, 'aboutPage');
-  page('about', A.title, f(A.desc), `<h1 lang="en">DailyDrop<i style="font-style:normal;color:var(--red)">.</i></h1><p class="mute">${A.tagline}</p><p>${f(A.intro)}</p><h2>${A.h1}</h2><p>${A.src}</p><p>${A.sides}</p><p>${f(A.gloss).replace('{glossary}', `<a href="${base}glossary/">${esc(T(l, 'glossary'))}</a>`)}</p><h2>${A.h2}</h2><p>${f(A.pub)}</p><p><a class="btn" href="${base}subscribe/">${A.sub}</a> <a class="btn" href="${base}">${A.read}</a></p>`);
+  page('about', A.title, f(A.desc), `<h1 lang="en">DailyDrop<i style="font-style:normal;color:var(--red)">.</i></h1><p class="mute">${A.tagline}</p><p>${f(A.intro)}</p><h2>${A.h1}</h2><p>${A.src}</p><p>${A.sides}</p><p>${f(A.gloss).replace('{glossary}', `<a href="${base}glossary/">${esc(T(l, 'glossary'))}</a>`)}</p><h2>${A.h2}</h2><p>${f(A.pub)}</p><p><a class="btn" href="${base}">${A.read}</a></p>`);
   // 구독: 한국판의 네이버 프리미엄콘텐츠는 한국 전용 → 다른 판은 '곧 열림' + 무료 읽기·앱 안내
   const S = PG(l, 'subscribePage');
   page('subscribe', `DailyDrop — ${S.title}`, f(S.desc), `<h1>${S.title}</h1><p>${f(S.p1)}</p><p class="mute">${S.p2}</p><p><a class="btn" href="${base}">${S.read}</a> <a class="btn" href="${base}archive/">${S.archive}</a></p>`);
@@ -265,7 +267,7 @@ fs.writeFileSync(path.join(OUT, 'about', 'index.html'), HEAD('데일리드롭 �
 <p><b>양쪽을 적습니다.</b> 모든 기사에 '이렇게 보는 쪽'과 '저렇게 보는 쪽'이 있습니다. 결론은 '데일리드롭 생각'에 따로 적어 의견과 사실을 섞지 않습니다.</p>
 <p><b>모르는 단어는 누르면 뜹니다.</b> 점선 밑줄 단어를 누르면 뜻과 "이 기사에서 왜 중요한지"가 함께 나옵니다. 용어는 매일 쌓여 <a href="/glossary/">용어사전</a>이 됩니다.</p>
 <h2>발행</h2><p>매일 현지시각 오전 6:00 발행(아침판). 주말은 짧게. 본문을 옮기지 않고 요약과 출처만 싣습니다.</p>
-<p><a class="btn" href="/subscribe/">구독 안내 →</a> <a class="btn" href="/privacy/">개인정보처리방침 →</a></p></main></body></html>`);
+<p><a class="btn" href="/privacy/">개인정보처리방침 →</a></p></main></body></html>`);
 fs.writeFileSync(path.join(OUT, 'subscribe', 'index.html'), HEAD('데일리드롭 구독', '네이버 프리미엄콘텐츠에서 구독할 수 있습니다.', '/subscribe/') + FONTS + BASECSS + NAV('/subscribe/') + `<main><h1>구독</h1>
 <p>데일리드롭은 <b>네이버 프리미엄콘텐츠</b>에서 구독합니다. 채널 심사가 끝나는 대로 이 자리에 구독 버튼이 생깁니다.</p>
 <p class="mute">현재 상태: 채널 심사 중 (2026년 10월 13일 전후 결과 예정). 그 전까지는 이 사이트에서 1·2호를 무료로 읽을 수 있습니다.</p>
@@ -361,7 +363,7 @@ fs.writeFileSync(path.join(OUT, 'privacy', 'index.html'), HEAD('데일리드롭 
 <h2>7. 외부 링크</h2><p>기사 출처 링크는 각 언론사·기관의 사이트로 연결되며, 해당 사이트의 개인정보 처리는 그 운영자의 방침을 따릅니다.</p>
 <h2>8. 문의 및 변경</h2><p>문의 연락처는 운영자 확인 후 이 페이지에 게시합니다. 방침이 바뀌면 이 페이지의 시행일을 갱신해 알립니다.</p>
 <p><a class="btn" href="/about/">소개로 돌아가기 →</a></p></main></body></html>`);
-fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/archive/', '/glossary/', '/about/', '/subscribe/', '/privacy/', '/settings/', ...REGION_PAGES.flatMap(r => [`/${REGIONS[r].prefix}`, `/${REGIONS[r].prefix}glossary/`, `/${REGIONS[r].prefix}about/`, `/${REGIONS[r].prefix}subscribe/`, `/${REGIONS[r].prefix}settings/`]), ...editions.map(e => `/${REGIONS[e.region || 'KR'].prefix}${e.date}/`)].map(u => `<url><loc>${SITE}${u}</loc></url>`).join('')}</urlset>`);
+fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/archive/', '/glossary/', '/about/', '/privacy/', '/settings/', ...REGION_PAGES.flatMap(r => [`/${REGIONS[r].prefix}`, `/${REGIONS[r].prefix}glossary/`, `/${REGIONS[r].prefix}about/`, `/${REGIONS[r].prefix}settings/`]), ...editions.map(e => `/${REGIONS[e.region || 'KR'].prefix}${e.date}/`)].map(u => `<url><loc>${SITE}${u}</loc></url>`).join('')}</urlset>`);
 // www → 루트, 그리고 임시 workers.dev → dailydrop.kr 리다이렉트(Cloudflare _redirects)
 // 호스트 리다이렉트(www·workers.dev → dailydrop.kr)는 src/index.js 에서 처리(_redirects 는 상대 경로만 허용)
 console.log('built', fs.readdirSync(OUT).join(' '), '| terms', terms.length);
