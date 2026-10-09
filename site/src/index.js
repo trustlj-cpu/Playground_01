@@ -12,6 +12,15 @@ export default {
       try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/quotes.json', { cf: { cacheTtl: 20, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=20' } }); }
       catch (e) { return new Response('{"q":{}}', { status: 502, headers: { 'content-type': 'application/json' } }); }
     }
+    // 오늘의 단어: 용어 클릭 기록(POST)·순위(GET, 30초 캐시)를 피드 Worker로 전달
+    if (url.pathname === '/api/term/hit' && request.method === 'POST') {
+      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/term/hit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: (await request.text()).slice(0, 400) }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json' } }); }
+      catch (e) { return new Response('{"ok":false}', { status: 502, headers: { 'content-type': 'application/json' } }); }
+    }
+    if (url.pathname === '/api/term/top') {
+      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/term/top' + url.search, { cf: { cacheTtl: 30, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=30' } }); }
+      catch (e) { return new Response('{"top":[]}', { status: 502, headers: { 'content-type': 'application/json' } }); }
+    }
     // 긴급속보 띠: 피드 Worker의 /breaking.json 을 같은 도메인으로(60초 캐시)
     if (url.pathname === '/api/breaking.json') {
       const q = new URLSearchParams({ region: (url.searchParams.get('region') || 'KR').slice(0, 4), lang: (url.searchParams.get('lang') || '').slice(0, 5) }); const until = (url.searchParams.get('until') || '').slice(0, 30); if (until) q.set('until', until); const ttl = until ? 3600 : 60;

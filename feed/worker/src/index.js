@@ -158,7 +158,7 @@ export default {
       try { await env.DB.prepare('UPDATE push_sends SET result = ?2 WHERE edition = ?1').bind(edition, JSON.stringify(out).slice(0, 2000)).run(); } catch (e) {}
       return json(out);
     }
-    // 긴급속보 띠(사이트 1면): 최근 3시간, 그 판 나라 항목 + 같은 언어의 국제 항목 중 제목에 속보 표시가 있는 것. 최신순 8건, 제목 중복 제거
+    // 긴급속보 띠(사이트 1면): 그 판 나라 속보 + 국제(GLB) 속보는 모든 판 공통(사장님 10/9) 중 제목에 속보 표시가 있는 것. 최신순 8건, 제목 중복 제거
     if (url.pathname === '/breaking.json') {
       const region = (url.searchParams.get('region') || 'KR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), lang = (url.searchParams.get('lang') || '').toLowerCase().replace(/[^a-z-]/g, '').slice(0, 5);
       // until=ISO(과거 시각)이면 지난 호용: 그 시각 직전 24시간의 속보(고정 자료라 하루 캐시). 없으면 실시간: 최근 6시간
@@ -168,10 +168,26 @@ export default {
       // 머리 표시가 붙은 진짜 속보만(‘record-breaking’·‘urgentes’·야구 속보중 같은 오탐 방지): 제목 앞머리 꼬리표 기준, 스포츠 제외
       const marks = ['[속보]%', '%[속보]%', '속보%', '[긴급]%', '[1보]%', '[2보]%', '[3보]%', '【速報】%', '%【速報】%', '速報：%', 'Breaking:%', 'BREAKING%', 'Breaking news%', 'Just in:%', '%【快訊】%', '%〔快訊〕%', '快訊%', '%突發%', 'Eilmeldung%', '%+++ Eil%', 'Última hora:%', 'ÚLTIMA HORA%', 'URGENTE:%', 'Urgente:%', "Ultim'ora%", 'ULTIM%ORA%', 'Alerte%', 'Plantão%', 'Breaking:%'];
       const where = marks.map((_, i) => `title LIKE ?${i + 4}`).join(' OR ');
-      const { results } = await env.DB.prepare(`SELECT title, link, source, published_at, region FROM items WHERE collected_at >= ?1 AND collected_at <= ?${marks.length + 4} AND tier IN ('A','B') AND field != '스포츠' AND (region = ?2 OR (region = 'GLB' AND lang = ?3)) AND (${where}) ORDER BY collected_at DESC LIMIT 40`).bind(since, region, lang || 'xx', ...marks, until).all().catch(() => ({ results: [] }));
+      const { results } = await env.DB.prepare(`SELECT title, link, source, published_at, region FROM items WHERE collected_at >= ?1 AND collected_at <= ?${marks.length + 4} AND tier IN ('A','B') AND field != '스포츠' AND (region = ?2 OR region = 'GLB') AND ?3 = ?3 AND (${where}) ORDER BY collected_at DESC LIMIT 40`).bind(since, region, lang || 'xx', ...marks, until).all().catch(() => ({ results: [] }));
+      // '속보급' 보강(실시간만): 최근 시간 다이제스트에서 서로 다른 매체 4곳 이상이 90분 안에 다룬 같은 사건(그 판 나라 또는 같은 언어 국제)
+      if (!past) { try { const hr = await env.DB.prepare('SELECT digest FROM hourly ORDER BY hour DESC LIMIT 1').first(); const cutoff = Date.now() - 90 * 60_000; for (const c of (hr ? JSON.parse(hr.digest).clusters || [] : [])) { if ((c.n_sources || 0) < 4 || c.field === '스포츠') continue; if (!(c.region === region || c.region === 'GLB')) continue; const it = (c.items || []).find(x => 'AB'.includes(x.tier)) || (c.items || [])[0]; const newest = Math.max(...(c.items || []).map(x => Date.parse(x.published_at) || 0)); if (!it || newest < cutoff) continue; results.push({ title: c.topic, link: it.link, source: it.source, published_at: new Date(newest).toISOString(), region: c.region }); } } catch (e) {} }
+      results.sort((x, y) => (Date.parse(y.published_at) || 0) - (Date.parse(x.published_at) || 0));
       const seen = new Set(), items = [];
       for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at }); if (items.length >= (past ? 12 : 8)) break; }
       return json({ region, at: new Date().toISOString(), past, items }, 200, { 'cache-control': past ? 'public, max-age=86400' : 'public, max-age=60' });
+    }
+    // 오늘의 단어(독자 클릭 순위): 용어 클릭 1회 = POST /term/hit {r,d,l,t}; GET /term/top?r=&d=&l= → 상위 5
+    if (url.pathname === '/term/hit' && req.method === 'POST') {
+      let b = {}; try { b = await req.json(); } catch (e) {}
+      const r = String(b.r || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), d = String(b.d || ''), l = String(b.l || '').replace(/[^A-Za-z-]/g, '').slice(0, 5), t = String(b.t || '').trim().slice(0, 60);
+      if (!r || !/^\d{4}-\d{2}-\d{2}$/.test(d) || !l || !t) return json({ ok: false }, 400);
+      await env.DB.prepare("INSERT INTO term_hits (region, date, lang, term, n, updated_at) VALUES (?1, ?2, ?3, ?4, 1, ?5) ON CONFLICT(region, date, lang, term) DO UPDATE SET n = n + 1, updated_at = ?5").bind(r, d, l, t, new Date().toISOString()).run();
+      return json({ ok: true });
+    }
+    if (url.pathname === '/term/top') {
+      const r = (url.searchParams.get('r') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), d = url.searchParams.get('d') || '', l = (url.searchParams.get('l') || '').replace(/[^A-Za-z-]/g, '').slice(0, 5);
+      const { results } = await env.DB.prepare('SELECT term t, n FROM term_hits WHERE region = ?1 AND date = ?2 AND lang = ?3 ORDER BY n DESC, updated_at DESC LIMIT 5').bind(r, d, l).all().catch(() => ({ results: [] }));
+      return json({ top: results }, 200, { 'cache-control': 'public, max-age=30' });
     }
     if (url.pathname === '/items.json') {
       const since = url.searchParams.get('since') || new Date(Date.now() - 6 * 3600_000).toISOString();
