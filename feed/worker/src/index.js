@@ -161,14 +161,17 @@ export default {
     // 긴급속보 띠(사이트 1면): 최근 3시간, 그 판 나라 항목 + 같은 언어의 국제 항목 중 제목에 속보 표시가 있는 것. 최신순 8건, 제목 중복 제거
     if (url.pathname === '/breaking.json') {
       const region = (url.searchParams.get('region') || 'KR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), lang = (url.searchParams.get('lang') || '').toLowerCase().replace(/[^a-z-]/g, '').slice(0, 5);
-      const since = new Date(Date.now() - 6 * 3600_000).toISOString();
+      // until=ISO(과거 시각)이면 지난 호용: 그 시각 직전 24시간의 속보(고정 자료라 하루 캐시). 없으면 실시간: 최근 6시간
+      const untilQ = Date.parse(url.searchParams.get('until') || ''), past = untilQ > 0 && untilQ < Date.now() - 60_000;
+      const until = past ? new Date(untilQ).toISOString() : new Date(Date.now() + 60_000).toISOString();
+      const since = new Date((past ? untilQ : Date.now()) - (past ? 24 : 6) * 3600_000).toISOString();
       // 머리 표시가 붙은 진짜 속보만(‘record-breaking’·‘urgentes’·야구 속보중 같은 오탐 방지): 제목 앞머리 꼬리표 기준, 스포츠 제외
       const marks = ['[속보]%', '%[속보]%', '속보%', '[긴급]%', '[1보]%', '[2보]%', '[3보]%', '【速報】%', '%【速報】%', '速報：%', 'Breaking:%', 'BREAKING%', 'Breaking news%', 'Just in:%', '%【快訊】%', '%〔快訊〕%', '快訊%', '%突發%', 'Eilmeldung%', '%+++ Eil%', 'Última hora:%', 'ÚLTIMA HORA%', 'URGENTE:%', 'Urgente:%', "Ultim'ora%", 'ULTIM%ORA%', 'Alerte%', 'Plantão%', 'Breaking:%'];
       const where = marks.map((_, i) => `title LIKE ?${i + 4}`).join(' OR ');
-      const { results } = await env.DB.prepare(`SELECT title, link, source, published_at, region FROM items WHERE collected_at >= ?1 AND tier IN ('A','B') AND field != '스포츠' AND (region = ?2 OR (region = 'GLB' AND lang = ?3)) AND (${where}) ORDER BY collected_at DESC LIMIT 40`).bind(since, region, lang || 'xx', ...marks).all().catch(() => ({ results: [] }));
+      const { results } = await env.DB.prepare(`SELECT title, link, source, published_at, region FROM items WHERE collected_at >= ?1 AND collected_at <= ?${marks.length + 4} AND tier IN ('A','B') AND field != '스포츠' AND (region = ?2 OR (region = 'GLB' AND lang = ?3)) AND (${where}) ORDER BY collected_at DESC LIMIT 40`).bind(since, region, lang || 'xx', ...marks, until).all().catch(() => ({ results: [] }));
       const seen = new Set(), items = [];
-      for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at }); if (items.length >= 8) break; }
-      return json({ region, at: new Date().toISOString(), items }, 200, { 'cache-control': 'public, max-age=60' });
+      for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at }); if (items.length >= (past ? 12 : 8)) break; }
+      return json({ region, at: new Date().toISOString(), past, items }, 200, { 'cache-control': past ? 'public, max-age=86400' : 'public, max-age=60' });
     }
     if (url.pathname === '/items.json') {
       const since = url.searchParams.get('since') || new Date(Date.now() - 6 * 3600_000).toISOString();

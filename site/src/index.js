@@ -14,8 +14,8 @@ export default {
     }
     // 긴급속보 띠: 피드 Worker의 /breaking.json 을 같은 도메인으로(60초 캐시)
     if (url.pathname === '/api/breaking.json') {
-      const q = new URLSearchParams({ region: (url.searchParams.get('region') || 'KR').slice(0, 4), lang: (url.searchParams.get('lang') || '').slice(0, 5) });
-      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/breaking.json?' + q, { cf: { cacheTtl: 60, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=60' } }); }
+      const q = new URLSearchParams({ region: (url.searchParams.get('region') || 'KR').slice(0, 4), lang: (url.searchParams.get('lang') || '').slice(0, 5) }); const until = (url.searchParams.get('until') || '').slice(0, 30); if (until) q.set('until', until); const ttl = until ? 3600 : 60;
+      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/breaking.json?' + q, { cf: { cacheTtl: ttl, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=' + ttl } }); }
       catch (e) { return new Response('{"items":[]}', { status: 502, headers: { 'content-type': 'application/json' } }); }
     }
     // 국가판 라우팅. live.json(빌드 산출물) = 현재 발행 중인 나라 목록 [{code,prefix}].
