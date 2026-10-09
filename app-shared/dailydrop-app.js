@@ -3,7 +3,7 @@
 // 사용: import { DailyDrop } from './dailydrop-app.js'; const dd = new DailyDrop({ onOpenEdition }); await dd.start();
 // 의존(선택): @capacitor/preferences, @capacitor/filesystem, @capacitor/push-notifications, @capacitor/app — 없으면 localStorage/무시로 폴백.
 
-const SITE = 'https://dailydrop.kr';
+const SITE = 'https://dailydropnewspaper.com';
 const FEED = 'https://feed.dailydrop.kr';
 const INDEX_URL = SITE + '/editions.json';
 const POLL_MS = 30 * 60 * 1000;

@@ -1,0 +1,411 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>6,625.93</b>KOSPI · 10/8 終値 · −2.62% · 昨日はハングルの日で休場、次の営業日は12日月曜日</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>1,342.3ウォン</b>ウォン/ドル · 10/9 夜間相場 · 0.26ウォン下落 · ソウルの通常取引はハングルの日で休場</div>
+    </div>
+    <div class="dateline"><span>第6号 · 朝刊</span><b>2026年10月10日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="nobel">
+      <div class="kick">国際・人権<span>報道照合 ✓ 6社 · 制裁の詳細は確認中</span></div>
+      <h2 class="hl">ノーベル平和賞に南アフリカ出身のナビ・ピレイ氏。数時間後、米国は国際刑事裁判所を制裁した</h2>
+      <p class="deck">国際法の機関を守れという賞が出た日、米財務省はその機関を制裁対象に加えた。韓国株は昨日、ハングルの日で休んだ</p>
+      <div class="body">
+        <p>9日（現地時間）、ノルウェー・ノーベル委員会は韓国時間の午後6時、今年のノーベル平和賞を南アフリカ出身の法律家ナビ・ピレイ氏（85）に贈ると発表した。インド系の血筋とも伝えられる（ミント・ヒンドゥスタン・タイムズ）。国連人権高等弁務官と国際刑事裁判所（ICC）の裁判官を務め、いまは国際司法裁判所（ICJ）の臨時裁判官だ（聯合ニュース・ロイター）。ワシントン・ポストによると、委員会は国際法の機関を強化した功績を挙げた。聯合ニュースは、委員会が米国のICC制裁も批判したと伝えた。今年の賞は2年連続で女性が受けた。ピレイ氏は賞を国際犯罪の生存者たちに捧げると述べ、拍手がもっと増えればトランプ大統領と賞を分けなければならないという冗談も言った。シリル・ラマポーザ南ア大統領は「勇気への賛辞」と歓迎した。南アの受賞者はマンデラ氏以来33年ぶりだ。国連も人権のための合図だと祝福した（ハンデルスブラット）。</p>
+        <p>反応はすぐに割れた。イスラエル外務省は「ゲッベルスが歓声を上げるだろう」と受賞を非難した（聯合ニュース・京郷新聞）。トランプ大統領はこれまで、この賞を受けたいという意向を公然と語ってきた（聯合ニュース）。フォーブスは、トランプ大統領が受賞者を「米国とイスラエルを憎む人」と呼んだ投稿を再掲したと伝えた。同じ日、米財務省はICC自体を制裁対象に加えたと発表した（ロイター単独・NHK）。米国は8月に赤根智子ICC所長を制裁したのに続き、機関全体へ圧力を広げた。ロシアも赤根所長らの身柄をオランダに引き渡すよう求めた（NHK・ジャパンタイムズ）。シュピーゲルは、ピレイ氏がガザ地区でのイスラエルの行動を批判してきた人物だと指摘し、メキシコのエクスパンシオンは、トランプ氏とネタニヤフ氏が不快に思う受賞だと評した。高市首相は日本の立場と両立しないとして深い懸念を表明した（朝日新聞）。判事出身者が賞を受けた日にその裁判所が制裁を受けた形で、二つの出来事は合わせて読まれる。ただ、制裁の時期が受賞と関連しているか、制裁の具体的な範囲はどうなのかは、まだ確認されていない。韓国もICC加盟国で、他人事ではない。週末はICCと欧州各国の反応が見どころだ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>85歳</b><span>ピレイ氏の年齢。南アの受賞者はマンデラ氏以来33年ぶりだ</span></div>
+        <div><b>3人</b><span>リヤド空港攻撃の死者。サウジ航空当局の発表（ロイター・AP）</span></div>
+        <div><b>6,625.93</b><span>KOSPIの10/8終値（−2.62%）。昨日はハングルの日で休場した</span></div>
+      </div></div>
+    </article>
+    <article class="col c2 vr story" tabindex="0" data-id="riyadh">
+      <div class="kick">国際・安全保障<span>報道照合 ✓ 4社 · 攻撃の主体はフーシ派側の主張</span></div>
+      <h3 class="hl">フーシ派、リヤド空港攻撃で3人死亡。ホルムズでまた船舶が被弾</h3>
+      <div class="one">
+        <p>サウジ民間航空当局は、フーシ派の攻撃を受けたリヤド空港で3人が死亡したと明らかにした（ロイター・AP）。フーシ派が犯行を主張しただけで、サウジは攻撃の主体を直接名指ししていない。聯合ニュースは、死者にサウジア航空の機長がいると伝えた。先の7日にはリヤド・アブハ空港への攻撃で3人が死亡したと発表しており、二つの集計が同じ事件かどうかは確認されていない。ルフトハンザとインドの航空会社がリヤド路線を止め、EUの航空当局はサウジ領空の警告範囲を広げた（ロイター）。米財務省は、イラン産石油製品の不法取引に関与したトルコ・UAE・インドの企業を制裁した（聯合ニュース）。ホルムズ海峡では9日、船舶1隻が飛翔体に当たったと英国海事貿易機関が明らかにし、革命防衛隊は航路に違反すれば処罰すると述べた（聯合ニュース）。トランプ大統領がイランとの交渉に言及すると、アジア取引で原油は下がった（ロイター）。8日のニューヨークWTIは3.6%上昇し、91ドル台だった。金曜日のニューヨーク株は原油安のなか上昇して始まったが（聯合ニュース）、この新聞をつくる時点でも取引中で、終値は載せられなかった。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>国際刑事裁判所<i>国際法</i></b><p>ICC。戦争犯罪や人道に対する罪を犯した個人を裁く常設の法廷で、オランダのハーグにある。国家間の紛争を扱う国際司法裁判所とは別の機関だ。</p></div>
+    </article>
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="spacex"><b>スペースX、周波数を買収。通信株が急落</b><em>米欧の通信株が9日、そろって下げた。ドイツ・テレコムは7%前後下落した。</em><span>通信・技術 · ✓ 報道5件</span></div>
+      <div class="it story" tabindex="0" data-id="visa"><b>鄭清来議員の米ビザ、保留に。外交部「韓米関係との関連づけは不適切」</b><em>国政監査の日程が変わった。与党は遺憾、野党は「異常信号」と対立した。</em><span>外交 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="poll"><b>李大統領の支持率37%、韓国ギャラップ</b><em>前回と同じ。与党の支持率は35%で、現政権の発足後で最も低かった。</em><span>政治 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="wall"><b>NY、木曜はハイテク株安。KOSPIはきょうも休み</b><em>ナスダック−1.25%、S&P 500−0.47%、10年物国債5.231%。韓国株は12日月曜日に開く。</em><span>市場 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="delta"><b>デルタ航空、燃料費60億ドル増で業績見通しを下方修正</b><em>原油高が航空会社の業績に波及した。1株当たり利益の見通しを5.10〜5.60ドルに下げた。</em><span>航空・エネルギー · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="sk">
+      <div class="kick">産業・半導体<span>報道照合 ✓ 6社 · 発言は崔泰源会長の現場での答え</span></div>
+      <h3 class="hl">崔泰源SK会長、湖南の半導体用地を初訪問。「最も速いスピードで、規模は龍仁の3分の2」</h3>
+      <div class="body">
+        <p>崔泰源SKグループ会長は9日午後、湖南半導体クラスターの予定地である光州軍空港を初めて訪れた。ミン・ヒョンベ全南光州市長、郭魯正SKハイニックス代表らと用地を視察した会長は「建てられる状況になれば、最も速いスピードで建てる」と述べた（聯合ニュース・東亜日報・SBS）。用地は約248万坪（818万余㎡）だ。電力と用水の供給が遅れてもファブを先に建てるという発言もした（東亜日報・韓国経済）。</p>
+        <p>規模は「現在の龍仁の3分の2ほど」で計画しており、土地と需要がさらにあれば、もっと大きくなりうるとした（京郷新聞・ZDNetコリア）。グループ総帥が自ら現場に来て速度を語るのは異例だという評価が出ている。ただ、着工時期と投資額はまだ発表されておらず、電力・用水の支援は政府と自治体の役割として残った。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="hybrid">
+      <div class="kick">通商・産業<span>報道照合 ✓ 5社 · 削減幅はEUの説明</span></div>
+      <h3 class="hl">中国、EUとハイブリッド車の輸出削減で合意。EU「4年で半分に」</h3>
+      <div class="body">
+        <p>中国は9日、EUとの貿易協議でハイブリッド車の問題に合意したと明らかにし、レアアースの輸出許可にも便宜を図ることにしたという（聯合ニュース）。EUは、この合意で中国産ハイブリッド車のEU向け輸出が4年かけておよそ半分に減りうると説明した（ニューヨーク・タイムズ・ロイター）。電気自動車をめぐる紛争は、協議を続けることにした。</p>
+        <p>表現は食い違う。中国は「合意」、ロイターとフィナンシャル・タイムズは「了解」と書いた。削減をどんな方式で行うのか、レアアースの許可をどの範囲まで緩めるのかは公開されていない。欧州で中国のハイブリッド車とぶつかる韓国の完成車メーカーにとっては、競争環境が変わりうる知らせだが、影響は詳細な条件が出てから見極められる。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="hack">
+      <div class="kick">サイバー・金融<span>報道照合 ✓ 5社 · 容疑者の関与はセキュリティ会社の分析</span></div>
+      <h3 class="hl">国内金融界のハッキング、中国のAIツール・DDoS組織の関与を示唆する状況。警察の捜査チームは43人に拡大</h3>
+      <div class="body">
+        <p>警察は最近、金融機関ハッキングの捜査チームを43人に増やした（聯合ニュース・京郷新聞）。セキュリティ会社のログプレッソは、容疑者として名指しされた人物が中国系のDDoS代行組織で活動していた状況があると分析した（朝鮮日報・聯合ニュース）。ロイターによると、ハッキングに使われたとされる中国のAIセキュリティ試験ツール「ARTEX」の開発者は、ソースコードを非公開に切り替え、更新を止めると述べた（東亜日報）。</p>
+        <p>ロイターは、国内の銀行9行と大型教会2カ所が、AIツールが使われた可能性を調べていると伝えた。日本でも大和証券・ソフトバンク・ローソンなどが相次いでサイバー事案に見舞われた。聯合ニュースは、2024年以降の海外発ハッキング18件のうち16件で、攻撃の主体を特定できていないと指摘した。名指しされた人物が実際の攻撃者かどうかは、まだ確定していない。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>ホルムズ海峡を通過中の船舶が9日、飛翔体に当たったと英国海事貿易機関が明らかにした。イラン革命防衛隊は、航路に違反すれば処罰すると述べた。<span>聯合ニュース単独報道</span></li>
+        <li>ウクライナが、ロシア最大のポータルであるヤンデックスのデータセンターを2日連続でドローン攻撃した。ヤンデックスは2カ所目の施設が被害を受けたと明らかにした。<span>聯合ニュース・ロイター</span></li>
+        <li>米検察が、ベネズエラのマドゥロ前大統領を米国人への拷問容疑で追加起訴した。圧力が法廷でも続いている。<span>聯合ニュース・AP</span></li>
+        <li>ローマ教皇レオ14世が、フィリピンのタグレ枢機卿を枢機卿団の首席に承認した。アジア出身者がこの座に就くのは初めてだ。<span>AP・ロイター</span></li>
+        <li>インドネシアの森林火災の煙霧が広がり、マレーシアの複数の州で学校が休校になった。影響を受ける生徒は200万人に上る。<span>聯合ニュース・ロイター</span></li>
+        <li>フランス政府が、学生デモをなだめようと代替教員3000人を投入する。デモ隊は、最初の成果のあとも闘争を続けると述べた。<span>聯合ニュース・ロイター</span></li>
+        <li>カナダの9月の雇用は予想に反して減り、失業率はわずかに上昇した。金利決定を控えた中央銀行の悩みが深まった。<span>ロイターほか</span></li>
+        <li>ネットフリックスが従業員の5%前後を減らす計画だと、パック・ニュースが報じた。早ければ来週にも発表されうる。会社はコメントしていない。<span>パック・ニュース引用のロイター・CNA</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「米国がイランを3日間集中攻撃する」</b> <span>国防総省の計画策定とトランプ氏の制止を伝える報道はあったが、トランプ氏は11月の中間選挙前の攻撃はないと述べた。確認されたことはない。</span></div>
+        <div><b>「鄭清来氏のビザ保留は韓米同盟に亀裂が入った信号」</b> <span>ビザは許可でも不許可でもない「審査中」の状態だ。外交部は韓米関係と結びつけるのは不適切だとした。ラトニック長官が国家情報院への不信を伝えたという説も、政府は「事実ではない」とした。</span></div>
+        <div><b>「金融界のハッカーは中国のDDoS組織の一員だ」</b> <span>セキュリティ会社の分析で状況が出てきたにすぎない。警察は捜査中で、攻撃の主体は確定していない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>10/10 土</b><span>北朝鮮の労働党創建記念日。プロ野球は3位争いが大詰めだ。国内株式市場は週末のため開かない。</span><b>週末</b><span>フーシ派・ホルムズの動向と原油価格、ICC制裁への各国の反応。金曜日のニューヨーク株の終値も確認が要る。</span><b>読者へ</b><span>KOSPIは12日月曜日に開く。木曜日のニューヨークのハイテク株安と、金曜日の原油の動きが一度に入ってくる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    nobel:{kick:"国際・人権 · 報道照合 ✓ 6社 · 制裁の詳細は確認中",title:"ノーベル平和賞に南アフリカ出身のナビ・ピレイ氏。数時間後、米国は国際刑事裁判所を制裁した",
+      what:"ノルウェー・ノーベル委員会は9日、2026年のノーベル平和賞の受賞者としてナビ（ナバネセム）・ピレイ氏（85）を発表した。南ア出身の法律家で、国連人権高等弁務官とICCの裁判官を務め、現在はICJの臨時裁判官だ。ワシントン・ポストは、委員会が国際法の機関を強化した功績を挙げたと伝えた。聯合ニュースは、委員会が米国のICC制裁も批判したと報じた。イスラエル外務省は受賞を非難した。ロイターは、米国が受賞の数時間後にICCへ制裁を科したと単独報道し、NHKは、米財務省がICCを制裁対象に指定したと伝えた。制裁対象指定の具体的な効力は報道ごとに整理が異なり、確認中だ。",
+      why:"米国は8月に赤根智子ICC所長を制裁し、今回は機関そのものを狙った。戦争犯罪を裁く国際法廷が主要国の制裁を受ければ、捜査や裁判そのものが揺らぎかねない。同じ日、ロシアがオランダなどに赤根所長の身柄引き渡しを求めたという報道も出た（NHK・ジャパンタイムズ）。国際法の機関が両側から圧力を受ける構図だ。",
+      me:"韓国はICC加盟国だ。直接の影響は大きくないが、韓米関係で国際法の問題が争点になりうる。日本の首相が懸念を表明したように、米国の同盟国が立場を決めなければならない状況が来るかもしれない。",
+      a:"戦争犯罪を裁く国際機関は守らなければならない。賞はその合図であり、制裁は政治的な報復だ。",b:"ICCは、米国やイスラエルのような非加盟国にも管轄権を主張してきた。米国はこれを主権侵害とみる。授賞の時期と制裁を一つに結びつけて読むのは行き過ぎだという反論が成り立つ。",
+      say:"賞は制裁を止められない。賞を受けた日に制裁が出たという事実だけが残る。次に見るのは二つ。制裁がICC職員個人の口座とビザにとどまらず、裁判所の運営まで止めるのか、欧州各国が公式の立場を出すのか。確認されていないのは、時期の因果関係だ。",
+      src:"ワシントン・ポスト（委員会の授賞理由、10/9） · 聯合ニュース（受賞者の経歴・所感・イスラエルの反応、10/9） · ロイター（ICC制裁の単独報道、10/9） · NHK（財務省の発表、10/9） · 朝日新聞（高市首相の懸念、10/10） · フォーブス（トランプ氏の再投稿、10/9）"},
+    riyadh:{kick:"国際・安全保障 · 報道照合 ✓ 4社 · 攻撃の主体はフーシ派側の主張",title:"フーシ派、リヤド空港攻撃で3人死亡。ホルムズでまた船舶が被弾",
+      what:"サウジ民間航空当局は、フーシ派の攻撃を受けたリヤド空港で3人が死亡したと明らかにした（ロイター・AP）。聯合ニュースは、死者にサウジア航空の機長が含まれると伝えた。ロイターは、空港の航空機から煙が上がり、ルフトハンザとインドの航空会社がリヤド路線を止めたと報じた。EUの航空当局はサウジ領空の警告範囲を広げた。先の7日、サウジはリヤド・アブハ空港への攻撃で3人が死亡したと発表したが、二つの集計の関係は確認されていない。9日にはホルムズ海峡で船舶が飛翔体に当たったと英国海事貿易機関が明らかにした（聯合ニュース）。",
+      why:"空港と領空は、湾岸の航空交通の要だ。民間人の死亡で、サウジがフーシ派との衝突にさらに一歩深く引き込まれたという分析が出ている（AP）。ホルムズへの攻撃は、原油価格の最も敏感な変数だ。",
+      me:"中東路線や経由便が影響を受けうる。サウジへの出張や乗り継ぎの予定があるなら、まず航空会社のお知らせを確認しよう。原油価格は為替と物価につながる。",
+      a:"トランプ氏が選挙前にイランを攻撃しないと述べた。米国発の拡大リスクは下がり、交渉への言及だけで原油が下がった。",b:"攻撃の主体はフーシ派とイランだ。米国が攻撃しないという言葉は、空港とホルムズを狙う側には効かない。",
+      say:"死者数が二つの数字で報じられている点から整理する必要がある。7日の集計と9日の集計が同じ事件かどうかで、今回の攻撃の規模が変わる。週末はサウジの対応とホルムズの通航状況を見よう。",
+      src:"ロイター（リヤド空港の死者・航空会社の運航停止・EU航空当局の警告・原油価格、10/8〜9） · AP（サウジ当局の発表、10/9） · 聯合ニュース（サウジア航空の機長、ホルムズの船舶被弾、10/9） · ジャパンタイムズ（10/8）"},
+    sk:{kick:"産業・半導体 · 報道照合 ✓ 6社 · 発言は崔泰源会長の現場での答え",title:"崔泰源SK会長、湖南の半導体用地を初訪問。「最も速いスピードで、規模は龍仁の3分の2」",
+      what:"崔泰源SKグループ会長は9日午後、湖南半導体クラスターの予定地である光州軍空港を訪れた。ミン・ヒョンベ全南光州市長、郭魯正SKハイニックス代表らが同行した。用地は818万余㎡（約248万坪）だ（東亜日報）。崔会長は、建てられる状況になれば最も速いスピードで建てると述べ、電力・用水の整備が遅れても先に着工するという趣旨で語った（東亜日報・韓国経済）。規模は現在の龍仁の3分の2ほどで計画中で、土地と需要がさらにあれば、もっと大きくなりうるとした（京郷新聞・ZDNetコリア）。",
+      why:"湖南半導体クラスターは、政治的な論争が大きかった。龍仁への投資が減るという懸念と、企業が望んで行くのかという攻防が続いた。総帥が現場で自ら意思を示したことは、その懐疑論をなだめる信号だ。ただ、電力と用水は企業が単独で解決できない。",
+      me:"地域の雇用や協力会社の投資に影響を与えうる。電力需要の大きい施設なので、長期的には電気料金や送電網の議論ともつながる。",
+      a:"AIメモリーの需要が爆発した以上、生産拠点は増やさなければならない。総帥の訪問は、速度を上げるという約束だ。",b:"言葉は速いが、着工時期と投資額は決まっていない。龍仁の計画が影響を受けるのかは、さらに確認が要る。",
+      say:"「最も速いスピード」は条件文についた言葉だ。「建てられる状況になれば」という但し書きを覚えておくべきだ。次に見るのは、電力・用水の支援計画と国家産業団地の指定日程だ。",
+      src:"聯合ニュース・東亜日報・京郷新聞・SBS・韓国経済・毎日経済・ZDNetコリア（崔会長の現場発言、10/9）"},
+    hybrid:{kick:"通商・産業 · 報道照合 ✓ 5社 · 削減幅はEUの説明",title:"中国、EUとハイブリッド車の輸出削減で合意。EU「4年で半分に」",
+      what:"中国は9日、EUとの貿易協議を通じてハイブリッド車の貿易問題で合意したと明らかにし、レアアースの輸出許可に便宜を図ることにしたという（聯合ニュース）。EUは、この合意で中国のハイブリッド車のEU向け輸出が4年かけておよそ半分に減りうると説明した（ニューヨーク・タイムズ・ロイター）。ロイターは、電気自動車の紛争についての協議は続けることにしたと伝えた。フィナンシャル・タイムズは、中国が「了解」に達したと明らかにしたと書いた。",
+      why:"欧州で中国のハイブリッド車の販売が急速に伸びると、EUは輸入を制限しようとしてきた。中国は、レアアースの輸出許可という交渉カードを握っている。今回の合意は、二つの争点を併せて扱った点が特徴だ。",
+      me:"欧州市場で中国車と競争する韓国の完成車メーカーには、競争環境が変わりうる。レアアースの供給が安定すれば、自動車・電子部品業界にも間接的に及ぶ。",
+      a:"自主的な輸出調整は、関税戦争よりましだ。市場への衝撃を抑えつつ、交渉の余地を残した。",b:"中国メーカーが現地生産や別の車種で迂回しうる。削減方式が公開されておらず、効果を判断するには早い。",
+      say:"中国は「合意」、ロイターとFTは「了解」と書いた。言葉の温度差は、詳細な条件がまだ詰まっていない信号かもしれない。削減方式とレアアース許可の範囲が公開されるかを見よう。",
+      src:"聯合ニュース（中国側の発表、10/9） · ニューヨーク・タイムズ（EUの説明、10/9） · ロイター（10/9） · フィナンシャル・タイムズ（10/9） · SCMP（10/9）"},
+    hack:{kick:"サイバー・金融 · 報道照合 ✓ 5社 · 容疑者の関与はセキュリティ会社の分析",title:"国内金融界のハッキング、中国のAIツール・DDoS組織の関与を示唆する状況。警察の捜査チームは43人に拡大",
+      what:"警察は最近、金融機関ハッキングの捜査チームに、デジタル・フォレンジックと国際共助の専門人材を加えて43人に増やした（聯合ニュース・京郷新聞）。セキュリティ会社のログプレッソは、容疑者として名指しされた人物が中国系のDDoS代行組織で活動していた状況があると分析した（朝鮮日報）。ロイターによると、ハッキングに使われたとされる中国のAIセキュリティ試験ツールARTEXの開発者は、GitHubで更新を止め、ソースコードを非公開に変えると明らかにした（東亜日報の引用）。聯合ニュースは、2024年以降の海外発ハッキング18件のうち16件は、攻撃の主体を特定できなかったと伝えた。",
+      why:"AIツールがハッキングの敷居を下げた。ロイターは、国内の銀行9行と大型教会2カ所がAIツール使用の可能性を調べており、日本でも大和証券・ソフトバンク・ローソンが被害に遭ったと伝えた。攻撃者を特定しにくい構造が問題だ。",
+      me:"金融アプリのパスワードを変え、2段階認証をオンにしておこう。金融会社を装ったメッセージのリンクは押してはならない。被害が確認されたのは、まだ一部の機関だ。",
+      a:"捜査チームの拡大と国際共助は、必要な措置だ。攻撃の主体を特定するのに時間がかかるのが現実だ。",b:"初動対応が遅れたという指摘がある。警察は、捜査主体の混乱や初動措置の不備という指摘に反論した（京郷新聞）。",
+      say:"名指しされた人物が攻撃者だという証拠は、まだ状況証拠にとどまる。ツールの開発者がコードを閉じても、すでに広まったコードが消えるわけではない。次に見るのは、警察の中間発表と金融当局の点検結果だ。",
+      src:"聯合ニュース・京郷新聞（捜査チーム拡大、10/9） · 朝鮮日報（ログプレッソの分析、10/9） · 東亜日報（ARTEX開発者、10/9） · ロイター引用のCNA（10/9）"},
+    spacex:{kick:"通信・技術 · 報道照合 ✓ 5社 · 買収条件は確認中",title:"スペースX、周波数を買収。通信株が急落",
+      what:"スペースXが米国の通信周波数を買い取ることにしたという知らせに、9日、米欧の通信株が下げた（ロイター・CNA）。ドイツ・テレコムの株価は7%前後下落した（ロイター）。フィナンシャル・タイムズは、米通信各社の時価総額が45億ドル減ったと伝え、マーケットウォッチは、AT&T・ベライゾン・Tモバイルの株価が下がったと報じた。ブルームバーグは、ベライゾンとAT&Tの債券も軟調だったと伝えた。買収金額と承認手続きは、今回の資料では確認されていない。",
+      why:"この周波数は、スターリンクの移動通信サービスの土台になる。衛星会社が携帯電話事業者と直接競合することになる信号と読まれる。",
+      me:"国内の通信会社に直接及ぶ知らせは、まだない。衛星の直接通信をめぐる競争が世界に広がるのかを示す信号だ。",
+      a:"衛星の直接通信が不感地帯を減らす新たな競争になる。消費者には選択肢が増える。",b:"投資家が先走って過剰反応した可能性がある。衛星が地上網の容量を代替するには、限界が大きい。",
+      say:"株は契約書より先に動いた。契約条件と規制当局の承認が出てはじめて、今回の下げが行き過ぎかどうかが分かる。",
+      src:"ロイター（通信株の下落・ドイツ・テレコム、10/9） · CNA（10/9） · フィナンシャル・タイムズ（時価総額の減少、10/9） · マーケットウォッチ（10/9） · ブルームバーグ（債券、10/9）"},
+    visa:{kick:"外交・政治 · 報道照合 ✓ 4社 · ビザの理由は非公開",title:"鄭清来議員の米ビザ、保留に。外交部「韓米関係との関連づけは不適切」",
+      what:"共に民主党の鄭清来議員の米国ビザの発給が保留され、国会外交統一委員会の米州の在外公館に対する国政監査への出席が難しくなった。鄭議員は、欧州の国政監査に日程を変えた（東亜日報）。民主党は深い遺憾を表して早期の解決を促し、「国民の力」は外交・情報・安全保障全般の異常信号だと攻勢をかけた。外交部の当局者は、個別のビザを韓米関係全般と結びつけるのは適切ではないとし、ビザ審査の内容は米国の法律により非公開で、事実確認が難しいとした（京郷新聞・東亜日報）。鄭議員はフェイスブックで、極端な主張や同盟を損なう発言は控えてほしいと述べた。",
+      why:"ビザ1件が、国内政治と韓米関係の解釈へ広がった。政府は拡大解釈を戒めるが、野党は亀裂の証拠とみる。",
+      me:"一般の申請者のビザ手続きが変わったという確認はない。ビザは個人ごとの審査なので、今回の件をそのまま当てはめる根拠もない。",
+      a:"議員の議政活動を妨げるのは不適切だ。同盟なら礼遇があるべきだ。",b:"ビザは米国の主権事項だ。理由を知らないまま外交問題に膨らませるのは性急だ。",
+      say:"いま知られている事実は「審査中」という状態だけだ。不許可でも許可でもない。次に見るのは、米国が発給の可否を決める時期だ。",
+      src:"東亜日報・京郷新聞・韓国経済（10/9） · 聯合ニュース（外交部・鄭議員の立場、10/9）"},
+    poll:{kick:"政治 · 報道照合 ✓ 3社 · 数値は韓国ギャラップの調査",title:"李大統領の支持率37%、韓国ギャラップ",
+      what:"韓国ギャラップが9日に発表した定例調査で、李在明大統領の職務肯定評価は37%と、前回と同じだった。否定評価は5ポイント減って51%だった（SBS）。政党支持率は、共に民主党が35%で、現政権の発足後で最も低かった（聯合ニュース）。毎日経済もこの結果を引用して報じた。",
+      why:"肯定が変わらないのに否定が減ったなら、意見を示さなかった回答が増えた可能性がある。与党の支持率が下がったことと併せて読む必要がある。",
+      me:"いまの支持率の流れは、国政監査の期間の与野党の攻防の背景になる。",
+      a:"",b:"",
+      say:"37%は同じだが、51%は減った。意見なしが増えたかどうかは、調査の詳細資料を見なければならない。来週の調査で方向が続くかがカギだ。",
+      src:"聯合ニュース・SBS・毎日経済（韓国ギャラップの調査、10/9）"},
+    wall:{kick:"市場 · 報道照合 ✓ 4社 · 数値は木曜の終値",title:"NY、木曜はハイテク株安。KOSPIはきょうも休み",
+      what:"米国株は木曜日（8日）、AI関連のテック株の弱さのなか、まちまちで終えた。S&P 500は0.47%安の7,765.36、ナスダックは1.25%安の27,193.34で、ダウは0.10%高の51,231.64だった。米10年物国債の利回りは5.231%だった。ロイターは、AI投資のコストと高い金利への懸念を理由に挙げた。WTIは3.6%上昇し、91ドル台だった。金曜日のニューヨーク株は原油安のなか上昇して始まったが（聯合ニュース）、この新聞をつくる時点でも取引中だった。韓国株は金曜日、ハングルの日で休んだ。KOSPIは木曜日に6,625.93（−2.62%）、KOSDAQは892.27（−0.69%）で終えた。",
+      why:"韓国株が休んでいる間に、海外の変数がたまった。次の営業日である12日月曜日に、一度に反映される。",
+      me:"月曜日の寄り付き直後の変動に備えよう。金曜日のニューヨークの終値は、土曜日の未明にならないと出ない。",
+      a:"",b:"",
+      say:"金曜日の序盤の反発は、終値が出てはじめて意味を持つ。木曜日の下げ幅をどれだけ戻したかが、月曜日のKOSPIの出発点になる。",
+      src:"聯合ニュース（ニューヨーク株の終値・寄り付き、10/9） · ロイター（10/8〜9） · AP（10/9） · 相場資料（KOSPI・KOSDAQの10/8終値）"},
+    delta:{kick:"航空・エネルギー · 報道照合 ✓ 2社 · 数値は会社の発表",title:"デルタ航空、燃料費60億ドル増で業績見通しを下方修正",
+      what:"デルタ航空は、燃料費が60億ドル増えた影響で、今年の業績見通しを下げた。調整後の1株当たり利益の見通しは5.10〜5.60ドルと、従来の6.50〜7.50ドルから下がった（ロイター・グローブ・アンド・メール）。運賃の引き上げ分では、燃料費の増加を埋められなかった。",
+      why:"原油高が企業業績に実際に波及した事例だ。航空は燃料費の比重が大きく、原油価格に最も早く反応する業種だ。",
+      me:"燃油サーチャージや航空券の価格に影響が続きうる。年末の海外旅行を計画しているなら、予約の時期を考えよう。",
+      a:"",b:"",
+      say:"見通しの下方修正は、原油高の状態が長引くという前提に基づく。原油が下がれば、逆に動きうる。ほかの航空会社の決算発表が比較の目安になる。",
+      src:"ロイター・グローブ・アンド・メール（会社の発表、10/9）"},
+  };
+
+  // ───── 用語集: 本文・ポップアップ内の用語に点線の下線、押すと説明
+  const G = {
+    "国際刑事裁判所":{f:"国際法・司法",d:"戦争犯罪や人道に対する罪などを犯した個人を裁く常設の国際裁判所。オランダのハーグにある。国連の機関ではなく、加盟国の条約で運営される。",w:"ピレイ氏の経歴に含まれ、米国がこの裁判所そのものを制裁した。"},
+    "国際司法裁判所":{f:"国際法・司法",d:"国と国の間の紛争を判断する国連の主要な司法機関。ICJともいう。個人ではなく国家を相手に裁判する。",w:"ピレイ氏はここの臨時裁判官だ。"},
+    "人権高等弁務官":{f:"国際機関",d:"国連事務局で人権問題を統括する職。各国の人権状況を点検し、批判の声を上げる。",w:"ピレイ氏はこの職を務めた。"},
+    "フーシ派":{f:"国際・安全保障",d:"イエメン北部を掌握したシーア派系の武装勢力。イランの支援を受け、紅海の船舶やサウジアラビアをミサイル・ドローンで攻撃してきた。",w:"リヤド空港攻撃について犯行を主張した。"},
+    "ホルムズ海峡":{f:"国際・エネルギー",d:"ペルシャ湾とオマーン湾をつなぐ狭い海路。世界の海上原油輸送の相当部分が通る。",w:"9日、船舶1隻が飛翔体に当たった。"},
+    "革命防衛隊":{f:"国際・安全保障",d:"イランの正規軍とは別に、最高指導者の直属である軍事組織。ホルムズ海峡の巡視と海上作戦を担う。",w:"航路に違反する船舶を処罰すると述べた。"},
+    "WTI":{f:"エネルギー",d:"西テキサス産原油。米国の原油価格の基準だ。ブレント原油より通常、数ドル安い。",w:"8日、3.6%上昇し、91ドル台だった。"},
+    "休場":{f:"金融",d:"証券市場が開かない日。祝日や年末などに休む。",w:"金曜日のハングルの日に続いて週末なので、次の営業日は12日月曜日だ。"},
+    "軍空港":{f:"地域・産業",d:"軍用機が使う空港。光州軍空港は移転が進められており、その跡地が湖南半導体クラスターの予定地として取り沙汰されている。",w:"崔泰源会長がここを訪れた。"},
+    "ファブ":{f:"半導体",d:"半導体を実際につくる工場。クリーンルームと大規模な電力・用水の設備が必要だ。",w:"電力・用水が遅れてもファブを先に建てるという趣旨で語った。"},
+    "ハイブリッド車":{f:"産業・通商",d:"エンジンと電気モーターを併用する自動車。電気自動車より充電の負担が少なく、欧州で中国産の販売が急速に伸びた。",w:"中国がEU向け輸出の削減で合意した。"},
+    "レアアース":{f:"資源・通商",d:"電気自動車のモーターや半導体などに使われる希少金属17種。中国が世界の精製の大部分を占め、輸出許可が外交カードに使われる。",w:"中国が輸出許可に便宜を図ると約束した。"},
+    "DDoS":{f:"サイバー",d:"多数の機器から一斉にアクセス要求を送り、サーバーを麻痺させる攻撃。",w:"容疑者がDDoS代行組織で活動していた状況が出てきた。"},
+    "周波数":{f:"通信",d:"無線通信が使う電波の帯域。国が事業者に割り当て、価格が非常に高い。",w:"スペースXが米国の通信周波数を買った。"},
+    "国政監査":{f:"政治・行政",d:"国会が毎年、政府機関の業務を監視する活動。秋に1カ月ほど行われる。",w:"鄭議員の米州の現場での国政監査への出席が難しくなった。"},
+    "韓国ギャラップ":{f:"世論",d:"定期的に大統領の支持率を調査して発表する世論調査機関。",w:"李大統領の肯定評価37%を発表した。"},
+    "10年物国債":{f:"金融",d:"満期10年の国債。米国の10年物の利回りは、長期金利と世界の資産価格の基準の役割を果たす。",w:"木曜日は5.231%だった。"},
+    "1株当たり利益":{f:"企業・金融",d:"純利益を発行済み株式数で割った値。株1株が稼いだ利益だ。",w:"デルタが通期の見通しを5.10〜5.60ドルに下げた。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

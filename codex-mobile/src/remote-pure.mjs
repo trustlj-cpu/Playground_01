@@ -1,5 +1,5 @@
 // 네트워크·플러그인 없이 테스트 가능한 순수 함수들 (remote.mjs가 사용)
-export const SITE = 'https://dailydrop.kr';
+export const SITE = 'https://dailydropnewspaper.com';
 export const FEED = 'https://feed.dailydrop.kr';
 // 국가판: 각 판은 그 나라 국내 뉴스 + 글로벌 뉴스. KR은 루트, US/JP는 /us/ /jp/ 아래. 앱 셸 문구는 당분간 한국어.
 export const REGIONS = { KR: { prefix: '', lang: 'ko', label: '한국판' }, US: { prefix: 'us/', lang: 'en', label: '미국판' }, JP: { prefix: 'jp/', lang: 'ja', label: '일본판' } };
@@ -36,18 +36,18 @@ export function transformEditionHtml(html, frameSrc) {
   h = h.replace(/<link[^>]*href="https:\/\/fonts\.googleapis\.com[^>]*>/g, '');
   h = h.replace(/href="\/(?!\/)/g, `href="${SITE}/`);
   h = h.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/g, '');
-  const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src https://dailydrop.kr; object-src 'none'; base-uri 'none'">`;
+  const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src https://dailydropnewspaper.com https://dailydrop.kr; object-src 'none'; base-uri 'none'">`;
   h = h.includes('</head>') ? h.replace('</head>', csp + IN_APP_CSS + '</head>') : csp + IN_APP_CSS + h;
   const inj = `<script src="${frameSrc}"></script>`;
   h = h.includes('</body>') ? h.replace('</body>', inj + '</body>') : h + inj;
   return h;
 }
 
-// https://dailydrop.kr/2026-10-07/ → '2026-10-07', 루트 → 'latest'; 국가판은 'US:2026-10-08' / 'JP:latest' 꼴; 그 외/다른 호스트 → null
+// https://dailydropnewspaper.com/2026-10-07/ → '2026-10-07', 루트 → 'latest'; 국가판은 'US:2026-10-08' / 'JP:latest' 꼴; 그 외/다른 호스트 → null
 export function parseEditionUrl(url) {
   try {
     const u = new URL(url);
-    if (u.protocol !== 'https:' || !['dailydrop.kr', 'www.dailydrop.kr'].includes(u.hostname)) return null; // 앱링크 설정과 동일한 호스트만
+    if (u.protocol !== 'https:' || !['dailydropnewspaper.com', 'www.dailydropnewspaper.com', 'dailydrop.kr', 'www.dailydrop.kr'].includes(u.hostname)) return null; // 앱링크 설정과 동일한 호스트만
     const m = u.pathname.match(/^\/(?:(us|jp)\/)?(\d{4}-\d{2}-\d{2})\/?$/); // 날짜 경로 전체 일치(…/2026-10-07/foo 는 제외)
     if (m) return m[1] ? `${m[1].toUpperCase()}:${m[2]}` : m[2];
     const r = u.pathname.match(/^\/(us|jp)\/?$/); if (r) return `${r[1].toUpperCase()}:latest`;

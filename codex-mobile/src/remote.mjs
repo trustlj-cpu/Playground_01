@@ -107,7 +107,7 @@ export function bindPushTap(onOpenEdition) {
   PushNotifications.addListener('pushNotificationActionPerformed', a => { const d = (a && a.notification && a.notification.data) || {}; if (d.edition) onOpenEdition(String(d.edition)); });
 }
 
-// 딥링크: https://dailydrop.kr/YYYY-MM-DD/ 또는 루트
+// 딥링크: https://dailydropnewspaper.com/YYYY-MM-DD/ 또는 루트
 export async function bindDeepLinks(onEdition) {
   if (!native()) return;
   const handle = url => { const d = parseEditionUrl(url); if (d) onEdition(d); };

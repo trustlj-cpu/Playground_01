@@ -7,7 +7,7 @@ const [, , spec, outArg] = process.argv;
 const NOW = Number(process.env.DD_NOW) || Date.now();
 const editions = JSON.parse(fs.readFileSync(spec, 'utf8')).filter(e => !e.publish_at || Date.parse(e.publish_at) <= NOW).map(e => ({ ...e, file: path.resolve(path.dirname(spec), e.file) })).sort((a, b) => a.date.localeCompare(b.date));
 const OUT = path.resolve(outArg || process.env.DD_OUT || path.join(__dirname, 'public')); fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
-const SITE = 'https://dailydrop.kr';
+const SITE = 'https://dailydropnewspaper.com';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 // 판 표기 전환일: 이 날짜부터 아침판(각국 현지 06:00 발행), 그 전 호(1~4호)는 현지시각 18:00판.
 const MORNING_FROM = '2026-10-09';
@@ -417,7 +417,7 @@ try {
   }
 } catch (e) { console.warn('app.json skipped:', e.message); }
 // 개인정보처리방침: 앱스토어/플레이스토어 제출 요건(공개 URL). 계정·가입 없음, 수집 최소.
-fs.writeFileSync(path.join(OUT, 'privacy', 'index.html'), HEAD('데일리드롭 개인정보처리방침', '데일리드롭 웹·앱의 개인정보 처리 원칙.', '/privacy/') + FONTS + BASECSS + NAV('/about/') + `<main><h1>개인정보처리방침</h1><p class="mute">시행일 2026년 10월 9일 · 적용 범위: dailydrop.kr 웹사이트와 데일리드롭 iOS·Android 앱</p>
+fs.writeFileSync(path.join(OUT, 'privacy', 'index.html'), HEAD('데일리드롭 개인정보처리방침', '데일리드롭 웹·앱의 개인정보 처리 원칙.', '/privacy/') + FONTS + BASECSS + NAV('/about/') + `<main><h1>개인정보처리방침</h1><p class="mute">시행일 2026년 10월 9일 · 적용 범위: dailydropnewspaper.com 웹사이트(이전 주소 dailydrop.kr 포함)와 데일리드롭 iOS·Android 앱</p>
 <h2>1. 수집하는 정보</h2>
 <p>데일리드롭은 로그인 없이 읽을 수 있습니다. 회원 가입(선택)은 북마크를 여러 기기에서 쓰기 위한 것이며, 서비스 제공을 위해 다음 정보만 처리합니다.</p>
 <ul><li><b>회원 정보(가입한 경우)</b> — 이메일 주소, 이름(선택), 로그인 방법(Google 계정 고유 번호 또는 비밀번호). 비밀번호는 복원할 수 없는 해시(PBKDF2)로만 저장합니다. 로그인 상태 유지를 위해 세션 쿠키(dd_sid, 30일)와 로그인 표시 쿠키(dd_in)를 씁니다.</li><li><b>북마크</b> — 회원이 저장한 기사·용어(제목, 호 날짜, 링크, 용어 뜻)를 계정에 저장합니다.</li><li><b>방문 통계</b> — 어떤 페이지가 얼마나 읽히는지 알기 위해 페이지 주소, 국가판·언어, 유입 사이트 이름(주소의 도메인만), 기기 종류(휴대폰·태블릿·데스크톱), 웹/앱 구분, 접속 국가 코드를 기록합니다. 하루 단위 순방문자 수는 날짜·IP·브라우저 정보로 만든 되돌릴 수 없는 해시로만 셉니다(IP 원문은 저장하지 않음). 브라우저의 '추적 금지(DNT)'나 GPC를 켜면 기록하지 않습니다.</li><li><b>접속 기록</b> — 호스팅(Cloudflare)이 보안·오류 대응을 위해 IP 주소, 접속 시각, 브라우저 종류를 짧은 기간 기록합니다. 이 기록은 개인을 식별하는 데 쓰지 않습니다.</li>
@@ -435,6 +435,6 @@ fs.writeFileSync(path.join(OUT, 'privacy', 'index.html'), HEAD('데일리드롭 
 ACC({ fs, path, OUT, esc, I18N, HEAD, FONTS, BASECSS, NAV, NAVSCROLL, NAVL, NAV_KEYS, LANGCODE, COUNTRIES, REGIONS, LIVE, latestKR: latest.date });
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /me/\nDisallow: /admin/\nDisallow: /api/\nSitemap: ${SITE}/sitemap.xml\n`);
 fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['/', '/archive/', '/glossary/', '/about/', '/privacy/', '/settings/', ...REGION_PAGES.flatMap(r => [`/${REGIONS[r].prefix}`, `/${REGIONS[r].prefix}glossary/`, `/${REGIONS[r].prefix}about/`, `/${REGIONS[r].prefix}settings/`]), ...editions.map(e => `/${REGIONS[e.region || 'KR'].prefix}${e.date}/`)].map(u => `<url><loc>${SITE}${u}</loc></url>`).join('')}</urlset>`);
-// www → 루트, 그리고 임시 workers.dev → dailydrop.kr 리다이렉트(Cloudflare _redirects)
-// 호스트 리다이렉트(www·workers.dev → dailydrop.kr)는 src/index.js 에서 처리(_redirects 는 상대 경로만 허용)
+// www → 루트, 그리고 임시 workers.dev → dailydropnewspaper.com 리다이렉트(Cloudflare _redirects)
+// 호스트 리다이렉트(www·workers.dev → dailydropnewspaper.com)는 src/index.js 에서 처리(_redirects 는 상대 경로만 허용)
 console.log('built', fs.readdirSync(OUT).join(' '), '| terms', terms.length);

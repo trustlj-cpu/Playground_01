@@ -32,7 +32,7 @@ function show(next,date){const seq=++showSeq;tab=next;selected=date??(next==='to
 function renderSaved(){const list=$('#saved-list');list.replaceChildren();const entries=editions.filter(e=>saved.includes(e.date)).reverse();if(!entries.length){list.textContent='아직 보관한 호가 없습니다. 읽는 화면에서 호 보관을 눌러 주세요.';return;}for(const e of entries){const b=document.createElement('button');b.className='edition-card';const title=document.createElement('b');title.textContent=`제${e.no}호 · ${e.date}`;b.append(title,document.createTextNode(e.blurb));b.addEventListener('click',()=>show('today',e.date));list.append(b);}}
 async function openExternal(value){const url=externalURL(value);if(!url)return;try{await Browser.open({url});}catch{notice.textContent='외부 페이지를 열지 못했습니다. 네트워크 연결을 확인해 주세요.';}}
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
-$('#site').addEventListener('click',()=>openExternal('https://dailydrop.kr/'));
+$('#site').addEventListener('click',()=>openExternal('https://dailydropnewspaper.com/'));
 const appOptions=$('#app-options');
 document.addEventListener('click',e=>{if(appOptions.open&&!appOptions.contains(e.target))appOptions.open=false;});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&appOptions.open){appOptions.open=false;appOptions.querySelector('summary').focus();}});
