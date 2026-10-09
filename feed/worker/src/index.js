@@ -1,3 +1,4 @@
+import { jevShadow } from './jev.js';
 // 데일리드롭 피드 Worker (v1.3 — 읽기 전용 digest 경로, 결정적 클러스터링): 10분 수집분 저장(D1) → 목록 페이지 / JSON / 1시간 취합본
 const KST = 9 * 3600 * 1000;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -159,6 +160,12 @@ export default {
       return json(out);
     }
     // 긴급속보 띠(사이트 1면): 그 판 나라 속보 + 국제(GLB) 속보는 모든 판 공통(사장님 10/9) 중 제목에 속보 표시가 있는 것. 최신순 8건, 제목 중복 제거
+    // Jev 그림자 채점 결과 보기: /jev.json?hour=YYYY-MM-DDTHH&region=KR (hour 없으면 최근)
+    if (url.pathname === '/jev.json') {
+      const hour = (url.searchParams.get('hour') || '').slice(0, 13), region = (url.searchParams.get('region') || '').toUpperCase().slice(0, 4);
+      const { results } = await env.DB.prepare(`SELECT hour, region, title, n, front, conf, brk, err FROM jev WHERE (?1 = '' OR hour = ?1) AND (?2 = '' OR region = ?2) ORDER BY hour DESC, front DESC LIMIT 200`).bind(hour, region).all().catch(() => ({ results: [] }));
+      return json({ enabled: !!env.TYPESAFE_API_KEY, rows: results });
+    }
     if (url.pathname === '/breaking.json') {
       const region = (url.searchParams.get('region') || 'KR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), lang = (url.searchParams.get('lang') || '').toLowerCase().replace(/[^a-z-]/g, '').slice(0, 5);
       // until=ISO(과거 시각)이면 지난 호용: 그 시각 직전 24시간의 속보(고정 자료라 하루 캐시). 없으면 실시간: 최근 6시간
@@ -245,7 +252,7 @@ export default {
     const hour = hourKey(ev.scheduledTime - 3600_000);
     ctx.waitUntil((async () => {
       const sched = new Date(ev.scheduledTime).toISOString(); let status = 'ok', error = null, n = null;
-      try { const d = await buildHourly(env, hour); n = d.n_items; } catch (e) { status = 'error'; error = String(e && e.stack || e).slice(0, 1000); }
+      try { const d = await buildHourly(env, hour); n = d.n_items; try { await jevShadow(env, hour, d); } catch (e) { /* Jev 그림자 채점 실패는 다이제스트에 영향 없음 */ } } catch (e) { status = 'error'; error = String(e && e.stack || e).slice(0, 1000); }
       try { await env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(sched, new Date().toISOString(), hour, status, n, error).run(); } catch (e) { /* 기록 실패는 무시 */ }
     })());
   },
