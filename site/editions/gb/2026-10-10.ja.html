@@ -1,0 +1,442 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開する。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>10,552.05</b>FTSE100 · 10月9日終値 · +1.06%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>1.3233</b>ポンド/ドル（GBP/USD） · 10月9日 22:30 英国夏時間 · +0.01%</div>
+    </div>
+    <div class="dateline"><span>第6号 · 朝刊</span><b>2026年10月10日（土）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="diesel">
+      <div class="kick">経済 · エネルギー<span>報道照合 ✓ 9社 · 価格は取引所の清算値。引き渡しの時期はロシア側と米側の説明による</span></div>
+      <h2 class="hl">トランプ氏「プーチン氏との電話会談後、ロシアはディーゼルを世界市場に放出する」　キーウは「戦争への投資」と批判、ブレントは104ドル超で引け</h2>
+      <p class="deck">米国は同じ日にロシア産ディーゼルの輸入を認可した。原油はほとんど動かず、FTSE100は1.06%上昇し、イングランド銀行は引き続き利上げが見込まれている。</p>
+      <div class="body">
+        <p>トランプ大統領は金曜、ロシアのプーチン大統領と電話会談を行い成功だったとし、ロシアが米国と世界の市場にディーゼルを放出すると述べた。ロイター、AP、BBC、フィナンシャル・タイムズ（FT）、CNBCが伝えた。同氏がトゥルース・ソーシャルに投稿した数量は、直ちに30万トン、11月に50万トン、その後に100万トンで、さらに300万トンを「近く」続けるという。ロシアの製油所の状況次第だとした。ロシアのアレクサンドル・ノヴァク副首相は、ディーゼルの輸出制限は直ちに解除されていると述べたが、100万トンの分は12月とした。クレムリンは、90分の電話会談はウクライナが中心で、イランにも触れたこと、プーチン氏が和平交渉をいつ再開するか検討すること、双方が11月に中国で開かれるAPEC首脳会議への出席に関心を持っていることを明らかにした。米財務省のOFACはその後、ロシア産ディーゼルの販売、引き渡し、輸入（米国向けを含む）を2027年4月7日まで認める一時的な包括許可を出した。APは、この措置を、11月3日の中間選挙の前に価格を抑えるため、モスクワへの圧力を緩めるものだと評した。ゼレンスキー大統領は「戦争への投資」と呼び、アクシオスはウクライナ政府が驚いたと報じた。ロイターは、トランプ氏のこれまでのディーゼル供給拡大策はまだ価格を下げていないと指摘した。FinancialJuiceによると、関係者は、トランプ氏の指令が当局に国防生産法の活用と、エネルギー生産を妨げる州の規則の迂回を促すことになると述べた。</p>
+        <p>市場は冷静に受け止めた。FinancialJuiceによると、ブレントは1バレル104.72ドルで清算されて0.42%上昇し、WTIは91.63ドルで0.15%上昇した。物理的な打撃としてより大きいのはハリケーン「イサイアス」だ。コンサルティング会社のMMAは、米メキシコ湾の原油の生産停止を日量150万バレル、生産量の72%と推計した。木曜の63%から上がった。ロンドンではFTSE100が1.06%高の10,552.05で引け、木曜の10,441.60から持ち直した。アイリッシュ・タイムズの市場リポートは、この上昇をギルト利回りの低下と結びつけた。取引所はきょう休場で、月曜までこれが最後の値となる。ポンドは1.3233ドル付近で終えた。格付け会社のS&Pグローバルは、英国のAA格付けを安定的の見通しで据え置き、2026年の成長率予想を1.3%に引き上げ、イングランド銀行が2026年後半に0.25ポイントの利上げをすると予想していると述べた、とFinancialJuiceが報じた。ウォール街ではS&P500が0.59%高の7,811.54、ナスダックが0.64%高の27,366.17、ダウが0.83%高の51,654.95で終えた。ブルームバーグは、ハイテク株が、オープンAIの収益をめぐる木曜の不安から反発したと伝えた。米10年債利回りは5.244%で引け、ピムコのイヴァシン氏はFTに、2000年以来となる6%に達し得ると語った。金は1.51%高の4,219.9ドルだった。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>300万トン</b><span>トランプ氏が、ロシアが「近く」供給すると述べたディーゼル。最初の30万トンは直ちにとされる（トゥルース・ソーシャルの投稿、報道による）</span></div>
+        <div><b>72%</b><span>ハリケーン「イサイアス」で生産が止まった米メキシコ湾の原油生産の割合。前日の63%から上昇（MMA）</span></div>
+        <div><b>10,552.05</b><span>金曜のFTSE100終値。1.06%高で、月曜までの最後の値</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="holborn">
+      <div class="kick">政治<span>報道照合 ✓ 3社 · 数字はカムデン区議会の公式発表</span></div>
+      <h3 class="hl">労働党、スターマー卿の旧選挙区ホルボーン・アンド・セントパンクラスを死守　ただし緑の党との票差は3,364票</h3>
+      <div class="one">
+        <p>カムデン区議会の労働党リーダー、サガル・アブディ＝ワリ氏が補欠選挙で12,292票を獲得し、緑の党党首ザック・ポランスキー氏の8,928票を破った、とITVが報じた。カムデン区議会は投票率を38.76%とした。リフォームUKのピーター・ニューマン氏は1,612票で、1,922票の保守党のユアン・キャメロン氏に及ばず、労働者党は314票だった。スターマー卿は2024年に48.9%を得たが、アブディ＝ワリ氏の得票率は約45%だった。ガーディアンは、この結果は労働党が左派の有権者を取り戻し始めていることを示すとし、緑の党は議席を奪えなかったことで今や岐路に立っているのかと問うた。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>マジョリティ（票差）<i>政治</i></b><p>英国の選挙区で、当選者が次点を上回った票数。当選者が全投票に占める得票率のことではない。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="raf"><b>ケンブリッジシャーの英空軍基地で逮捕されたラトビア人男性2人、保釈</b><em>ガーディアン、スカイニュース、BBCは、BBCが保安上の違反と呼んだ事案の後、2人が保釈されたと報じた。</em><span>英国 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="hasan"><b>バンス氏、フォートフッド銃撃犯の処刑のライブ配信は見ないと表明</b><em>AP、ロイター、FT、BBCによると、トランプ氏は沈黙し、連邦通信委員会の委員長はテレビでの放映の可否について国防総省に判断を委ねている。</em><span>米国 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="panama"><b>パナマでマグニチュード7.6の地震、津波警報も</b><em>米地質調査所を引用したロイターとガーディアンは7.6、BBCは7.7とし、建物の被害を伝えた。</em><span>世界 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="spacex"><b>スペースXの周波数帯取引で通信株が下落、ドイツ・テレコムは7%安</b><em>ロイターとブルームバーグは、米欧の通信事業者の株が下がったと報じた。</em><span>ビジネス · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="cook"><b>ホワイトハウス、FRBのリサ・クック理事を調べる委員会を設置</b><em>ロイターとブルームバーグは、この動きと公聴会の予定を報じた。</em><span>米国 · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="drumcree">
+      <div class="kick">英国 · 北アイルランド<span>報道照合 ✓ 6社 · 警察の捜査は初期段階で、起訴された者はいない</span></div>
+      <h3 class="hl">北アイルランド担当相、ドラムクリーの行進を禁止　ミシェル・オニール首席大臣には抗議をめぐり警察が聴取への出頭を要請</h3>
+      <div class="body">
+        <p>北アイルランド担当相のクリス・ブライアント氏は金曜、オレンジ結社のドラムクリーの行進を、ポータダウンのガルヴァギー・ロード沿いで行うことは認めないと発表した、とBBC、スカイニュース、ガーディアン、アイリッシュ・タイムズが報じた。争いのある行進について裁定する独立機関の行進委員会は、制限付きで行進を認めていたが、道路での大規模な抗議が行進を止めた。ブライアント氏は、状況は大きく変わり、オレンジ結社と民族主義系の住民は折り合いをつけられなかったと述べた。報道によると、北アイルランド警察（PSNI）のジョン・ブッチャー本部長が裁定の見直しを求めたのを受けて動いた。アイルランドのターオシャック（首相）、ミホール・マーティン氏は、ガルヴァギー・ロードの住民にとって安堵をもたらすと述べた。オレンジ結社は、行進が止められれば「深刻な結果」になると警告していた。</p>
+        <p>BBC、スカイニュース、アイリッシュ・タイムズはまた、北アイルランドの首席大臣でシン・フェイン党のミシェル・オニール氏が、抗議への自らの関与について聴取を求める警察の書簡を受け取ったと報じた。オニール氏は協力すると述べ、「住民とともに立つことを誇りに思う」と語った。PSNIは「犯罪を行った合理的な疑いのある」人々に書簡を送っていると述べ、特定の人物の名は挙げなかった。ユニオニスト系の政治家は、抗議に加わったシン・フェイン党の幹部らに対する措置を求めている。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="icc">
+      <div class="kick">世界 · 法<span>報道照合 ✓ 6社 · 英国の声明の全文は確認していない</span></div>
+      <h3 class="hl">米国がICCに制裁、元ICC裁判官のノーベル平和賞受賞から数時間後　英国と同盟国7カ国は裁判所を支持</h3>
+      <div class="body">
+        <p>ルビオ国務長官は金曜、国際刑事裁判所（ICC）への制裁を発表した。ノーベル委員会が同裁判所の元裁判官である南アフリカ出身のナヴィ・ピレイ氏を2026年の平和賞受賞者に選んだ数時間後のことだった、とロイター、AP、BBC、FT、NBCニュースが報じた。ルビオ氏は同裁判所を「ならず者の裁判所」と呼び、米国は同裁判所との取引を断つと述べた。ロイターは、措置は従来のものより踏み込んでおり、同裁判所にサービスを提供する企業も罰せられ得ると報じた。報道は、この動きを、イスラエルのベンヤミン・ネタニヤフ首相と元国防相ヨアヴ・ガラント氏に対する同裁判所の逮捕状と結びつけている。</p>
+        <p>ICCの検察官は制裁を非難し、裁判所の活動は続くと述べた。報道によると、英国、カナダ、デンマーク、フランス、ドイツ、イタリア、日本、オランダの外相は、同裁判所への「継続的で揺るぎない支持」を改めて表明する共同声明を出した。元国連人権高等弁務官のピレイ氏は、国連のパレスチナ占領地域に関する調査委員会の委員長も務めた。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="houthi">
+      <div class="kick">世界 · 中東<span>報道照合 ✓ 5社 · サウジ主導の連合の主張は単一の情報源によるもので、出典を明記</span></div>
+      <h3 class="hl">フーシ派がリヤド空港を攻撃、3人死亡　EU航空安全機関はサウジ上空の警告を拡大、英国はエスカレーションを非難</h3>
+      <div class="body">
+        <p>サウジ当局は、フーシ派が犯行声明を出したリヤド空港への攻撃で3人が死亡したと明らかにした、とロイターとAPが報じた。ロイターによると、欧州連合航空安全機関は攻撃を受けてサウジ上空に関する警告を拡大した。ルフトハンザとインドの航空会社はすでにリヤド便を停止していた。国連安全保障理事会で英国は、フーシ派の危険なエスカレーションを「断固として非難する」と述べたと、外務省の声明は伝えている。</p>
+        <p>FinancialJuiceによると、サウジ主導の連合は、イエメンのフーシ派の部隊と能力に対する広範な作戦を進めていると述べ、トランプ氏はサウジアラビアの情勢に満足していないと述べた。これとは別に、ロイターとガーディアンは、アラブ首長国連邦の検察当局が、フライドバイの副操縦士がテルアビブ行きの便で自爆攻撃を計画したとしていると報じた。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>イングランド女子代表ライオネス、女子ワールドカップのプレーオフ準決勝でギリシャに勝利。ジョージア・スタンウェイが得点<span>BBC · ESPN</span></li>
+        <li>環境庁、ヨークシャーに干ばつ状態を宣言<span>GOV.UK</span></li>
+        <li>鳥の飼い主に鳥インフルエンザへの備えを改めて呼びかけ。病気が英国に戻る中で<span>GOV.UK</span></li>
+        <li>ローマ教皇レオ、フィリピン出身のタグレ枢機卿を枢機卿団長に指名<span>AP · Reuters</span></li>
+        <li>デルタ、燃料コストの60億ドルの急増が運賃上昇分を上回り、利益見通しを引き下げ<span>Reuters · Bloomberg</span></li>
+        <li>シカゴ・ベアーズの名選手マイク・ディトカ氏が86歳で死去<span>AP · BBC</span></li>
+        <li>クリスチャン・ビッタル氏の金利不正操作の有罪判決が破棄される<span>Guardian</span></li>
+        <li>メキシコでオーストラリア人サーファー兄弟2人と米国人の友人を殺害した罪で、男3人に有罪<span>Guardian · BBC</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「ロシアは300万トンのディーゼルを一度に供給する」</b> <span>トランプ氏の投稿は、直ちに30万トン、300万トンは「近く」で、製油所次第としている。ノヴァク氏は100万トンの分を12月とした。日程は確認されていない。</span></div>
+        <div><b>「ロシアへの制裁は解除された」</b> <span>財務省の許可は一時的で、ディーゼルのみが対象で、2027年4月7日までだ。報道が伝える限り、ほかの制裁は有効なままだ。</span></div>
+        <div><b>「ウクライナの和平交渉が再開した」</b> <span>クレムリンは、プーチン氏が再開の時期を検討するとしている。ウィトコフ氏は別の会話を建設的だったと述べたが、それ以上の発表はない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/10 土</b><span>ロンドン市場は休場で、次のFTSE100の値は月曜・プレミアリーグの週末と、ライオネスのプレーオフでの次の一歩・キーウとワシントンがディーゼル許可についてさらに語るか・ハリケーン「イサイアス」と湾岸の原油生産・ドラムクリー禁止への反応。</span><b>来週</b><span>ウォール街の決算シーズンが始まる・米インフレ指標が待たれる・ガルヴァギー・ロードの抗議をめぐるPSNIの捜査・10月28日の予算案と11月3日の米中間選挙。</span><b>読者へ</b><span>ガソリン価格は卸売りの燃料価格に数週間遅れて連動するため、スタンドですぐ変わるとは期待しないこと。リヤド行き、またはリヤド経由の便を予約している場合は、航空会社の案内を確認すること。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    diesel:{kick:"経済 · エネルギー · 報道照合 ✓ 9社",title:"トランプ氏「プーチン氏との電話会談後、ロシアはディーゼルを世界市場に放出する」　キーウは「戦争への投資」と批判、ブレントは104ドル超で引け",
+      what:"10月9日、トランプ氏はプーチン氏と電話会談を行い成功だったとし、ロシアが米国と世界の市場にディーゼルを放出すると述べた。トゥルース・ソーシャルへの投稿では、直ちに30万トン、11月に50万トン、その後に100万トン、さらに300万トンを「近く」としたが、ロシアの製油所次第だという。ロシアのアレクサンドル・ノヴァク副首相は、ディーゼルの輸出制限は直ちに解除されていると述べ、100万トンの分は12月とした。米財務省のOFACは、ロシア産ディーゼルについて、2027年4月7日まで有効な一時的包括許可を出した。クレムリンは、90分の電話会談はウクライナが中心でイランにも触れたこと、プーチン氏が和平交渉をいつ再開するか検討することを明らかにした。ゼレンスキー氏はこの動きを戦争への投資と呼び、アクシオスはウクライナ政府が驚いたと伝えた。ブレントは104.72ドルで清算されて0.42%上昇し、WTIは91.63ドルで0.15%上昇した。FTSE100は1.06%高の10,552.05で引け、S&P500は0.59%高の7,811.54となった。",
+      why:"ディーゼルは物資、農業、貨物輸送を動かすため、その価格はほとんどあらゆるものに波及する。この取引はエネルギー対策であると同時に、制裁の緩和でもある。米中間選挙の数週間前で、ワシントンがウクライナ和平の仲介を試みている最中に出てきた。",
+      me:"ガソリンスタンドの価格は卸売りのディーゼルに遅れて連動し、数十万トン程度では市場は単独では変わらない。エネルギーコストの上昇が、イングランド銀行を利上げに傾けさせ続けており、それが住宅ローンや預金の金利を左右する。",
+      a:"供給が増えれば、家計と企業を苦しめる価格高騰が和らぐ可能性があり、ロシアとの対話を保つことは外交に役立つかもしれない。",
+      b:"モスクワに燃料の販売を認めれば、ウクライナへの攻撃が続く中でその見返りを与えることになり、キーウは事前に相談を受けていなかった。",
+      say:"見出しの数量は慎重に扱うべきだ。直ちにとされる30万トンは世界の需要に比べれば小さく、残りは製油所次第である。ブレントが100ドル超にとどまるか、議会や欧州の同盟国が許可に反発するか、ロシアが和平交渉再開の日程を示すかを見たい。",
+      src:"Reuters、AP、BBC、Financial Times、CNBC、Axios、Bloomberg、FinancialJuice、Irish Times（2026年10月9〜10日）"},
+    holborn:{kick:"政治 · 報道照合 ✓ 3社",title:"労働党、スターマー卿の旧選挙区ホルボーン・アンド・セントパンクラスを死守　ただし緑の党との票差は3,364票",
+      what:"補欠選挙は10月8日に行われ、9日の早朝に結果が出た。労働党のサガル・アブディ＝ワリ氏が12,292票を獲得した、とITVが報じた。緑の党党首のザック・ポランスキー氏は8,928票で、票差は3,364票となった。カムデン区議会の集計表では、保守党のユアン・キャメロン氏が1,922票、リフォームUKのピーター・ニューマン氏が1,612票、自由民主党のパトリック・スティルマン氏が924票、労働者党が314票だった。投票率は38.76%。2024年にスターマー卿は得票率48.9%を得たが、アブディ＝ワリ氏は約45%だった。ガーディアンは、この結果は労働党が左派の一部の有権者を取り戻しつつあることを示唆するとし、緑の党は岐路にあるのかと問うた。",
+      why:"補欠選挙は、総選挙と総選挙の間に世論を直接測る数少ない機会の一つだ。今回は、同じ有権者を労働党と緑の党が争う戦いだった。",
+      me:"当選者は宣誓後、この選挙区の下院議員になる。ほかの地域の有権者にとっては、政府とその対抗勢力の状況を知るもう一つの目安になる。",
+      a:"労働党は議席を守り、緑の党は突破できなかった。党の左側が崩れているわけではない。",
+      b:"労働党がかつて楽々と勝った議席での票差が3,364票というのは警告であり、投票率38.76%は低い。",
+      say:"ロンドンの一議席を読み込みすぎてはいけない。重要なのは、労働党に対する緑の党の得票率と、ポランスキー氏の指導力が問われるかどうかだ。次の補欠選挙の試金石はファラージ氏の議席だと伝えられるが、日付は確認されていない。",
+      src:"ITV News、The Guardian、カムデン区議会、Yahoo News UK（2026年10月9日）"},
+    raf:{kick:"英国 · 安全保障 · 報道照合 ✓ 3社",title:"ケンブリッジシャーの英空軍基地で逮捕されたラトビア人男性2人、保釈",
+      what:"ガーディアン、スカイニュース、BBCは10月9日、ケンブリッジシャーの英空軍基地で逮捕されたラトビア人男性2人が保釈されたと報じた。BBCはこの事案を、基地での保安上の違反と表現した。私たちが確認した報道は、2人がどのような容疑をかけられているのか、いつ逮捕されたのか、いつ出頭しなければならないのかを伝えていない。",
+      why:"空軍基地は機微な施設であり、侵入があれば、保安と、背後にいる可能性のある者をめぐって疑問が生じる。",
+      me:"市民へのリスクは報じられていない。報道によると、事案はまだ初期段階で、起訴された者はいない。",
+      a:"",b:"",
+      say:"警察が2人の容疑を明らかにするのを待ちたい。それまでは、この逮捕をほかの捜査と結びつけるのは誤りだ。",
+      src:"The Guardian、Sky News、BBC（2026年10月9日）"},
+    hasan:{kick:"米国 · 司法 · 報道照合 ✓ 4社",title:"バンス氏、フォートフッド銃撃犯の処刑のライブ配信は見ないと表明",
+      what:"バンス副大統領は10月9日、国防総省が計画するニダル・ハサンの処刑のライブ配信に疑問を示し、自分は見ないと述べた、とAP、ロイター、FT、BBCが報じた。ロイターは、トランプ氏は沈黙を保ち、放送事業者を規制する連邦通信委員会の委員長は、テレビ局が放映できるかどうかについて国防総省に判断を委ねたと伝えた。ロイターの解説記事は、ライブ配信が合法かを問い、他国の慣行と比較した。ハサンは2009年のフォートフッドでの銃撃で有罪となった。報道は日付を確認していない。",
+      why:"国家による処刑のライブ配信は米国で初めてとなり、死を公開で見ることの法的・倫理的な問題を提起する。",
+      me:"英国の読者にとっては米国の慣行をめぐる議論だが、配信があればオンラインで英国の視聴者にも届き得る。",
+      a:"支持する側は、正義は公開されるべきだと言う。",b:"批判する側は、ライブ配信は法に基づく刑罰を見世物にするものだと言う。",
+      say:"日付、裁判所への異議申し立て、ホワイトハウスが沈黙を破るかを見たい。",
+      src:"AP、Reuters、Financial Times、BBC（2026年10月9日）"},
+    panama:{kick:"世界 · 自然災害 · 報道照合 ✓ 3社",title:"パナマでマグニチュード7.6の地震、津波警報も",
+      what:"ロイターは米地質調査所を引用し、10月9日にパナマで感じられたマグニチュード7.6の地震を報じた。ガーディアンも7.6とし、津波警報を伝えた。BBCは7.7とし、建物が被害を受けたと述べた。当初のマグニチュードは、データが入るにつれて修正されることが多い。私たちが確認した報道は、死傷者の数を伝えていない。",
+      why:"この規模の地震は、深刻な被害や津波を引き起こし得る。パナマの運河と港は世界の海運にとって重要だ。",
+      me:"英国への直接の影響は報じられていない。中米への旅行を予定している場合は、外務省の渡航情報を確認すること。",
+      a:"",b:"",
+      say:"マグニチュードはきょう確定し、死傷者数も明らかになるだろう。運河の通航に支障が出るかどうかも見たい。",
+      src:"Reuters、The Guardian、BBC（2026年10月9日）"},
+    spacex:{kick:"ビジネス · 通信 · 報道照合 ✓ 2社",title:"スペースXの周波数帯取引で通信株が下落、ドイツ・テレコムは7%安",
+      what:"ロイターとブルームバーグは10月9日、スペースXが電波の周波数帯（携帯電話の通信に使われる電波）をめぐる取引で合意したのを受け、米欧の通信株が下落したと報じた。ロイターは、ドイツ・テレコムの株が7%下落したと伝えた。先の報道は、スペースXが携帯電話の通信網向けに低周波数帯の免許を購入するとしていた。投資家は、衛星企業が携帯市場に参入すれば事業者と競合することを懸念している。",
+      why:"携帯事業者は、通信網と周波数帯を持つことで稼いでいる。自前の衛星を持つ新たな競合は、その優位を削り得る。",
+      me:"競争が増えれば、いずれ遠隔地の通信品質が良くなるかもしれない。英国の携帯料金プランの変更は発表されていない。",
+      a:"",b:"",
+      say:"英国上場の事業者が対応を求められるか、規制当局が衛星と携帯電話の直接通信サービスの条件を定めるかを見たい。",
+      src:"Reuters、Bloomberg（2026年10月9日）"},
+    cook:{kick:"米国 · 中央銀行 · 報道照合 ✓ 2社",title:"ホワイトハウス、FRBのリサ・クック理事を調べる委員会を設置",
+      what:"ロイターは10月9日、ホワイトハウスを引用し、トランプ氏がFRBのリサ・クック理事を調べる委員会を立ち上げたと報じた。ブルームバーグは、ホワイトハウスが公聴会を計画していると報じた。私たちが確認した報道は、委員会が何を調べているのか、公聴会がいつ開かれるのかを示していない。",
+      why:"FRBは米国の金利を決めており、それは世界の借入コストや通貨に影響する。理事への圧力は、中央銀行の独立性への疑念を高める。",
+      me:"FRBへの疑念はドルや米国債利回りを動かし得て、それがギルトやポンドに影響する。",
+      a:"",b:"",
+      say:"公聴会の日付、ホワイトハウスが挙げる法的根拠、FRBの反応を注視したい。",
+      src:"Reuters、Bloomberg（2026年10月9日）"},
+    drumcree:{kick:"英国 · 北アイルランド · 報道照合 ✓ 6社",title:"北アイルランド担当相、ドラムクリーの行進を禁止　ミシェル・オニール首席大臣には抗議をめぐり警察が聴取への出頭を要請",
+      what:"10月9日、北アイルランド担当相のクリス・ブライアント氏は、オレンジ結社のドラムクリーの行進を、ポータダウンのガルヴァギー・ロード沿いで行うことは認めないと発表した。行進委員会は制限付きで行進を認めていたが、道路での大規模な抗議が行進を止めた。ブライアント氏は、状況は変わり、オレンジ結社と民族主義系の住民は折り合いをつけられなかったと述べた。報道によると、PSNIのジョン・ブッチャー本部長が裁定の見直しを求めたのを受けて動いた。ターオシャックのミホール・マーティン氏は、住民に安堵をもたらすと述べた。オレンジ結社は「深刻な結果」を警告していた。これとは別に、ミシェル・オニール首席大臣は、抗議への自らの関与について聴取を求める警察の書簡を受け取った。オニール氏は協力すると述べた。PSNIは「犯罪を行った合理的な疑いのある」人々に書簡を送っていると述べた。",
+      why:"ドラムクリーは北アイルランド紛争（トラブルズ）の最も暴力的な火種の一つで、ガルヴァギー・ロード区間は1998年から禁じられている。独立した行進委員会の裁定を覆すのは、担当相として異例の措置だ。",
+      me:"この決定は主に地元の関心事だが、ユニオニスト系と民族主義系の関係、そして自治政府にとって重要なベルファスト、ロンドン、ダブリンの関係を試すものとなる。",
+      a:"住民と民族主義系の指導者は、禁止は対立に終止符を打ち、混乱を防ぐと言う。",
+      b:"ユニオニスト系とオレンジ結社は、行進を認めた裁定を無視し、抗議に報いるものだと言う。",
+      say:"オレンジ結社の反応、オニール氏への警察の聴取が行われるか、ユニオニスト系の怒りが自治政府の運営に影響するかを見たい。",
+      src:"BBC、Sky News、The Guardian、Irish Times、Irish Examiner、GOV.UK（2026年10月9日）"},
+    icc:{kick:"世界 · 法 · 報道照合 ✓ 6社",title:"米国がICCに制裁、元ICC裁判官のノーベル平和賞受賞から数時間後　英国と同盟国7カ国は裁判所を支持",
+      what:"10月9日、ノーベル委員会は、国際刑事裁判所の元裁判官で国連の元人権高等弁務官でもある南アフリカ出身のナヴィ・ピレイ氏を、2026年の平和賞受賞者に選んだ。数時間後、ルビオ国務長官は同裁判所への米国の制裁を発表し、「ならず者の裁判所」と呼んだ。ロイターは、措置は従来のものより踏み込んでおり、同裁判所にサービスを提供する企業も罰せられ得ると報じた。報道は、この動きを、ベンヤミン・ネタニヤフ氏とヨアヴ・ガラント氏に対する同裁判所の逮捕状と結びつけている。ICCの検察官は制裁を非難し、裁判所は活動を続けると述べた。英国、カナダ、デンマーク、フランス、ドイツ、イタリア、日本、オランダの外相は、支持を表明する共同声明を出した。",
+      why:"同裁判所は、戦争犯罪を訴追する主要な常設の場だ。個人だけでなく機関そのものへの制裁は、その銀行取引、技術、人員確保を妨げ得る。",
+      me:"英国は同裁判所の主な支持国の一つだ。米国の規則が及べば、同裁判所にサービスを提供する企業は難しい選択を迫られかねない。",
+      a:"支持する側は、同裁判所は独立しており、その活動は守られなければならないと言う。",
+      b:"米国は、自国は同裁判所の管轄下にはなく、逮捕状は不当だったと言う。",
+      say:"実務上の試金石は、制裁がどう運用されるかだ。銀行や納入業者が取引を断つか、英国とEUが法的措置で同裁判所を守るかである。",
+      src:"Reuters、AP、BBC、Financial Times、NBC News、GOV.UK（2026年10月9日）"},
+    houthi:{kick:"世界 · 中東 · 報道照合 ✓ 5社",title:"フーシ派がリヤド空港を攻撃、3人死亡　EU航空安全機関はサウジ上空の警告を拡大、英国はエスカレーションを非難",
+      what:"サウジ当局は、フーシ派が犯行声明を出したリヤド空港への攻撃で3人が死亡したと述べた、とロイターとAPが報じた。ロイターは、欧州連合航空安全機関がサウジ上空に関する警告を拡大したと伝えた。ルフトハンザとインドの航空会社はすでにリヤド便を停止していた。国連安全保障理事会で英国は、フーシ派のエスカレーションを断固として非難すると述べた。FinancialJuiceは、サウジ主導の連合がイエメンのフーシ派の部隊に対する広範な作戦を進めていると述べ、トランプ氏が情勢に満足していないと述べたと報じた。これとは別に、UAEの検察当局は、フライドバイの副操縦士がテルアビブ行きの便での自爆攻撃を計画したとしていると、ロイターとガーディアンが報じた。",
+      why:"湾岸は、世界の石油と航空輸送の中心だ。主要空港への攻撃は、運航と燃料供給に広範な混乱が及ぶ可能性を高める。",
+      me:"サウジアラビア行き、または経由の便を予約している場合は、航空会社の案内を確認すること。航空会社の保険料と燃料費は上がるかもしれない。",
+      a:"サウジ主導の作戦は、王国が反撃する意思があることを示している。",
+      b:"攻撃が重なれば、紛争が拡大し、海運と空の旅にさらに混乱が及ぶ恐れがある。",
+      say:"上空の警告、さらなる航空会社の運航停止、月曜の原油価格の動きを注視したい。",
+      src:"Reuters、AP、The Guardian、GOV.UK、FinancialJuice（2026年10月9日）"}
+  };
+
+  const G = {
+    "中間選挙":{f:"政治",d:"大統領の4年の任期の中間に行われる米国の選挙。下院の全議席と、上院の3分の1の議席が争われる。",w:"11月3日に行われる。"},
+    "ブレント":{f:"市場",d:"原油の主要な国際指標価格。北海産の油種で決まる。",w:"1バレル104.72ドルで清算された。"},
+    "WTI":{f:"市場",d:"ウェスト・テキサス・インターミディエイト。米国の原油の指標価格。",w:"91.63ドルで清算された。"},
+    "トゥルース・ソーシャル":{f:"メディア",d:"トランプ氏のメディア会社が所有するソーシャルメディア。同氏はここで政策を発表することが多い。",w:"同氏はここでディーゼルの数量を発表した。"},
+    "クレムリン":{f:"世界",d:"モスクワにあるロシア大統領府の所在地。ロシア政府を指す言葉としても使われる。",w:"電話会談について独自の説明を出した。"},
+    "APEC":{f:"世界",d:"アジア太平洋経済協力。21の経済圏が参加する枠組みで、毎年首脳会議を開く。",w:"今年の首脳会議は11月に中国で開かれる。"},
+    "OFAC":{f:"法",d:"外国資産管理局。米財務省で制裁を運用する機関。",w:"ロシア産ディーゼルの一時的な許可を出した。"},
+    "包括許可":{f:"法",d:"制裁が本来は禁じる種類の取引を、誰でも行えるようにする許可。",w:"ロシア産ディーゼルを2027年4月7日まで対象とする。"},
+    "国防生産法":{f:"法",d:"国家の必要のために生産を優先するよう、大統領が産業に指示できる米国の法律。",w:"指令は、当局にこの法の活用を促すことになるという。"},
+    "ハリケーン「イサイアス」":{f:"気象",d:"米メキシコ湾岸に向かう嵐。この沿岸には国内の石油精製と海上生産の多くが集まる。",w:"メキシコ湾の原油生産の大半を止めた。"},
+    "MMA":{f:"市場",d:"エネルギー分野のコンサルティング会社。メキシコ湾の石油・ガスの生産停止の推計がよく引用される。",w:"原油の生産停止を72%と推計した。"},
+    "生産停止":{f:"エネルギー",d:"嵐などの危険のため、通常は一時的に止められた生産。",w:"メキシコ湾の原油の生産停止は日量150万バレル。"},
+    "FTSE100":{f:"市場",d:"ロンドン証券取引所に上場する時価総額上位100社の株価指数。",w:"1.06%高の10,552.05で引けた。"},
+    "ギルト利回り":{f:"市場",d:"英国政府の債券（ギルト）で投資家が得る利回り。債券価格が下がると上がる。",w:"報道は、FTSEの上昇をその低下と結びつけた。"},
+    "イングランド銀行":{f:"経済",d:"英国の中央銀行。物価上昇率を2%近くに保つため、政策金利を決める。",w:"S&Pは、2026年後半に利上げすると予想している。"},
+    "S&Pグローバル":{f:"金融",d:"米国の企業。その格付け部門が、政府や企業の信用力を評価する。",w:"英国のAA格付けを据え置いた。"},
+    "米10年債利回り":{f:"市場",d:"米国政府の10年債の利回り。世界の借入コストの指標となる。",w:"5.244%で引けた。"},
+    "ピムコ":{f:"金融",d:"米国の大手債券運用会社。",w:"同社のイヴァシン氏は、10年債利回りが6%に達し得ると述べた。"},
+    "補欠選挙":{f:"政治",d:"総選挙と総選挙の間に、空席となった下院の議席を埋めるため、一つの選挙区で行う投票。",w:"ホルボーン・アンド・セントパンクラスは労働党が守った。"},
+    "ザック・ポランスキー":{f:"人物",d:"英国の緑の党の党首。",w:"補欠選挙で2位となった。"},
+    "緑の党":{f:"政治",d:"環境や左派寄りの政策を掲げる英国の政党。",w:"党首のポランスキー氏は2位だった。"},
+    "リフォームUK":{f:"政治",d:"ナイジェル・ファラージ氏が率いる英国の右派政党。",w:"候補は1,612票を得た。"},
+    "労働者党":{f:"政治",d:"ジョージ・ギャロウェイ氏が率いる英国の小さな左派政党。",w:"314票を得た。"},
+    "ドラムクリー":{f:"歴史",d:"北アイルランドのポータダウン近郊にあるアイルランド国教会の教会。毎年のオレンジ結社の行進が、北アイルランド紛争の間、火種となった。",w:"担当相が今年の行進を禁止した。"},
+    "ガルヴァギー・ロード":{f:"地理",d:"ポータダウンにある主に民族主義系の住民の道路。オレンジ結社が長年、沿道を行進しようとしてきた。",w:"この道路での抗議が行進を止めた。"},
+    "オレンジ結社":{f:"社会",d:"北アイルランドのプロテスタント系の友愛団体。毎年夏に行進を行う。",w:"「深刻な結果」を警告していた。"},
+    "行進委員会":{f:"法",d:"北アイルランドで争いのある行進について裁定する独立機関。",w:"制限付きで行進を認めていた。"},
+    "PSNI":{f:"機関",d:"北アイルランド警察。",w:"犯罪の疑いのある人々に書簡を送っている。"},
+    "ターオシャック":{f:"政治",d:"アイルランド政府の首長（首相）。",w:"ミホール・マーティン氏は、禁止は安堵をもたらすと述べた。"},
+    "シン・フェイン党":{f:"政治",d:"アイルランドの共和主義政党。北アイルランド議会で最大の党。",w:"ミシェル・オニール氏は同党から首席大臣を務める。"},
+    "ユニオニスト":{f:"政治",d:"北アイルランドで、英国との連合の維持を支持する政治勢力。",w:"その政治家らは、抗議に加わった側への措置を求めている。"},
+    "民族主義系":{f:"政治",d:"北アイルランドで、アイルランドとの統一を支持する政治勢力に連なる人々。",w:"オレンジ結社とこの側の住民は、折り合いをつけられなかった。"},
+    "国際刑事裁判所":{f:"法",d:"オランダのハーグにある常設の裁判所。集団殺害、戦争犯罪、人道に対する罪で個人を裁く。",w:"米国が制裁を発表した。"},
+    "ナヴィ・ピレイ":{f:"人物",d:"南アフリカ出身の法律家。国際刑事裁判所の元裁判官で、国連の元人権高等弁務官。",w:"2026年のノーベル平和賞に選ばれた。"},
+    "逮捕状":{f:"法",d:"特定の人物の逮捕を認める裁判所の命令。",w:"同裁判所はネタニヤフ氏とガラント氏について出した。"},
+    "フーシ派":{f:"世界",d:"イランの支援を受けるイエメンの武装勢力。国の北部の多くを支配し、船舶や湾岸の標的を攻撃してきた。",w:"リヤド空港への攻撃で犯行声明を出した。"},
+    "欧州連合航空安全機関":{f:"機関",d:"航空の安全規則を定めて監視し、紛争地域について警告を出すEUの機関。",w:"サウジ上空の警告を拡大した。"},
+    "国連安全保障理事会":{f:"機関",d:"平和と安全に主要な責任を負う国連の機関。英国を含む5つの常任理事国がある。",w:"英国はここでフーシ派を非難した。"},
+    "連邦通信委員会":{f:"機関",d:"米国の放送と通信の規制当局。",w:"委員長は処刑の放映について国防総省に判断を委ねた。"},
+    "周波数帯":{f:"技術",d:"携帯電話や放送に使われる電波の周波数。政府が免許を与える。",w:"スペースXの取引が通信株を直撃した。"},
+    "FRB":{f:"経済",d:"連邦準備制度理事会。米国の中央銀行の中枢で、米国の金利を決める。",w:"ホワイトハウスは理事の一人を調べている。"},
+    "枢機卿団長":{f:"宗教",d:"枢機卿団を統括する首席の枢機卿。教皇が亡くなったり退位したりしたときは、枢機卿団を率いる。",w:"教皇レオはタグレ枢機卿をこの職に指名した。"},
+    "破棄":{f:"法",d:"上級の裁判所が取り消し、有罪判決が効力を失うこと。",w:"クリスチャン・ビッタル氏の有罪判決が破棄された。"},
+    "ライオネス":{f:"スポーツ",d:"イングランド女子サッカー代表の愛称。",w:"女子ワールドカップのプレーオフ準決勝でギリシャに勝った。"},
+    "アレクサンドル・ノヴァク":{f:"人物",d:"ロシアの副首相。",w:"ディーゼルの輸出制限が直ちに解除されると述べた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
