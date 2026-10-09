@@ -12,6 +12,12 @@ export default {
       try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/quotes.json', { cf: { cacheTtl: 20, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=20' } }); }
       catch (e) { return new Response('{"q":{}}', { status: 502, headers: { 'content-type': 'application/json' } }); }
     }
+    // 긴급속보 띠: 피드 Worker의 /breaking.json 을 같은 도메인으로(60초 캐시)
+    if (url.pathname === '/api/breaking.json') {
+      const q = new URLSearchParams({ region: (url.searchParams.get('region') || 'KR').slice(0, 4), lang: (url.searchParams.get('lang') || '').slice(0, 5) });
+      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/breaking.json?' + q, { cf: { cacheTtl: 60, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=60' } }); }
+      catch (e) { return new Response('{"items":[]}', { status: 502, headers: { 'content-type': 'application/json' } }); }
+    }
     // 국가판 라우팅. live.json(빌드 산출물) = 현재 발행 중인 나라 목록 [{code,prefix}].
     // ?r=XX 로 고르면 쿠키(dd_region)에 기억. 쿠키가 없고 루트(/)로 들어오면 접속 국가(Cloudflare cf.country)의 판으로.
     // 그 나라 판이 아직 없으면 한국 접속자는 한국판, 그 외는 영어판(미국판).

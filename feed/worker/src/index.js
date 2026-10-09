@@ -158,6 +158,18 @@ export default {
       try { await env.DB.prepare('UPDATE push_sends SET result = ?2 WHERE edition = ?1').bind(edition, JSON.stringify(out).slice(0, 2000)).run(); } catch (e) {}
       return json(out);
     }
+    // 긴급속보 띠(사이트 1면): 최근 3시간, 그 판 나라 항목 + 같은 언어의 국제 항목 중 제목에 속보 표시가 있는 것. 최신순 8건, 제목 중복 제거
+    if (url.pathname === '/breaking.json') {
+      const region = (url.searchParams.get('region') || 'KR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), lang = (url.searchParams.get('lang') || '').toLowerCase().replace(/[^a-z-]/g, '').slice(0, 5);
+      const since = new Date(Date.now() - 6 * 3600_000).toISOString();
+      // 머리 표시가 붙은 진짜 속보만(‘record-breaking’·‘urgentes’·야구 속보중 같은 오탐 방지): 제목 앞머리 꼬리표 기준, 스포츠 제외
+      const marks = ['[속보]%', '%[속보]%', '속보%', '[긴급]%', '[1보]%', '[2보]%', '[3보]%', '【速報】%', '%【速報】%', '速報：%', 'Breaking:%', 'BREAKING%', 'Breaking news%', 'Just in:%', '%【快訊】%', '%〔快訊〕%', '快訊%', '%突發%', 'Eilmeldung%', '%+++ Eil%', 'Última hora:%', 'ÚLTIMA HORA%', 'URGENTE:%', 'Urgente:%', "Ultim'ora%", 'ULTIM%ORA%', 'Alerte%', 'Plantão%', 'Breaking:%'];
+      const where = marks.map((_, i) => `title LIKE ?${i + 4}`).join(' OR ');
+      const { results } = await env.DB.prepare(`SELECT title, link, source, published_at, region FROM items WHERE collected_at >= ?1 AND tier IN ('A','B') AND field != '스포츠' AND (region = ?2 OR (region = 'GLB' AND lang = ?3)) AND (${where}) ORDER BY collected_at DESC LIMIT 40`).bind(since, region, lang || 'xx', ...marks).all().catch(() => ({ results: [] }));
+      const seen = new Set(), items = [];
+      for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at }); if (items.length >= 8) break; }
+      return json({ region, at: new Date().toISOString(), items }, 200, { 'cache-control': 'public, max-age=60' });
+    }
     if (url.pathname === '/items.json') {
       const since = url.searchParams.get('since') || new Date(Date.now() - 6 * 3600_000).toISOString();
       const { results } = await env.DB.prepare('SELECT * FROM items WHERE collected_at >= ?1 ORDER BY collected_at DESC LIMIT 2000').bind(since).all();
@@ -182,7 +194,7 @@ export default {
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
     if (url.pathname === '/') return page(env, url);
-    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
+    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/breaking.json?region=XX&lang=xx', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
     if (ev.cron === '* * * * *') { ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }

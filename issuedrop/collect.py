@@ -85,8 +85,19 @@ def _parse_date(s: str) -> dt.datetime | None:
     return None
 
 
+def _xml_fix(raw: bytes) -> bytes:
+    """깨진 피드 복구(연합뉴스 top 등): XML 금지 제어문자 제거, 엔티티가 아닌 맨 & 를 &amp; 로."""
+    t = raw.decode("utf-8", "replace")
+    t = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", t)
+    t = re.sub(r"&(?!(?:[A-Za-z][A-Za-z0-9]{1,31}|#[0-9]{1,7}|#x[0-9A-Fa-f]{1,6});)", "&amp;", t)
+    return t.encode("utf-8")
+
+
 def parse_feed(raw: bytes) -> list[dict]:
-    root = ET.fromstring(raw)
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError:
+        root = ET.fromstring(_xml_fix(raw))
     items = []
     tag = root.tag.lower()
     if tag.endswith("feed"):  # Atom
