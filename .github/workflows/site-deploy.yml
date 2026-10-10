@@ -42,7 +42,9 @@ jobs:
       - name: Tell search engines about published editions (IndexNow — Bing, Naver, Yandex, Seznam; non-fatal)
         run: |
           BODY=$(node -e "const S='https://dailydropnewspaper.com',K='7f0249be94d00919564c3e4df873f106',C=require('./site/countries.json');const e=require('./site/editions.json').filter(x=>!x.publish_at||Date.parse(x.publish_at)<=Date.now());const by={};for(const x of e){const r=x.region||'KR';if(!by[r]||by[r].date<x.date)by[r]=x}const pre=r=>{const c=C.find(z=>z.code===r);return c?c.prefix:r.toLowerCase()+'/'};const u=[S+'/'];for(const [r,x] of Object.entries(by)){u.push(S+'/'+pre(r),S+'/'+pre(r)+x.date+'/');for(const l of Object.keys(x.translations||{}))u.push(S+'/'+pre(r)+x.date+'/'+l+'/')}console.log(JSON.stringify({host:'dailydropnewspaper.com',key:K,keyLocation:S+'/'+K+'.txt',urlList:[...new Set(u)].slice(0,500)}))")
-          curl -sS -m 30 -o /dev/null -w "indexnow %{http_code}\n" -X POST https://api.indexnow.org/indexnow -H 'content-type: application/json; charset=utf-8' --data "$BODY" || echo "indexnow failed (non-fatal)"
+          curl -sS -m 15 -A 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)' -o /tmp/k.txt -w "keyfile %{http_code} %{content_type}\n" https://dailydropnewspaper.com/7f0249be94d00919564c3e4df873f106.txt && head -c 40 /tmp/k.txt && echo || true
+          curl -sS -m 30 -o /tmp/inx.txt -w "indexnow %{http_code}\n" -X POST https://api.indexnow.org/indexnow -H 'content-type: application/json; charset=utf-8' --data "$BODY" || echo "indexnow failed (non-fatal)"
+          head -c 300 /tmp/inx.txt 2>/dev/null; echo
       - name: Notify app users of a new edition (once per edition)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
