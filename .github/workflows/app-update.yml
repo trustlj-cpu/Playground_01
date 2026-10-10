@@ -1,0 +1,98 @@
+name: app-update
+
+# Native app (app-native/, Expo). Content never needs this workflow: the app reads the static JSON API
+# that every site deploy regenerates. This ships *code* changes:
+#  - push to app-mobile touching app-native/** → OTA update (EAS Update) to the production channel
+#  - manual run → store builds for iOS + Android (EAS Build, production profile)
+# Needs the repository secret EXPO_TOKEN (expo.dev → Access tokens). Without it every job skips with a notice.
+
+on:
+  push:
+    branches: [app-mobile]
+    paths:
+      - "app-native/**"
+      - ".github/workflows/app-update.yml"
+  workflow_dispatch:
+    inputs:
+      build:
+        description: "Run EAS Build (iOS + Android, production profile)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: app-update-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app-native
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Check EXPO_TOKEN
+        id: tok
+        working-directory: .
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::notice title=app-update skipped::EXPO_TOKEN secret is not set — OTA update not published."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.tok.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.tok.outputs.ok == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app-native/package-lock.json
+      - name: Install
+        if: steps.tok.outputs.ok == 'true'
+        run: npm ci
+      - name: Typecheck
+        if: steps.tok.outputs.ok == 'true'
+        run: npx tsc --noEmit
+      - name: Publish OTA update (production channel)
+        if: steps.tok.outputs.ok == 'true'
+        run: npx eas-cli update --auto --channel production --non-interactive
+
+  build:
+    if: github.event_name == 'workflow_dispatch' && inputs.build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app-native
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Check EXPO_TOKEN
+        id: tok
+        working-directory: .
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::notice title=app-build skipped::EXPO_TOKEN secret is not set — EAS Build not started."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.tok.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.tok.outputs.ok == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app-native/package-lock.json
+      - name: Install
+        if: steps.tok.outputs.ok == 'true'
+        run: npm ci
+      - name: Start EAS Build (iOS + Android)
+        if: steps.tok.outputs.ok == 'true'
+        run: npx eas-cli build --platform all --profile production --non-interactive --no-wait
