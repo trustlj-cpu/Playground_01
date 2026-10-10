@@ -140,7 +140,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
   const players = useRef<Partial<Record<Sfx, AudioPlayer>>>({});
 
   const ink = c.ink;
-  const dot = c.dark ? c.red : c.logoDot;
+  const dot = c.logoDot; // site/nyt.css --logo-dot: #9e0604 light, #d2654f dark
 
   const end = () => {
     setShow(false);

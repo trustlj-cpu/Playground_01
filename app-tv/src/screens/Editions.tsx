@@ -1,4 +1,5 @@
-// Past editions of the selected region as a focusable grid; OK opens that edition on Home.
+// Past editions = the web archive page (site/build.js /archive/: h1 + .card per edition, BASECSS),
+// laid out as a 3-column grid for the D-pad. OK opens that edition on Home.
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { langName } from '../shared/i18n';
@@ -8,8 +9,9 @@ import type { Region } from '../shared/types';
 import { tvStrings } from '../strings';
 import { useColors } from '../settings';
 import Focusable from '../tv/Focusable';
+import { cellWidth } from '../tv/grid';
 import { useBack } from '../tv/remote';
-import { useTV } from '../tv/scale';
+import { useWeb } from '../tv/web';
 
 export function longDate(date: string, lang: string) {
   try {
@@ -19,43 +21,45 @@ export function longDate(date: string, lang: string) {
   }
 }
 
-export default function Editions({ region, lang, current, onPick, onClose }: { region: Region; lang: string; current: string; onPick: (date: string) => void; onClose: () => void }) {
+export const EDITION_COLS = 3;
+
+export default function Editions({ region, lang, current, latest, onPick, onClose }: { region: Region; lang: string; current: string; latest?: string; onPick: (date: string) => void; onClose: () => void }) {
   const c = useColors();
-  const { u, padX, padY } = useTV();
+  const w = useWeb();
   const S = tvStrings(lang);
   useBack(() => {
     onClose();
     return true;
   });
-  const cols = 3;
-  const gap = 28 * u;
+  const gap = w.px(14); // .card{margin:14px 0}
+  const ring = w.px(4) + Math.max(2, w.px(2));
+  const cellW = cellWidth(w.CW - 2 * ring, EDITION_COLS, gap); // exact pixels: 3 cells + 2 gaps never wrap
+  const fb = w.fs(19);
   return (
     <View style={{ flex: 1, backgroundColor: c.paper }} testID="editions">
-      <ScrollView contentContainerStyle={{ paddingHorizontal: padX, paddingTop: padY, paddingBottom: padY + 40 * u }}>
-        <Text style={[sans(700), { fontSize: 24 * u, letterSpacing: 2 * u, color: c.red }]}>{regionName(region, lang).toUpperCase()}</Text>
-        <Text style={[serif(lang, 700), { fontSize: 64 * u, color: c.head, marginTop: 6 * u, marginBottom: 36 * u }]}>{S.archive}</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: w.padX + ring, paddingTop: w.padY, paddingBottom: w.padY + w.px(40) }}>
+        {/* main h1{font-size:30px;font-weight:900;letter-spacing:-.03em;line-height:1.25;margin:0 0 6px} */}
+        <Text style={[serif(lang, 700), { fontSize: w.fs(30), letterSpacing: w.ls(-0.03, w.fs(30)), lineHeight: w.fs(30) * 1.25, color: c.head, marginBottom: w.px(6) }]}>{S.archive}</Text>
+        <Text style={[sans(400), { fontSize: w.fs(13), color: c.mute, marginBottom: w.px(14) }]}>{regionName(region, lang)}</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }} testID="editions-grid">
           {region.editions.map((e, i) => {
-            const isLatest = e.date === region.latest.date;
+            const isLatest = e.date === (latest || region.latest.date);
             return (
-              <View key={e.date} style={{ width: `${(100 - 2) / cols}%` as any }}>
+              <View key={e.date} style={{ width: cellW }}>
                 <Focusable
                   autoFocus={e.date === current || (!region.editions.some((x) => x.date === current) && i === 0)}
                   onPress={() => onPick(e.date)}
-                  radius={10 * u}
                   testID={'edition-' + e.date}
-                  style={{ padding: 30 * u, minHeight: 190 * u, backgroundColor: c.paper2, borderWidth: Math.max(1, 1.5 * u), borderColor: e.date === current ? c.red : c.rule2 }}
+                  // .card{border:1px solid var(--rule);padding:16px 18px;background:rgba(0,0,0,.02)} :hover{border-color:var(--red)}
+                  style={{ paddingVertical: w.px(16), paddingHorizontal: w.px(18), backgroundColor: 'rgba(0,0,0,0.02)', borderWidth: w.hair, borderColor: e.date === current ? c.red : c.rule3 }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 * u }}>
-                    <Text style={[serif(lang, 700), { fontSize: 44 * u, color: c.head }]}>{S.app.edNo.replace('{n}', String(e.no))}</Text>
-                    {isLatest && (
-                      <Text style={[sans(700), { fontSize: 18 * u, letterSpacing: 1.4 * u, color: c.paper, backgroundColor: c.red, paddingHorizontal: 10 * u, paddingVertical: 3 * u, borderRadius: 4 * u, overflow: 'hidden' }]}>
-                        {S.tv.latestTag.toUpperCase()}
-                      </Text>
-                    )}
-                  </View>
-                  <Text style={[serif(lang), { fontSize: 28 * u, color: c.ink, marginTop: 10 * u }]}>{longDate(e.date, lang)}</Text>
-                  <Text style={[sans(400), { fontSize: 21 * u, color: c.mute, marginTop: 10 * u }]}>{e.langs.map(langName).join(' · ')}</Text>
+                  <Text style={[serif(lang, 700), { fontSize: fb, color: c.head, marginBottom: w.px(4) }]}>
+                    {S.app.edNo.replace('{n}', String(e.no))}
+                    {isLatest ? ' · ' + S.latest : ''}
+                  </Text>
+                  {/* .cdt{font-size:.8em;font-weight:400;margin-top:2px;opacity:.85} */}
+                  <Text style={[serif(lang), { fontSize: w.fs(19 * 0.8), color: c.ink, opacity: 0.85, marginTop: w.px(2) }]}>{longDate(e.date, lang)}</Text>
+                  <Text style={[sans(400), { fontSize: w.fs(13), color: c.mute, marginTop: w.px(4) }]}>{e.langs.map(langName).join(' · ')}</Text>
                 </Focusable>
               </View>
             );

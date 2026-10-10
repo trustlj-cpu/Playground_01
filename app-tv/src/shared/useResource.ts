@@ -1,7 +1,10 @@
-// Copied from app-native/src/lib/useResource.ts (DailyDrop phone app) for the TV app — keep in sync by hand.
+// Copied from app-native/src/lib/useResource.ts (DailyDrop phone app) for the TV app, then changed:
+// data is keyed by path (keyed.ts) — never shown under another path — and `fingerprint` lets a caller
+// ignore volatile fields when deciding whether a poll changed anything (no re-render, no cache write).
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { fetchJSON, readCache, writeCache } from './api';
+import { accept, emptySlot, MemCache, Slot, visible } from './keyed';
 
 export interface Resource<T> {
   data: T | null;
@@ -15,20 +18,42 @@ export interface Resource<T> {
 }
 
 const FOREGROUND_MIN_MS = 20_000;
+const mem = new MemCache<any>(12);
+
+/** Load `path` into the memory + device cache ahead of time (e.g. a new edition before swapping to it). */
+export async function prefetch(path: string): Promise<boolean> {
+  try {
+    const d = await fetchJSON(path);
+    mem.set(path, d);
+    writeCache(path, d);
+    return true;
+  } catch {
+    const c = await readCache(path);
+    if (c) mem.set(path, c.data, c.at);
+    return !!c;
+  }
+}
+
+export interface ResourceOpts<T> {
+  pollMs?: number;
+  /** identity used to decide whether new data differs (default: the whole JSON) */
+  fingerprint?: (d: T) => string;
+}
 
 /**
  * Stale-while-revalidate JSON loader: shows the cached copy immediately, then fetches
  * the network copy. Refetches when the app returns to the foreground and on refresh().
  */
-export function useResource<T>(path: string | null, opts: { pollMs?: number; keepPrevious?: boolean } = {}): Resource<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+export function useResource<T>(path: string | null, opts: ResourceOpts<T> = {}): Resource<T> {
+  const [slot, setSlot] = useState<Slot<T>>(emptySlot);
+  const [error, setError] = useState<{ key: string; e: Error } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [stale, setStale] = useState(false);
-  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const cur = useRef(path);
-  const raw = useRef<string>('');
+  const print = useRef<{ key: string | null; s: string }>({ key: null, s: '' });
   const last = useRef(0);
+  const fp = useRef(opts.fingerprint);
+  fp.current = opts.fingerprint;
+  cur.current = path;
 
   const load = useCallback(async () => {
     const p = cur.current;
@@ -38,44 +63,41 @@ export function useResource<T>(path: string | null, opts: { pollMs?: number; kee
     try {
       const d = await fetchJSON<T>(p);
       if (cur.current !== p) return;
-      const s = JSON.stringify(d);
-      if (s !== raw.current) {
-        raw.current = s;
-        setData(d);
+      const s = fp.current ? fp.current(d) : JSON.stringify(d);
+      if (print.current.key !== p || s !== print.current.s) {
+        print.current = { key: p, s };
+        mem.set(p, d);
         writeCache(p, d);
+        const at = Date.now();
+        setSlot((old) => accept(old, cur.current, p, d, at, false));
+      } else {
+        // unchanged: confirm the copy on screen (memory / device cache) without a new render when possible
+        setSlot((old) => (old.key === p ? (old.stale ? { ...old, stale: false } : old) : accept(old, cur.current, p, (mem.get(p)?.data as T) ?? d, Date.now(), false)));
       }
-      setError(null);
-      setStale(false);
-      setUpdatedAt(Date.now());
+      setError((e) => (e ? null : e));
     } catch (e) {
-      if (cur.current === p) setError(e as Error);
+      if (cur.current === p) setError({ key: p, e: e as Error });
     } finally {
       if (cur.current === p) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    cur.current = path;
-    raw.current = '';
-    if (!opts.keepPrevious) setData(null); // Latest keeps showing the old paper until the new edition arrives
-    setError(null);
-    setStale(false);
-    setUpdatedAt(null);
     if (!path) return;
     let alive = true;
-    readCache<T>(path).then((c) => {
-      if (!alive || cur.current !== path || !c || raw.current) return;
-      // (cache hit for the new path replaces any previous data immediately)
-      raw.current = JSON.stringify(c.data);
-      setData(c.data);
-      setStale(true);
-      setUpdatedAt(c.at);
-    });
+    const m = mem.get(path);
+    if (m) print.current = { key: path, s: fp.current ? fp.current(m.data) : JSON.stringify(m.data) };
+    else
+      readCache<T>(path).then((c) => {
+        if (!alive || cur.current !== path || !c || print.current.key === path) return;
+        print.current = { key: path, s: fp.current ? fp.current(c.data) : JSON.stringify(c.data) };
+        mem.set(path, c.data, c.at);
+        setSlot((old) => accept(old, cur.current, path, c.data, c.at, true));
+      });
     load();
     return () => {
       alive = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, load]);
 
   useEffect(() => {
@@ -93,5 +115,13 @@ export function useResource<T>(path: string | null, opts: { pollMs?: number; kee
     return () => clearInterval(t);
   }, [opts.pollMs, path, load]);
 
-  return { data, error, loading, stale, updatedAt, refresh: load };
+  const shown = visible(slot, path, mem);
+  return {
+    data: shown.data,
+    error: error && error.key === path ? error.e : null,
+    loading: loading && !!path,
+    stale: shown.stale,
+    updatedAt: shown.at,
+    refresh: load,
+  };
 }

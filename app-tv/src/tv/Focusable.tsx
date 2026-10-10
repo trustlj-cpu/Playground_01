@@ -1,12 +1,14 @@
-// A focusable, pressable surface for the remote: scales up slightly and draws a red focus ring when focused.
+// A focusable, pressable surface for the remote. Focus looks like the web's keyboard focus
+// (edition CSS `.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}`), scaled (tv/web.ts).
 // Native TV: Pressable is focusable by the tvOS / Android TV focus engine; `autoFocus` maps to hasTVPreferredFocus.
 // Web: react-native-web renders it with tabindex=0, keysource.ts moves focus between them with the arrow keys,
 // and `autoFocus` focuses the element in an effect.
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useColors } from '../settings';
+import { markActivity } from './activity';
 import { reveal } from './keysource';
-import { useTV } from './scale';
+import { useWeb } from './web';
 
 export interface FocusableProps {
   onPress?: () => void;
@@ -26,9 +28,9 @@ export interface FocusableProps {
 
 const native = Platform.OS !== 'web';
 
-export default function Focusable({ onPress, onFocus, onBlur, autoFocus, style, focusedStyle, scale = 1.04, radius = 6, ring = true, label, testID, children }: FocusableProps) {
+export default function Focusable({ onPress, onFocus, onBlur, autoFocus, style, focusedStyle, scale = 1, radius = 0, ring = true, label, testID, children }: FocusableProps) {
   const c = useColors();
-  const { u } = useTV();
+  const w = useWeb();
   const [focused, setFocused] = useState(false);
   const s = useRef(new Animated.Value(1)).current;
   const ref = useRef<View>(null);
@@ -48,7 +50,8 @@ export default function Focusable({ onPress, onFocus, onBlur, autoFocus, style, 
     }
   }, [autoFocus]);
 
-  const inset = -Math.max(5, 7 * u);
+  const ringW = Math.max(2, Math.round(w.px(2)));
+  const inset = -(w.px(4) + ringW);
   return (
     <Pressable
       ref={ref}
@@ -58,6 +61,7 @@ export default function Focusable({ onPress, onFocus, onBlur, autoFocus, style, 
       hasTVPreferredFocus={!!autoFocus}
       onFocus={() => {
         setFocused(true);
+        markActivity(); // a focus change is activity (lean-back idle timer)
         onFocus?.();
       }}
       onBlur={() => {
@@ -72,7 +76,7 @@ export default function Focusable({ onPress, onFocus, onBlur, autoFocus, style, 
         {ring && focused && (
           <View
             pointerEvents="none"
-            style={[styles.ring, { top: inset, left: inset, right: inset, bottom: inset, borderRadius: radius + 4, borderWidth: Math.max(3, 4 * u), borderColor: c.red }]}
+            style={[styles.ring, { top: inset, left: inset, right: inset, bottom: inset, borderRadius: radius ? radius + w.px(4) : 0, borderWidth: ringW, borderColor: c.red }]}
           />
         )}
       </Animated.View>

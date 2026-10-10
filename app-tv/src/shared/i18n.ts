@@ -164,3 +164,10 @@ export function langName(lang: string): string {
 }
 
 export const fmt = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));
+
+/** Any plain string from the website's ui block (e.g. editionShort "제{n}호 · 아침판", langcode "KOR"). */
+export function uiText(lang: string, key: string): string {
+  const ui = S.ui[lang] || S.ui[base(lang)] || {};
+  const v = ui[key] ?? S.ui.en[key];
+  return typeof v === 'string' ? v : '';
+}

@@ -9,10 +9,11 @@ const src = fs.readFileSync(path.join(__dirname, '../src/shared/logoPath.ts'), '
 const LOGO_PATH = src.match(/LOGO_PATH =\s*'([^']+)'/)[1];
 const DOT = JSON.parse(src.match(/LOGO_DOT = (\{[^}]+\})/)[1].replace(/(\w+):/g, '"$1":'));
 const OUT = path.join(__dirname, '../assets/tv');
-const BG = '#14130f', INK = '#f3eee3', RED = '#e2765f', PAPER = '#ece4d8';
+const BG = '#14130f', INK = '#f3eee3', DOT_DARK = '#d2654f', PAPER = '#ece4d8'; // site/nyt.css dark tokens (--logo-dot #d2654f)
 
 // [file, width, height, logo width as a fraction of the image width, tagline?]
 const JOBS = [
+  ['splash-logo.png', 880, 240, 0.98, false], // launch screen (app.json expo-splash-screen, same dark paper)
   ['android-banner-320x180.png', 320, 180, 0.78, false],
   ['android-icon-512.png', 512, 512, 0.8, false],
   ['icon-1280x768.png', 1280, 768, 0.72, false],
@@ -30,7 +31,7 @@ function html(w, h, frac, tagline) {
   const lw = Math.round(w * frac), lh = Math.round((lw * 243) / 894);
   const rule = Math.max(2, Math.round(h / 180));
   return `<!doctype html><html><body style="margin:0;width:${w}px;height:${h}px;background:${BG};display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif">
-  <svg width="${lw}" height="${lh}" viewBox="0 0 894 243"><path d="${LOGO_PATH}" fill="${INK}"/><circle cx="${DOT.cx}" cy="${DOT.cy}" r="${DOT.r}" fill="${RED}"/></svg>
+  <svg width="${lw}" height="${lh}" viewBox="0 0 894 243"><path d="${LOGO_PATH}" fill="${INK}"/><circle cx="${DOT.cx}" cy="${DOT.cy}" r="${DOT.r}" fill="${DOT_DARK}"/></svg>
   ${tagline ? `<div style="margin-top:${Math.round(h * 0.05)}px;border-top:${rule}px solid ${PAPER}55;border-bottom:${rule}px solid ${PAPER}55;padding:${Math.round(h * 0.012)}px ${Math.round(w * 0.02)}px;color:${PAPER};font-size:${Math.round(h * 0.045)}px;letter-spacing:${Math.round(h * 0.006)}px">THE MORNING FRONT PAGE · 06:00</div>` : ''}
   </body></html>`;
 }

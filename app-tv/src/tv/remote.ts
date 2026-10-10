@@ -4,29 +4,21 @@
 //    focus engine moves focus (tvOS / Android TV), or on the web the spatial-navigation layer in keysource.ts.
 //  - Back (Android TV back, tvOS Menu, Escape/Backspace on the web) goes to the top-most useBack handler.
 //    With none registered the platform default runs (tvOS Menu / Android back leave the app on Home).
-//  - Every key counts as activity (used by the lean-back idle timer).
+//  - Every key, focus change and return to the foreground counts as activity (lean-back idle timer, activity.ts).
+//  - At the root nothing is registered, so tvOS Menu / Android Back leave the app (Apple requirement:
+//    Menu on the root screen must exit). Only screens that can go back register a useBack handler.
 import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
+import { getLastActivity, markActivity, onActivity, resetOnForeground } from './activity';
 import { installKeySource, setMenuKeyCaptured } from './keysource';
+
+export { getLastActivity, markActivity, onActivity };
 
 export type RemoteKey = 'up' | 'down' | 'left' | 'right' | 'select' | 'playPause' | 'other';
 type Entry<T> = { fn: { current: T } };
 
 const keyStack: Entry<(k: RemoteKey) => boolean>[] = [];
 const backStack: Entry<() => boolean>[] = [];
-const activityListeners = new Set<() => void>();
-let lastActivity = Date.now();
-
-export function markActivity() {
-  lastActivity = Date.now();
-  activityListeners.forEach((l) => l());
-}
-export const getLastActivity = () => lastActivity;
-export function onActivity(l: () => void): () => void {
-  activityListeners.add(l);
-  return () => {
-    activityListeners.delete(l);
-  };
-}
 
 function dispatchKey(k: RemoteKey): boolean {
   const top = keyStack[keyStack.length - 1];
@@ -72,5 +64,12 @@ export function useBack(handler: () => boolean, active = true) {
 
 /** Mount once at the root. */
 export function useRemoteSource() {
-  useEffect(() => installKeySource({ key: dispatchKey, back: dispatchBack, activity: markActivity }), []);
+  useEffect(() => {
+    const off = installKeySource({ key: dispatchKey, back: dispatchBack, activity: markActivity });
+    const offFg = resetOnForeground(AppState); // returning to the app restarts the idle clock
+    return () => {
+      off();
+      offFg();
+    };
+  }, []);
 }

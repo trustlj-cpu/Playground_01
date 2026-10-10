@@ -23,9 +23,19 @@ export function findRegion(index: Index | null, code: string): Region | undefine
   return index?.regions.find((r) => r.code === code) || index?.regions[0];
 }
 
+/** Languages a region actually publishes in (the latest edition's languages; index `langs` may list
+ *  planned ones with no edition yet, e.g. CH fr/it), in the region's order. */
+export function availableLangs(region: Region): string[] {
+  const latest = region.editions.find((e) => e.date === region.latest.date) || region.editions[0];
+  const have = new Set(latest?.langs?.length ? latest.langs : region.editions.flatMap((e) => e.langs || []));
+  const out = region.langs.filter((l) => have.has(l));
+  have.forEach((l) => !out.includes(l) && out.push(l));
+  return out.length ? out : region.langs;
+}
+
 /** Language to read an edition in: the chosen one if that edition has it, else the region's first language. */
 export function pickLang(region: Region, ref: Pick<EditionRef, 'langs'> | undefined, want: string): string {
-  const langs = ref?.langs?.length ? ref.langs : region.langs;
+  const langs = ref?.langs?.length ? ref.langs : availableLangs(region);
   if (langs.includes(want)) return want;
   const base = want.split('-')[0];
   const near = langs.find((l) => l.split('-')[0] === base);

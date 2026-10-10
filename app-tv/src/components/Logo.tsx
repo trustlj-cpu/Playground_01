@@ -9,7 +9,7 @@ export default function Logo({ width, color, dot }: { width: number; color?: str
   return (
     <Svg width={width} height={(width * 243) / 894} viewBox="0 0 894 243" accessibilityLabel="DailyDrop.">
       <Path d={LOGO_PATH} fill={color || c.head} />
-      <Circle cx={LOGO_DOT.cx} cy={LOGO_DOT.cy} r={LOGO_DOT.r} fill={dot || (c.dark ? c.red : c.logoDot)} />
+      <Circle cx={LOGO_DOT.cx} cy={LOGO_DOT.cy} r={LOGO_DOT.r} fill={dot || c.logoDot} />
     </Svg>
   );
 }

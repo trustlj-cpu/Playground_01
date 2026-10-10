@@ -1,5 +1,6 @@
 // Copied from app-native/src/lib/theme.ts (DailyDrop phone app) for the TV app — keep in sync by hand.
-// Design tokens copied from the website (site/nyt.css): warm newsprint, black ink, brick-red accent.
+// Design tokens copied from the website (site/nyt.css, light and dark): warm newsprint, black ink, brick-red accent.
+// Web is the only design source (ops/app/DESIGN_RULE.md) — sizes live in src/tv/web.ts, scaled from web CSS px.
 import { Platform, TextStyle } from 'react-native';
 
 export interface Palette {
@@ -14,6 +15,13 @@ export interface Palette {
   head: string; // headline ink (slightly brighter than body in dark mode)
   logoDot: string;
   scrim: string;
+  /** web .pop / .tip / .brkl .bp background and border (nyt.css: dark → paper-2 + #3a352d, light → paper + ink) */
+  popBg: string;
+  popBorder: string;
+  /** web .brkl scrim (build.js BREAK) */
+  scrim2: string;
+  /** rules on the archive / settings pages (build.js BASECSS --rule: #b9b1a0 light, #4a443a dark) */
+  rule3: string;
   dark: boolean;
 }
 
@@ -24,11 +32,15 @@ export const light: Palette = {
   ink2: '#363636',
   mute: '#6f6f6f',
   rule: '#121212',
-  rule2: '#d2c9ba',
+  rule2: '#dcdcdc',
   red: '#8d2f22',
   head: '#121212',
   logoDot: '#9e0604',
   scrim: 'rgba(20,18,14,0.55)',
+  popBg: '#ece4d8',
+  popBorder: '#121212',
+  scrim2: 'rgba(0,0,0,0.45)',
+  rule3: '#b9b1a0',
   dark: false,
 };
 
@@ -43,7 +55,11 @@ export const dark: Palette = {
   red: '#e2765f',
   head: '#f3eee3',
   logoDot: '#d2654f',
-  scrim: 'rgba(0,0,0,0.6)',
+  scrim: 'rgba(20,18,14,0.55)',
+  popBg: '#1c1a15',
+  popBorder: '#3a352d',
+  scrim2: 'rgba(0,0,0,0.45)',
+  rule3: '#4a443a',
   dark: true,
 };
 
@@ -55,6 +71,9 @@ export const FONT_FILES = {
   NotoSerifKR_700Bold: require('../../assets/fonts/NotoSerifKR_700Bold.otf'),
   NotoSerifJP_400Regular: require('../../assets/fonts/NotoSerifJP_400Regular.otf'),
   NotoSerifJP_700Bold: require('../../assets/fonts/NotoSerifJP_700Bold.otf'),
+  // zh-TW: Big5 level-1 + every character of the TW editions (scripts/subset-tc-font.py)
+  NotoSerifTC_400Regular: require('../../assets/fonts/NotoSerifTC_400Regular.otf'),
+  NotoSerifTC_700Bold: require('../../assets/fonts/NotoSerifTC_700Bold.otf'),
   NotoSerif_400Regular: require('../../assets/fonts/NotoSerif_400Regular.otf'),
   NotoSerif_700Bold: require('../../assets/fonts/NotoSerif_700Bold.otf'),
   NotoSerif_400Regular_Italic: require('../../assets/fonts/NotoSerif_400Regular_Italic.otf'),
@@ -63,7 +82,8 @@ export const FONT_FILES = {
 const familyFor = (lang: string) => {
   const l = (lang || '').toLowerCase();
   if (l.startsWith('ko')) return 'NotoSerifKR';
-  if (l.startsWith('ja') || l.startsWith('zh')) return 'NotoSerifJP';
+  if (l.startsWith('zh')) return 'NotoSerifTC'; // the JP subset lacked ~5% of a TW edition's characters
+  if (l.startsWith('ja')) return 'NotoSerifJP';
   if (/^(hi|th|ar|he|uk)/.test(l)) return null; // scripts the bundled serifs don't cover → system serif fallback
   return 'NotoSerif';
 };
@@ -83,11 +103,16 @@ export function sans(weight: 400 | 600 | 700 = 400): TextStyle {
 /** Languages whose lines may break between any two characters (CJK). */
 export const isCJK = (lang: string) => /^(ko|ja|zh)/.test(lang || '');
 
-/** Paragraph alignment like the web: justified with syllable-level breaks for Korean/Japanese/Chinese.
- *  Latin text is justified only where the platform hyphenates (Android); elsewhere ragged-right avoids rivers. */
+/** Paragraph alignment like the web (nyt.css): justified, Korean breaks between syllables, Japanese/Chinese
+ *  keep kinsoku (line-break strict). Latin text is justified only *with* hyphenation, as on the web
+ *  (hyphens:auto): web and Android TV hyphenate (hyphenationFrequency), tvOS can't → left-aligned there. */
 export function para(lang: string): TextStyle {
   if (isCJK(lang)) {
     return Platform.OS === 'web' ? ({ textAlign: 'justify', wordBreak: lang.startsWith('ko') ? 'break-all' : 'normal', lineBreak: 'strict' } as TextStyle) : { textAlign: 'justify' };
   }
-  return Platform.OS === 'android' ? { textAlign: 'justify' } : { textAlign: 'left' };
+  if (Platform.OS === 'web') return { textAlign: 'justify', hyphens: 'auto' } as TextStyle;
+  return Platform.OS === 'android' ? ({ textAlign: 'justify', textBreakStrategy: 'highQuality' } as TextStyle) : { textAlign: 'left' };
 }
+
+/** Text props that go with para(): Android hyphenates justified Latin text (otherwise word gaps open up). */
+export const paraProps = (lang: string) => (Platform.OS === 'android' && !isCJK(lang) ? ({ android_hyphenationFrequency: 'full' } as const) : {});

@@ -36,14 +36,18 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-/** Bring a newly focused element into view like a TV list: things near the top of a page snap the page
- *  to its top (so the masthead stays visible), everything else is centred. */
+/** Bring a newly focused element into view like a TV list: anything that starts on the first screen
+ *  snaps the page to its top (so the menu and masthead stay visible); an element taller than most of the
+ *  screen (the lead story) is shown from its top; everything else is centred. */
 export function reveal(el: HTMLElement, smooth = true) {
   const sp = scrollParent(el);
   if (!sp) return;
-  const top = el.getBoundingClientRect().top - sp.getBoundingClientRect().top + sp.scrollTop;
+  const r = el.getBoundingClientRect();
+  const top = r.top - sp.getBoundingClientRect().top + sp.scrollTop;
   const behavior = smooth ? 'smooth' : 'auto';
-  if (top < sp.clientHeight * 0.5) sp.scrollTo({ top: 0, behavior });
+  const vh = sp.clientHeight;
+  if (top + Math.min(r.height, vh * 0.35) < vh) sp.scrollTo({ top: 0, behavior });
+  else if (r.height > vh * 0.8) sp.scrollTo({ top: Math.max(0, top - vh * 0.08), behavior });
   else el.scrollIntoView({ block: 'center', inline: 'nearest', behavior });
 }
 
