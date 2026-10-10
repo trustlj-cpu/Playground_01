@@ -10,13 +10,16 @@ npm install
 npm start                    # 실제 API (EXPO_PUBLIC_API_BASE, 기본 production)
 npm run start:fixtures       # fixtures/app/v1 로컬 데이터 (EXPO_PUBLIC_USE_FIXTURES=1)
 npm run typecheck
+npm test                     # jest-expo + Testing Library (src/__tests__)
+npm run lint                 # expo lint (eslint-config-expo)
 ```
 환경변수는 `.env.example` 참고. fixtures는 `EXPO_PUBLIC_USE_FIXTURES=1`일 때만 번들에 들어갑니다(metro.config.js).
 
 ## 구조
 - `src/app/` — 화면(expo-router): `(tabs)/index` 최신호 · `archive` 지난 호 · `glossary` 용어사전 · `bookmarks` 북마크 · `settings` 설정, `edition/[region]/[date]` 지난 호 지면
 - `src/components/` — 제호(Masthead), 속보 띠(BreakingBar)·목록, 기사 카드, 기사 시트(팝업: 닫기 버튼 없음 — 바깥 탭·아래로 스와이프), 용어 툴팁, 블록 HTML 렌더러(허용 태그만), 인플루언서 상자
-- `src/lib/` — API·캐시(`api.ts`, `useResource.ts`), 설정(국가판·언어·글자 크기·테마), 북마크(AsyncStorage), 용어 매칭(웹 linkTerms와 같은 규칙)
+- `src/lib/` — API·캐시(`api.ts`, `useResource.ts`; 응답 모양 검사 `normalize.ts`; 캐시 파일 저장 `cacheStore.ts` — 기기의 문서 폴더
+  `dd-cache/`, 합계 40 MB를 넘으면 오래된 것부터 지움. AsyncStorage에는 작은 목록만), 설정(국가판·언어·글자 크기·테마), 북마크(AsyncStorage), 용어 매칭(웹 linkTerms와 같은 규칙)
 - `src/i18n/site.json` — 웹에서 뽑은 문구(팝업 라벨 국가판·언어별, 메뉴·설정·용어사전 문구). 갱신: `node scripts/from-site.js i18n ../site`
 - `src/components/Intro.tsx` — 시작 화면(타자기 제호 애니메이션), `assets/sfx/` — 효과음(CC0, 출처 `assets/sfx/SOURCES.md`)
 - `src/lib/account.ts` — 웹 계정 로그인·북마크 API(기능 플래그, 아래 "계정 연동")
@@ -28,9 +31,17 @@ npm run typecheck
 1. expo.dev에서 프로젝트를 만들고 이 폴더에서 `npx eas-cli init` → `npx eas-cli update:configure`
    (`app.json`의 `updates.url` 자리표시자 `REPLACE-WITH-EAS-PROJECT-ID`와 `extra.eas.projectId`가 채워집니다)
 2. GitHub 저장소 시크릿 `EXPO_TOKEN` 추가(expo.dev → Access tokens)
-3. 이후 `app-mobile` 브랜치에 `app-native/**` 변경을 push하면 `.github/workflows/app-update.yml`이 production 채널로 OTA 업데이트를 올리고,
-   Actions에서 수동 실행하면 iOS·Android 스토어 빌드를 시작합니다. 시크릿이 없으면 건너뜁니다.
-- `runtimeVersion`은 `appVersion` 정책: 네이티브 모듈을 바꾸면 `version`을 올리고 스토어 빌드를 새로 내야 합니다.
+3. 이후 `app-mobile` 브랜치에 `app-native/**` 변경을 push하면 `.github/workflows/app-update.yml`이 타입검사·린트·테스트 후
+   **preview** 채널로 OTA 업데이트를 올립니다. **production** 채널 OTA와 iOS·Android 스토어 빌드는 Actions에서 수동 실행(체크박스)할 때만.
+   시크릿이 없으면 게시 단계만 건너뜁니다(EXPO_TOKEN은 EAS를 부르는 단계에만 전달).
+- `runtimeVersion`은 `fingerprint` 정책: 네이티브 코드(모듈·app.json 네이티브 설정)가 바뀌면 런타임 버전이 저절로 달라져,
+  그 OTA는 새 스토어 빌드에만 내려갑니다(예전 빌드에 맞지 않는 JS가 내려가 앱이 죽는 일 방지).
+- 앱 식별자: iOS `bundleIdentifier`·Android `package` = `com.dailydropnewspaper.app`(site/app.json과 같음).
+- 유니버설 링크/앱 링크: iOS `associatedDomains`=`applinks:dailydropnewspaper.com`, Android `intentFilters`(autoVerify) =
+  `/20…`(호별), `/`, `/archive/`, `/glossary/` — 사이트 AASA와 같은 경로. 들어온 웹 주소는 `src/app/+native-intent.tsx`가 앱 화면으로 바꿉니다.
+  지금 `https://dailydropnewspaper.com/.well-known/apple-app-site-association`·`assetlinks.json`이 404인 것은 정상입니다:
+  `site/build.js`는 Apple Team ID와 Android 서명 SHA-256이 `site/app.json`에 채워진 뒤에만 그 파일을 만듭니다(개발자 계정 개설 후).
+  그 전까지는 링크가 브라우저로 열립니다.
 - eas.json 프로필: development / preview / production, 채널은 프로필 이름과 같음.
 
 ## 글꼴 크기 줄이기 (assets/fonts)
