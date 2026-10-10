@@ -8,7 +8,7 @@ export default function ScreenTitle({ title, sub, lang, right }: { title: string
   return (
     <View style={[styles.wrap, { borderBottomColor: c.ink }]}>
       <View style={styles.row}>
-        <Text style={[serif(lang, 700), styles.h1, { color: c.head }]} accessibilityRole="header">
+        <Text style={[serif(lang, 700), styles.h1, { color: c.head }]} accessibilityRole="header" maxFontSizeMultiplier={1.3}>
           {title}
         </Text>
         {right}

@@ -1,6 +1,6 @@
 // Bottom sheet used for the article popup and the breaking-news list.
 // Owner rule: no close button — it closes by tapping outside (the dimmed area) or swiping down.
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, PanResponder, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SHEET_MAX } from '../lib/layout';
@@ -27,8 +27,8 @@ export default function Sheet({ onClose, children, contentKey, label, fit }: Pro
   const card = W >= 700;
   const cardW = Math.min(SHEET_MAX, W - 48);
   const vMargin = Math.max(insets.top + 24, Math.round(H * 0.08));
-  const y = useRef(new Animated.Value(H)).current;
-  const fade = useRef(new Animated.Value(0)).current;
+  const [y] = useState(() => new Animated.Value(H));
+  const [fade] = useState(() => new Animated.Value(0));
   const scrollY = useRef(0);
   const closing = useRef(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -55,21 +55,27 @@ export default function Sheet({ onClose, children, contentKey, label, fit }: Pro
     ]).start(() => onClose());
   }, [y, fade, H, onClose]);
 
-  const pan = useRef(
+  // the responder is created once; it calls the current close() (H changes on rotation / fold)
+  const closeRef = useRef(close);
+  useEffect(() => {
+    closeRef.current = close;
+  }, [close]);
+  // eslint-disable-next-line react-hooks/refs -- refs are only read inside the gesture callbacks, not during render
+  const [pan] = useState(() =>
     PanResponder.create({
       onMoveShouldSetPanResponderCapture: (_, g) => scrollY.current <= 0 && g.dy > 8 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5,
       onMoveShouldSetPanResponder: (_, g) => scrollY.current <= 0 && g.dy > 8 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5,
       onPanResponderMove: (_, g) => y.setValue(Math.max(0, g.dy)),
       onPanResponderRelease: (_, g) => {
-        if (g.dy > 110 || g.vy > 1.1) close();
+        if (g.dy > 110 || g.vy > 1.1) closeRef.current();
         else Animated.spring(y, { toValue: 0, useNativeDriver: NATIVE, damping: 24, stiffness: 260 }).start();
       },
       onPanResponderTerminate: () => Animated.spring(y, { toValue: 0, useNativeDriver: NATIVE }).start(),
     }),
-  ).current;
+  );
 
   return (
-    <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
+    <View style={StyleSheet.absoluteFill} accessibilityViewIsModal onAccessibilityEscape={close}>
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: c.scrim, opacity: fade }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityRole="button" accessibilityLabel={label} />
       </Animated.View>

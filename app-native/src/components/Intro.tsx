@@ -6,7 +6,7 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
-import Animated, { Easing, type SharedValue, cancelAnimation, interpolateColor, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, type SharedValue, cancelAnimation, interpolateColor, runOnJS, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, ClipPath, Defs, Path, Rect as SvgRect } from 'react-native-svg';
 import { getIntroTarget, onIntroTarget, type Rect } from '../lib/introTarget';
 import { useSettings } from '../lib/settings';
@@ -148,7 +148,10 @@ function Letter({ i, clock, k, W, H, ink, dot }: { i: number; clock: SharedValue
 
 export default function Intro() {
   const { settings, colors: c } = useSettings();
-  const [show, setShow] = useState(() => settings.intro && !playedThisLaunch);
+  // reduced motion is known synchronously here, so the cover never flashes up (the async check below
+  // still catches a change made since start-up)
+  const reduced = useReducedMotion();
+  const [show, setShow] = useState(() => settings.intro && !playedThisLaunch && !reduced);
   const { width: sw, height: sh } = useWindowDimensions();
   const W = Math.min(330, sw * 0.84); // min(330px, 84vw)
   const H = (W * 243) / 894;
@@ -165,8 +168,9 @@ export default function Intro() {
   const finished = useRef(false);
   const players = useRef<Partial<Record<Sfx, AudioPlayer>>>({});
 
-  const ink = c.ink;
-  const dot = c.dark ? c.red : c.logoDot; // splash.js: #9e0604 light, #e2765f dark
+  // the same tokens as the masthead wordmark it rises into (Masthead.Logo), so nothing changes colour at hand-over
+  const ink = c.head;
+  const dot = c.logoDot;
   const paper = c.paper;
   const clear = paper.length === 7 ? paper + '00' : 'transparent';
 
@@ -220,6 +224,7 @@ export default function Intro() {
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
       timers.current.forEach(clearTimeout);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- intended: the players created by this run of the effect
       const ps = players.current;
       setTimeout(() => Object.values(ps).forEach((p) => p?.remove()), 1500); // let the full stop ring out
     };

@@ -28,6 +28,7 @@ function PaperTabBar({ state, navigation }: BottomTabBarProps) {
           <Pressable
             key={r.key}
             accessibilityRole="tab"
+            accessibilityLabel={labels[r.name] || r.name}
             accessibilityState={{ selected: on }}
             onPress={() => {
               const e = navigation.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
@@ -37,6 +38,7 @@ function PaperTabBar({ state, navigation }: BottomTabBarProps) {
           >
             <Text
               numberOfLines={1}
+              maxFontSizeMultiplier={1.5} // five labels in one row: beyond 1.5× they would be cut off ("Bookm…")
               style={[
                 serif(settings.lang, on ? 700 : 400),
                 styles.label,

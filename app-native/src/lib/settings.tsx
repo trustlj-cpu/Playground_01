@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
+import { warnWrite } from './cacheStore';
+import { editionForLocale } from './locale';
 import { dark, light, Palette } from './theme';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
@@ -17,15 +19,29 @@ export interface Settings {
 
 const KEY = 'dd.settings.v1';
 
-/** First run: device language decides the edition (ko → KR, ja → JP, otherwise US), like the existing app. */
+/** First run: the device locale decides the edition and reading language (src/lib/locale.ts). */
 export function firstRunDefaults(): Settings {
-  let code = 'en';
+  let ed = { region: 'US', lang: 'en' };
   try {
-    code = (getLocales()[0]?.languageCode || 'en').toLowerCase();
+    const l = getLocales()[0];
+    ed = editionForLocale(l?.languageCode, l?.regionCode, l?.languageScriptCode);
   } catch {}
-  if (code === 'ko') return { region: 'KR', lang: 'ko', textScale: 1, theme: 'system', intro: true, introSound: true };
-  if (code === 'ja') return { region: 'JP', lang: 'ja', textScale: 1, theme: 'system', intro: true, introSound: true };
-  return { region: 'US', lang: 'en', textScale: 1, theme: 'system', intro: true, introSound: true };
+  return { ...ed, textScale: 1, theme: 'system', intro: true, introSound: true };
+}
+
+/** Stored settings over the defaults, field by field: a value of the wrong type (older app version,
+ *  damaged storage) keeps the default instead of turning every font size into NaN. */
+export function sanitize(base: Settings, v: unknown): Settings {
+  if (!v || typeof v !== 'object') return base;
+  const o = v as Record<string, unknown>;
+  const out = { ...base };
+  if (typeof o.region === 'string' && o.region) out.region = o.region;
+  if (typeof o.lang === 'string' && o.lang) out.lang = o.lang;
+  if (typeof o.textScale === 'number' && isFinite(o.textScale)) out.textScale = Math.min(1.3, Math.max(0.85, o.textScale));
+  if (o.theme === 'system' || o.theme === 'light' || o.theme === 'dark') out.theme = o.theme;
+  if (typeof o.intro === 'boolean') out.intro = o.intro;
+  if (typeof o.introSound === 'boolean') out.introSound = o.introSound;
+  return out;
 }
 
 interface Ctx {
@@ -45,7 +61,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(KEY)
       .then((raw) => {
-        if (raw) setSettings((s) => ({ ...s, ...JSON.parse(raw) }));
+        if (raw) setSettings((s) => sanitize(s, JSON.parse(raw)));
       })
       .catch(() => {})
       .finally(() => setReady(true));
@@ -54,7 +70,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const update = useCallback((patch: Partial<Settings>) => {
     setSettings((s) => {
       const next = { ...s, ...patch };
-      AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(() => {});
+      AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(warnWrite('settings'));
       return next;
     });
   }, []);

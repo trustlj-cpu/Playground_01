@@ -9,7 +9,7 @@ import { linkTerms } from '../lib/terms';
 import { para, sans, serif } from '../lib/theme';
 import type { Edition, Story } from '../lib/types';
 import Kick from './Kick';
-import { useOverlay } from './Overlay';
+import { useOverlay } from './overlayContext';
 import RichText, { TermTap } from './RichText';
 
 export default function ArticleView({ edition, story }: { edition: Edition; story: Story }) {
@@ -21,8 +21,8 @@ export default function ArticleView({ edition, story }: { edition: Edition; stor
   const lang = edition.lang;
   const L = popupLabels(edition.region, lang);
   const S = strings(lang);
-  const p = story.popup || {};
-  const key = articleKey(edition.region, edition.date, lang, story.id);
+  const p = useMemo(() => story.popup || {}, [story]);
+  const key = articleKey(edition.region, edition.date, story.id);
   const on = bm.hasArticle(key);
   const justify = para(lang);
 
@@ -35,7 +35,7 @@ export default function ArticleView({ edition, story }: { edition: Edition; stor
   }, [edition, story, p]);
 
   const onTerm = (t: TermTap) => {
-    const entry = edition.glossary[t.term];
+    const entry = edition.glossary?.[t.term];
     if (entry) showTerm({ term: t.term, entry, x: t.x, y: t.y, region: edition.region, lang, date: edition.date });
   };
 
@@ -52,7 +52,7 @@ export default function ArticleView({ edition, story }: { edition: Edition; stor
           onPress: () => bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl, url: webPath(edition.url) }),
         }}
       />
-      <RichText segs={segs.title} onTerm={onTerm} style={[serif(lang, 700), styles.title, cls !== 'phone' && styles.titleL, { color: c.head }]} />
+      <RichText segs={segs.title} onTerm={onTerm} maxScale={1.3} style={[serif(lang, 700), styles.title, cls !== 'phone' && styles.titleL, { color: c.head }]} />
       {!!p.what && (
         <>
           {lab(L.what)}

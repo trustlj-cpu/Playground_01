@@ -15,15 +15,18 @@ export default function RichText({
   style,
   onTerm,
   selectable,
+  maxScale = 1.6,
 }: {
   segs: Seg[];
   style?: StyleProp<TextStyle>;
   onTerm?: (t: TermTap) => void;
   selectable?: boolean;
+  /** cap on the OS text size: reading text may grow a lot, headlines less (they are large to begin with) */
+  maxScale?: number;
 }) {
   const c = useColors();
   return (
-    <Text style={style} selectable={selectable} android_hyphenationFrequency="normal">
+    <Text style={style} selectable={selectable} android_hyphenationFrequency="normal" maxFontSizeMultiplier={maxScale}>
       {segs.map((s, i) =>
         s.term && onTerm ? (
           <Text

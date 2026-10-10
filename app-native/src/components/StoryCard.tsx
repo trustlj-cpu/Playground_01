@@ -8,7 +8,7 @@ import { linkTerms } from '../lib/terms';
 import { isCJK, para, sans, serif } from '../lib/theme';
 import type { Edition, Story } from '../lib/types';
 import Kick from './Kick';
-import { useOverlay } from './Overlay';
+import { useOverlay } from './overlayContext';
 import RichText, { TermTap } from './RichText';
 
 /** Headline / dek / body type sizes for a story card (shared with the height estimate). */
@@ -41,7 +41,7 @@ function StoryCard({ edition, story, lead, textCols = 1 }: { edition: Edition; s
   const { cls } = useLayout();
   const width = useColumnWidth();
   const lang = edition.lang;
-  const key = articleKey(edition.region, edition.date, lang, story.id);
+  const key = articleKey(edition.region, edition.date, story.id);
   const on = bm.hasArticle(key);
   const S = strings(lang);
   const indent = isCJK(lang) ? '\u3000' : '\u2003'; // 1em first-line indent (web: text-indent:1em)
@@ -62,15 +62,22 @@ function StoryCard({ edition, story, lead, textCols = 1 }: { edition: Edition; s
   }, [edition, story, split]);
 
   const onTerm = (t: TermTap) => {
-    const entry = edition.glossary[t.term];
+    const entry = edition.glossary?.[t.term];
     if (entry) showTerm({ term: t.term, entry, x: t.x, y: t.y, region: edition.region, lang, date: edition.date });
   };
+
+  const toggle = () =>
+    bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl, url: webPath(edition.url) });
 
   return (
     <Pressable
       onPress={() => openArticle(edition, story)}
+      // VoiceOver/TalkBack treat the card as one element, which hides the nested bookmark button:
+      // offer it as a custom action (swipe up/down on iOS, actions menu on Android)
       accessibilityRole="button"
-      accessibilityHint={story.hl}
+      accessibilityLabel={[story.hl, story.dek].filter(Boolean).join('. ')}
+      accessibilityActions={[{ name: 'activate' }, { name: 'bookmark', label: on ? S.account.bmOn : S.account.bm }]}
+      onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'bookmark' ? toggle() : openArticle(edition, story))}
       style={({ pressed }) => [styles.card, compact && styles.compact, pressed && { backgroundColor: c.dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)' }]}
     >
       <Kick
@@ -78,12 +85,13 @@ function StoryCard({ edition, story, lead, textCols = 1 }: { edition: Edition; s
         bookmark={{
           on,
           label: on ? S.account.bmOn : S.account.bm,
-          onPress: () => bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl, url: webPath(edition.url) }),
+          onPress: toggle,
         }}
       />
       <RichText
         segs={segs.hl}
         onTerm={onTerm}
+        maxScale={lead ? 1.25 : 1.4}
         style={[
           serif(lang, 700),
           { fontSize: t.hl, lineHeight: t.hlLh, letterSpacing: lead ? -0.6 : compact ? -0.3 : -0.4 },

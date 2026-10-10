@@ -1,29 +1,15 @@
 // App-wide overlay layer (above the tab bar): article sheet, breaking list sheet, glossary tooltip.
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BackHandler, StyleSheet, View } from 'react-native';
-import type { BreakingItem, Edition, GlossEntry, Story } from '../lib/types';
+import { strings } from '../i18n';
+import type { BreakingItem, Edition, Story } from '../lib/types';
 import ArticleView from './ArticleView';
 import BreakingList from './BreakingList';
 import Sheet from './Sheet';
 import TermTip from './TermTip';
+import { type Ctx, OverlayContext, type TermInfo } from './overlayContext';
 
-export interface TermInfo {
-  term: string;
-  entry: GlossEntry;
-  x: number;
-  y: number;
-  region: string;
-  lang: string;
-  date: string;
-}
-
-interface Ctx {
-  openArticle: (edition: Edition, story: Story) => void;
-  openBreaking: (items: BreakingItem[], label: string, lang: string) => void;
-  showTerm: (t: TermInfo) => void;
-}
-
-const OverlayContext = createContext<Ctx | null>(null);
+export { useOverlay, type TermInfo } from './overlayContext';
 
 export function OverlayProvider({ children }: { children: React.ReactNode }) {
   const [article, setArticle] = useState<{ edition: Edition; story: Story } | null>(null);
@@ -60,12 +46,12 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
       <View style={{ flex: 1 }}>
         {children}
         {article && (
-          <Sheet onClose={() => setArticle(null)} contentKey={article.edition.date + article.story.id}>
+          <Sheet onClose={() => setArticle(null)} contentKey={article.edition.date + article.story.id} label={strings(article.edition.lang).app.close}>
             <ArticleView edition={article.edition} story={article.story} />
           </Sheet>
         )}
         {breaking && (
-          <Sheet onClose={() => setBreaking(null)} label={breaking.label} fit>
+          <Sheet onClose={() => setBreaking(null)} label={strings(breaking.lang).app.close} fit>
             <BreakingList items={breaking.items} label={breaking.label} lang={breaking.lang} />
           </Sheet>
         )}
@@ -77,10 +63,4 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
       </View>
     </OverlayContext.Provider>
   );
-}
-
-export function useOverlay(): Ctx {
-  const c = useContext(OverlayContext);
-  if (!c) throw new Error('OverlayProvider missing');
-  return c;
 }
