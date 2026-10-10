@@ -173,9 +173,11 @@ function build(ctx) {
         const glossary = {}; for (const [k, v] of Object.entries(x.G)) if (v && typeof v === 'object') glossary[k] = { f: plain(v.f), d: plain(v.d), w: plain(v.w) };
         const influencers = ((X && X.infl) || []).filter(i => i && i.who && h.okUrl(i.u)).slice(0, 6).map(i => { const t = i.t || {}; return { who: String(i.who), where: String(i.where || ''), date: String(i.date || ''), u: i.u, t: String(t[lang] || t[String(lang).split('-')[0]] || t.en || t[own] || '') }; });
         const sources = []; for (const [id, v] of Object.entries((X && X.src) || {})) for (const o of (Array.isArray(v) ? v : [])) if (o && o.n && h.okUrl(o.u) && !o.search) sources.push({ id, n: String(o.n), u: o.u, alt: (o.alt || []).map(String) });
+        // 제호 아래 시세표(웹 .tape와 같은 값·같은 문구): 종목명·값·▲▼·등락, 아래 안내 문구
+        let tape = null; try { const t = first(parse(h.TAPE ? h.TAPE(e.date, region, lang) : ''), n => has(n, 'tape')); if (t) tape = { note: t.attrs['data-note'] || '', q: els(t).filter(q => has(q, 'q')).map(q => { const f = tg => els(q).find(c => c.tag === tg); const i = f('i'); const u = i && els(i).find(c => c.tag === 'u'); const sp = i && els(i).find(c => c.tag === 'span'); return { k: q.attrs['data-k'] || '', name: text(f('b')), v: text(f('em')), dir: has(q, 'dn') ? 'dn' : has(q, 'upp') ? 'up' : '', tri: text(u), chg: text(sp), asof: text(f('small')) }; }) }; } catch (err) { tape = null; }
         const doc = {
           v: 1, region, lang, date: e.date, no: e.no, publishAt: iso(h.PUBAT(e)), url,
-          mast: { label: h.EDTXT(lang, region, e.no, e.date).num, dateline: `${h.COUNTRY(lang, region)}, ${h.dateIn(lang)(e.date)}`, time, house: x.mast.house, ears: x.mast.ears },
+          mast: { label: h.EDTXT(lang, region, e.no, e.date).num, dateline: `${h.COUNTRY(lang, region)}, ${h.dateIn(lang)(e.date)}`, time, house: x.mast.house, ears: x.mast.ears, ...(tape && tape.q.length ? { tape } : {}) },
           stories: x.stories, blocks: x.blocks, glossary, influencers, sources,
           breaking: `/api/breaking.json?region=${region}&lang=${lang}`,
         };
