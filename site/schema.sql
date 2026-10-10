@@ -62,3 +62,10 @@ CREATE TABLE IF NOT EXISTS email_codes (
   expires_at INTEGER NOT NULL,
   tries INTEGER NOT NULL DEFAULT 0
 );
+-- 앱 로그인(RFC 8252 + PKCE): /api/auth/app/start 가 발급하는 60초·1회용 코드. 코드 원문은 저장하지 않음
+CREATE TABLE IF NOT EXISTS app_codes (
+  code_hash TEXT PRIMARY KEY,            -- SHA-256(code) hex
+  user_id INTEGER NOT NULL,
+  challenge TEXT NOT NULL,               -- PKCE S256 code_challenge (base64url 43자)
+  expires_at INTEGER NOT NULL            -- ms epoch, 발급 + 60초
+);

@@ -2,7 +2,10 @@
 //  POST /api/auth/google {credential}         Google ID 토큰(GIS) 검증 → 로그인/가입
 //  POST /api/auth/signup {email,password,name} 이메일 가입(PBKDF2-SHA256)
 //  POST /api/auth/login  {email,password}      이메일 로그인
-//  POST /api/auth/logout                       세션 삭제
+//  POST /api/auth/logout                       세션 삭제(쿠키 또는 Bearer 토큰의 세션)
+//  GET  /api/auth/app/start?redirect_uri&state&code_challenge&code_challenge_method=S256
+//                                              앱 로그인(RFC 8252 + PKCE): 로그인된 브라우저 → 302 dailydrop://auth?code&state
+//  POST /api/auth/app/token {code,code_verifier} 1회용 코드 → {ok,token,user}. 이후 앱은 Authorization: Bearer <token>
 //  POST /api/auth/email/send · /verify {code}  6자리 인증 코드(Resend 키가 있을 때만)
 //  GET  /api/auth/config                       {google: 클라이언트 ID|null, verify: bool}
 //  GET  /api/me · DELETE /api/me {confirm:true} 내 정보 · 탈퇴(회원·세션·북마크 삭제)
@@ -14,6 +17,12 @@
 const SID = 'dd_sid', HINT = 'dd_in';
 const SESSION_DAYS = 30, PBKDF2_ITER = 100000, RL_MAX = 10, RL_WIN = 15 * 60 * 1000;
 const KST = 9 * 3600 * 1000; // 통계의 '하루'·시간 축은 한국 시간 기준
+// 앱 로그인 redirect_uri 허용 목록(정확히 같아야 함). Expo Go 개발용 exp://… 주소는 기기마다 달라 기본 허용하지 않고,
+// 필요할 때만 vars/secret APP_DEV_REDIRECTS(쉼표로 구분한 정확한 exp:// 주소)로 켠다.
+const APP_REDIRECTS = new Set(['dailydrop://auth']);
+const APP_CODE_TTL = 60e3;
+const RE_STATE = /^[A-Za-z0-9_-]{16,128}$/, RE_CHALLENGE = /^[A-Za-z0-9_-]{43}$/, RE_CODE = /^[A-Za-z0-9_-]{43}$/, RE_VERIFIER = /^[A-Za-z0-9._~-]{43,128}$/;
+const appRedirectOk = (env, r) => APP_REDIRECTS.has(r) || String(env.APP_DEV_REDIRECTS || '').split(',').map(s => s.trim()).filter(s => /^exp:\/\/[^\s?#]+$/.test(s)).includes(r);
 const APP_ORIGINS = new Set(['capacitor://localhost', 'http://localhost', 'https://localhost', 'ionic://localhost']);
 const BOT = /bot|crawl|spider|slurp|facebookexternalhit|embedly|preview|monitor|curl|wget|python|httpclient|java\/|go-http|okhttp|axios|node-fetch|headless|lighthouse|pingdom|uptime/i;
 const enc = new TextEncoder();
@@ -29,6 +38,8 @@ const sha256 = async s => hex(await crypto.subtle.digest('SHA-256', enc.encode(s
 const rand = n => crypto.getRandomValues(new Uint8Array(n));
 const ip = req => req.headers.get('cf-connecting-ip') || req.headers.get('x-real-ip') || '0.0.0.0';
 const kday = ts => new Date(ts + KST).toISOString().slice(0, 10);
+// Authorization: Bearer <token> (앱). 쿠키 토큰과 같은 형식(base64url 43자)·길이 제한
+const bearerOf = req => { const m = /^Bearer ([A-Za-z0-9_-]{1,100})$/.exec(req.headers.get('authorization') || ''); return m ? m[1] : null; };
 const cookieOf = (req, k) => { const m = (req.headers.get('cookie') || '').match(new RegExp('(?:^|;\\s*)' + k + '=([^;]+)')); return m ? m[1] : null; };
 const isEmail = s => typeof s === 'string' && s.length <= 254 && /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(s);
 const str = (v, max) => (typeof v === 'string' ? v : '').trim().slice(0, max);
@@ -47,18 +58,23 @@ async function pbkdf2(pw, saltBytes, iter) {
 }
 const DUMMY_SALT = new Uint8Array(16);
 
-// ── 세션: 32바이트 토큰을 쿠키로, DB엔 SHA-256 만
-async function newSession(env, req, userId) {
+// ── 세션: 32바이트 토큰을 쿠키(웹) 또는 응답 본문(앱)으로, DB엔 SHA-256 만
+async function sessionToken(env, req, userId) {
   const token = b64u(rand(32)); const now = Date.now();
   await env.UDB.prepare('INSERT INTO sessions (token_hash, user_id, created_at, expires_at, ua) VALUES (?, ?, ?, ?, ?)').bind(await sha256(token), userId, now, now + SESSION_DAYS * 864e5, str(req.headers.get('user-agent'), 200)).run();
+  return token;
+}
+async function newSession(env, req, userId) {
+  const token = await sessionToken(env, req, userId);
   const age = SESSION_DAYS * 86400;
   return [`${SID}=${token}; Path=/; Max-Age=${age}; HttpOnly; Secure; SameSite=Lax`, `${HINT}=1; Path=/; Max-Age=${age}; Secure; SameSite=Lax`];
 }
 const clearCookies = () => [`${SID}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`, `${HINT}=; Path=/; Max-Age=0; Secure; SameSite=Lax`];
 const withCookies = (res, cookies) => { for (const c of cookies) res.headers.append('set-cookie', c); return res; };
 
-async function currentUser(env, req) {
-  const t = cookieOf(req, SID); if (!t || t.length > 100) return null;
+// 쿠키(dd_sid)가 있으면 쿠키로만, 없으면 Bearer 토큰으로. cookieOnly: 앱 코드 발급처럼 브라우저 세션이어야 하는 곳.
+async function currentUser(env, req, cookieOnly = false) {
+  const c = cookieOf(req, SID); const t = c != null ? c : cookieOnly ? null : bearerOf(req); if (!t || t.length > 100) return null;
   const row = await env.UDB.prepare('SELECT u.*, s.token_hash AS sid_hash, s.expires_at AS sid_exp FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?').bind(await sha256(t)).first();
   if (!row) return null;
   if (row.sid_exp < Date.now()) { await env.UDB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(row.sid_hash).run(); return null; }
@@ -134,7 +150,10 @@ export async function handleAccount(request, env, url, ctx) {
   if (p === '/api/hit') return hit(request, env, url, ctx);
   if (!env.UDB) return err(503, 'unavailable');
   const isWrite = m !== 'GET' && m !== 'HEAD';
-  if (isWrite && !sameOrigin(request, url)) return err(403, 'forbidden');
+  // CSRF: 쿠키로 인증하는 쓰기는 같은 출처만. 쿠키 없이 Bearer 토큰만 온 요청은 브라우저가 자동으로 붙일 수 없으므로 예외.
+  // /api/auth/app/token 은 쿠키를 읽지도 쓰지도 않고 1회용 코드+PKCE 로만 인증하므로 예외.
+  const viaBearer = cookieOf(request, SID) == null && !!bearerOf(request);
+  if (isWrite && !sameOrigin(request, url) && !viaBearer && !(p === '/api/auth/app/token' && m === 'POST')) return err(403, 'forbidden');
   try {
     if (p === '/api/auth/config' && m === 'GET') return json({ google: env.GOOGLE_CLIENT_ID || null, verify: verifyOn(env) });
     if (p === '/api/me') {
@@ -147,6 +166,7 @@ export async function handleAccount(request, env, url, ctx) {
         await env.UDB.batch([
           env.UDB.prepare('DELETE FROM bookmarks WHERE user_id = ?').bind(u.id),
           env.UDB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
+          env.UDB.prepare('DELETE FROM app_codes WHERE user_id = ?').bind(u.id),
           env.UDB.prepare('DELETE FROM email_codes WHERE email = ?').bind(u.email),
           env.UDB.prepare('UPDATE pageviews SET user_id = NULL WHERE user_id = ?').bind(u.id),
           env.UDB.prepare('DELETE FROM users WHERE id = ?').bind(u.id),
@@ -157,8 +177,11 @@ export async function handleAccount(request, env, url, ctx) {
     }
     if (p === '/api/auth/logout' && m === 'POST') {
       const t = cookieOf(request, SID); if (t && t.length <= 100) await env.UDB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await sha256(t)).run();
-      return withCookies(json({ ok: true }), clearCookies());
+      const bt = bearerOf(request); if (bt) await env.UDB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await sha256(bt)).run();
+      return t != null || !bt ? withCookies(json({ ok: true }), clearCookies()) : json({ ok: true });
     }
+    if (p === '/api/auth/app/start' && m === 'GET') return appStart(request, env, url);
+    if (p === '/api/auth/app/token' && m === 'POST') return appToken(request, env);
     if (p === '/api/auth/signup' && m === 'POST') {
       const b = await body(request); if (!b) return err(400, 'bad_request');
       const email = str(b.email, 254).toLowerCase(), pw = typeof b.password === 'string' ? b.password : '', name = str(b.name, 60);
@@ -246,6 +269,41 @@ export async function handleAccount(request, env, url, ctx) {
     console.error('account api error', p, e && e.message); // 요청 본문(비밀번호·토큰)은 남기지 않음
     return err(500, 'server');
   }
+}
+
+// ── 앱 로그인(RFC 8252 + PKCE S256). 코드 원문은 저장하지 않고 SHA-256 만, 60초·1회용.
+async function appStart(req, env, url) {
+  const q = url.searchParams;
+  const redirect = q.get('redirect_uri') || '', state = q.get('state') || '', challenge = q.get('code_challenge') || '';
+  if (!appRedirectOk(env, redirect) || !RE_STATE.test(state) || !RE_CHALLENGE.test(challenge) || q.get('code_challenge_method') !== 'S256') return err(400, 'bad_request');
+  const noStore = { 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' };
+  const u = await currentUser(env, req, true);
+  if (!u || !active(env, u)) {
+    // 검증한 값만으로 다시 만든 주소로 돌아오게 한다(로그인 페이지 safeNext 가 /api/... 를 허용)
+    const back = '/api/auth/app/start?' + new URLSearchParams({ redirect_uri: redirect, state, code_challenge: challenge, code_challenge_method: 'S256' });
+    return new Response(null, { status: 302, headers: { location: '/login/?next=' + encodeURIComponent(back), ...noStore } });
+  }
+  const code = b64u(rand(32)), now = Date.now();
+  if (Math.random() < 0.05) await env.UDB.prepare('DELETE FROM app_codes WHERE expires_at < ?').bind(now).run();
+  await env.UDB.prepare('INSERT INTO app_codes (code_hash, user_id, challenge, expires_at) VALUES (?, ?, ?, ?)').bind(await sha256(code), u.id, challenge, now + APP_CODE_TTL).run();
+  return new Response(null, { status: 302, headers: { location: redirect + '?code=' + code + '&state=' + state, ...noStore } });
+}
+
+async function appToken(req, env) {
+  const b = await body(req, 1024); if (!b) return err(400, 'bad_request');
+  const code = typeof b.code === 'string' ? b.code : '', verifier = typeof b.code_verifier === 'string' ? b.code_verifier : '';
+  if (!RE_CODE.test(code) || !RE_VERIFIER.test(verifier)) return err(400, 'bad_request');
+  if (await limited(env, req)) return err(429, 'rate');
+  // 찾으면서 바로 지운다(한 문장이라 동시에 두 번 와도 한쪽만 행을 받음) → PKCE 가 틀려도 코드는 이미 소멸
+  const row = await env.UDB.prepare('DELETE FROM app_codes WHERE code_hash = ? RETURNING user_id, challenge, expires_at').bind(await sha256(code)).first();
+  if (!row || row.expires_at < Date.now()) return err(400, 'code_expired');
+  const calc = b64u(await crypto.subtle.digest('SHA-256', enc.encode(verifier)));
+  if (!same(calc, row.challenge)) return err(400, 'pkce');
+  const u = await env.UDB.prepare('SELECT * FROM users WHERE id = ?').bind(row.user_id).first();
+  if (!u || !active(env, u)) return err(400, 'code_expired');
+  await env.UDB.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').bind(Date.now(), u.id).run();
+  const token = await sessionToken(env, req, u.id);
+  return json({ ok: true, token, user: publicUser(env, u) });
 }
 
 // ── 북마크
