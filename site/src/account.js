@@ -180,7 +180,7 @@ export async function handleAccount(request, env, url, ctx) {
       const bt = bearerOf(request); if (bt) await env.UDB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await sha256(bt)).run();
       return t != null || !bt ? withCookies(json({ ok: true }), clearCookies()) : json({ ok: true });
     }
-    if (p === '/api/auth/app/start' && m === 'GET') return appStart(request, env, url);
+    if (p === '/api/auth/app/start' && (m === 'GET' || m === 'POST')) return appStart(request, env, url);
     if (p === '/api/auth/app/token' && m === 'POST') return appToken(request, env);
     if (p === '/api/auth/signup' && m === 'POST') {
       const b = await body(request); if (!b) return err(400, 'bad_request');
@@ -273,7 +273,9 @@ export async function handleAccount(request, env, url, ctx) {
 
 // ── 앱 로그인(RFC 8252 + PKCE S256). 코드 원문은 저장하지 않고 SHA-256 만, 60초·1회용.
 async function appStart(req, env, url) {
-  const q = url.searchParams;
+  // GET = 확인 화면, POST(같은 사이트 Origin 필수 — 위 CSRF 검사) = 코드 발급. 조작된 링크만으로 코드가 다른 앱에 넘어가지 않게 한다.
+  const isPost = req.method === 'POST';
+  const q = isPost ? new URLSearchParams(await req.text().catch(() => '')) : url.searchParams;
   const redirect = q.get('redirect_uri') || '', state = q.get('state') || '', challenge = q.get('code_challenge') || '';
   if (!appRedirectOk(env, redirect) || !RE_STATE.test(state) || !RE_CHALLENGE.test(challenge) || q.get('code_challenge_method') !== 'S256') return err(400, 'bad_request');
   const noStore = { 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' };
@@ -282,6 +284,12 @@ async function appStart(req, env, url) {
     // 검증한 값만으로 다시 만든 주소로 돌아오게 한다(로그인 페이지 safeNext 가 /api/... 를 허용)
     const back = '/api/auth/app/start?' + new URLSearchParams({ redirect_uri: redirect, state, code_challenge: challenge, code_challenge_method: 'S256' });
     return new Response(null, { status: 302, headers: { location: '/login/?next=' + encodeURIComponent(back), ...noStore } });
+  }
+  if (!isPost) {
+    const h = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const who = h(u.name || u.email || '');
+    const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DailyDrop</title><style>body{margin:0;background:#ece4d8;color:#121212;font:16px/1.5 Georgia,"Noto Serif KR",serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}main{max-width:360px;text-align:center}h1{font-size:22px;margin:0 0 8px}p{margin:0 0 20px;color:#555}button{font:inherit;font-size:16px;background:#121212;color:#ece4d8;border:0;padding:12px 22px;cursor:pointer;width:100%}small{display:block;margin-top:14px;color:#777;font-size:13px}@media(prefers-color-scheme:dark){body{background:#151412;color:#ece4d8}p{color:#aaa}button{background:#ece4d8;color:#151412}}</style></head><body><main><h1>DailyDrop 앱으로 로그인</h1><p>${who} 계정으로 DailyDrop 앱에 로그인합니다.<br>Sign in to the DailyDrop app as ${who}.</p><form method="post" action="/api/auth/app/start"><input type="hidden" name="redirect_uri" value="${h(redirect)}"><input type="hidden" name="state" value="${h(state)}"><input type="hidden" name="code_challenge" value="${h(challenge)}"><input type="hidden" name="code_challenge_method" value="S256"><button type="submit">계속 · Continue</button></form><small>요청하지 않았다면 이 창을 닫으세요. · If you didn't request this, close this window.</small></main></body></html>`;
+    return new Response(html, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'x-frame-options': 'DENY', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self' dailydrop: exp:; frame-ancestors 'none'", ...noStore } });
   }
   const code = b64u(rand(32)), now = Date.now();
   if (Math.random() < 0.05) await env.UDB.prepare('DELETE FROM app_codes WHERE expires_at < ?').bind(now).run();
