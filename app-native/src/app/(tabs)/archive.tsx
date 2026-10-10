@@ -6,6 +6,7 @@ import { Failed, Loading } from '../../components/EditionView';
 import ScreenTitle, { formatDate } from '../../components/ScreenTitle';
 import { fmt, langName, strings } from '../../i18n';
 import { findRegion, pickLang, regionName, useIndex } from '../../lib/content';
+import { GAP, READ_MAX, useLayout } from '../../lib/layout';
 import { useSettings } from '../../lib/settings';
 import { sans, serif } from '../../lib/theme';
 
@@ -17,6 +18,10 @@ export default function Archive() {
   const S = strings(settings.lang);
   const region = findRegion(index.data, settings.region);
   const [pulling, setPulling] = useState(false);
+  // ≥700 px: a two-column grid of editions inside the reading width
+  const { width } = useLayout();
+  const cols = width >= 700 ? 2 : 1;
+  const cellW = cols > 1 ? (Math.min(width, READ_MAX + 32) - 32 - GAP) / 2 : undefined;
 
   if (!region) return index.error ? <Failed lang={settings.lang} onRetry={index.refresh} notCached /> : <Loading lang={settings.lang} />;
 
@@ -24,9 +29,12 @@ export default function Archive() {
   return (
     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: c.paper }}>
       <FlatList
+        key={cols}
+        numColumns={cols}
+        columnWrapperStyle={cols > 1 ? { gap: GAP } : undefined}
         data={region.editions}
         keyExtractor={(e) => e.date}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32, width: '100%', maxWidth: READ_MAX + 32, alignSelf: 'center' }}
         ListHeaderComponent={<ScreenTitle title={S.archive} sub={regionName(region, settings.lang)} lang={settings.lang} />}
         refreshControl={
           <RefreshControl
@@ -46,7 +54,13 @@ export default function Archive() {
           return (
             <Pressable
               onPress={() => router.push({ pathname: '/edition/[region]/[date]', params: { region: region.code, date: item.date, lang } })}
-              style={({ pressed }) => [styles.row, i < region.editions.length - 1 && { borderBottomColor: c.ink, borderBottomWidth: 1 }, pressed && { opacity: 0.6 }]}
+              style={({ pressed }) => [
+                styles.row,
+                cellW ? { width: cellW } : null,
+                // dotted rule under every row but the last one (in the grid: under every row of cells but the last)
+                (cols > 1 ? Math.floor(i / 2) < Math.floor((region.editions.length - 1) / 2) : i < region.editions.length - 1) && { borderBottomColor: c.ink, borderBottomWidth: 1 },
+                pressed && { opacity: 0.6 },
+              ]}
               accessibilityRole="link"
             >
               <View style={styles.no}>

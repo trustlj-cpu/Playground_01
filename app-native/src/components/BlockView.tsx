@@ -1,8 +1,9 @@
 // Native renderer for blocks[].html (no WebView). Block tags → Views, inline tags → nested Text.
 import React, { useMemo } from 'react';
-import { Linking, StyleSheet, Text, TextStyle, useWindowDimensions, View } from 'react-native';
+import { Linking, StyleSheet, Text, TextStyle, View } from 'react-native';
 import { HNode, isBlock, parseHTML, plain } from '../lib/html';
-import { useColors, useSettings } from '../lib/settings';
+import { useColumnWidth, useTextScale } from '../lib/layout';
+import { useColors } from '../lib/settings';
 import { Palette, sans, serif } from '../lib/theme';
 import type { Block } from '../lib/types';
 
@@ -146,9 +147,8 @@ export function BoxTitle({ title, lang }: { title: string; lang: string }) {
 
 export default function BlockView({ block, lang }: { block: Block; lang: string }) {
   const c = useColors();
-  const { settings } = useSettings();
-  const s = settings.textScale;
-  const width = useWindowDimensions().width - 32;
+  const s = useTextScale();
+  const width = useColumnWidth();
   const nodes = useMemo(() => {
     const n = parseHTML(block.html);
     return block.type === 'next' ? asRows(n) : n;

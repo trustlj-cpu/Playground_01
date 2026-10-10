@@ -19,7 +19,9 @@ function PaperTabBar({ state, navigation }: BottomTabBarProps) {
     settings: S.settings,
   };
   return (
-    <View style={[styles.bar, { backgroundColor: c.paper, borderTopColor: c.ink, paddingBottom: Math.max(insets.bottom, 8) }]} accessibilityRole="tablist">
+    <View style={[styles.bar, { backgroundColor: c.paper, borderTopColor: c.ink, paddingBottom: Math.max(insets.bottom, 8) }]}>
+      {/* items keep phone spacing on wide screens: centred within the reading width instead of spread edge to edge */}
+      <View style={styles.inner} accessibilityRole="tablist">
       {state.routes.map((r, i) => {
         const on = state.index === i;
         return (
@@ -46,6 +48,7 @@ function PaperTabBar({ state, navigation }: BottomTabBarProps) {
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }
@@ -63,7 +66,8 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, paddingTop: 8, paddingHorizontal: 14 },
+  bar: { borderTopWidth: 1, paddingTop: 8, paddingHorizontal: 14 },
+  inner: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', maxWidth: 640, alignSelf: 'center' },
   item: { flexShrink: 1, alignItems: 'center', paddingVertical: 4, paddingHorizontal: 2 },
   label: { fontSize: 12.5, letterSpacing: 0.3, borderBottomWidth: 1.5, paddingBottom: 3 },
 });

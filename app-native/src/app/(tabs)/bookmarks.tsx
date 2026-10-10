@@ -9,6 +9,7 @@ import { fmt, strings } from '../../i18n';
 import { getJSON, paths } from '../../lib/api';
 import { ArticleBookmark, useBookmarks } from '../../lib/bookmarks';
 import { useIndex } from '../../lib/content';
+import { READ_MAX, useTextScale } from '../../lib/layout';
 import { useSettings } from '../../lib/settings';
 import { sans, serif } from '../../lib/theme';
 import type { Edition } from '../../lib/types';
@@ -23,7 +24,7 @@ export default function Bookmarks() {
   const [tab, setTab] = useState<'a' | 't'>('a');
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
-  const s = settings.textScale;
+  const s = useTextScale();
   const index = useIndex();
   // bookmarks synced from the website carry no edition number: look it up in the index
   const edNo = (b: ArticleBookmark) => b.no || index.data?.regions.find((r) => r.code === b.region)?.editions.find((e) => e.date === b.date)?.no || 0;
@@ -52,7 +53,7 @@ export default function Bookmarks() {
   );
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: c.paper }} contentContainerStyle={{ paddingTop: insets.top, paddingHorizontal: 16, paddingBottom: 32 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: c.paper }} contentContainerStyle={{ paddingTop: insets.top, paddingHorizontal: 16, paddingBottom: 32, width: '100%', maxWidth: READ_MAX + 32, alignSelf: 'center' }}>
       <ScreenTitle title={S.app.bookmarks} lang={settings.lang} />
       <View style={styles.segs} accessibilityRole="tablist">
         <Seg id="a" label={A.tabArticles} n={bm.articles.length} />

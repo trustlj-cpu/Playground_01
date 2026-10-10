@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { termKey, useBookmarks } from '../lib/bookmarks';
-import { useColors, useSettings } from '../lib/settings';
+import { TIP_MAX, useTextScale } from '../lib/layout';
+import { useColors } from '../lib/settings';
 import { sans, serif } from '../lib/theme';
 import { popupLabels, strings } from '../i18n';
 import BookmarkButton from './BookmarkButton';
@@ -11,12 +12,11 @@ import type { TermInfo } from './Overlay';
 
 export default function TermTip({ info, onClose }: { info: TermInfo; onClose: () => void }) {
   const c = useColors();
-  const { settings } = useSettings();
   const bm = useBookmarks();
   const { width: W, height: H } = useWindowDimensions();
   const [h, setH] = useState(0);
-  const s = settings.textScale;
-  const w = Math.min(340, W - 32);
+  const s = useTextScale();
+  const w = Math.min(W >= 700 ? TIP_MAX : 340, W - 32);
   const left = Math.max(16, Math.min(info.x - 40, W - 16 - w));
   const below = info.y + 14;
   const top = h && below + h > H - 24 ? Math.max(16, info.y - 14 - h) : below;

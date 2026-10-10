@@ -8,6 +8,7 @@ import { fmt, strings } from '../../i18n';
 import { paths } from '../../lib/api';
 import { termKey, useBookmarks } from '../../lib/bookmarks';
 import { findRegion, pickLang, useIndex } from '../../lib/content';
+import { READ_MAX, useTextScale } from '../../lib/layout';
 import { useSettings } from '../../lib/settings';
 import { sans, serif } from '../../lib/theme';
 import type { GlossaryFile, GlossaryTerm } from '../../lib/types';
@@ -33,7 +34,7 @@ export default function Glossary() {
   const G = S.glossaryPage;
   const [q, setQ] = useState('');
   const [pulling, setPulling] = useState(false);
-  const s = settings.textScale;
+  const s = useTextScale();
 
   const list = useMemo(() => {
     const terms = res.data?.terms || [];
@@ -81,7 +82,7 @@ export default function Glossary() {
         renderItem={renderItem}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32, width: '100%', maxWidth: READ_MAX + 32, alignSelf: 'center' }}
         initialNumToRender={15}
         refreshControl={
           <RefreshControl

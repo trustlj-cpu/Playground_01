@@ -8,6 +8,7 @@ import { fmt, langName, strings } from '../../i18n';
 import { API_BASE, USE_FIXTURES } from '../../lib/api';
 import { useBookmarks } from '../../lib/bookmarks';
 import { findRegion, pickLang, regionName, titleCase, useIndex } from '../../lib/content';
+import { READ_MAX } from '../../lib/layout';
 import { ThemeMode, useSettings } from '../../lib/settings';
 import { para, sans, serif } from '../../lib/theme';
 
@@ -45,7 +46,7 @@ export default function Settings() {
   );
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: c.paper }} contentContainerStyle={{ paddingTop: insets.top, paddingHorizontal: 16, paddingBottom: 40 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: c.paper }} contentContainerStyle={{ paddingTop: insets.top, paddingHorizontal: 16, paddingBottom: 40, width: '100%', maxWidth: READ_MAX + 32, alignSelf: 'center' }}>
       <ScreenTitle title={P.title || S.settings} lang={L} />
 
       <H t={P.h} p={P.p} />

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Linking, StyleSheet, Text, View } from 'react-native';
 import { inflLabels } from '../i18n';
-import { useColors, useSettings } from '../lib/settings';
+import { useTextScale } from '../lib/layout';
+import { useColors } from '../lib/settings';
 import { sans, serif } from '../lib/theme';
 import type { Influencer } from '../lib/types';
 import { BoxTitle } from './BlockView';
@@ -9,7 +10,7 @@ import { BoxTitle } from './BlockView';
 /** Influencer watch box (web: INFL in build.js) — statements as posted, link to the original post. */
 export default function Influencers({ items, lang }: { items: Influencer[]; lang: string }) {
   const c = useColors();
-  const s = useSettings().settings.textScale;
+  const s = useTextScale();
   const [title, srcLabel, note] = inflLabels(lang);
   const list = items.filter((i) => i && i.who && /^https?:\/\//.test(i.u || '')).slice(0, 6);
   if (!list.length) return null;

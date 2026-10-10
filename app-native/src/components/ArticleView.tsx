@@ -3,7 +3,8 @@ import React, { useMemo } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { popupLabels, strings } from '../i18n';
 import { articleKey, useBookmarks, webPath } from '../lib/bookmarks';
-import { useColors, useSettings } from '../lib/settings';
+import { useLayout, useTextScale } from '../lib/layout';
+import { useColors } from '../lib/settings';
 import { linkTerms } from '../lib/terms';
 import { para, sans, serif } from '../lib/theme';
 import type { Edition, Story } from '../lib/types';
@@ -13,10 +14,10 @@ import RichText, { TermTap } from './RichText';
 
 export default function ArticleView({ edition, story }: { edition: Edition; story: Story }) {
   const c = useColors();
-  const { settings } = useSettings();
+  const { cls } = useLayout();
   const { showTerm } = useOverlay();
   const bm = useBookmarks();
-  const s = settings.textScale;
+  const s = useTextScale();
   const lang = edition.lang;
   const L = popupLabels(edition.region, lang);
   const S = strings(lang);
@@ -51,7 +52,7 @@ export default function ArticleView({ edition, story }: { edition: Edition; stor
           onPress: () => bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl, url: webPath(edition.url) }),
         }}
       />
-      <RichText segs={segs.title} onTerm={onTerm} style={[serif(lang, 700), styles.title, { color: c.head }]} />
+      <RichText segs={segs.title} onTerm={onTerm} style={[serif(lang, 700), styles.title, cls !== 'phone' && styles.titleL, { color: c.head }]} />
       {!!p.what && (
         <>
           {lab(L.what)}
@@ -103,6 +104,7 @@ export default function ArticleView({ edition, story }: { edition: Edition; stor
 
 const styles = StyleSheet.create({
   title: { fontSize: 26, lineHeight: 31, letterSpacing: -0.6, marginTop: 8, marginBottom: 6 },
+  titleL: { fontSize: 30, lineHeight: 36 },
   lab: { fontSize: 11, letterSpacing: 1.6, marginTop: 18, marginBottom: 6 },
   view: { borderTopWidth: 1, paddingTop: 8, marginTop: 6, marginBottom: 6 },
   viewName: { fontSize: 11, letterSpacing: 2, marginBottom: 3 },
