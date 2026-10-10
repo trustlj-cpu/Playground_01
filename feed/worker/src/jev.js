@@ -34,3 +34,34 @@ export async function jevShadow(env, hour, digest) {
   }
   return { done, failed, regions: regions.size };
 }
+
+// Jev 용어 선별(사장님 10/10): 편집 에이전트가 판 원고의 후보 용어를 D1 jev_terms 에 넣으면(done 비어 있음),
+// 매분 크론이 묶어서 Jev에게 '이 판 독자에게 설명이 필요한 말인가'를 묻고 p(필요 확률)를 채운다. 에이전트는 p로 용어사전 G를 고른다.
+// 컨테이너에서 Worker로 직접 요청할 수 없어 D1을 우편함처럼 쓴다. 한 번에 최대 120개, Jev 호출 1회당 용어 10개.
+const TERMS_PER_CALL = 10;
+export async function jevTerms(env) {
+  if (!env.TYPESAFE_API_KEY) return { skipped: true };
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS jev_terms (id INTEGER PRIMARY KEY AUTOINCREMENT, edition TEXT, lang TEXT, term TEXT, context TEXT, p REAL, conf REAL, err TEXT, created TEXT, done TEXT)').run();
+  const { results } = await env.DB.prepare('SELECT id, edition, lang, term, context FROM jev_terms WHERE done IS NULL ORDER BY id LIMIT 120').all();
+  if (!results || !results.length) return { done: 0 };
+  const groups = new Map(); for (const r of results) { const k = r.edition + '|' + r.lang; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
+  const chunks = []; for (const rows of groups.values()) for (let i = 0; i < rows.length; i += TERMS_PER_CALL) chunks.push(rows.slice(i, i + TERMS_PER_CALL));
+  let done = 0, failed = 0; const now = new Date().toISOString();
+  await Promise.all(chunks.map(async rows => {
+    const { edition, lang } = rows[0];
+    const questions = {}; rows.forEach((r, i) => { questions['t' + i] = { type: 'noul', instructions: `In the ${edition} edition of a daily newspaper (written in ${lang}) the term "${String(r.term).slice(0, 80)}" appears${r.context ? ' in: "' + String(r.context).slice(0, 200) + '"' : ''}. Would a typical general reader of this edition need a short glossary explanation of this term to understand the story?`, criteria: { true: 'needs a glossary explanation', false: 'common knowledge for these readers' } }; });
+    const state = { edition, language: lang, task: 'choose newspaper glossary terms', terms: rows.map(r => String(r.term).slice(0, 80)) };
+    let a = null, err = null;
+    try {
+      const r = await fetch(URL_, { method: 'POST', headers: { authorization: 'Bearer ' + env.TYPESAFE_API_KEY, 'content-type': 'application/json' }, body: JSON.stringify({ model: 'jev-latest', state, questions }), signal: AbortSignal.timeout(20000) });
+      if (!r.ok) throw new Error('jev ' + r.status + ' ' + (await r.text()).slice(0, 200));
+      a = (await r.json()).answers || {};
+    } catch (e) { err = String(e && e.message || e).slice(0, 300); }
+    for (let i = 0; i < rows.length; i++) {
+      const x = a && a['t' + i]; const p = x && typeof x.noul === 'number' ? x.noul : null;
+      if (p === null) failed++; else done++;
+      await env.DB.prepare('UPDATE jev_terms SET p = ?1, conf = ?2, err = ?3, done = ?4 WHERE id = ?5').bind(p, x && x.confidence != null ? x.confidence : null, p === null ? (err || 'no answer') : null, now, rows[i].id).run();
+    }
+  }));
+  return { done, failed };
+}

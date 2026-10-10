@@ -1,4 +1,4 @@
-import { jevShadow } from './jev.js';
+import { jevShadow, jevTerms } from './jev.js';
 // 데일리드롭 피드 Worker (v1.3 — 읽기 전용 digest 경로, 결정적 클러스터링): 10분 수집분 저장(D1) → 목록 페이지 / JSON / 1시간 취합본
 const KST = 9 * 3600 * 1000;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -236,7 +236,7 @@ export default {
     return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/breaking.json?region=XX&lang=xx', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
-    if (ev.cron === '* * * * *') { ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }
+    if (ev.cron === '* * * * *') { ctx.waitUntil(jevTerms(env).catch(() => {})); ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
     // GitHub schedule은 기본 브랜치(main)의 워크플로만 실행하므로, paycheck-page에만 있는 issuedrop.yml(KST 06/12/18시 자료보고서)도 여기서 호출한다.
     const DISPATCH = { '*/10 * * * *': { wf: 'codex-feed-schedule.yml', ref: 'main', tag: 'dispatch' }, '0 21,3,9 * * *': { wf: 'issuedrop.yml', ref: 'paycheck-page', tag: 'dispatch:issuedrop' }, '4 0,1,4,5,6,9,10,11,12,13,19,20,21,22 * * *': { wf: 'site-deploy.yml', ref: 'paycheck-page', tag: 'dispatch:site' } };
