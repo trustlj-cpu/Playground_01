@@ -11,6 +11,8 @@ export interface Settings {
   lang: string;
   textScale: number; // 0.85 … 1.3 (same range as the website's text-size slider)
   theme: ThemeMode;
+  intro: boolean; // opening animation (typewriter masthead) once per cold start
+  introSound: boolean; // its typewriter sounds
 }
 
 const KEY = 'dd.settings.v1';
@@ -21,9 +23,9 @@ export function firstRunDefaults(): Settings {
   try {
     code = (getLocales()[0]?.languageCode || 'en').toLowerCase();
   } catch {}
-  if (code === 'ko') return { region: 'KR', lang: 'ko', textScale: 1, theme: 'system' };
-  if (code === 'ja') return { region: 'JP', lang: 'ja', textScale: 1, theme: 'system' };
-  return { region: 'US', lang: 'en', textScale: 1, theme: 'system' };
+  if (code === 'ko') return { region: 'KR', lang: 'ko', textScale: 1, theme: 'system', intro: true, introSound: true };
+  if (code === 'ja') return { region: 'JP', lang: 'ja', textScale: 1, theme: 'system', intro: true, introSound: true };
+  return { region: 'US', lang: 'en', textScale: 1, theme: 'system', intro: true, introSound: true };
 }
 
 interface Ctx {

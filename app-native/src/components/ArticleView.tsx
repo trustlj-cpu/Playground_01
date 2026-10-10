@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { popupLabels, strings } from '../i18n';
-import { articleKey, useBookmarks } from '../lib/bookmarks';
+import { articleKey, useBookmarks, webPath } from '../lib/bookmarks';
 import { useColors, useSettings } from '../lib/settings';
 import { linkTerms } from '../lib/terms';
 import { para, sans, serif } from '../lib/theme';
@@ -48,7 +48,7 @@ export default function ArticleView({ edition, story }: { edition: Edition; stor
         bookmark={{
           on,
           label: on ? S.account.bmOn : S.account.bm,
-          onPress: () => bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl }),
+          onPress: () => bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl, url: webPath(edition.url) }),
         }}
       />
       <RichText segs={segs.title} onTerm={onTerm} style={[serif(lang, 700), styles.title, { color: c.head }]} />

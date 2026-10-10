@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { setIntroTarget } from '../lib/introTarget';
 import { useColors } from '../lib/settings';
 import { serif } from '../lib/theme';
 import type { Edition } from '../lib/types';
@@ -23,10 +24,23 @@ export default function Masthead({ edition, onPlace }: { edition: Edition; onPla
   const { width } = useWindowDimensions();
   const lang = edition.lang;
   const m = edition.mast;
+  // the opening animation (Intro) ends by rising into this wordmark
+  const logoRef = useRef<View>(null);
+  const report = () =>
+    setIntroTarget(
+      () =>
+        new Promise((done) => {
+          const v = logoRef.current;
+          if (!v) return done(null);
+          v.measureInWindow((x, y, w, h) => done(w > 0 ? { x, y, width: w, height: h } : null));
+        }),
+    );
   return (
     <View style={styles.wrap}>
       <View style={styles.logo}>
-        <Logo width={Math.min(330, width * 0.84)} />
+        <View ref={logoRef} onLayout={report} collapsable={false}>
+          <Logo width={Math.min(330, width * 0.84)} />
+        </View>
       </View>
       <View style={[styles.dateline, { borderColor: c.ink }]}>
         <Text style={[serif(lang), styles.side, { color: c.ink2 }]} numberOfLines={1}>

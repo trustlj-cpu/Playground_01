@@ -4,8 +4,9 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenTitle from '../../components/ScreenTitle';
-import { langName, strings } from '../../i18n';
+import { fmt, langName, strings } from '../../i18n';
 import { API_BASE, USE_FIXTURES } from '../../lib/api';
+import { useBookmarks } from '../../lib/bookmarks';
 import { findRegion, pickLang, regionName, titleCase, useIndex } from '../../lib/content';
 import { ThemeMode, useSettings } from '../../lib/settings';
 import { para, sans, serif } from '../../lib/theme';
@@ -15,6 +16,7 @@ const STEPS = [0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3];
 export default function Settings() {
   const { settings, update, colors: c } = useSettings();
   const insets = useSafeAreaInsets();
+  const bm = useBookmarks();
   const index = useIndex();
   const L = settings.lang;
   const S = strings(L);
@@ -97,6 +99,47 @@ export default function Settings() {
         ))}
       </View>
 
+      <H t={S.app.intro} p={S.app.introP} />
+      <View style={styles.chips}>
+        <Text style={[sans(400), styles.lbl, { color: c.ink }]}>{S.app.introAnim}</Text>
+        <Chip on={settings.intro} label={S.app.on} onPress={() => update({ intro: true })} />
+        <Chip on={!settings.intro} label={S.app.off} onPress={() => update({ intro: false })} />
+      </View>
+      <View style={styles.chips}>
+        <Text style={[sans(400), styles.lbl, { color: settings.intro ? c.ink : c.mute }]}>{S.app.introSound}</Text>
+        <Chip on={settings.introSound} label={S.app.on} onPress={() => update({ introSound: true })} />
+        <Chip on={!settings.introSound} label={S.app.off} onPress={() => update({ introSound: false })} />
+      </View>
+
+      {bm.syncEnabled ? (
+        <>
+          <H t={S.app.account} p={S.app.accountP} />
+          {bm.user ? (
+            <>
+              <Text style={[sans(400), { color: c.ink, fontSize: 13.5, marginTop: 4 }]}>{fmt(S.app.signedInAs, { who: bm.user.name || bm.user.email })}</Text>
+              <Text style={[sans(400), styles.small, { color: bm.sync === 'error' ? c.red : c.mute }]}>
+                {bm.sync === 'syncing'
+                  ? S.app.syncing
+                  : bm.sync === 'error'
+                    ? S.app.syncFail
+                    : bm.lastSync
+                      ? fmt(S.app.synced, { t: new Date(bm.lastSync).toLocaleTimeString(L, { hour: '2-digit', minute: '2-digit' }) })
+                      : ''}
+              </Text>
+              <View style={styles.chips}>
+                <Chip on={false} label={S.app.syncNow} onPress={() => bm.syncNow()} />
+                <Chip on={false} label={S.app.signOut} onPress={() => bm.signOut()} />
+              </View>
+            </>
+          ) : (
+            <View style={styles.chips}>
+              <Chip on label={S.app.signIn} onPress={() => bm.signIn()} />
+              {bm.sync === 'error' ? <Text style={[sans(400), styles.small, { color: c.red, alignSelf: 'center' }]}>{S.app.syncFail}</Text> : null}
+            </View>
+          )}
+        </>
+      ) : null}
+
       <View style={[styles.foot, { borderTopColor: c.ink }]}>
         <Text style={[serif(L), { fontSize: 12, color: c.ink2, lineHeight: 18 }]}>{S.app.aboutApp}</Text>
         <Text style={[sans(400), styles.small, { color: c.mute }]}>
@@ -119,4 +162,5 @@ const styles = StyleSheet.create({
   sizeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   foot: { marginTop: 28, borderTopWidth: 1, paddingTop: 8 },
   small: { fontSize: 11, marginTop: 6 },
+  lbl: { fontSize: 13.5, alignSelf: 'center', minWidth: 120 },
 });

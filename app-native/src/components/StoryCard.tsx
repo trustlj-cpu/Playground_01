@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { strings } from '../i18n';
-import { articleKey, useBookmarks } from '../lib/bookmarks';
+import { articleKey, useBookmarks, webPath } from '../lib/bookmarks';
 import { useColors, useSettings } from '../lib/settings';
 import { linkTerms } from '../lib/terms';
 import { isCJK, para, sans, serif } from '../lib/theme';
@@ -53,7 +53,7 @@ function StoryCard({ edition, story, lead }: { edition: Edition; story: Story; l
         bookmark={{
           on,
           label: on ? S.account.bmOn : S.account.bm,
-          onPress: () => bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl }),
+          onPress: () => bm.toggleArticle({ key, id: story.id, region: edition.region, lang, date: edition.date, no: edition.no, kick: story.kick, hl: story.hl, url: webPath(edition.url) }),
         }}
       />
       <RichText

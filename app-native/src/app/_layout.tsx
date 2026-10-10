@@ -6,6 +6,7 @@ import * as SystemUI from 'expo-system-ui';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Intro from '../components/Intro';
 import { OverlayProvider } from '../components/Overlay';
 import { BookmarkProvider } from '../lib/bookmarks';
 import { IndexProvider } from '../lib/content';
@@ -48,6 +49,7 @@ function Shell() {
           />
         </OverlayProvider>
       </IndexProvider>
+      <Intro />
     </View>
   );
 }

@@ -46,16 +46,17 @@ export const dark: Palette = {
   dark: true,
 };
 
-// Fonts: Noto Serif KR / JP / (Latin) Noto Serif from @expo-google-fonts, two weights each.
-// Custom fonts in React Native select weight by family name, so each weight is its own family.
+// Fonts: Noto Serif KR / JP / (Latin) Noto Serif, two weights each, subset + converted to CFF by
+// scripts/subset-fonts.py (45.8 MB of TTF → 13.6 MB). Custom fonts in React Native select weight by
+// family name, so each weight is its own family.
 export const FONT_FILES = {
-  NotoSerifKR_400Regular: require('@expo-google-fonts/noto-serif-kr/400Regular/NotoSerifKR_400Regular.ttf'),
-  NotoSerifKR_700Bold: require('@expo-google-fonts/noto-serif-kr/700Bold/NotoSerifKR_700Bold.ttf'),
-  NotoSerifJP_400Regular: require('@expo-google-fonts/noto-serif-jp/400Regular/NotoSerifJP_400Regular.ttf'),
-  NotoSerifJP_700Bold: require('@expo-google-fonts/noto-serif-jp/700Bold/NotoSerifJP_700Bold.ttf'),
-  NotoSerif_400Regular: require('@expo-google-fonts/noto-serif/400Regular/NotoSerif_400Regular.ttf'),
-  NotoSerif_700Bold: require('@expo-google-fonts/noto-serif/700Bold/NotoSerif_700Bold.ttf'),
-  NotoSerif_400Regular_Italic: require('@expo-google-fonts/noto-serif/400Regular_Italic/NotoSerif_400Regular_Italic.ttf'),
+  NotoSerifKR_400Regular: require('../../assets/fonts/NotoSerifKR_400Regular.otf'),
+  NotoSerifKR_700Bold: require('../../assets/fonts/NotoSerifKR_700Bold.otf'),
+  NotoSerifJP_400Regular: require('../../assets/fonts/NotoSerifJP_400Regular.otf'),
+  NotoSerifJP_700Bold: require('../../assets/fonts/NotoSerifJP_700Bold.otf'),
+  NotoSerif_400Regular: require('../../assets/fonts/NotoSerif_400Regular.otf'),
+  NotoSerif_700Bold: require('../../assets/fonts/NotoSerif_700Bold.otf'),
+  NotoSerif_400Regular_Italic: require('../../assets/fonts/NotoSerif_400Regular_Italic.otf'),
 };
 
 const familyFor = (lang: string) => {

@@ -8,6 +8,7 @@ import ScreenTitle, { formatDate } from '../../components/ScreenTitle';
 import { fmt, strings } from '../../i18n';
 import { getJSON, paths } from '../../lib/api';
 import { ArticleBookmark, useBookmarks } from '../../lib/bookmarks';
+import { useIndex } from '../../lib/content';
 import { useSettings } from '../../lib/settings';
 import { sans, serif } from '../../lib/theme';
 import type { Edition } from '../../lib/types';
@@ -23,6 +24,9 @@ export default function Bookmarks() {
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const s = settings.textScale;
+  const index = useIndex();
+  // bookmarks synced from the website carry no edition number: look it up in the index
+  const edNo = (b: ArticleBookmark) => b.no || index.data?.regions.find((r) => r.code === b.region)?.editions.find((e) => e.date === b.date)?.no || 0;
 
   const open = async (b: ArticleBookmark) => {
     setBusy(b.key);
@@ -64,10 +68,11 @@ export default function Bookmarks() {
             >
               <View style={styles.row}>
                 <Text style={[sans(700), styles.kick, { color: c.ink }]} numberOfLines={1}>
-                  {splitKick(b.kick)[0]}
+                  {b.kick ? splitKick(b.kick)[0] : ''}
                   <Text style={[sans(400), { color: c.mute }]}>
                     {'  '}
-                    {fmt(strings(b.lang).app.edNo, { n: b.no })} · {formatDate(b.date, b.lang)}
+                    {edNo(b) ? fmt(strings(b.lang).app.edNo, { n: edNo(b) }) + ' · ' : ''}
+                    {formatDate(b.date, b.lang)}
                   </Text>
                 </Text>
                 <BookmarkButton on label={A.bmOn} onPress={() => bm.removeArticle(b.key)} />
