@@ -49,14 +49,14 @@ export default {
       const region = m && live[m[1]] !== undefined ? m[1] : live[country] !== undefined ? country : (country === 'KR' || !country ? 'KR' : 'US');
       if (region !== 'KR' && live[region] !== undefined) return withCC(Response.redirect(url.origin + '/' + live[region], 302), country);
     }
-    // 예약 발행: schedule.json의 공개 시각(at)이 지난 호가 있으면 그 나라 1면·그 호 페이지를 _sched 사본으로 내보낸다. _sched 직접 접근은 막는다.
+    // 예약 발행: schedule.json의 공개 시각(at)이 지난 호가 있으면 그 나라 1면·그 호 페이지(앱 API /app/v1 의 그 호 JSON·index·glossary 포함)를 _sched 사본으로 내보낸다. _sched 직접 접근은 막는다.
     if (url.pathname.startsWith('/_sched/') || url.pathname === '/schedule.json') return new Response('Not found', { status: 404 });
     if (request.method === 'GET') {
-      const hit = (await schedule(env, url)).filter(s => s.at <= Date.now() && (url.pathname === '/' + s.prefix || url.pathname === '/' + s.prefix + 'index.html' || url.pathname.startsWith('/' + s.prefix + s.date + '/') || url.pathname === '/' + s.prefix + 'editions.json')).sort((a, b) => b.at - a.at)[0];
+      const hit = (await schedule(env, url)).filter(s => s.at <= Date.now() && (url.pathname === '/' + s.prefix || url.pathname === '/' + s.prefix + 'index.html' || url.pathname.startsWith('/' + s.prefix + s.date + '/') || url.pathname === '/' + s.prefix + 'editions.json' || url.pathname === '/app/v1/index.json' || url.pathname.startsWith('/app/v1/glossary/') || url.pathname.startsWith('/app/v1/' + s.key.slice(0, -s.date.length - 1) + '/' + s.date + '.'))).sort((a, b) => b.at - a.at)[0];
       if (hit) {
         const p = url.pathname.replace(/index\.html$/, '');
         const r = await env.ASSETS.fetch(new Request(url.origin + '/_sched/' + hit.key + p));
-        if (r.ok) { const h = new Headers(r.headers); h.set('cache-control', 'no-cache'); return withCC(new Response(r.body, { status: 200, headers: h }), country); }
+        if (r.ok) { const h = new Headers(r.headers); h.set('cache-control', 'no-cache'); if (p.endsWith('.json')) h.set('access-control-allow-origin', '*'); return withCC(new Response(r.body, { status: 200, headers: h }), country); }
       }
     }
     const res = await env.ASSETS.fetch(request);

@@ -435,6 +435,8 @@ fs.copyFileSync(path.join(__dirname, 'og.png'), path.join(OUT, 'og.png'));
 fs.cpSync(path.join(__dirname, 'brand'), path.join(OUT, 'brand'), { recursive: true });
 // 앱용 호 목록(공개 JSON). 앱은 이 파일을 폴링해 새 호를 받는다.
 fs.writeFileSync(path.join(OUT, 'editions.json'), JSON.stringify({ site: SITE, generated_at: new Date().toISOString(), latest: latest.date, editions: [...byRegion('KR')].reverse().map(e => ({ date: e.date, no: e.no, title: `제 ${e.no} 호 · ${fmt(e.date)} ${KO_ED(e.date)}`, blurb: e.blurb || '', url: `${SITE}/${e.date}/`, html: `${SITE}/${e.date}/index.html` })) }, null, 1));
+// 앱용 콘텐츠 API(/app/v1, 스펙 ops/app/API.md): 공개된 호만. 실패해도 사이트 빌드는 계속
+try { require("./appapi.js").build({ OUT, SITE, SPECDIR: path.dirname(spec), editions, h: { EDTXT, TZ, COUNTRY, dateIn, isAM, PUBAT, EXTRA, okUrl } }); } catch (err) { console.warn("app api skipped:", err.message); }
 // 앱 딥링크(universal links / app links): site/app.json에 Team ID·서명 지문이 채워진 경우에만 생성
 try {
   const app = JSON.parse(fs.readFileSync(path.join(path.dirname(spec), 'app.json'), 'utf8'));
