@@ -9,34 +9,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import * as Account from './account';
-import type { AccountUser, ServerBookmark } from './account';
+import type { AccountUser } from './account';
+import {
+  type ArticleBookmark,
+  enqueue,
+  type Op,
+  parseArticles,
+  parseOutbox,
+  parseTerms,
+  reconcile,
+  type TermBookmark,
+  toServerArticle,
+  toServerTerm,
+} from './bookmarkSync';
+import { warnWrite } from './cacheStore';
 
-export interface ArticleBookmark {
-  key: string; // region:date:lang:id
-  id: string;
-  region: string;
-  lang: string;
-  date: string;
-  no: number; // 0 when it came from the website (the list looks the number up in the index)
-  kick: string;
-  hl: string;
-  url?: string; // web path of the edition page, e.g. /2026-10-10/en/
-  at: number;
-}
-
-export interface TermBookmark {
-  key: string; // lang:term
-  term: string;
-  f: string;
-  d: string;
-  w: string;
-  region: string;
-  lang: string;
-  date: string;
-  at: number;
-}
-
-type Op = { m: 'POST' | 'DELETE'; b: ServerBookmark };
+export type { ArticleBookmark, TermBookmark } from './bookmarkSync';
+export { articleKey, termKey, webPath } from './bookmarkSync';
 
 const KA = 'dd.bm.articles.v1';
 const KT = 'dd.bm.terms.v1';
@@ -66,66 +55,6 @@ interface Ctx {
 
 const BookmarkContext = createContext<Ctx | null>(null);
 
-export const articleKey = (region: string, date: string, lang: string, id: string) => `${region}:${date}:${lang}:${id}`;
-/** Web path of an edition page from the API's absolute url (https://…/2026-10-10/en/ → /2026-10-10/en/). */
-export const webPath = (u?: string) => (u ? u.replace(/^https?:\/\/[^/]+/, '') || undefined : undefined);
-export const termKey = (lang: string, term: string) => `${lang}:${term}`;
-
-const sid = (b: Pick<ServerBookmark, 'kind' | 'region' | 'date' | 'ref'>) => (b.kind === 'term' ? `t|${b.ref}` : `a|${b.region}|${b.date}|${b.ref}`);
-const aSid = (a: Omit<ArticleBookmark, 'at'>) => sid({ kind: 'article', region: a.region, date: a.date, ref: a.id });
-const tSid = (t: Omit<TermBookmark, 'at'>) => sid({ kind: 'term', region: t.region, date: t.date, ref: t.term });
-
-export const toServerArticle = (a: Omit<ArticleBookmark, 'at'>): ServerBookmark => ({
-  kind: 'article',
-  region: a.region,
-  date: a.date,
-  lang: a.lang,
-  ref: a.id,
-  title: a.hl,
-  url: a.url ? `${a.url}#${a.id}` : '',
-});
-export const toServerTerm = (t: Omit<TermBookmark, 'at'>): ServerBookmark => ({
-  kind: 'term',
-  region: t.region,
-  date: t.date,
-  lang: t.lang,
-  ref: t.term,
-  title: t.term,
-  url: '',
-  note: (t.d || '').slice(0, 380),
-});
-
-const fromServerArticle = (x: ServerBookmark, prev?: ArticleBookmark): ArticleBookmark => {
-  const lang = x.lang || prev?.lang || 'en';
-  const url = (x.url || '').split('#')[0];
-  return {
-    key: prev?.key || articleKey(x.region, x.date, lang, x.ref),
-    id: x.ref,
-    region: x.region,
-    lang,
-    date: x.date,
-    no: prev?.no || 0,
-    kick: prev?.kick || '',
-    hl: prev?.hl || x.title || x.ref,
-    url: prev?.url || url || undefined,
-    at: prev?.at || x.created_at || Date.now(),
-  };
-};
-const fromServerTerm = (x: ServerBookmark, prev?: TermBookmark): TermBookmark => {
-  const lang = x.lang || prev?.lang || 'en';
-  return {
-    key: prev?.key || termKey(lang, x.ref),
-    term: x.ref,
-    f: prev?.f || '',
-    d: prev?.d || x.note || '',
-    w: prev?.w || '',
-    region: x.region || prev?.region || '',
-    lang,
-    date: x.date || prev?.date || '',
-    at: prev?.at || x.created_at || Date.now(),
-  };
-};
-
 export function BookmarkProvider({ children }: { children: React.ReactNode }) {
   const [articles, setArticles] = useState<ArticleBookmark[]>([]);
   const [terms, setTerms] = useState<TermBookmark[]>([]);
@@ -139,30 +68,33 @@ export function BookmarkProvider({ children }: { children: React.ReactNode }) {
   const outbox = useRef<Op[]>([]);
   const userRef = useRef<AccountUser | null>(null);
   const running = useRef<Promise<void> | null>(null);
+  const sending = useRef<Op | null>(null); // outbox op whose request is in flight
   const again = useRef(false);
 
   const putA = (list: ArticleBookmark[]) => {
     A.current = list;
     setArticles(list);
-    AsyncStorage.setItem(KA, JSON.stringify(list)).catch(() => {});
+    AsyncStorage.setItem(KA, JSON.stringify(list)).catch(warnWrite('bookmarks'));
   };
   const putT = (list: TermBookmark[]) => {
     T.current = list;
     setTerms(list);
-    AsyncStorage.setItem(KT, JSON.stringify(list)).catch(() => {});
+    AsyncStorage.setItem(KT, JSON.stringify(list)).catch(warnWrite('term bookmarks'));
   };
   const putO = (list: Op[]) => {
     outbox.current = list;
-    AsyncStorage.setItem(KO, JSON.stringify(list)).catch(() => {});
+    AsyncStorage.setItem(KO, JSON.stringify(list)).catch(warnWrite('sync outbox'));
   };
 
   useEffect(() => {
     (async () => {
       try {
         const [[, a], [, t], [, o]] = await AsyncStorage.multiGet([KA, KT, KO]);
-        if (a) putA(JSON.parse(a));
-        if (t) putT(JSON.parse(t));
-        if (o) outbox.current = JSON.parse(o);
+        // a bookmark tapped in the moment before storage was read is kept on top of the stored list
+        const merge = <X extends { key: string }>(stored: X[] | null, now: X[]) => (stored ? [...now, ...stored.filter((x) => !now.some((y) => y.key === x.key))] : now);
+        putA(merge(parseArticles(a), A.current));
+        putT(merge(parseTerms(t), T.current));
+        outbox.current = [...parseOutbox(o), ...outbox.current];
       } catch {}
       const u = await Account.savedUser();
       userRef.current = u;
@@ -186,48 +118,32 @@ export function BookmarkProvider({ children }: { children: React.ReactNode }) {
       try {
         while (outbox.current.length) {
           const op = outbox.current[0];
-          if (op.m === 'POST') await Account.addBookmark(op.b);
-          else await Account.deleteBookmark(op.b);
-          putO(outbox.current.slice(1));
+          sending.current = op;
+          try {
+            if (op.m === 'POST') await Account.addBookmark(op.b);
+            else await Account.deleteBookmark(op.b);
+          } catch (e) {
+            // rejected for good (e.g. 400/404/409): drop it instead of blocking every later change forever
+            if (!(e instanceof Account.ApiError && e.permanent)) throw e;
+          } finally {
+            sending.current = null;
+          }
+          // remove exactly this op: while it was in flight the outbox may have changed around it
+          putO(outbox.current.filter((o) => o !== op));
         }
         const items = await Account.listBookmarks();
         const firstMerge = (await AsyncStorage.getItem(KM).catch(() => null)) !== String(u.id);
-        const server = new Set(items.map(sid));
         // changes made while the list was in flight are still in the outbox: keep them as they are locally
-        const pending = new Set(outbox.current.map((o) => sid(o.b)));
-
-        const prevA = new Map(A.current.map((a) => [aSid(a), a]));
-        const prevT = new Map(T.current.map((t) => [tSid(t), t]));
-        const nextA: ArticleBookmark[] = [];
-        const nextT: TermBookmark[] = [];
-        const upload: ServerBookmark[] = [];
-        for (const x of items) {
-          const k = sid(x);
-          if (pending.has(k)) continue;
-          if (x.kind === 'article') nextA.push(fromServerArticle(x, prevA.get(k)));
-          else if (x.kind === 'term') nextT.push(fromServerTerm(x, prevT.get(k)));
-        }
-        for (const [k, a] of prevA) {
-          if (server.has(k) && !pending.has(k)) continue;
-          if (pending.has(k)) nextA.push(a);
-          else if (firstMerge) {
-            nextA.push(a); // made on the device before signing in: keep and upload
-            upload.push(toServerArticle(a));
+        const r = reconcile(items, A.current, T.current, outbox.current, firstMerge);
+        putA(r.articles);
+        putT(r.terms);
+        for (const b of r.upload) {
+          try {
+            await Account.addBookmark(b);
+          } catch (e) {
+            if (!(e instanceof Account.ApiError && e.permanent)) throw e;
           }
         }
-        for (const [k, t] of prevT) {
-          if (server.has(k) && !pending.has(k)) continue;
-          if (pending.has(k)) nextT.push(t);
-          else if (firstMerge) {
-            nextT.push(t);
-            upload.push(toServerTerm(t));
-          }
-        }
-        nextA.sort((a, b) => b.at - a.at);
-        nextT.sort((a, b) => b.at - a.at);
-        putA(nextA);
-        putT(nextT);
-        for (const b of upload) await Account.addBookmark(b);
         await AsyncStorage.setItem(KM, String(u.id)).catch(() => {});
         setLastSync(Date.now());
         setSync('idle');
@@ -267,10 +183,7 @@ export function BookmarkProvider({ children }: { children: React.ReactNode }) {
   const queue = useCallback(
     (op: Op) => {
       if (!userRef.current) return;
-      // a POST followed by a DELETE of the same item (or the reverse) cancels out
-      const k = sid(op.b);
-      const rest = outbox.current.filter((o) => sid(o.b) !== k);
-      putO(rest.length < outbox.current.length ? rest : [...outbox.current, op]);
+      putO(enqueue(outbox.current, op, sending.current));
       runSync();
     },
     [runSync],

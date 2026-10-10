@@ -22,7 +22,20 @@ import { SITE_ORIGIN } from './api';
 export const ACCOUNT_SYNC = process.env.EXPO_PUBLIC_ACCOUNT_SYNC === '1' && Platform.OS !== 'web';
 
 const TOKEN_KEY = 'dd.account.token';
-const USER_KEY = 'dd.account.user.v1';
+const USER_KEY = 'dd.account.user.v1'; // in the secure store (email/name are personal data); older builds kept it in AsyncStorage
+const TIMEOUT_MS = 15_000;
+
+/** fetch with a timeout: a request hanging on a captive portal or dead connection must not leave
+ *  "Syncing…" on screen forever or block the sync queue. */
+async function fetchT(url: string, init: RequestInit, ms = TIMEOUT_MS): Promise<Response> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 export interface AccountUser {
   id: number;
@@ -44,6 +57,16 @@ export interface ServerBookmark {
 }
 
 export class AuthError extends Error {}
+/** The server answered with an error status (not 401). 4xx other than 408/429 means the request itself is
+ *  rejected and retrying it will not help. */
+export class ApiError extends Error {
+  constructor(public status: number, path: string) {
+    super(`HTTP ${status} ${path}`);
+  }
+  get permanent() {
+    return this.status >= 400 && this.status < 500 && this.status !== 408 && this.status !== 429;
+  }
+}
 
 async function getToken(): Promise<string | null> {
   try {
@@ -64,8 +87,18 @@ export async function savedUser(): Promise<AccountUser | null> {
   if (!ACCOUNT_SYNC) return null;
   if (!(await getToken())) return null;
   try {
-    const raw = await AsyncStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as AccountUser) : null;
+    let raw = await SecureStore.getItemAsync(USER_KEY).catch(() => null);
+    if (!raw) {
+      // migrate from AsyncStorage (earlier builds)
+      raw = await AsyncStorage.getItem(USER_KEY);
+      if (raw) {
+        await SecureStore.setItemAsync(USER_KEY, raw).catch(() => {});
+        await SecureStore.deleteItemAsync(USER_KEY).catch(() => {});
+  await AsyncStorage.removeItem(USER_KEY).catch(() => {});
+      }
+    }
+    const u = raw ? JSON.parse(raw) : null;
+    return u && typeof u === 'object' && u.id != null ? (u as AccountUser) : null;
   } catch {
     return null;
   }
@@ -74,15 +107,16 @@ export async function savedUser(): Promise<AccountUser | null> {
 async function call<T>(method: string, path: string, body?: unknown, token?: string | null): Promise<T> {
   const t = token ?? (await getToken());
   if (!t) throw new AuthError('signed out');
-  const res = await fetch(SITE_ORIGIN + path, {
+  const res = await fetchT(SITE_ORIGIN + path, {
     method,
     credentials: 'omit', // never mix in a browser cookie: the bearer token is the only credential
     headers: { accept: 'application/json', authorization: `Bearer ${t}`, ...(body ? { 'content-type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (res.status === 401) throw new AuthError('session expired');
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${path}`);
-  return (await res.json()) as T;
+  if (!res.ok) throw new ApiError(res.status, path);
+  const text = await res.text();
+  return (text ? JSON.parse(text) : {}) as T; // 204 / empty body
 }
 
 const b64url = (b64: string) => b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -112,7 +146,7 @@ export async function signIn(): Promise<AccountUser | null> {
   if (r.type !== 'success') return null; // cancelled / dismissed
   const q = Linking.parse(r.url).queryParams || {};
   if (q.state !== state || typeof q.code !== 'string') throw new Error('bad_redirect');
-  const res = await fetch(SITE_ORIGIN + '/api/auth/app/token', {
+  const res = await fetchT(SITE_ORIGIN + '/api/auth/app/token', {
     method: 'POST',
     credentials: 'omit',
     headers: { accept: 'application/json', 'content-type': 'application/json' },
@@ -123,18 +157,24 @@ export async function signIn(): Promise<AccountUser | null> {
   if (!j.token || !j.user) throw new Error('no_token');
   await setToken(j.token);
   const user = { id: j.user.id, email: j.user.email, name: j.user.name || '' };
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user)).catch(() => {});
+  await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user)).catch(() => {});
   return user;
 }
 
 export async function signOut(): Promise<void> {
   const t = await getToken();
   await setToken(null);
+  await SecureStore.deleteItemAsync(USER_KEY).catch(() => {});
   await AsyncStorage.removeItem(USER_KEY).catch(() => {});
   if (t) await call('POST', '/api/auth/logout', {}, t).catch(() => {});
 }
 
-export const listBookmarks = () => call<{ items: ServerBookmark[] }>('GET', '/api/bookmarks').then((j) => j.items || []);
+export const listBookmarks = () =>
+  call<{ items?: unknown }>('GET', '/api/bookmarks').then((j) =>
+    (Array.isArray(j.items) ? j.items : []).filter(
+      (x): x is ServerBookmark => !!x && typeof x.ref === 'string' && (x.kind === 'article' || x.kind === 'term') && typeof (x.region ?? '') === 'string' && typeof (x.date ?? '') === 'string',
+    ).map((x) => ({ ...x, region: x.region ?? '', date: x.date ?? '' })),
+  );
 export const addBookmark = (b: ServerBookmark) => call<{ ok: boolean }>('POST', '/api/bookmarks', b);
 export const deleteBookmark = (b: Pick<ServerBookmark, 'kind' | 'region' | 'date' | 'ref'>) =>
   call<{ ok: boolean }>('DELETE', '/api/bookmarks', { kind: b.kind, region: b.region, date: b.date, ref: b.ref });

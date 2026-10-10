@@ -3,16 +3,29 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BookmarkButton from '../../components/BookmarkButton';
 import { splitKick } from '../../components/Kick';
-import { useOverlay } from '../../components/Overlay';
+import { useOverlay } from '../../components/overlayContext';
 import ScreenTitle, { formatDate } from '../../components/ScreenTitle';
 import { fmt, strings } from '../../i18n';
 import { getJSON, paths } from '../../lib/api';
 import { ArticleBookmark, useBookmarks } from '../../lib/bookmarks';
 import { useIndex } from '../../lib/content';
+import { normEdition } from '../../lib/normalize';
 import { READ_MAX, useTextScale } from '../../lib/layout';
 import { useSettings } from '../../lib/settings';
 import { sans, serif } from '../../lib/theme';
+import type { Palette } from '../../lib/theme';
 import type { Edition } from '../../lib/types';
+
+// module level: a component defined inside the screen would remount (and lose screen-reader focus) on every render
+function Seg({ on, label, n, onPress, c }: { on: boolean; label: string; n: number; onPress: () => void; c: Palette }) {
+  return (
+    <Pressable onPress={onPress} style={[styles.seg, { borderColor: c.ink, backgroundColor: on ? c.ink : 'transparent' }]} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+      <Text style={[sans(600), { color: on ? c.paper : c.ink, fontSize: 13, letterSpacing: 0.5 }]}>
+        {label} {n ? `· ${n}` : ''}
+      </Text>
+    </Pressable>
+  );
+}
 
 export default function Bookmarks() {
   const { settings, colors: c } = useSettings();
@@ -33,7 +46,7 @@ export default function Bookmarks() {
     setBusy(b.key);
     setFailed(null);
     try {
-      const ed = await getJSON<Edition>(paths.edition(b.region, b.date, b.lang));
+      const ed = await getJSON<Edition>(paths.edition(b.region, b.date, b.lang), normEdition);
       const st = ed.stories.find((x) => x.id === b.id);
       if (st) openArticle(ed, st);
       else setFailed(b.key);
@@ -44,20 +57,12 @@ export default function Bookmarks() {
     }
   };
 
-  const Seg = ({ id, label, n }: { id: 'a' | 't'; label: string; n: number }) => (
-    <Pressable onPress={() => setTab(id)} style={[styles.seg, { borderColor: c.ink, backgroundColor: tab === id ? c.ink : 'transparent' }]} accessibilityRole="tab" accessibilityState={{ selected: tab === id }}>
-      <Text style={[sans(600), { color: tab === id ? c.paper : c.ink, fontSize: 13, letterSpacing: 0.5 }]}>
-        {label} {n ? `· ${n}` : ''}
-      </Text>
-    </Pressable>
-  );
-
   return (
     <ScrollView style={{ flex: 1, backgroundColor: c.paper }} contentContainerStyle={{ paddingTop: insets.top, paddingHorizontal: 16, paddingBottom: 32, width: '100%', maxWidth: READ_MAX + 32, alignSelf: 'center' }}>
       <ScreenTitle title={S.app.bookmarks} lang={settings.lang} />
       <View style={styles.segs} accessibilityRole="tablist">
-        <Seg id="a" label={A.tabArticles} n={bm.articles.length} />
-        <Seg id="t" label={A.tabTerms} n={bm.terms.length} />
+        <Seg c={c} on={tab === 'a'} onPress={() => setTab('a')} label={A.tabArticles} n={bm.articles.length} />
+        <Seg c={c} on={tab === 't'} onPress={() => setTab('t')} label={A.tabTerms} n={bm.terms.length} />
       </View>
       {tab === 'a' ? (
         bm.articles.length ? (
@@ -65,6 +70,11 @@ export default function Bookmarks() {
             <Pressable
               key={b.key}
               onPress={() => open(b)}
+              // the row is one accessibility element on iOS, so the nested remove button is offered as an action
+              accessibilityRole="button"
+              accessibilityLabel={b.hl}
+              accessibilityActions={[{ name: 'activate' }, { name: 'remove', label: A.bmOn }]}
+              onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'remove' ? bm.removeArticle(b.key) : open(b))}
               style={({ pressed }) => [styles.item, i < bm.articles.length - 1 && { borderBottomColor: c.ink, borderBottomWidth: 1 }, pressed && { opacity: 0.6 }]}
             >
               <View style={styles.row}>

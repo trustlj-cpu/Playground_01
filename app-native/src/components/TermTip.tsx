@@ -8,7 +8,7 @@ import { useColors } from '../lib/settings';
 import { sans, serif } from '../lib/theme';
 import { popupLabels, strings } from '../i18n';
 import BookmarkButton from './BookmarkButton';
-import type { TermInfo } from './Overlay';
+import type { TermInfo } from './overlayContext';
 
 export default function TermTip({ info, onClose }: { info: TermInfo; onClose: () => void }) {
   const c = useColors();
@@ -21,13 +21,13 @@ export default function TermTip({ info, onClose }: { info: TermInfo; onClose: ()
   const below = info.y + 14;
   const top = h && below + h > H - 24 ? Math.max(16, info.y - 14 - h) : below;
   const L = popupLabels(info.region, info.lang);
-  const key = termKey(info.lang, info.term);
+  const key = termKey(info.term);
   const on = bm.hasTerm(key);
   const S = strings(info.lang);
 
   return (
     <>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="dismiss" />
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" accessibilityLabel={strings(info.lang).app.close} />
       <View
         onLayout={(e) => setH(e.nativeEvent.layout.height)}
         style={[
