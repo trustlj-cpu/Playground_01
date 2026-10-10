@@ -1,0 +1,115 @@
+name: tv-update
+
+# TV app (app-tv/, Expo + react-native-tvos — Apple TV and Android TV / Google TV).
+# Content never needs this workflow: the TV app reads the same static JSON API as the website.
+# This ships *code* changes:
+#  - push to app-mobile touching app-tv/** → OTA update (EAS Update) to the *preview* channel
+#  - manual run → OTA update to the *production* channel and/or store builds (EAS Build, production profile,
+#    EXPO_TV=1 from eas.json; builds the tvOS and Android TV binaries)
+# Needs the repository secret EXPO_TOKEN (expo.dev → Access tokens). It is only exposed to the steps that
+# call EAS; without it every job skips with a notice.
+
+on:
+  push:
+    branches: [app-mobile]
+    paths:
+      - "app-tv/**"
+      - ".github/workflows/tv-update.yml"
+  workflow_dispatch:
+    inputs:
+      update:
+        description: "Publish an OTA update to the production channel"
+        type: boolean
+        default: true
+      build:
+        description: "Run EAS Build (tvOS + Android TV, production profile)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: tv-update-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    if: github.event_name == 'push' || inputs.update
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app-tv
+    steps:
+      - name: Check EXPO_TOKEN
+        id: tok
+        working-directory: .
+        env:
+          HAS_TOKEN: ${{ secrets.EXPO_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::notice title=tv-update skipped::EXPO_TOKEN secret is not set — OTA update not published."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.tok.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.tok.outputs.ok == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app-tv/package-lock.json
+      - name: Install
+        if: steps.tok.outputs.ok == 'true'
+        run: npm ci
+      - name: Typecheck
+        if: steps.tok.outputs.ok == 'true'
+        run: npx tsc --noEmit
+      - name: Publish OTA update
+        if: steps.tok.outputs.ok == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TV: '1'
+          EXPO_PUBLIC_API_BASE: https://dailydropnewspaper.com/app/v1/
+          CHANNEL: ${{ github.event_name == 'push' && 'preview' || 'production' }}
+        run: npx eas-cli update --auto --channel "$CHANNEL" --platform all --non-interactive
+
+  build:
+    if: github.event_name == 'workflow_dispatch' && inputs.build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app-tv
+    steps:
+      - name: Check EXPO_TOKEN
+        id: tok
+        working-directory: .
+        env:
+          HAS_TOKEN: ${{ secrets.EXPO_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::notice title=tv-build skipped::EXPO_TOKEN secret is not set — EAS Build not started."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.tok.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.tok.outputs.ok == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app-tv/package-lock.json
+      - name: Install
+        if: steps.tok.outputs.ok == 'true'
+        run: npm ci
+      - name: Start EAS Build (tvOS + Android TV)
+        if: steps.tok.outputs.ok == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli build --platform all --profile production --non-interactive --no-wait
