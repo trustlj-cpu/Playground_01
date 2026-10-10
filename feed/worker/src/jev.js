@@ -42,15 +42,15 @@ const TERMS_PER_CALL = 10;
 export async function jevTerms(env) {
   if (!env.TYPESAFE_API_KEY) return { skipped: true };
   await env.DB.prepare('CREATE TABLE IF NOT EXISTS jev_terms (id INTEGER PRIMARY KEY AUTOINCREMENT, edition TEXT, lang TEXT, term TEXT, context TEXT, p REAL, conf REAL, err TEXT, created TEXT, done TEXT)').run();
-  const { results } = await env.DB.prepare('SELECT id, edition, lang, term, context FROM jev_terms WHERE done IS NULL ORDER BY id LIMIT 120').all();
+  const { results } = await env.DB.prepare('SELECT id, edition, lang, term, context, kind FROM jev_terms WHERE done IS NULL ORDER BY id LIMIT 120').all();
   if (!results || !results.length) return { done: 0 };
-  const groups = new Map(); for (const r of results) { const k = r.edition + '|' + r.lang; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
+  const groups = new Map(); for (const r of results) { const k = r.edition + '|' + r.lang + '|' + (r.kind || 'term'); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
   const chunks = []; for (const rows of groups.values()) for (let i = 0; i < rows.length; i += TERMS_PER_CALL) chunks.push(rows.slice(i, i + TERMS_PER_CALL));
   let done = 0, failed = 0; const now = new Date().toISOString();
   await Promise.all(chunks.map(async rows => {
     const { edition, lang } = rows[0];
-    const questions = {}; rows.forEach((r, i) => { questions['t' + i] = { type: 'noul', instructions: `In the ${edition} edition of a daily newspaper (written in ${lang}) the term "${String(r.term).slice(0, 80)}" appears${r.context ? ' in: "' + String(r.context).slice(0, 200) + '"' : ''}. Would a typical general reader of this edition need a short glossary explanation of this term to understand the story?`, criteria: { true: 'needs a glossary explanation', false: 'common knowledge for these readers' } }; });
-    const state = { edition, language: lang, task: 'choose newspaper glossary terms', terms: rows.map(r => String(r.term).slice(0, 80)) };
+    const infl = rows[0].kind === 'infl'; const questions = {}; rows.forEach((r, i) => { questions['t' + i] = infl ? { type: 'noul', instructions: `For the ${edition} edition of a daily newspaper (written in ${lang}): ${String(r.term).slice(0, 120)} said or posted: "${String(r.context || '').slice(0, 260)}". Is this a notable statement by an influential figure that readers of this edition would want to see in a short 'what influential people said' box (domestic figures of this country or globally influential figures)?`, criteria: { true: 'worth showing to these readers', false: 'not notable for these readers' } } : { type: 'noul', instructions: `In the ${edition} edition of a daily newspaper (written in ${lang}) the term "${String(r.term).slice(0, 80)}" appears${r.context ? ' in: "' + String(r.context).slice(0, 200) + '"' : ''}. Would a typical general reader of this edition need a short glossary explanation of this term to understand the story?`, criteria: { true: 'needs a glossary explanation', false: 'common knowledge for these readers' } }; });
+    const state = infl ? { edition, language: lang, task: 'choose notable influencer statements for a newspaper box', speakers: rows.map(r => String(r.term).slice(0, 120)) } : { edition, language: lang, task: 'choose newspaper glossary terms', terms: rows.map(r => String(r.term).slice(0, 80)) };
     let a = null, err = null;
     try {
       const r = await fetch(URL_, { method: 'POST', headers: { authorization: 'Bearer ' + env.TYPESAFE_API_KEY, 'content-type': 'application/json' }, body: JSON.stringify({ model: 'jev-latest', state, questions }), signal: AbortSignal.timeout(20000) });
