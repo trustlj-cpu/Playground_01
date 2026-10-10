@@ -136,7 +136,7 @@ function aggregate(appDir, keep = () => true, generated = new Date().toISOString
   for (const c of COUNTRIES) {
     const mine = eds.filter(x => x.region === c.code); if (!mine.length) continue;
     const own = c.langs[0]; const byDate = new Map();
-    for (const x of mine) { const k = x.j.date; if (!byDate.has(k)) byDate.set(k, { date: k, no: x.j.no, langs: [] }); byDate.get(k).langs.push(x.j.lang); }
+    for (const x of mine) { const k = x.j.date; if (!byDate.has(k)) byDate.set(k, { date: k, no: x.j.no, langs: [] }); byDate.get(k).langs.push(x.j.lang); if (x.j.card) byDate.get(k).card = x.j.card; }
     const order = l => (l === own ? -1 : LANGS.indexOf(l) < 0 ? 999 : LANGS.indexOf(l));
     const list = [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date)); list.forEach(e => e.langs.sort((a, b) => order(a) - order(b)));
     const langs = [...new Set(list.flatMap(e => e.langs))].sort((a, b) => order(a) - order(b));
@@ -181,6 +181,7 @@ function build(ctx) {
           stories: x.stories, blocks: x.blocks, glossary, influencers, sources,
           breaking: `/api/breaking.json?region=${region}&lang=${lang}`,
         };
+        if (lang === own && h.CARD) { try { doc.card = h.CARD(region, e); } catch (err) { } }
         write(path.join(appDir, region, `${e.date}.${lang}.json`), doc); n++;
       } catch (err) { fail++; console.warn(`app api: ${region} ${e.date} ${lang} skipped: ${err.message}`); }
     }
