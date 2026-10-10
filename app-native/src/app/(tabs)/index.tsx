@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EditionView, { Failed, Loading } from '../../components/EditionView';
 import { paths } from '../../lib/api';
 import { findRegion, pickLang, useIndex } from '../../lib/content';
+import { normEdition } from '../../lib/normalize';
 import { useSettings } from '../../lib/settings';
 import type { Edition } from '../../lib/types';
 import { useResource } from '../../lib/useResource';
@@ -18,7 +19,7 @@ export default function Latest() {
   const ref = region?.editions.find((e) => e.date === region.latest.date) || region?.editions[0];
   const lang = region ? pickLang(region, ref, settings.lang) : settings.lang;
   const path = region && ref ? paths.edition(region.code, ref.date, lang) : null;
-  const ed = useResource<Edition>(path, { keepPrevious: true });
+  const ed = useResource<Edition>(path, { keepPrevious: true, parse: normEdition });
 
   const [pulling, setPulling] = useState(false);
   const refresh = async () => {
@@ -42,7 +43,8 @@ export default function Latest() {
         onPlace={() => router.navigate('/settings')}
       />
     );
-  } else if ((index.error && !index.data) || (ed.error && !ed.loading)) {
+  } else if ((index.error && !index.data) || (ed.error && !ed.loading) || (index.data && !path)) {
+    // (index.data && !path: the chosen region lists no edition yet)
     body = <Failed lang={settings.lang} onRetry={refresh} notCached={!!ed.error || !!index.error} />;
   } else {
     body = <Loading lang={settings.lang} />;

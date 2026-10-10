@@ -13,68 +13,107 @@ export interface Resource<T> {
   refresh: () => Promise<void>;
 }
 
+export interface ResourceOptions<T> {
+  pollMs?: number;
+  keepPrevious?: boolean;
+  /** validates / normalises a network or cached copy; throwing marks that copy unusable (the last good one stays) */
+  parse?: (raw: unknown) => T;
+}
+
 const FOREGROUND_MIN_MS = 20_000;
+
+interface State<T> {
+  path: string | null;
+  data: T | null;
+  error: Error | null;
+  loading: boolean;
+  stale: boolean;
+  updatedAt: number | null;
+}
+
+const fresh = <T>(path: string | null, data: T | null): State<T> => ({ path, data, error: null, loading: !!path, stale: false, updatedAt: null });
 
 /**
  * Stale-while-revalidate JSON loader: shows the cached copy immediately, then fetches
- * the network copy. Refetches when the app returns to the foreground and on refresh().
+ * the network copy. Refetches when the app returns to the foreground, every `pollMs` and on refresh().
+ *
+ * Requests can overlap (poll + foreground + pull-to-refresh). Every request gets a sequence number and its
+ * outcome is applied only if no newer request's outcome has been applied, so a slow old response can never
+ * replace newer data; `loading` stays true until the newest request has finished.
  */
-export function useResource<T>(path: string | null, opts: { pollMs?: number; keepPrevious?: boolean } = {}): Resource<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [stale, setStale] = useState(false);
-  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+export function useResource<T>(path: string | null, opts: ResourceOptions<T> = {}): Resource<T> {
+  const [st, setSt] = useState<State<T>>(() => fresh<T>(path, null));
   const cur = useRef(path);
   const raw = useRef<string>('');
   const last = useRef(0);
+  const seq = useRef(0); // last request started
+  const applied = useRef(0); // newest request whose outcome is on screen
+  const parseRef = useRef(opts.parse);
+  useEffect(() => {
+    parseRef.current = opts.parse;
+  });
+
+  // path changed: reset while rendering (no commit showing the old path's data under the new path)
+  let view = st;
+  if (st.path !== path) {
+    view = fresh<T>(path, opts.keepPrevious ? st.data : null); // Latest keeps showing the old paper until the new edition arrives
+    setSt(view);
+  }
 
   const load = useCallback(async () => {
     const p = cur.current;
     if (!p) return;
-    setLoading(true);
+    const n = ++seq.current;
     last.current = Date.now();
+    setSt((s) => (s.path === p && !s.loading ? { ...s, loading: true } : s));
+    let patch: Partial<State<T>> = {};
     try {
-      const d = await fetchJSON<T>(p);
-      if (cur.current !== p) return;
-      const s = JSON.stringify(d);
+      const body = await fetchJSON<unknown>(p);
+      const d = parseRef.current ? parseRef.current(body) : (body as T);
+      if (cur.current !== p || n < applied.current) return;
+      applied.current = n;
+      const s = JSON.stringify(body);
+      patch = { error: null, stale: false, updatedAt: Date.now() };
       if (s !== raw.current) {
         raw.current = s;
-        setData(d);
-        writeCache(p, d);
+        patch.data = d;
       }
-      setError(null);
-      setStale(false);
-      setUpdatedAt(Date.now());
+      writeCache(p, body); // also refreshes the cached copy's timestamp
     } catch (e) {
-      if (cur.current === p) setError(e as Error);
+      if (cur.current !== p || n < applied.current) return;
+      applied.current = n;
+      patch = { error: e as Error };
     } finally {
-      if (cur.current === p) setLoading(false);
+      if (cur.current === p) {
+        const done = n === seq.current;
+        const ps = patch;
+        setSt((s) => (s.path === p ? { ...s, ...ps, loading: done ? false : s.loading } : s));
+      }
     }
   }, []);
 
   useEffect(() => {
     cur.current = path;
     raw.current = '';
-    if (!opts.keepPrevious) setData(null); // Latest keeps showing the old paper until the new edition arrives
-    setError(null);
-    setStale(false);
-    setUpdatedAt(null);
+    applied.current = seq.current;
     if (!path) return;
     let alive = true;
-    readCache<T>(path).then((c) => {
+    readCache<unknown>(path).then((c) => {
+      // a network copy already arrived: the cached one is older
       if (!alive || cur.current !== path || !c || raw.current) return;
-      // (cache hit for the new path replaces any previous data immediately)
+      let d: T;
+      try {
+        d = parseRef.current ? parseRef.current(c.data) : (c.data as T);
+      } catch {
+        return; // cached copy from an incompatible API version
+      }
       raw.current = JSON.stringify(c.data);
-      setData(c.data);
-      setStale(true);
-      setUpdatedAt(c.at);
+      setSt((s) => (s.path === path ? { ...s, data: d, stale: true, updatedAt: c.at } : s));
     });
     load();
     return () => {
       alive = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, load]);
 
   useEffect(() => {
@@ -92,5 +131,5 @@ export function useResource<T>(path: string | null, opts: { pollMs?: number; kee
     return () => clearInterval(t);
   }, [opts.pollMs, path, load]);
 
-  return { data, error, loading, stale, updatedAt, refresh: load };
+  return { data: view.data, error: view.error, loading: view.loading, stale: view.stale, updatedAt: view.updatedAt, refresh: load };
 }

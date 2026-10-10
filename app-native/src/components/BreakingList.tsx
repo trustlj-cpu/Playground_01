@@ -1,5 +1,6 @@
 import React from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { openExternal } from '../lib/links';
 import { useColors } from '../lib/settings';
 import { sans, serif } from '../lib/theme';
 import type { BreakingItem } from '../lib/types';
@@ -39,7 +40,7 @@ export default function BreakingList({ items, label, lang }: { items: BreakingIt
       {list.map((x, i) => (
         <Pressable
           key={x.u + i}
-          onPress={() => Linking.openURL(x.u).catch(() => {})}
+          onPress={() => openExternal(x.u)}
           style={({ pressed }) => [styles.li, i < list.length - 1 && { borderBottomColor: c.ink, borderBottomWidth: 1 }, pressed && { opacity: 0.6 }]}
           accessibilityRole="link"
         >

@@ -2,13 +2,14 @@
 // so a new edition published on the web appears in the app without an update.
 import React, { createContext, useContext } from 'react';
 import { paths } from './api';
+import { normIndex } from './normalize';
 import type { EditionRef, Index, Region } from './types';
 import { Resource, useResource } from './useResource';
 
 const IndexContext = createContext<Resource<Index> | null>(null);
 
 export function IndexProvider({ children }: { children: React.ReactNode }) {
-  const res = useResource<Index>(paths.index, { pollMs: 5 * 60_000 });
+  const res = useResource<Index>(paths.index, { pollMs: 5 * 60_000, parse: normIndex });
   return <IndexContext.Provider value={res}>{children}</IndexContext.Provider>;
 }
 

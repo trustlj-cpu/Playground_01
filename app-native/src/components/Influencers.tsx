@@ -1,5 +1,6 @@
 import React from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { openExternal } from '../lib/links';
 import { inflLabels } from '../i18n';
 import { useTextScale } from '../lib/layout';
 import { useColors } from '../lib/settings';
@@ -24,7 +25,7 @@ export default function Influencers({ items, lang }: { items: Influencer[]; lang
             {'  '}
             <Text
               style={[sans(400), styles.meta, { color: c.mute, textDecorationColor: c.mute }]}
-              onPress={() => Linking.openURL(i.u).catch(() => {})}
+              onPress={() => openExternal(i.u)}
               accessibilityRole="link"
             >
               {[i.where, i.date].filter(Boolean).join(' · ') || srcLabel}

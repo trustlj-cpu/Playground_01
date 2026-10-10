@@ -1,6 +1,7 @@
 // Native renderer for blocks[].html (no WebView). Block tags → Views, inline tags → nested Text.
 import React, { useMemo } from 'react';
-import { Linking, StyleSheet, Text, TextStyle, View } from 'react-native';
+import { StyleSheet, Text, TextStyle, View } from 'react-native';
+import { openExternal } from '../lib/links';
 import { HNode, isBlock, parseHTML, plain } from '../lib/html';
 import { useColumnWidth, useTextScale } from '../lib/layout';
 import { useColors } from '../lib/settings';
@@ -47,7 +48,7 @@ function Inline({ nodes, ctx, parent }: { nodes: HNode[]; ctx: Ctx; parent?: str
         const spaced = !prev || (prev.k === 'text' && /\s$/.test(prev.text));
         const pre = n.tag === 'span' && !spaced ? '  ' : n.tag === 'i' && parent === 'b' ? '  ' : '';
         return (
-          <Text key={i} style={st} onPress={n.tag === 'a' && n.href ? () => Linking.openURL(n.href!).catch(() => {}) : undefined}>
+          <Text key={i} style={st} onPress={n.tag === 'a' && n.href ? () => openExternal(n.href!) : undefined}>
             {pre}
             <Inline nodes={n.children} ctx={ctx} parent={n.tag} />
           </Text>

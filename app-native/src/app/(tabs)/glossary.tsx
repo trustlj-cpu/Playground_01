@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BookmarkButton from '../../components/BookmarkButton';
@@ -6,6 +6,7 @@ import { Failed, Loading } from '../../components/EditionView';
 import ScreenTitle, { formatDate } from '../../components/ScreenTitle';
 import { fmt, strings } from '../../i18n';
 import { paths } from '../../lib/api';
+import { normGlossary } from '../../lib/normalize';
 import { termKey, useBookmarks } from '../../lib/bookmarks';
 import { findRegion, pickLang, useIndex } from '../../lib/content';
 import { READ_MAX, useTextScale } from '../../lib/layout';
@@ -26,10 +27,9 @@ export default function Glossary() {
   // not every language has its own glossary file yet (e.g. zh-TW): fall back to English
   const [fallback, setFallback] = useState<string | null>(null);
   const lang = fallback && fallback.startsWith(want + '>') ? 'en' : want;
-  const res = useResource<GlossaryFile>(paths.glossary(lang));
-  useEffect(() => {
-    if (res.error && !res.data && !res.loading && lang !== 'en' && (res.error as any).status === 404) setFallback(want + '>en');
-  }, [res.error, res.data, res.loading, lang, want]);
+  const res = useResource<GlossaryFile>(paths.glossary(lang), { parse: normGlossary });
+  // (state adjusted while rendering, React's pattern for "derive from the previous render")
+  if (res.error && !res.data && !res.loading && lang !== 'en' && (res.error as { status?: number }).status === 404 && fallback !== want + '>en') setFallback(want + '>en');
   const S = strings(lang);
   const G = S.glossaryPage;
   const [q, setQ] = useState('');
@@ -46,7 +46,7 @@ export default function Glossary() {
   if (!res.data) return res.error && !res.loading ? <Failed lang={lang} onRetry={res.refresh} notCached /> : <Loading lang={lang} />;
 
   const renderItem = ({ item }: { item: GlossaryTerm }) => {
-    const key = termKey(lang, item.term);
+    const key = termKey(item.term);
     const on = bm.hasTerm(key);
     return (
       <View style={[styles.item, { borderBottomColor: c.ink }]}>
