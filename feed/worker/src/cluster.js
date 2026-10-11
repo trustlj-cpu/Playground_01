@@ -13,6 +13,10 @@ const LANG_STOP = {
   es: new Set('conoce prepárate preparate clima temperatura temperaturas lluvia lluvias pronóstico pronostico interna categoría el la los las un una unos unas de del al y e o en por para con sin sobre entre tras ante antes contra hasta desde que quien cual cuales como más menos muy no sí ya aún también su sus este esta estos estas ese esa eso esto nuevo nueva nuevos nuevas banco bancos central tipos tasa tasas ser estar está están fue fueron será va puede debe dice dicen afirma anuncia hoy ayer mañana ahora año años mes semana dos tres primer primero primera millones euros pesos ministro ministra presidente presidenta gobierno vídeo video fotos directo última hora urgente exclusiva análisis opinión entrevista enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre lunes martes miércoles jueves viernes sábado domingo resultados resultado sorteo números ganadores'.split(' ')),
   it: new Set('il lo la i gli le un uno una di del dello della dei degli delle dell dall nell sull quest anch a al allo alla ai agli alle da dal dalla dai in nel nella nei con su sul sulla per tra fra e ed o che chi come più meno molto non già ancora anche suo sua suoi sue questo questa questi queste quello quella nuovo nuova nuovi nuove banca banche centrale tassi tasso essere stato stata sono era sarà può deve dice dicono afferma annuncia oggi ieri domani adesso anno anni mese settimana due tre primo prima miliardi milioni euro ministro ministra presidente premier governo video foto diretta live ultim ultime ultima notizie esclusiva analisi opinione intervista gennaio febbraio marzo aprile maggio giugno luglio agosto settembre ottobre novembre dicembre lunedì martedì mercoledì giovedì venerdì sabato domenica'.split(' ')),
   nl: new Set('de het een en of in op aan van voor met bij uit over onder naar tot door om na tegen tussen zonder dat die dit deze wie wat hoe meer minder veel niet geen ook nog al zijn haar hun hij zij ze wordt worden werd werden is was zal kan moet wil zegt zeggen meldt nieuw nieuwe bank banken centrale rente vandaag gisteren morgen nu jaar jaren maand week twee drie eerste miljard miljoen euro minister premier president kabinet regering video foto live liveblog update nieuws exclusief analyse opinie interview januari februari maart april mei juni juli augustus september oktober november december maandag dinsdag woensdag donderdag vrijdag zaterdag zondag'.split(' ')),
+  th: new Set('ที่ และ ของ ใน ให้ จาก ได้ ไม่ เป็น กับ แล้ว จะ ว่า มี การ ความ คน วันนี้ ล่าสุด ข่าว เผย'.split(' ')),
+  ar: new Set('على عن إلى الى التي الذي هذا هذه بعد قبل بين خلال حول مع غير كان كانت يوم اليوم عاجل قال قالت أول جديد'.split(' ')),
+  he: new Set('של על עם את זה זו כי לא גם אחרי לפני היום הוא היא הם אבל כל יותר בין'.split(' ')),
+  uk: new Set('про від для які який яка що після через під над при його її їх буде було також україни україна заявив заявила'.split(' ')),
   id: new Set('yang dan di ke dari untuk dengan pada dalam akan juga tidak atau ini itu oleh sebagai telah sudah bisa para antara kata ujar kata menurut mengatakan tegas hari bank sentral suku bunga rupiah ekonomi pemerintah presiden menteri indonesia terkini terbaru berita video foto live'.split(' ')),
   vi: new Set('của những được trong cho với này đó các một không có và đã sẽ cũng khi người nhiều theo tại về từ như năm ngày hôm nay mới nhất tin tức video ảnh trực tiếp ngân hàng nhà nước thủ tướng chủ tịch bộ trưởng việt nam'.split(' ')),
   pl: new Set('jest są był była było będzie będą nie się oraz ale jak lub czy dla przez przed nad pod przy bez może także jeszcze tylko bardzo nowy nowa nowe nowych polska polski polskie polsce rząd premier prezydent minister bank banki stopy procent mówi powiedział powiedziała zapowiada krytykuje ostrzega wideo zdjęcia najnowsze aktualizacja wiadomości'.split(' ')),
@@ -40,9 +44,14 @@ export const normTitle = t => normCase(stripTail(t)).toLowerCase();
 export function tokenList(t, lang) { return [...tokens(t, lang)]; } // 삽입 순서 = 제목 내 등장 순서
 // 라틴 문자(악센트 포함: é è ü ö ß ç ğ…) — 전각 로마자(ＮＹ·Ｓ＆Ｐ)는 종전처럼 제외(일본어 제목 동작 유지)
 const LAT = '(?:(?![\\uFF00-\\uFFEF])\\p{Script=Latin})';
-const TOKEN_RE = new RegExp(`\\d{1,4}-[A-Za-z]{2,}|[가-힣]{2,}|[\\u4e00-\\u9fff]{2,}|[\\u30a0-\\u30ff]{2,}|${LAT}(?:${LAT}|\\p{M}|[0-9'&.-]){3,}|[\\p{Script=Devanagari}\\u200c\\u200d]{2,}|\\d{3,}`, 'gu');
+const TOKEN_RE = new RegExp(`\\d{1,4}-[A-Za-z]{2,}|[가-힣]{2,}|[\\u4e00-\\u9fff]{2,}|[\\u30a0-\\u30ff]{2,}|${LAT}(?:${LAT}|\\p{M}|[0-9'&.-]){3,}|[\\p{Script=Devanagari}\\u200c\\u200d]{2,}|[\\p{Script=Cyrillic}\\p{M}]{3,}|[\\p{Script=Arabic}]{3,}|[\\p{Script=Hebrew}\\p{M}]{2,}|[\\p{Script=Thai}]{2,}|\\d{3,}`, 'gu');
 const isZh = lang => /^zh/i.test(String(lang || ''));
 const isDeva = w => /^[\p{Script=Devanagari}‌‍]+$/u.test(w);
+// 키릴·아랍·히브리·타이 문자 토큰은 3자(코드포인트)부터. 타이어는 띄어쓰기가 없어 Intl.Segmenter로 낱말을 나눈다
+const isRTLT = w => /^[\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Thai}\p{M}]+$/u.test(w);
+const isThai = w => /^\p{Script=Thai}+$/u.test(w);
+let THSEG = null; try { THSEG = new Intl.Segmenter('th', { granularity: 'word' }); } catch (e) { THSEG = null; }
+const thParts = w => THSEG ? [...THSEG.segment(w)].filter(x => x.isWordLike).map(x => x.segment) : [w];
 const isHan2 = w => /^[\u4e00-\u9fff]{2}$/.test(w);
 // 중국어(띄어쓰기 없음) 한자 연속열 → 구절 사전 치환 + 기능어에서 끊기 + 2자 바이그램. 일본어는 종전대로 연속열 통째(가나가 단어 경계 역할).
 const ZH_DICT = new Map([...ZH_STOP].map(w => [w, null])); for (const [k, v] of Object.entries(ZH_SYN)) ZH_DICT.set(k, v); for (const [k, v] of ZH_PHRASE) ZH_DICT.set(k, v);
@@ -64,7 +73,7 @@ export function tokens(t, lang) {
   let nt = normTitle(t);
   const extra = new Set(); for (const [p, c] of PHRASE) if (nt.includes(p)) { extra.add(c); nt = nt.split(p).join(' '); } // 구절은 약어 하나로만 남긴다('reserve bank of india/australia'의 reserve·bank 가 서로 겹치지 않게)
   const raw = nt.match(TOKEN_RE) || [];
-  const parts = []; for (const w of raw) { if (zh && /^[\u4e00-\u9fff]+$/.test(w)) { parts.push(...zhParts(w)); continue; } parts.push(w); if (w.includes('-')) for (const p of w.split('-')) if (p.length >= 4) parts.push(p); }
+  const parts = []; for (const w of raw) { if (zh && /^[\u4e00-\u9fff]+$/.test(w)) { parts.push(...zhParts(w)); continue; } if (isThai(w)) { parts.push(...thParts(w)); continue; } if (/^ال\p{Script=Arabic}{3,}$/u.test(w)) { parts.push(w.slice(2)); continue; } parts.push(w); if (w.includes('-')) for (const p of w.split('-')) if (p.length >= 4) parts.push(p); }
   // 2~3자 약어(BoE·SNB·Fed·ECB·FX)는 원문 대소문자에서만 식별 — 소문자화 전 제목에서 뽑아 약한 토큰으로 추가. 악센트 글자에 붙은 조각(Orbán→'orb', Niño→'ni')은 약어가 아니다
   const acr = new Set((normCase(t).match(/(?<![A-Za-z0-9&.'가-힣\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u1E00-\u1EFF\u0300-\u036F-])[A-Z][A-Za-z]{1,2}(?![A-Za-z0-9&.'가-힣\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u1E00-\u1EFF\u0300-\u036F-])/g) || []).map(x => x.toLowerCase()).filter(x => !ACR_STOP.has(x) && !(las && las.has(x))));
   for (const x of extra) acr.add(x);
@@ -72,7 +81,7 @@ export function tokens(t, lang) {
     let w0 = w1.replace(/^[.'&-]+|[.'&-]+$/g, '').replace(/'s$/, '');
     if (lang && /^fr/i.test(lang)) w0 = w0.replace(/^(?:l|d|j|m|n|s|t|c|qu|jusqu|lorsqu|puisqu)'(?=\p{L}{2})/u, ''); // 프랑스어 엘리전(l'Élysée·d'Ottawa)
     else if (lang && /^it/i.test(lang)) w0 = w0.replace(/^(?:l|d|c|un|dell|dall|nell|sull|all|coll|quest|quell|anch|sant|tutt)'(?=\p{L}{2})/u, ''); // 이탈리아어 엘리전(l'Italia·dell'Ue)
-    if (!w0 || (!isKo(w0) && w0.length < (isDeva(w0) ? 3 : 4) && !acr.has(w0))) continue; // 한국어는 2자부터, 라틴은 4자부터(원문 약어 예외), 데바나가리는 3자(코드포인트)부터
+    if (!w0 || (!isKo(w0) && w0.length < (isDeva(w0) || isRTLT(w0) ? 3 : 4) && !acr.has(w0))) continue; // 한국어는 2자부터, 라틴은 4자부터(원문 약어 예외), 데바나가리는 3자(코드포인트)부터
     const w = SYN[w0] || w0;
     if (STOP.has(w) || (ls && ls.has(w))) continue;
     if (/^\d+$/.test(w) && w.length === 4 && +w >= 1990 && +w <= 2100) continue; // 연도
