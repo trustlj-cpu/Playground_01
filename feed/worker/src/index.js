@@ -175,6 +175,25 @@ export default {
       const { results } = await env.DB.prepare(`SELECT hour, region, title, n, front, conf, brk, err FROM jev WHERE (?1 = '' OR hour = ?1) AND (?2 = '' OR region = ?2) ORDER BY hour DESC, front DESC LIMIT 200`).bind(hour, region).all().catch(() => ({ results: [] }));
       return json({ enabled: !!env.TYPESAFE_API_KEY, rows: results });
     }
+    // 지금 중요한 소식(사이트 /live/·X 홍보용): 최근 3시간 다이제스트 묶음 중 서로 다른 매체 3곳 이상, 점수순 상위 30. ?lang=en 이면 제목 번역
+    if (url.pathname === '/top.json') {
+      const lang = (url.searchParams.get('lang') || 'en').toLowerCase().replace(/[^a-z-]/g, '').slice(0, 5);
+      const { results: hrs } = await env.DB.prepare('SELECT hour, digest FROM hourly ORDER BY hour DESC LIMIT 3').all();
+      const skip = new Set(['인플루언서', '커뮤니티', '트렌드']), seen = new Set(), out = [];
+      hrs.forEach((h, hi) => { let d; try { d = JSON.parse(h.digest); } catch (e) { return; }
+        for (const c of d.clusters || []) {
+          if ((c.n_sources || 0) < 3 || skip.has(c.field) || !['A', 'B'].includes(c.tier_best)) continue;
+          const its = (c.items || []).filter(i => i.link && !/news\.google\.com/.test(i.link));
+          const k = String(c.topic || '').toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!k || seen.has(k)) continue; seen.add(k);
+          let id = 0; for (const ch of k) id = (id * 31 + ch.charCodeAt(0)) >>> 0;
+          const at = c.items.map(i => Date.parse(i.published_at) || 0).reduce((a, b) => Math.max(a, b), 0);
+          out.push({ id: id.toString(36), t: String(c.topic || '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, ''), l: c.lang || '', f: c.field, r: c.region, ns: c.n_sources, s: c.sources, at: at ? new Date(at).toISOString() : null,
+            u: its.slice(0, 4).map(i => ({ t: i.title, s: i.source, u: i.link })), sc: (c.n_sources * 2 + (c.n_items || 0)) * (c.field === '스포츠' ? 0.6 : 1) * (1 - hi * 0.25) });
+        } });
+      out.sort((a, b) => b.sc - a.sc); const items = out.slice(0, 30);
+      await trBreak(env, items, lang).catch(() => {});
+      return json({ at: new Date().toISOString(), lang, items }, 200, { 'cache-control': 'public, max-age=300' });
+    }
     if (url.pathname === '/breaking.json') {
       const region = (url.searchParams.get('region') || 'KR').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), lang = (url.searchParams.get('lang') || '').toLowerCase().replace(/[^a-z-]/g, '').slice(0, 5);
       // until=ISO(과거 시각)이면 지난 호용: 그 시각 직전 24시간의 속보(고정 자료라 하루 캐시). 없으면 실시간: 최근 6시간
@@ -233,7 +252,7 @@ export default {
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
     if (url.pathname === '/') return page(env, url);
-    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/breaking.json?region=XX&lang=xx', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
+    return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/breaking.json?region=XX&lang=xx', '/top.json?lang=xx', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
     if (ev.cron === '* * * * *') { ctx.waitUntil(jevTerms(env).catch(() => {})); ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }
