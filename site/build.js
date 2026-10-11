@@ -194,10 +194,10 @@ const POOLHTML = (date, region = 'KR') => { const items = POOL[`${region}:${date
 // 조판 균형: 데스크톱(≥860px)에서 같은 줄(.grid/.strip)의 열 높이를 재서 짧은 열 바닥에 풀 단신을 끼워 넣고, 그래도 남는 차이는 열을 늘려 바닥을 맞춘다. 창 크기가 바뀌면 다시.
 // 줄마다 양끝 맞춤(신문식): 브라우저 기본 양끝 맞춤은 남는 폭을 띄어쓰기에만 몰아 넣어 단어 사이가 벌어진다.
 // 왼쪽 맞춤으로 줄바꿈 위치를 잰 뒤, 줄마다 남는 폭을 그 줄 모든 글자 사이에 고르게(글자당 1px 안팎) 나눠 넣는다. 마지막 줄은 그대로.
-// 한·일·중 판에서만 쓴다. 라틴 문자 판은 줄을 span으로 쪼개면 자동 하이픈 자리가 맨 끊김이 되므로(사파리) CSS 양끝 맞춤+hyphens:auto에 맡긴다.
-const JUSTIFY = `<script>(function(){var SEL='.body p,.one p,.deck,.word p,.it em,.rumor div';var lastW=0;var LAT=!/^(ko|ja|zh)/.test(document.documentElement.lang||'');
+// 한·일·중과, 자동 하이픈 사전이 없는 언어(타이·인니·베트남·필리핀·히브리)에서 쓴다. 하이픈 사전이 있는 라틴 문자 판은 줄을 span으로 쪼개면 자동 하이픈 자리가 맨 끊김이 되므로(사파리) CSS 양끝 맞춤+hyphens:auto에 맡긴다. 아랍어는 글자 간격을 넣으면 이음이 끊기므로 CSS 양끝 맞춤만.
+const JUSTIFY = `<script>(function(){var SEL='.body p,.one p,.deck,.word p,.it em,.rumor div';var lastW=0;var LG=document.documentElement.lang||'';var LAT=!/^(ko|ja|zh)/.test(LG);var NOHY=/^(th|id|vi|fil|he)/.test(LG);var THAI=/^th/.test(LG);
 function unwrap(p){var wbs=p.querySelectorAll('wbr.jl');for(var i=0;i<wbs.length;i++)wbs[i].remove();var s=p.querySelectorAll('span.jl');for(var i=0;i<s.length;i++){var x=s[i];x.parentNode.replaceChild(document.createTextNode(x.textContent),x);}p.normalize();}
-function run(){if(LAT)return;var ps=document.querySelectorAll(SEL);for(var k=0;k<ps.length;k++){try{one(ps[k]);}catch(e){}}}
+function run(){if(LAT&&!NOHY)return;var ps=document.querySelectorAll(SEL);for(var k=0;k<ps.length;k++){try{one(ps[k]);}catch(e){}}}
 function one(p){unwrap(p);p.style.removeProperty('text-align');if(!p.offsetWidth)return;var cs=getComputedStyle(p);if(cs.textAlign!=='justify')return;
  p.style.setProperty('text-align','left','important');var pr=p.getBoundingClientRect();var right=pr.right-parseFloat(cs.paddingRight||0);
  var mc=p.parentElement,cn=1,cg=0,cl=0,cw=0;while(mc&&mc!==document.body){var mcs=getComputedStyle(mc);cn=parseInt(mcs.columnCount)||1;if(cn>1){cg=parseFloat(mcs.columnGap)||0;var mr=mc.getBoundingClientRect();cl=mr.left+parseFloat(mcs.paddingLeft||0);cw=(mr.width-parseFloat(mcs.paddingLeft||0)-parseFloat(mcs.paddingRight||0)-cg*(cn-1))/cn;break;}mc=mc.parentElement;}
@@ -208,7 +208,7 @@ function one(p){unwrap(p);p.style.removeProperty('text-align');if(!p.offsetWidth
   var sg=cur.segs[cur.segs.length-1];if(sg&&sg.t===t&&sg.b===i)sg.b=i+1;else cur.segs.push({t:t,a:i,b:i+1});
   if(/\\s/.test(t.data[i]))cur.sp++;else{cur.n++;cur.end=r.right;}}}
  var plan=[];for(var j=0;j<lines.length;j++){var L=lines[j];var slack=L.right-L.end-1.5;var ls=0;
-  if(j<lines.length-1&&slack>0.2&&L.n>=4){ls=slack/(L.n+L.sp);if(LAT)ls=Math.min(ls,fs*0.04);else if(ls>fs*0.25)ls=0;}plan.push({L:L,ls:ls});}
+  if(j<lines.length-1&&slack>0.2&&L.n>=4){ls=slack/(L.n+L.sp);if(LAT&&!THAI)ls=Math.min(ls,fs*0.06);else if(ls>fs*0.25)ls=0;}plan.push({L:L,ls:ls});}
  for(var q=plan.length-1;q>=0;q--){var L=plan[q].L,v=(base+plan[q].ls).toFixed(3)+'px';for(var m=L.segs.length-1;m>=0;m--){var g=L.segs[m];var tn=g.t;
   if(g.b<tn.data.length)tn.splitText(g.b);var mid=g.a>0?tn.splitText(g.a):tn;var sp=document.createElement('span');sp.className='jl';sp.style.letterSpacing=v;mid.parentNode.replaceChild(sp,mid);sp.appendChild(mid);
   if(m===L.segs.length-1&&q<plan.length-1){var wb=document.createElement('wbr');wb.className='jl';sp.parentNode.insertBefore(wb,sp.nextSibling);}}}
