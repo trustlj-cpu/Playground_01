@@ -195,8 +195,8 @@ const POOLHTML = (date, region = 'KR') => { const items = POOL[`${region}:${date
 // 조판 균형: 데스크톱(≥860px)에서 같은 줄(.grid/.strip)의 열 높이를 재서 짧은 열 바닥에 풀 단신을 끼워 넣고, 그래도 남는 차이는 열을 늘려 바닥을 맞춘다. 창 크기가 바뀌면 다시.
 // 줄마다 양끝 맞춤(신문식): 브라우저 기본 양끝 맞춤은 남는 폭을 띄어쓰기에만 몰아 넣어 단어 사이가 벌어진다.
 // 왼쪽 맞춤으로 줄바꿈 위치를 잰 뒤, 줄마다 남는 폭을 그 줄 모든 글자 사이에 고르게(글자당 1px 안팎) 나눠 넣는다. 마지막 줄은 그대로.
-// 한·일·중과, 자동 하이픈 사전이 없는 왼쪽→오른쪽 언어(타이·인니·베트남·필리핀)에서 쓴다. 하이픈 사전이 있는 라틴 문자 판은 줄을 span으로 쪼개면 자동 하이픈 자리가 맨 끊김이 되므로(사파리) CSS 양끝 맞춤+hyphens:auto에 맡긴다. 오른쪽→왼쪽 판(아랍·히브리)은 줄 끝 계산이 왼쪽 기준이 아니므로 CSS 양끝 맞춤만.
-const JUSTIFY = `<script>(function(){var SEL='.body p,.one p,.deck,.word p,.it em,.rumor div';var lastW=0;var LG=document.documentElement.lang||'';var LAT=!/^(ko|ja|zh)/.test(LG);var NOHY=/^(th|id|vi|fil)/.test(LG)&&document.documentElement.dir!=="rtl";var THAI=/^th/.test(LG);
+// 한·일·중과, 자동 하이픈 사전이 없는 왼쪽→오른쪽 언어(타이·인니·필리핀)에서 쓴다(베트남어는 성조 부호 때문에 글자 단위 측정이 어긋나고 음절마다 띄어 써서 CSS 양끝 맞춤으로 충분). 하이픈 사전이 있는 라틴 문자 판은 줄을 span으로 쪼개면 자동 하이픈 자리가 맨 끊김이 되므로(사파리) CSS 양끝 맞춤+hyphens:auto에 맡긴다. 오른쪽→왼쪽 판(아랍·히브리)은 줄 끝 계산이 왼쪽 기준이 아니므로 CSS 양끝 맞춤만.
+const JUSTIFY = `<script>(function(){var SEL='.body p,.one p,.deck,.word p,.it em,.rumor div';var lastW=0;var LG=document.documentElement.lang||'';var LAT=!/^(ko|ja|zh)/.test(LG);var NOHY=/^(th|id|fil)/.test(LG)&&document.documentElement.dir!=="rtl";var THAI=/^th/.test(LG);
 function unwrap(p){var wbs=p.querySelectorAll('wbr.jl');for(var i=0;i<wbs.length;i++)wbs[i].remove();var s=p.querySelectorAll('span.jl');for(var i=0;i<s.length;i++){var x=s[i];x.parentNode.replaceChild(document.createTextNode(x.textContent),x);}p.normalize();}
 function wrapped(x){var r=x.getClientRects();for(var i=1;i<r.length;i++)if(Math.abs(r[i].top-r[0].top)>2)return true;return false;}
 function run(){if(LAT&&!NOHY)return;var ps=document.querySelectorAll(SEL);for(var k=0;k<ps.length;k++){try{one(ps[k]);}catch(e){}}}
