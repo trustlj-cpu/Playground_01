@@ -191,6 +191,9 @@ export default {
             u: its.slice(0, 4).map(i => ({ t: i.title, s: i.source, u: i.link })), sc: (c.n_sources * 2 + (c.n_items || 0)) * (c.field === '스포츠' ? 0.6 : 1) * (1 - hi * 0.25) });
         } });
       out.sort((a, b) => b.sc - a.sc); const items = out.slice(0, 30);
+      for (const it of items) it.u = it.u.map(x => ({ ...x, s: (x.u.match(/^https?:\/\/(?:www\.)?([^/]+)/) || [])[1] || x.s }));
+      await liveSum(env, items).catch(() => {});
+      if (url.searchParams.get('raw') !== '1') { const ok = items.filter(i => i.h && i.x); return json({ at: new Date().toISOString(), lang, items: ok }, 200, { 'cache-control': 'public, max-age=300' }); }
       await trBreak(env, items, lang).catch(() => {});
       return json({ at: new Date().toISOString(), lang, items }, 200, { 'cache-control': 'public, max-age=300' });
     }
@@ -345,5 +348,27 @@ async function trBreak(env, items, lang) {
       } catch (e) { t = ''; }
     }
     if (t) { x.it.o = x.it.t; x.it.t = t; }
+  }));
+}
+
+// /live/ 소식 요약: 묶음의 기사 제목들만 근거로 영어 제목(h)과 2~3문장 요약(x)을 만든다(Workers AI). D1 live_sum에 저장해 한 번만 생성, 한 번에 새로 6건까지
+async function liveSum(env, items) {
+  if (!env.AI || !items.length) return;
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_sum (id TEXT PRIMARY KEY, h TEXT, x TEXT, at INTEGER)').run();
+  const { results } = await env.DB.prepare(`SELECT id, h, x FROM live_sum WHERE id IN (${items.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...items.map(i => i.id)).all();
+  const have = new Map(results.map(r => [r.id, r]));
+  const todo = [];
+  for (const it of items) { const r = have.get(it.id); if (r) { it.h = r.h; it.x = r.x; } else if (todo.length < 6) todo.push(it); }
+  await Promise.all(todo.map(async it => {
+    const heads = [it.t, ...it.u.map(u => u.t)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 6).map(t => '- ' + t).join('\n');
+    const prompt = 'These are headlines from different news outlets about one event:\n' + heads + '\n\nWrite in plain English for an international reader. Use ONLY facts stated in the headlines; do not add names, numbers, causes or opinions that are not there. Reply with JSON only: {"h": "<neutral news headline, max 14 words>", "x": "<2-3 short sentences: what happened, and why it matters to readers, only if the headlines support it>"}';
+    try {
+      const r = await Promise.race([env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
+      const m = String(r && r.response || '').match(/\{[\s\S]*\}/); if (!m) return;
+      const o = JSON.parse(m[0]); const h = String(o.h || '').trim().slice(0, 160), x = String(o.x || '').trim().slice(0, 700);
+      if (h.length < 15 || x.length < 40) return;
+      it.h = h; it.x = x;
+      await env.DB.prepare('INSERT OR REPLACE INTO live_sum (id, h, x, at) VALUES (?1, ?2, ?3, ?4)').bind(it.id, h, x, Date.now()).run();
+    } catch (e) {}
   }));
 }
