@@ -429,7 +429,7 @@ const SETTINGS = (r) => { const R = REGIONS[r]; const T = { ...I18N.en.settingsP
 <h2>${T.h}</h2><p>${T.p}</p>
 <input id="csearch" type="search" class="csearch" placeholder="${T.search}" aria-label="${T.search}" autocomplete="off">
 <div class="clist" id="clist">${list}<p class="mute none" id="cnone" hidden>${T.none}</p></div>
-<h2>${T.h2}</h2><p>${T.p2}</p><p class="mute">${T.note}</p></main>
+<h2>${T.h2}</h2><p>${T.p2}</p>${T.note ? `<p class="mute">${T.note}</p>` : ""}</main>
 <style>
 .settings-page h2{margin-top:28px}
 .tsize{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin:10px 0 12px}.tsize input{min-width:120px}.tsize output,.tsize button{white-space:nowrap;flex-shrink:0}.tmode button{white-space:nowrap;min-width:0}.tsize .a{font-family:var(--serif);font-size:13px}.tsize .a.big{font-size:22px}.tsize input{flex:1;accent-color:var(--ink)}.tsize output{font-variant-numeric:tabular-nums;min-width:4ch;font-size:13px}.tsize button{font:inherit;font-size:12px;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:4px 10px;cursor:pointer}
