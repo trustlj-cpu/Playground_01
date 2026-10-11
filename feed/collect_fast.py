@@ -36,10 +36,14 @@ def item_id(link: str) -> str:
 
 
 # 지역 → 기본 언어(소스 yaml에 lang이 없을 때). KR 한국어, JP 일본어, DE 독일어, FR 불어, TW 번체 중국어,
-# BR 포르투갈어, MX·ES 스페인어, IT 이탈리아어, NL 네덜란드어, 그 외(SG 포함) 영어
+# BR 포르투갈어, MX·ES·AR 스페인어, IT 이탈리아어, NL 네덜란드어, ID 인니어, VN 베트남어, TH 태국어, PL 폴란드어,
+# TR 튀르키예어, UA 우크라이나어, SA·AE 아랍어, IL 히브리어, 그 외(SG·PH·ZA·NG 포함) 영어
+# (PH 필리핀어(fil)·AE 영어·IL 영어는 소스별 lang 사용)
 # (CA·IN·CH는 영어/불어·힌디, 독/불/이탈리아어가 섞이므로 소스별 lang 사용)
 LANG_BY_REGION = {"KR": "ko", "JP": "ja", "CN": "zh", "DE": "de", "FR": "fr", "TW": "zh-TW",
-                  "BR": "pt", "MX": "es", "ES": "es", "IT": "it", "NL": "nl"}
+                  "BR": "pt", "MX": "es", "ES": "es", "IT": "it", "NL": "nl",
+                  "ID": "id", "VN": "vi", "TH": "th", "PH": "en", "AR": "es", "PL": "pl", "TR": "tr", "UA": "uk",
+                  "SA": "ar", "AE": "ar", "IL": "he", "ZA": "en", "NG": "en"}
 
 def future_none(p, now):
     """발행 시각이 1시간 넘게 미래면 버린다(연방의회 의사일정처럼 '예정일'을 발행일로 쓰는 피드가 목록 맨 위로 뜨는 것 방지)."""
