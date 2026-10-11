@@ -1,0 +1,484 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>49,313.44</b>加権指数 · 10/8 終値 · −0.99%（10/9 休場、10/12 再開）</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>31.916</b>米ドル/台湾ドル · 10/9 の国際相場 · −0.01%</div>
+    </div>
+    <div class="dateline"><span>第8号 · 朝刊</span><b>2026年10月12日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="taipei">
+      <div class="kick">政治 · 選挙<span>報道照合 ✓ 6社 · 発言は各方面の公開の説明。人数は単一メディアの引用</span></div>
+      <h2 class="hl">TVBS・三立共催の台北市長討論会が決定　両陣営がきょう日程と相互質問を協議　沈伯洋氏の「台北大洋流」車列遊説が初出発</h2>
+      <p class="deck">11月28日の統一地方選まで47日。討論会の回数・日程・ルールはまだ決まっていない。沈伯洋氏は11日、車列遊説で中山、大同から保安宮まで走った。</p>
+      <div class="body">
+        <p>TVBSと三立テレビは11日夜、台北市長候補のテレビ討論会を共同で開くと発表した。自由時報、聯合報、三立ニュース、NOWnewsがこの手配を報じている。両陣営は12日（月）に日程と形式を協議し、なかでも相互質問をどう行うかが最も注目されている。これに先立ち、民進党の沈伯洋氏は4回の討論会を提案し、相互質問を設けるよう主張した。現職の国民党・蒋万安市長は「たくさん呼びかけた方が勝ちではない」と述べ、詳細はいずれも話し合えるとして、月曜に沈陣営の代表が協議に出席するよう望んだ。蒋陣営はこれまで、TVBSの1回だけ参加すると答えていた（中央社、公視、自由時報）。沈伯洋氏は、相互質問がなければ相手が既存の説明を繰り返すのを聞くだけになると述べた。蒋万安陣営の選対事務所はこれに対し、相手のデマだと反論し、争点と見なす3項目を挙げた（自由時報）。民衆党の詹為元氏は、討論会は1〜2回が最適との見方を示した（自由時報）。高雄市長選の討論会はすでに話がまとまっており、民進党の頼瑞隆氏は、高雄にできるなら台北もできると信じていると述べた（自由時報）。テレビ討論会は、中央選挙委員会（中選会）が開く政見発表会とは違う（政見発表会は選挙管理機関が法に基づいて開く場）。メディアが招き、候補者が自発的に参加するもので、回数もルールも双方の交渉次第だ。</p><p>もう一つの流れは、選挙戦の勢いの競い合いだ。車列遊説は、選挙陣営の車列が沿道を回って支持を訴える手法で、沈伯洋氏が11日に始めた「台北大洋流」は、中山、大同から終点の保安宮まで走り、宮の前で5項目の政策を発表した。Yahoo!ニュースは、原稿を読まず一項目ずつ「開封」していったと形容した。台北市議会議員の王世堅氏は「雷神のハンマー」を贈った（中央社、自由時報）。自由時報は、車列が2,000台超に達し、ライブ配信を6.5万人が視聴したと報じたが、これは単一メディアの引用した数字で、警察や主催者の集計による裏付けはない。車列遊説には苦情も寄せられ、沈伯洋氏はThreadsで謝罪した（自由時報）。一方、李彦秀氏の9日の「ソーシャルワーカーが薬物を配る」発言の余波は収まらず、ソーシャルワーカーの労働組合は12日に同氏の事務所へ抗議に向かう予定だ（自由時報）。衛生福利部は先に、ハームリダクション計画はソーシャルワーカーに薬物を配らせるものではないと釈明している。国民党の立法委員は8機関の薬物特別報告を設定し、民進党の林月琴立法委員は専門家の意見を聞くよう呼びかけ、この話題を選挙戦の中傷の延長戦にしないよう求めた（自由時報）。この先の攻防は、おおむね討論会のルールと回数に集まる。日程が決まれば、選挙前で最大の公開の論戦になる。蒋万安氏は10日、万華の広照宮で沈伯洋氏から討論会の招待状を直接渡された後、陣営はTVBSの1回だけ受けると答えていた。そのため今回の2局共催を蒋陣営が受け入れるかどうかも注目点だ（自由時報）。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>47日</b><span>11月28日の統一地方選までの日数（暦で計算）</span></div><div><b>4回</b><span>沈伯洋氏が提案した討論会の回数。蒋陣営はこれまでTVBSの1回だけ応じていた（中央社）</span></div><div><b>2,000台超</b><span>自由時報が引用した車列遊説の車列の規模。単一の情報源</span></div>
+      </div></div>
+    </article>
+    <article class="col c2 vr story" tabindex="0" data-id="plad">
+      <div class="kick">両岸 · 軍事<span>報道照合 ✓ 2社 · 海域の記述が一致せず、国防部の回答は未確認</span></div>
+      <h3 class="hl">中国軍、12日から東シナ海、黄海などで実弾射撃を発表　国慶節の期間中も台湾周辺で活動を継続</h3>
+      <div class="one">
+        <p>自由時報と公視は11日夜、中国軍が12日から実弾射撃を行うと発表したと報じた。自由時報が書いたのは10月12日から17日まで東シナ海など5つの海域で、公視の見出しにあるのは黄海などの海域で、両社の海域の記述は完全には一致しない。詳細な座標と時間帯は、中国の海事当局の航行警報に従うべきだ。公視は、国慶節の期間中も中国軍が台湾周辺で活動を続けたと指摘した。自由時報の別の記事によると、中国側は台湾を囲む演習を「台湾の安全を守る」ためだと述べており、これは頼総統の国慶演説が戦争の抑止を強調したことへの反応だという。実弾射撃は軍が実弾で行う演練で、公告された区域内の船舶・航空機は避けなければならない。国防部のこの射撃に関する説明と、中国軍機・艦の最新の機数は、発稿時点で確認できておらず、未確認として扱う。元米国在台協会（AIT）理事主席の莫健氏は、台湾海峡は20年前より危険だと述べた（自由時報、単一の情報源）。2022年8月の台湾周辺での大規模な実弾演習と違い、今回の公告は台湾周辺の特定区域を名指ししておらず、規模の説明もない。射撃区域が台湾本島からどれだけ離れているか、各社は説明しておらず、本紙は推測しない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>実弾射撃<i>軍事</i></b><p>軍が実弾を使って行う射撃演練。空包弾や模擬だけの演習と違い、公告された区域内の船舶と航空機は避けなければならない。</p></div>
+    </article>
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="wtt"><b>林昀儒、WTT中国グランドスマッシュ男子シングルス決勝で7ゲームの激戦　新世界ランク1位の松島輝空に惜敗、準優勝は自己最高に並ぶ</b><em>自由時報、聯合報、Yahoo!スポーツによると、林昀儒はグランドスマッシュの男子シングルス決勝で日本の松島輝空と7ゲームの激戦の末に敗れた。松島は試合後、彼を尊敬していると語った。</em><span>スポーツ · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="s337"><b>米国の337条調査：米側は「まだ決定していない」、鴻海は出荷と顧客との協力に大きな影響はないと説明</b><em>中央社は、米側がまだ決定していないと強調したと報じた。自由時報は、鴻海が出荷と顧客との協力に大きな影響はないと述べたと伝えた。</em><span>経済 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="xz"><b>新荘で女性が自宅で死亡、警察は同居の家族に的を絞る　親族1人と連絡取れず捜査</b><em>聯合報、Yahoo!ニュース、自由時報によると、59歳の女性は体に複数の刃物の傷があった。警察は捜査中で、事件の全容は固まっておらず、本紙は名前を出さない。</em><span>社会 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="pope"><b>教皇レオ14世の肺に小さな結節、今週手術で切除へ</b><em>ロイター、NBC、ワシントン・ポスト、中央社によれば、バチカンは手術を受けると説明した。詳しい日程とリスクは未公表。</em><span>国際 · ✓ 6媒体</span></div>
+      <div class="it story" tabindex="0" data-id="tusk"><b>ポーランド警察が情報を入手、トゥスク首相と国防相が攻撃の標的になる可能性があると説明</b><em>ロイター、AP通信、ルモンドは、警察が襲撃計画の可能性を把握したと報じた。ANSAとシュピーゲルは逮捕者が出たと伝えるが、詳細は未確認。</em><span>国際 · ✓ 5媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="ceas">
+      <div class="kick">国際 · ロシア・ウクライナ<span>報道照合 ✓ 6社 · 停戦の条件はトランプ氏の説明。ロシア側の回答は確認できず</span></div>
+      <h3 class="hl">トランプ氏、ロシア・ウクライナの「エネルギー停戦」が即時発効と発表　ゼレンスキー氏は「私にはニュースだ」としつつ支持を表明、米側の詳細を待つ</h3>
+      <div class="body">
+        <p>トランプ氏は11日、Truth Socialへの投稿で、ロシアとウクライナがエネルギー停戦に同意し、即時に発効すると発表した（ロイター、米NBC、USAトゥデイ、自由時報）。ウクライナのゼレンスキー大統領はその後、この知らせは自分にとって「ニュース」だと述べた（NBC、The Week）が、自身のTelegramチャンネルでウクライナは停戦を支持すると表明し、カナダのカーニー首相、フィンランドのストゥブ大統領、NATOのルッテ事務総長とこの件を話したばかりで、米側からの詳細を待っていると述べた（ウクライナ・プラウダ、FinancialJuice）。ゼレンスキー氏は米ABCにも、ロシア側が60日間の停戦を受け入れるなら、延期されている大統領選挙を実施する用意があると語った（ロイター）。ロイターはさらに、ゼレンスキー氏が、ロシアがエネルギー施設への攻撃をやめるなら、ウクライナ側も製油所への攻撃をやめると述べたと報じた。クレムリンが確認したか、停戦をどう監視するかについて、発稿時点で信頼できる回答は確認できていない。トランプ氏は双方にこの停戦に違反しないよう求めた（Livemint）。先日はウクライナに大統領交代を呼びかけてもおり（公視）、ドイツはゼレンスキー氏への支持を表明した（ロイター）。トランプ氏が9日に発表したディーゼル合意も、共和党の上院重鎮から違法で危険だと批判された（自由時報、単一の情報源）。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="riyadh">
+      <div class="kick">国際 · 中東<span>報道照合 ✓ 6社 · 死傷者数はサウジ当局の発表</span></div>
+      <h3 class="hl">リヤド空港が攻撃され12人死亡、300人超負傷　空港は閉鎖延長、11日にはターミナル火災の報も　フーシ派が改めて警告</h3>
+      <div class="body">
+        <p>サウジ当局は、10日（土）にリヤドのハーリド国王国際空港が攻撃され、12人が死亡、300人超が負傷したと述べた（AP通信、NPR、CBS、ポリティコ）。FinancialJuiceはフーシ派が犯行を主張したと報じ、AP通信はサウジが空港の閉鎖を延長したと報じた。サウジ・ガゼットとイスラエルのハアレツは、サウジ主導の連合軍が11日、第4ターミナルがまた飛翔体に撃たれて火災が起きたと述べたと報じた。フーシ派は改めて航空会社と旅客にサウジの空港を使わないよう警告した（ロイター、ストレーツ・タイムズ）。NPRは、トランプ氏がフーシ派への軍事作戦に加わるか検討していると報じた。フィリピン、インド、パキスタンは自国民が負傷したと述べた（フィリピン・インクワイアラー、エコノミック・タイムズ、FinancialJuice）。フィナンシャル・タイムズは、石油業界の幹部がリヤドで開かれる世界石油会議への出席を取りやめたと報じ、ロイターはサウジ株が下落したと報じた。サウジのエネルギー相は、リヤドは「エネルギー安全保障の都」だと述べ、世界の供給の安定を約束した（サウジ・ガゼット）。パキスタンの外相は攻撃を非難して在リヤド大使館に負傷者への支援を指示し、欧州委員会も情勢の緊迫に警告した（FinancialJuice、アンタラ通信）。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="mkt">
+      <div class="kick">経済 · 市場<span>報道照合 ✓ 3社 · 相場はDailyDropのデータ、上昇率は単一の集計</span></div>
+      <h3 class="hl">台湾株、12日に取引再開　金曜の米国株は0.59%高、金は1.43%高　TSMCの15日の法人説明会が今週の焦点</h3>
+      <div class="body">
+        <p>台湾株は国慶節の連休で休場し、12日（月）に取引を再開する。休場前の最終取引日（8日）、加権指数は49,313.44ポイントで引け、0.99%下落した（DailyDropの相場データ）。連休中の9日（金）に米国株が引け、S&amp;P500種指数は0.59%上昇して7,811.54ポイント、WTI原油は0.39%上昇して1バレル91.85米ドル、金は1.43%上昇して1オンス4,216.3米ドルだった（DailyDropの相場データ）。米ドル/台湾ドルは31.916で、0.01%の小幅安。中央社によれば、投資顧問会社（投顧）は今週の台湾株の焦点をTSMCの法人説明会とみている。自由時報は説明会が15日だと報じ、外国メディアを引いて今年の台湾株の上昇率は7割に迫ると伝えた。別の記事は投資信託会社（投信）の集計として累計70.26%の上昇とし、10月はもみ合いが続く可能性があるとみる。投顧は、企業収益が高金利の衝撃を和らげられるとみて、第4四半期には攻めの相場があるとする一方、AIバブルを懸念して分散投資を勧める声もある（自由時報、Yahoo!ニュース）。米国は鴻海、デルタ電子、広達に対し337条調査を開始し、経済部は支援すると述べた。これも再開初日の電子株の変数だ（中央社）。</p><p>注意しておきたいのは、米国は12日が連邦の祝日で、債券市場は休場、株式市場は通常どおり取引されることだ。連休中のリヤド空港攻撃とロシア・ウクライナのエネルギー停戦のニュースを市場がどう織り込むかは、寄り付き後でなければ分からず、本紙は予測しない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>CPBLポストシーズンのチャレンジシリーズ：統一ライオンズが2連勝で並び、12日に中信兄弟と第4戦で決着。勝者が台湾シリーズ進出<span>自由時報、Yahoo!スポーツ</span></li>
+        <li>国道5号の北向きUターンラッシュは夜になって次第に解消、国道ではこの日36件の事故が発生<span>自由時報</span></li>
+        <li>竹北の優鼎科技で大規模火災、消防が15台出動、濃煙で大気汚染<span>自由時報</span></li>
+        <li>苗栗・苑裡のごみ埋立地で午後に大規模火災、国道から濃煙が見える<span>公視、自由時報</span></li>
+        <li>気象系ファンページは「コグマ（小熊）」が今年8個目の強い台風、「ジャンミ（薔琵）」が今週発生しそうで、一部の予報は台湾に近づくとする。気象署の発表に従うこと<span>聯合報、自由時報</span></li>
+        <li>ジブチ沖で移民船が沈没、国連機関は少なくとも109人が死亡と説明<span>ロイター、自由時報</span></li>
+        <li>ネパールで鉄砲水、村を避難、少なくとも5人が行方不明と報じられる<span>ロイター、AP通信</span></li>
+        <li>日本の公明党幹事長が「台湾は中国に返還」と発言、自由時報は世論が痛烈に批判したと報じる（単一の情報源）<span>自由時報</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「ロシアとウクライナはエネルギー停戦に同意した。」</b> <span>いまのところトランプ氏の一方的な説明。ゼレンスキー氏は自分にはニュースだと述べたが、支持を表明して詳細を待つとしている。ロシア側の回答は確認できていない（ロイター、NBC）。</span></div>
+        <div><b>「フーシ派はダンマーム空港などほかの目標も攻撃した。」</b> <span>FinancialJuice 1社の速報が触れているだけで、ほかのメディアはまだ裏付けていない。</span></div>
+        <div><b>「米国の337条調査は、鴻海など台湾メーカーの製品が輸入禁止になるということだ。」</b> <span>米側はまだ決定していないと強調している（中央社）。鴻海は出荷と顧客との協力に大きな影響はないと述べた（自由時報）。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/12（月）</b><span>台湾株が取引再開 · 両陣営が台北市長のテレビ討論会の日程とルールを協議 · ソーシャルワーカーの労働組合が李彦秀氏の事務所へ抗議（自由時報）· 中国軍がきょうから実弾射撃を発表 · CPBLの中信兄弟と統一ライオンズが第4戦で決着 · 米国は連邦の祝日で、債券市場は休場、株式市場は通常どおり · 月曜は天気がよく、中南部は昼夜の寒暖差が10度近い（自由時報）。</span><b>今週</b><span>TSMCの法人説明会は15日（自由時報）· 教皇レオ14世が今週手術（NPR）· 国際通貨基金（IMF）と世界銀行の年次総会がまもなくバンコクで開幕、焦点は中東の戦争と高水準の債務（ロイター）· 11月28日の統一地方選。</span><b>読者へ</b><span>12日の寄り付き前に、金曜の米国株の終値、油価と中東情勢を見ること。「エネルギー停戦」はロシア側が確認するまで確定したものとして扱わないこと。中国軍の射撃は海事当局の公告に従うこと。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    taipei:{
+      "kick": "政治 · 選挙 · 報道照合 ✓ 6社 · 発言は各方面の公開の説明。人数は単一メディアの引用",
+      "title": "TVBS・三立共催の台北市長討論会が決定　両陣営がきょう日程と相互質問を協議　沈伯洋氏の「台北大洋流」車列遊説が初出発",
+      "what": "TVBSと三立テレビは11日夜、台北市長のテレビ討論会を共同で開くと発表した。両陣営は12日に日程と形式を協議し、相互質問が焦点となる（自由時報、聯合報、三立ニュース、NOWnews）。沈伯洋氏はこれに先立ち4回の討論会を提案して相互質問を主張し、蒋万安氏は討論会は多ければよいというものではなく、詳細は話し合えると述べ、これまではTVBSの1回だけに同意していた（中央社、公視、自由時報）。沈伯洋氏は11日に「台北大洋流」車列遊説を始め、保安宮まで走った。自由時報は、車列が2,000台超、ライブ配信の視聴が6.5万人と報じた。沈伯洋氏は車列遊説に寄せられた苦情についてもThreadsで謝罪した。ソーシャルワーカーの労働組合は12日、李彦秀氏の9日の薬物発言に抗議するため、同氏の事務所へ向かう予定だ。",
+      "why": "台北市長は全国が注目する地方首長選挙で、テレビ討論会は、候補者が同じ舞台で相手の質問に答えなければならない数少ない機会だ。相互質問をするかどうかで、視聴者が互いに問い質す場面を見られるのか、それぞれが言いたいことを言うだけに終わるのかが決まる。",
+      "me": "台北市民なら、双方が最終的に決めた日程とルールに注目し、討論会では、車列や動員の人数だけでなく、交通・住宅・薬物政策に対する両者の具体的な取り組みを見比べるとよい。人数の多さは得票と同じではない。",
+      "a": "沈伯洋陣営は、相互質問と複数回の討論会があってこそ市民が政策の本当の検証を見られるのであり、現職は1局だけを選ぶべきではないと考える。",
+      "b": "蒋万安陣営は、討論会は量より質で、詳細は話し合えるとし、相手の説明にはデマの面があると指摘する。民衆党も1〜2回で十分と主張している。",
+      "say": "この交渉がきょう結論を出せるかは、三つにかかっている。回数が1回か複数回か、相互質問があるか、日程が11月28日の投票より十分前に置かれるか。双方が署名しテレビ局が発表するまで、「決定」が意味するのは主催側が決まったことであり、ルールが決まったことではない。車列の人数とライブ配信の視聴数は単一メディアの説明で、そのまま支持率に換算できないことも指摘しておく。",
+      "src": "自由時報 · 中央社 · 公視 · 聯合報 · 三立ニュース · NOWnews（10月11日）"
+    },
+    plad:{
+      "kick": "両岸 · 軍事 · 報道照合 ✓ 2社 · 海域の記述が一致せず、国防部の回答は未確認",
+      "title": "中国軍、12日から東シナ海、黄海などで実弾射撃を発表　国慶節の期間中も台湾周辺で活動を継続",
+      "what": "自由時報と公視は、中国軍が12日から実弾射撃を行うと発表したと報じた。自由時報は東シナ海など5つの海域で10月12日から17日まで、公視の見出しは黄海などの海域と書いており、記述は完全には一致しない。公視は、国慶節の期間中も中国軍が台湾周辺で活動を続けたと述べる。自由時報の別の記事では、中国側が台湾を囲む演習は台湾の安全を守るためだと述べ、戦争の抑止を強調する頼総統の演説を批判した。国防部の正式な回答と中国軍機・艦の機数は、確認できていない。元米国在台協会理事主席の莫健氏は、台湾海峡は20年前より危険だと述べたが、報じたのは自由時報1社だけだ。",
+      "why": "実弾射撃は航行警報の区域が設定され、船舶と航空機の航路に影響し、台湾への政治的なシグナルと読まれることも多い。ただし2022年以降の大規模な台湾包囲演習とは異なり、今回の射撃が台湾に向けたものだという証拠は現時点でなく、国防部と軍事専門家のその後の判断を待つ必要がある。",
+      "me": "大半の人の日常生活に影響はない。海運、漁業、航空業に携わる人は、海事当局の航行警報と国防部の公告に注意するとよい。",
+      "a": "台湾の当局は、中国軍の動きを厳重に把握しているとして市民に安心を呼びかける一方、国防投資を増やす目的は抑止だと説明することが多い。",
+      "b": "北京は、行動を通常の演習または地域の安全を守るためと説明し、台湾が外国と協力する立場を批判している。",
+      "say": "現段階で最も必要なのは二つの文書だ。中国の海事当局が公表する完全な座標と日付、そして国防部のこの射撃に関する正式な説明である。これが出るまでは、「実弾射撃」をそのまま封鎖や台湾を狙った新たな大規模演習と同一視するのは適切でない。本紙は各社の報道の海域の違いを引き続き照合する。",
+      "src": "自由時報 · 公視（10月11日）"
+    },
+    ceas:{
+      "kick": "国際 · ロシア・ウクライナ · 報道照合 ✓ 6社 · 停戦の条件はトランプ氏の説明。ロシア側の回答は確認できず",
+      "title": "トランプ氏、ロシア・ウクライナの「エネルギー停戦」が即時発効と発表　ゼレンスキー氏は「私にはニュースだ」としつつ支持を表明、米側の詳細を待つ",
+      "what": "トランプ氏は11日、Truth Socialでロシアとウクライナがエネルギー停戦に同意し、即時に発効すると発表した（ロイター、NBC、USAトゥデイ、自由時報）。ゼレンスキー氏はこれは自分にはニュースだと述べたが、ウクライナは停戦を支持するとし、Telegramで、カーニー氏、ストゥブ氏、ルッテ氏と話し、米側の詳細を待っていると述べた（NBC、ウクライナ・プラウダ）。ロイターは、ゼレンスキー氏が条件を示したと報じた。ロシアがエネルギー施設への攻撃をやめれば、ウクライナ側は製油所を攻撃しない。ロシアが60日間の停戦に同意するなら、ウクライナ側は選挙を実施する。ロシア側の回答は確認できていない。",
+      "why": "エネルギー施設はこの戦争の主要な攻撃目標の一つで、攻撃が止まれば、欧州の電力とディーゼルの供給に直接影響し、国際油価や制裁の行方にも響く。ただし現時点では米側の一方的な説明があるだけで、双方が署名した文書はない。",
+      "me": "停戦が実際に守られれば、国際油価と海運コストが落ち着く可能性があり、台湾のエネルギー輸入コストには間接的にプラスになる。ただしロシア側が確認するまでは、油価がすぐ下がると期待すべきでない。台湾中油の据え置き措置を延長するかどうかも、油価の動き次第だ。",
+      "a": "トランプ陣営は、まずエネルギー施設への攻撃をやめれば油価と生活への圧力を下げられ、より広い停戦への道を開くと考える。",
+      "b": "批判する側は、米国がロシア産原油への制裁を先に緩め、そのうえで条文を公表せずに停戦を発表したのは、ロシアに先に見返りを与えたに等しいとみる。ウクライナ側も詳細をまだ見ていない。",
+      "say": "確かめるべきは三つある。クレムリンが公に確認し期限を説明するか。停戦を誰が監視し、違反をどう認定するか。そしてこの先48時間にエネルギー施設への攻撃がまた報じられるか。条文と双方の確認が出るまで、「エネルギー停戦」はトランプ氏の発表にすぎない。",
+      "src": "ロイター · NBC · USAトゥデイ · The Week · ウクライナ・プラウダ · FinancialJuice · 自由時報 · 公視（10月11日）"
+    },
+    riyadh:{
+      "kick": "国際 · 中東 · 報道照合 ✓ 6社 · 死傷者数はサウジ当局の発表",
+      "title": "リヤド空港が攻撃され12人死亡、300人超負傷　空港は閉鎖延長、11日にはターミナル火災の報も　フーシ派が改めて警告",
+      "what": "サウジ当局は、10日にリヤドのハーリド国王国際空港が攻撃され、12人が死亡、300人超が負傷したと述べた（AP通信、NPR、CBS）。フーシ派が犯行を主張し（FinancialJuice）、空港は閉鎖が延長された（AP通信）。サウジ主導の連合軍は11日、第4ターミナルがまた飛翔体に撃たれ、火災が起きたと述べた（サウジ・ガゼット、ハアレツ）。フーシ派は改めて航空業者に警告した（ロイター、ストレーツ・タイムズ）。NPRは、トランプ氏が軍事作戦への参加を検討していると報じた。複数の国が自国民が負傷したと述べている。",
+      "why": "リヤドは湾岸の航空とエネルギー会議の拠点で、民間空港への攻撃は、中東の戦争のリスクを軍事目標から民間施設へ広げ、油価と海運のリスクを押し上げ、航空会社に迂回を迫る。",
+      "me": "リヤドやサウジを経由する旅行者は、航空会社に便を確認してほしい。台湾の油価と輸送コストも中東情勢の影響を受ける可能性があり、台湾中油の据え置きがいつまで持つかは油価次第だ。",
+      "a": "サウジとその同盟国は、民間インフラへの攻撃であり、より強い防空と国際社会の対応が必要だと考える。",
+      "b": "フーシ派は行動をサウジへの反撃と説明している。米国が直接介入すれば地域の衝突が拡大しかねないという分析もある。",
+      "say": "現段階で見るべきは、サウジの民間航空当局がいつ空港の再開時期を公表するか、第4ターミナルの火災の原因と死傷者、そして米国が実際に動くかだ。死傷者数は各社とも現在は12人死亡、300人超負傷で一致しているが、フーシ派がほかの空港も攻撃したかは、独立した裏付けがまだない。",
+      "src": "AP通信 · NPR · CBS · ロイター · ストレーツ・タイムズ · サウジ・ガゼット · ハアレツ（10月10日〜11日）"
+    },
+    mkt:{
+      "kick": "経済 · 市場 · 報道照合 ✓ 3社 · 相場はDailyDropのデータ、上昇率は単一の集計",
+      "title": "台湾株、12日に取引再開　金曜の米国株は0.59%高、金は1.43%高　TSMCの15日の法人説明会が今週の焦点",
+      "what": "台湾株は9日、国慶節の連休で休場し、12日に再開する。8日の加権指数は49,313.44ポイントで引け、0.99%下落した。米国株は9日に引け、S&P500種指数は7,811.54ポイントで0.59%上昇、WTI原油は91.85米ドルで0.39%上昇、金は4,216.3米ドルで1.43%上昇した（DailyDropの相場データ）。中央社と自由時報は、今週の焦点は15日のTSMCの法人説明会だと報じた。自由時報は外国メディアと投信の集計を引き、今年の台湾株の上昇率は約70%だと伝えた。",
+      "why": "台湾株は電子サプライチェーンとの連動性が高く、連休中にたまった国際ニュースは再開初日にまとめて反映される。TSMCの法人説明会は、AI需要と設備投資に対する市場の見方に影響する。",
+      "me": "台湾株やETFを持っているなら、寄り付き前に米国株の終値、油価、中東情勢を確認するとよい。今年の累計上昇率が高く、短期の値動きも大きくなりうる。投資判断は自分のリスク許容度に基づいて行うこと。",
+      "a": "投顧は、企業収益が高金利の衝撃を和らげるのに十分で、第4四半期にも攻めの相場があるとみる（自由時報）。",
+      "b": "AIバブルと高値圏でのもみ合いを懸念し、分散投資を勧める声もある（Yahoo!ニュース）。",
+      "say": "再開初日に見るべき数字は三つ。加権指数の49,313ポイントに対する寄り付きの窓、台湾ドルが対米ドルで31.9近辺を守るか、そして電子の値がさ株の出来高だ。TSMCの法人説明会は15日に開かれるため、説明会前の相場は期待による取引が多い。",
+      "src": "DailyDropの相場データ · 中央社 · 自由時報（10月9日〜11日）"
+    },
+    wtt:{
+      "kick": "スポーツ · 卓球 · 報道照合 ✓ 3社 · 試合結果はメディアの報道",
+      "title": "林昀儒、WTT中国グランドスマッシュ男子シングルス決勝で7ゲームの激戦　新世界ランク1位の松島輝空に惜敗、準優勝は自己最高に並ぶ",
+      "what": "自由時報、聯合報、Yahoo!スポーツによると、林昀儒はWTT中国グランドスマッシュ男子シングルス決勝で、日本の松島輝空と7ゲームの激戦の末に敗れ、準優勝となった。自由時報は、これは今年の自己最高成績と同じだと述べる。試合前、自由時報は、優勝すれば世界ランキングが再び自己最高を更新する見通しだと書いた。松島は試合後、林昀儒を尊敬していると語った。決勝のゲームごとのスコアは、信頼できる二次報道を確認できておらず、ここには書かない。",
+      "why": "グランドスマッシュは卓球の最高格のシリーズ戦の一つで、台湾の男子シングルスが続けて決勝に進むのは近年まれな成績であり、世界ランキングとポイントの重要な源でもある。",
+      "me": "卓球が好きな読者は試合の再放送を見るとよい。ランキングはWTTの公式発表に従う。",
+      "a": "",
+      "b": "",
+      "say": "準優勝は、トップ選手との差が縮まったことを示す。次の大会では、決勝の勝負どころの点をどう処理するかを見たい。ゲームごとのスコアは、公式データが出てから補う。",
+      "src": "自由時報 · 聯合報 · Yahoo!スポーツ（10月11日）"
+    },
+    s337:{
+      "kick": "経済 · 貿易 · 報道照合 ✓ 4社 · 調査は始まったばかりで、裁定はまだない",
+      "title": "米国の337条調査：米側は「まだ決定していない」、鴻海は出荷と顧客との協力に大きな影響はないと説明",
+      "what": "米国際貿易委員会は9日に337条調査を開始し、鴻海、デルタ電子、広達など台湾企業が名を連ねた（中央社、公視）。中央社は、米側がまだ決定していないと強調したと報じた。経済部は手続きを尊重し、必要があれば支援すると述べた。自由時報は、鴻海が出荷と顧客との協力に大きな影響はないと述べたと報じた。Yahoo!株式は3社の最新の回答をまとめた。調査は始まったばかりで、企業が違反したかどうかは審理を待つ。",
+      "why": "337条調査は、輸入品が知的財産権を侵害した疑いを対象とする。成立と認められれば、対象製品の米国市場への進入が禁じられる可能性がある。台湾のAIサーバーのサプライチェーンは主要な輸出産業だ。",
+      "me": "関連企業の株を持つ投資家は、各社の説明とその後の調査の進み具合を待つべきだ。12日に台湾株が再開した後の市場の反応に注意するとよく、調査開始のニュースだけで判断するのは望ましくない。",
+      "a": "",
+      "b": "",
+      "say": "対象の台湾企業の開示、経済部のその後の説明、貿易委員会が公表する調査日程を見る。調査の開始は敗訴を意味しない。",
+      "src": "中央社 · 自由時報 · 公視 · Yahoo!株式（10月11日）"
+    },
+    xz:{
+      "kick": "社会 · 治安 · 報道照合 ✓ 4社 · 事件の全容は未確定、名前は出さない",
+      "title": "新荘で女性が自宅で死亡、警察は同居の家族に的を絞る　親族1人と連絡取れず捜査",
+      "what": "自由時報、聯合報、Yahoo!ニュース、中時新聞網によると、新荘の民家で59歳の女性が11日、室内に倒れているのを発見され、体に複数の刃物の傷があった。警察は同居の家族に的を絞り、そのうち親族1人と連絡が取れず、捜査を続けているという。事件はまだ捜査が終わっておらず、動機に関する説明は各社で異なる。本紙は採用せず、誰の名前も出さない。",
+      "why": "家庭内で起きた暴力事件は、被害者と家族のプライバシーにかかわる。報道は、裏付けのない動機の推測を避けるべきだ。",
+      "me": "身近に家庭内暴力を受けている人がいれば、113保護専用ダイヤルに相談できる。",
+      "a": "",
+      "b": "",
+      "say": "警察がその後、連絡の取れない親族を確保できるか、検察官がどう捜査するかを見る。事件の全容が固まる前に、誰も罪に決めつけてはならない。",
+      "src": "自由時報 · 聯合報 · Yahoo!ニュース · 中時新聞網（10月11日）"
+    },
+    pope:{
+      "kick": "国際 · 宗教 · 報道照合 ✓ 6社 · 手術の詳細は未公表",
+      "title": "教皇レオ14世の肺に小さな結節、今週手術で切除へ",
+      "what": "ロイター、NBC、ワシントン・ポスト、NPR、CBS、中央社によると、教皇レオ14世は肺に小さな結節が見つかったと述べ、バチカンは手術を受けると説明した。NPRは今週中に行うと書いている。結節の性質、手術日、予定される療養期間について、バチカンはこれ以上の詳細を公表していない。",
+      "why": "教皇は世界で10億人超のカトリック信徒の精神的指導者で、健康のニュースはバチカンの日程や重要な典礼の手配に影響する。",
+      "me": "台湾のカトリック信徒にとっては、短期的に教皇の公の活動に影響する可能性がある。一般の人に直接の影響はない。",
+      "a": "",
+      "b": "",
+      "say": "まずバチカンが手術日と病理結果を公表するかを見て、そのうえでその後の日程を語るべきだ。公式の説明がない限り、病状を推測しない。",
+      "src": "ロイター · NBC · ワシントン・ポスト · NPR · CBS · 中央社（10月11日）"
+    },
+    tusk:{
+      "kick": "国際 · 欧州 · 報道照合 ✓ 5社 · 逮捕者が出たとの説明は2社のみ",
+      "title": "ポーランド警察が情報を入手、トゥスク首相と国防相が攻撃の標的になる可能性があると説明",
+      "what": "ロイターとAP通信によると、ポーランド警察は、トゥスク首相と国防相が襲われる可能性があるという情報を得たと述べた。WPニュースは、トゥスク氏が徒歩で行事に出席したと報じた。イタリアのANSAとドイツのシュピーゲルは逮捕者が出たと報じたが、詳細と動機はほかのメディアでは裏付けられていない。",
+      "why": "政府首脳への暗殺の脅威は国家安全保障にかかわり、ポーランドとロシア・ウクライナ戦争にまつわる緊張もさらに高める。",
+      "me": "台湾の読者にとっては欧州の安全保障情勢の一環で、いまのところ直接の影響はない。",
+      "a": "",
+      "b": "",
+      "say": "ポーランドの検察が容疑者の身元と動機を公表するか、外国勢力と関係があるかを見る。証拠がない限り、特定の国に結びつけるべきでない。",
+      "src": "ロイター · AP通信 · ルモンド · WPニュース · ANSA · シュピーゲル（10月11日）"
+    },
+  };
+  const G = {
+    "FinancialJuice":{"f":"メディア","d":"英語のリアルタイム経済・国際ニュース速報サービス。一文の速報で突発事件を伝えることが多く、内容は転載が多いため、元の情報源の照合が必要。","w":"この記事では、ダンマーム空港が攻撃されたという説明はFinancialJuice 1社だけが伝えているため、未確認として扱った。"},
+    "ディーゼル合意":{"f":"エネルギー","d":"トランプ氏が9日にプーチン氏との電話会談後に発表した米ロのディーゼルに関する取り決め。公視によれば、米財務省はロシア産ディーゼルの輸出への制裁を一時的に適用除外にするが、条文はロシア側がまだ公表していない。","w":"共和党の上院重鎮はこの合意を違法で危険だと批判したが、報じたのはいまのところ自由時報1社だけだ。"},
+    "337条調査":{"f":"貿易法","d":"米国の『1930年関税法』第337条に基づき、米国際貿易委員会が輸入品が特許などの知的財産権を侵害していないかを調べる。成立すれば製品の輸入を禁じられる。","w":"米国は鴻海、デルタ電子、広達に対し337条調査を開始し、米側はまだ決定していないと強調した。"},
+    "台北大洋流":{"f":"選挙","d":"沈伯洋氏の選挙陣営が車列遊説につけた名称。「洋流（海流）」で勢いを形容している。","w":"沈伯洋氏は11日、初めて「台北大洋流」車列遊説を始め、保安宮まで走った。"},
+    "ストゥブ":{"f":"人物","d":"アレクサンデル・ストゥブ。フィンランドの大統領。","w":"ゼレンスキー氏は、トランプ氏が発表したエネルギー停戦についてストゥブ氏らと話したばかりだと述べた。"},
+    "ジブチ":{"f":"地名","d":"東アフリカの国。紅海の出口近くに位置し、移民がイエメンへ海を渡る出発地の一つになることが多い。","w":"ジブチ沖で移民船が沈没し、国連機関は少なくとも109人が死亡したと述べた。"},
+    "Truth Social":{"f":"SNS","d":"トランプ氏が関係する会社が運営するSNS。トランプ氏はここで政策や人事を直接投稿して発表することが多い。","w":"トランプ氏は11日、Truth Socialでロシアとウクライナがエネルギー停戦に同意したと投稿した。"},
+    "アンタラ通信":{"f":"メディア","d":"インドネシアの国営通信社ANTARA。東南アジアと国際ニュースを報じる。","w":"アンタラ通信は、欧州委員会がリヤド空港攻撃後の情勢の緊迫に警告したと報じた。"},
+    "サウジ・ガゼット":{"f":"メディア","d":"サウジアラビアで発行される英字紙Saudi Gazette。","w":"サウジ・ガゼットは、リヤド空港の第4ターミナルが11日にまた飛翔体に撃たれ、火災が起きたと報じた。"},
+    "ダンマーム":{"f":"地名","d":"サウジアラビア東部の大都市で、ペルシャ湾岸の石油と港湾の要衝。","w":"フーシ派がダンマーム空港も攻撃したという速報があるが、いまのところ単一の情報源だ。"},
+    "ハームリダクション計画":{"f":"公衆衛生","d":"薬物使用者にすぐやめることを求めず、まず使用による害を減らす方法。たとえば清潔な注射器具や代替薬物の提供がある。国ごとにやり方と論争は異なる。","w":"衛生福利部は先に、ハームリダクション計画はソーシャルワーカーに薬物を配らせるものではないと釈明した。"},
+    "フーシ派":{"f":"国際","d":"イエメンの武装組織。「青年運動」とも呼ばれ、イランの支援を受け、最近はサウジアラビアを攻撃している。","w":"FinancialJuiceは、フーシ派がリヤド空港攻撃の犯行を主張したと報じた。"},
+    "ルッテ":{"f":"人物","d":"マルク・ルッテ。北大西洋条約機構（NATO）の事務総長。","w":"ゼレンスキー氏は、エネルギー停戦についてルッテ氏らと話したばかりだと述べた。"},
+    "投信":{"f":"金融","d":"投資信託会社。ETFなどのファンドを発行・運用する資産運用会社。","w":"自由時報は投信の集計を引き、台湾株の今年の累計上昇率は70.26%だと報じた。"},
+    "公明党":{"f":"日本政治","d":"日本の政党の一つ。仏教団体の創価学会を主な支持基盤とする。","w":"自由時報は、公明党の幹事長が「台湾は中国に返還」と発言し、世論が痛烈に批判したと報じたが、いまのところ単一の情報源だ。"},
+    "エネルギー停戦":{"f":"国際","d":"発電所、製油所、石油・ガス施設などエネルギー施設への攻撃を止める限定的な停戦で、範囲は全面停戦より小さい。","w":"トランプ氏はロシアとウクライナがエネルギー停戦に同意したと発表したが、ロシア側の回答は確認できていない。"},
+    "トゥスク":{"f":"人物","d":"ドナルド・トゥスク。ポーランドの首相。","w":"ポーランド警察は、トゥスク氏と国防相が攻撃の標的になる可能性があるという情報を得たと述べた。"},
+    "ウクライナ・プラウダ":{"f":"メディア","d":"ウクライナのオンライン紙Ukrainska Pravda。ウクライナの政治と戦争を報じる。","w":"ウクライナ・プラウダは、ゼレンスキー氏がエネルギー停戦の米側の詳細を待っていると報じた。"},
+    "中国グランドスマッシュ":{"f":"スポーツ","d":"WTTグランドスマッシュのシリーズで、中国で開かれる大会。ポイントと賞金は通常の大会より高い。","w":"林昀儒は中国グランドスマッシュ男子シングルス決勝で惜敗し、準優勝となった。"},
+    "世界石油会議":{"f":"エネルギー","d":"3年に1度開かれる世界の石油産業の大型会議。今回は第25回で、リヤドで開かれる。","w":"フィナンシャル・タイムズは、石油業界の幹部が空港攻撃後、リヤドで開かれる世界石油会議への出席を取りやめたと報じた。"},
+    "レオ14世":{"f":"人物","d":"教皇レオ14世。米国出身で、2025年に選出された現在のカトリックの教皇。","w":"レオ14世は肺に小さな結節が見つかったと述べ、手術で切除するという。"},
+    "結節":{"f":"医療","d":"臓器にできた小さな異常組織のかたまり。良性のこともあれば悪性のこともあり、検査で判断する必要がある。","w":"バチカンは、教皇の肺の結節の性質をまだ公表していない。"},
+    "雷神のハンマー":{"f":"用語","d":"北欧神話の雷神トールのハンマー。漫画や映画にもよく登場する。","w":"台北市議会議員の王世堅氏は保安宮で沈伯洋氏に雷神のハンマーを贈ったが、報道は意味を説明していない。"},
+    "カーニー":{"f":"人物","d":"マーク・カーニー。カナダの首相。","w":"ゼレンスキー氏は、エネルギー停戦についてカーニー氏らと話したばかりだと述べた。"},
+    "ハアレツ":{"f":"メディア","d":"イスラエルの新聞『ハアレツ』（Haaretz）。","w":"ハアレツは、サウジ主導の連合軍がリヤド空港の第4ターミナルが11日にまた攻撃されたと述べたと報じた。"},
+    "連邦の祝日":{"f":"米国","d":"米連邦政府が定める国の祝日。10月の第2月曜はコロンバスデーで、連邦機関は休み、債券市場は休場、株式市場は通常どおり取引されることが多い。","w":"米国は12日が連邦の祝日。"},
+    "WTT":{"f":"スポーツ","d":"世界卓球のプロツアー（World Table Tennis）。国際卓球で最高格のプロ大会シリーズ。","w":"林昀儒はWTT中国グランドスマッシュ男子シングルス決勝で準優勝した。"},
+    "エネルギー安全保障の都":{"f":"用語","d":"サウジのエネルギー相がリヤドを形容した言い方で、世界のエネルギー供給の安定を担うという意味。","w":"サウジのエネルギー相は、リヤドは「エネルギー安全保障の都」だと述べ、世界の供給の安定を約束した。"},
+    "詹為元":{"f":"人物","d":"報道で民衆党の立場から選挙討論会について見方を示した政治家。","w":"詹為元氏は、台北市長の討論会は1〜2回が最適だと述べた。"},
+    "車列遊説":{"f":"選挙","d":"選挙陣営の車列が沿道を回って支持を訴える手法で、宣伝カーや旗を伴うことが多い。","w":"沈伯洋氏は11日に車列遊説を始め、中山、大同から保安宮まで走った。"},
+    "莫健":{"f":"人物","d":"元米国在台協会（AIT）理事主席。","w":"自由時報は、莫健氏が台湾海峡は20年前より危険だと述べたと報じた。"},
+    "グランドスマッシュ":{"f":"スポーツ","d":"WTTの最高格の大会。ポイントと賞金は通常の大会より高い。","w":"林昀儒はグランドスマッシュ男子シングルス決勝で準優勝した。"},
+    "松島輝空":{"f":"人物","d":"日本の卓球選手。報道は新たな世界ランク1位とし、決勝で林昀儒を破った。","w":"林昀儒は7ゲームの激戦の末、松島輝空に惜敗した。"},
+    "相互質問":{"f":"討論","d":"討論会で候補者が相手に直接質問し、問いただすこと。それぞれが述べるだけにとどまらない。","w":"相互質問をどう行うかが、12日の両陣営の協議の焦点だ。"},
+    "薬物特別報告":{"f":"立法","d":"立法委員が関係機関に求める、薬物対策の課題についての専門の報告。","w":"国民党の立法委員は8機関の薬物特別報告を設定した。"},
+    "Threads":{"f":"SNS","d":"Meta社のテキスト系SNS。台湾では「脆」と略されることが多い。","w":"沈伯洋氏は、車列遊説に寄せられた苦情についてThreadsで謝罪した。"},
+    "投顧":{"f":"金融","d":"投資顧問会社。投資調査と市場の見方を提供する。","w":"投顧は、今週の台湾株の焦点はTSMCの法人説明会だとみている。"},
+    "欧州委員会":{"f":"機関","d":"EUの執行機関で、法案の提出と政策の執行を担う。","w":"欧州委員会は、リヤド空港攻撃後の情勢の緊迫に警告した。"},
+    "万華の広照宮":{"f":"地名","d":"台北市万華区の廟。選挙期間中は候補者が訪れることが多い。","w":"沈伯洋氏は10日、万華の広照宮で蒋万安氏に討論会の招待状を渡した。"},
+    "頼瑞隆":{"f":"人物","d":"民進党所属の高雄市長選の立候補者。","w":"頼瑞隆氏は、高雄で討論会がまとまったのだから台北でもできると信じていると述べた。"},
+    "広達":{"f":"企業","d":"台湾の電子機器受託製造の大手。ノートPCとAIサーバーを生産する。","w":"広達は鴻海、デルタ電子とともに米国の337条調査の対象に名を連ねた。"},
+    "ハーリド国王国際空港":{"f":"機関","d":"サウジアラビアの首都リヤドの主要な国際空港。","w":"この空港は10日に攻撃され、12人が死亡、300人超が負傷した。"},
+    "航行警報":{"f":"航海","d":"海事当局が船舶に出す公告で、ある海域が射撃や演習のため一時的に通航に適さないことを知らせる。","w":"中国軍の実弾射撃の詳細な座標と時間帯は、航行警報に従うべきだ。"},
+    "世界ランク1位":{"f":"スポーツ","d":"卓球メディアで「球王」と呼ばれる、世界ランキング首位の選手。","w":"松島輝空は新たな世界ランク1位と報じられた。"},
+    "デルタ電子":{"f":"企業","d":"台湾の電源供給と放熱機器の大手で、AIサーバーの部品を供給する。","w":"デルタ電子は米国の337条調査の対象に名を連ねた。"},
+    "国際通貨基金":{"f":"機関","d":"略称IMF。加盟国に融資と経済助言を行う国際機関。","w":"IMFと世界銀行の年次総会がまもなくバンコクで開幕する。"},
+    "東シナ海":{"f":"地名","d":"中国大陸の東岸沖、台湾の北東にある海域。","w":"自由時報は、中国軍の実弾射撃が東シナ海など5つの海域に及ぶと報じた。"},
+    "抑止":{"f":"軍事","d":"相手が代償が大きすぎると予想して攻撃をあきらめるようにする戦略。","w":"頼総統は国慶演説で、国防投資を増やすのは戦争を抑止するためだと述べた。"},
+    "S&P500種指数":{"f":"金融","d":"米国の上場大手500社の株価を追う指数で、米国株の主要な指標。","w":"S&P500種指数は9日に7,811.54ポイントで引け、0.59%上昇した。"},
+    "王世堅":{"f":"人物","d":"民進党所属の台北市議会議員。","w":"王世堅氏は保安宮で沈伯洋氏に雷神のハンマーを贈った。"},
+    "ターミナル":{"f":"航空","d":"空港で旅客が搭乗を待つ建物。","w":"リヤド空港の第4ターミナルが11日にまた飛翔体に撃たれた。"},
+    "教皇":{"f":"宗教","d":"カトリック教会の最高指導者で、バチカン市国の元首でもある。","w":"教皇の肺に小さな結節が見つかり、手術で切除するという。"},
+    "李彦秀":{"f":"人物","d":"国民党所属の立法委員で、蒋万安陣営の報道官。","w":"李彦秀氏の9日の「ソーシャルワーカーが薬物を配る」発言の余波は収まっていない。"},
+    "中央選挙委員会":{"f":"機関","d":"略称は中選会。全国の選挙事務を所管する。","w":"中選会が開く政見発表会は、テレビ討論会とは異なる。"},
+    "Telegram":{"f":"SNS","d":"メッセージの送信と公開チャンネルの運営ができるメッセージアプリで、ウクライナとロシアの当局者がよく使う。","w":"ゼレンスキー氏は自身のTelegramチャンネルでエネルギー停戦への支持を表明した。"},
+    "クレムリン":{"f":"地名","d":"モスクワの政府施設群で、ロシアの大統領府と政府の代名詞でもある。","w":"クレムリンがエネルギー停戦を確認したか、本紙は確認できていない。"},
+    "共和党":{"f":"米国政治","d":"米国の二大政党の一つで、トランプ氏の所属政党。","w":"共和党の上院重鎮は、ディーゼル合意を違法で危険だと批判した。"},
+    "ジャンミ":{"f":"気象","d":"台風の名前。台風委員会の加盟国・地域が提供し、順番に使われる。","w":"気象系ファンページは、ジャンミ（薔琵）が今週発生しそうだと述べた。気象署の発表に従うこと。"},
+    "WTI原油":{"f":"エネルギー","d":"米国産の軽質低硫黄原油。英語略称はWTI。北米と国際の原油価格の主要な指標の一つ。","w":"WTI原油は9日に1バレル91.85米ドルで引け、0.39%上昇した。"},
+    "世界銀行":{"f":"機関","d":"開発途上国に融資と援助を行う国際金融機関。","w":"世界銀行の年次総会がIMFとともにまもなくバンコクで開幕する。"},
+    "鴻海":{"f":"企業","d":"台湾の電子機器受託製造の大手で、AIサーバーも生産する。","w":"鴻海は、337条調査は出荷と顧客との協力に影響しないと述べた。"},
+    "チャレンジシリーズ":{"f":"スポーツ","d":"CPBLのレギュラーシーズン後のポストシーズンの第1段階で、勝者が台湾シリーズに進む。","w":"統一ライオンズと中信兄弟は12日に第4戦で決着し、勝者が台湾シリーズ進出を争う。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
