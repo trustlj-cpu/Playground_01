@@ -320,19 +320,24 @@ const LEADT = h => { const m = h.match(/const A = (\{[\s\S]*?\n  \});\n/); if (!
 const PG = (l, k) => ({ ...I18N.en[k], ...(I18N[l] || {})[k] });
 // 기사별 페이지는 공용 BASECSS(약 80KB)를 매번 싣지 않고 내용 해시가 붙은 파일 하나를 함께 쓴다(/brand/ 는 1주일 캐시).
 let BASEHREF = null; const BASELINK = () => { if (!BASEHREF) { const css = BASECSS.replace(/^<style>/, '').replace(/<\/style>$/, ''); const h = require('crypto').createHash('sha1').update(css).digest('hex').slice(0, 10); fs.mkdirSync(path.join(OUT, 'brand'), { recursive: true }); fs.writeFileSync(path.join(OUT, 'brand', `base-${h}.css`), css); BASEHREF = `/brand/base-${h}.css`; } return `<link rel="stylesheet" href="${BASEHREF}">`; };
+// 기사별 페이지 틀(나라마다 하나, /_art/<나라>.html): 사이트 Worker가 그 호의 a.json 에서 제목·설명·주소·구조화 정보·본문을 끼워 넣어 보여 준다(파일 수가 기사 수만큼 늘지 않게).
+const ART_CSS = `<style>main{max-width:680px}.ak{font:600 12px/1.4 var(--sans,system-ui);letter-spacing:.04em;color:var(--mute);margin:18px 0 6px}.at{font-size:clamp(24px,5.4vw,34px);line-height:1.25;margin:0 0 14px;text-wrap:balance}.at:lang(ko){word-break:keep-all}main p{text-align:justify;hyphens:auto;line-height:1.75}.ae{color:var(--mute);font-size:13px;margin-top:22px}.as{font-size:13px;padding-left:18px}.as a{color:inherit}</style>`;
+const ARTDONE = new Set(); const ARTTPL = (r, l) => { if (ARTDONE.has(r)) return; ARTDONE.add(r); const R = REGIONS[r];
+  const page = SEO_HEAD(HEAD('@@T@@', '@@D@@', '@@U@@', l) + FONTS + BASELINK() + ART_CSS + NAV('/' + R.prefix, r) + '@@B@@' + JUSTIFY.replace("var SEL='", "var SEL='main p:not(.ae),") + '</body></html>', '@@L@@');
+  fs.mkdirSync(path.join(OUT, '_art'), { recursive: true }); fs.writeFileSync(path.join(OUT, '_art', r + '.html'), page); };
 const ARTLIST = []; // {region, lang, date, url, title, desc, when, orig}
 const ARTS = (h, e, l, base, edUrl, X) => { const m = h.match(/const A = (\{[\s\S]*?\n  \});\n/); if (!m) return; let A; try { A = new Function('return ' + m[1])(); } catch (_) { return; }
   const plain = x => String(x || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); const r = e.region || 'KR'; const R = REGIONS[r]; const own = R.lang === l;
-  const edT = own ? R.title(e.no, e.date) : TTITLE(l, r, e.no, e.date); const read = PG(l, 'aboutPage').read; const when = e.publish_at || (e.date + 'T06:00:00Z');
+  const edT = own ? R.title(e.no, e.date) : TTITLE(l, r, e.no, e.date); const read = PG(l, 'aboutPage').read; const when = e.publish_at || (e.date + 'T06:00:00Z'); const AJ = { r, items: {} }; ARTTPL(r, l);
   for (const [id0, a] of Object.entries(A)) { if (!a || typeof a !== 'object' || !a.title) continue; const id = id0.replace(/[^\w-]/g, ''); const t = plain(a.title); const desc = plain(a.what).slice(0, 160);
     const url = `${base}a/${id}/`; const paras = [a.what, a.why, a.me, a.a, a.b, a.say].map(plain).filter(Boolean);
     const links = ((X && X.src && X.src[id0]) || []).filter(s => s && /^https?:\/\//.test(s.u || '')).map(s => `<li><a href="${esc(s.u)}" rel="noopener nofollow" target="_blank">${esc(s.n || s.u)}</a></li>`).join('');
     const ld = '<script type="application/ld+json">' + JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: t.slice(0, 110), description: desc, url: SITE + url, mainEntityOfPage: SITE + url, inLanguage: l, datePublished: when, dateModified: when, image: [SITE + '/og.png?v=5'], isAccessibleForFree: true, isPartOf: { '@type': 'CreativeWork', name: edT, url: SITE + edUrl }, author: { '@type': 'Organization', name: 'DailyDrop', url: SITE + '/about/' }, publisher: { '@type': 'NewsMediaOrganization', name: 'DailyDrop', url: SITE + '/', logo: { '@type': 'ImageObject', url: SITE + '/brand/icon-512.png', width: 512, height: 512 } } }).replace(/</g, '\\u003c') + '</script>';
     const css = `<style>main{max-width:680px}.ak{font:600 12px/1.4 var(--sans,system-ui);letter-spacing:.04em;color:var(--mute);margin:18px 0 6px}.at{font-size:clamp(24px,5.4vw,34px);line-height:1.25;margin:0 0 14px;text-wrap:balance}.at:lang(ko){word-break:keep-all}main p{text-align:justify;hyphens:auto;line-height:1.75}.ae{color:var(--mute);font-size:13px;margin-top:22px}.as{font-size:13px;padding-left:18px}.as a{color:inherit}</style>`;
     const body = `<main><div class="ak">${esc(plain(a.kick))}</div><h1 class="at">${esc(t)}</h1>${paras.map(p => `<p>${esc(p)}</p>`).join('')}${links ? `<ul class="as">${links}</ul>` : ''}<p class="ae">${esc(edT)}</p><p><a class="btn" href="${edUrl}#${id}">${esc(read)}</a></p></main>`;
-    const page = SEO_HEAD(HEAD(`${t} · DailyDrop`, desc, url, l) + FONTS + BASELINK() + css + NAV('/' + R.prefix, r) + body + JUSTIFY.replace("var SEL='", "var SEL='main p:not(.ae),") + '</body></html>', ld);
-    const d = path.join(OUT, url); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'index.html'), page);
-    ARTLIST.push({ region: r, lang: l, date: e.date, url, title: t, desc, when, orig: own, pub: !e.publish_at || Date.parse(e.publish_at) <= NOW }); } };
+    AJ.items[id] = { t: `${esc(t)} · DailyDrop`, d: esc(desc), u: url, ld, b: body };
+    ARTLIST.push({ region: r, lang: l, date: e.date, url, title: t, desc, when, orig: own, pub: !e.publish_at || Date.parse(e.publish_at) <= NOW }); }
+  fs.mkdirSync(path.join(OUT, base), { recursive: true }); fs.writeFileSync(path.join(OUT, base, 'a.json'), JSON.stringify(AJ)); };
 const glossary = {}; // term → {f,d,w,first:date,no}
 const GLOSS = {}; // 국가판별 용어사전(KR 제외): region → term → {f,d,w,first,no}
 for (const e of editions) {

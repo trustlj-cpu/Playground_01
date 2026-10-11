@@ -3,7 +3,7 @@ import { handleAccount } from './account.js';
 const CANON = 'dailydropnewspaper.com';
 const OLD_HOSTS = new Set(['dailydrop.kr', 'www.dailydrop.kr', 'thedailydrop.today', 'www.thedailydrop.today', 'www.dailydropnewspaper.com']);
 const ACCOUNT_API = /^\/api\/(auth\/|me$|bookmarks$|hit$|admin\/)/;
-export default {
+const handler = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.hostname !== CANON && (OLD_HOSTS.has(url.hostname) || url.hostname.endsWith('.workers.dev'))) {
@@ -59,6 +59,21 @@ export default {
         if (r.ok) { const h = new Headers(r.headers); h.set('cache-control', 'no-cache'); if (p.endsWith('.json')) h.set('access-control-allow-origin', '*'); return withCC(new Response(r.body, { status: 200, headers: h }), country); }
       }
     }
+    // 기사별 페이지(/<prefix><date>/a/<id>/): 그 호의 a.json(예약 발행 규칙을 그대로 따르도록 이 Worker를 다시 거쳐 가져옴)과 나라별 틀(/_art/<나라>.html)로 조립
+    const am = request.method === 'GET' && url.pathname.match(/^\/((?:[a-z]{2}\/)?\d{4}-\d\d-\d\d\/)a\/([\w-]+)(\/?)$/);
+    if (am) {
+      if (!am[3]) return Response.redirect(url.origin + url.pathname + '/' + url.search, 301);
+      const aj = await handler.fetch(new Request(url.origin + '/' + am[1] + 'a.json'), env, ctx);
+      if (aj.ok) {
+        let J; try { J = await aj.json(); } catch (e) { J = null; }
+        const it = J && J.items && J.items[am[2]];
+        const tpl = it && await env.ASSETS.fetch(new Request(url.origin + '/_art/' + J.r + '.html'));
+        if (tpl && tpl.ok) {
+          const html = (await tpl.text()).split('@@T@@').join(it.t).split('@@D@@').join(it.d).split('@@U@@').join(it.u).split('@@L@@').join(it.ld).split('@@B@@').join(it.b);
+          return withCC(new Response(html, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } }), country);
+        }
+      }
+    }
     const res = await env.ASSETS.fetch(request);
     // 앱·외부에서 읽는 JSON(editions.json 등)은 CORS 허용 + 짧은 캐시
     if (url.pathname === '/.well-known/apple-app-site-association') { const h = new Headers(res.headers); h.set('content-type', 'application/json'); return new Response(res.body, { status: res.status, headers: h }); }
@@ -68,6 +83,7 @@ export default {
     return withCC(res, country);
   },
 };
+export default handler;
 
 // 접속 국가 코드를 쿠키(dd_cc)로 넘겨 페이지의 국가판 메뉴가 그 나라를 맨 위에 올리게 한다(국가 코드 두 글자만, 정렬에만 사용).
 function withCC(res, cc) {
