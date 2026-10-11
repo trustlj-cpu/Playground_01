@@ -197,6 +197,7 @@ const POOLHTML = (date, region = 'KR') => { const items = POOL[`${region}:${date
 // 한·일·중과, 자동 하이픈 사전이 없는 언어(타이·인니·베트남·필리핀·히브리)에서 쓴다. 하이픈 사전이 있는 라틴 문자 판은 줄을 span으로 쪼개면 자동 하이픈 자리가 맨 끊김이 되므로(사파리) CSS 양끝 맞춤+hyphens:auto에 맡긴다. 아랍어는 글자 간격을 넣으면 이음이 끊기므로 CSS 양끝 맞춤만.
 const JUSTIFY = `<script>(function(){var SEL='.body p,.one p,.deck,.word p,.it em,.rumor div';var lastW=0;var LG=document.documentElement.lang||'';var LAT=!/^(ko|ja|zh)/.test(LG);var NOHY=/^(th|id|vi|fil|he)/.test(LG);var THAI=/^th/.test(LG);
 function unwrap(p){var wbs=p.querySelectorAll('wbr.jl');for(var i=0;i<wbs.length;i++)wbs[i].remove();var s=p.querySelectorAll('span.jl');for(var i=0;i<s.length;i++){var x=s[i];x.parentNode.replaceChild(document.createTextNode(x.textContent),x);}p.normalize();}
+function wrapped(x){var r=x.getClientRects();for(var i=1;i<r.length;i++)if(Math.abs(r[i].top-r[0].top)>2)return true;return false;}
 function run(){if(LAT&&!NOHY)return;var ps=document.querySelectorAll(SEL);for(var k=0;k<ps.length;k++){try{one(ps[k]);}catch(e){}}}
 function one(p){unwrap(p);p.style.removeProperty('text-align');if(!p.offsetWidth)return;var cs=getComputedStyle(p);if(cs.textAlign!=='justify')return;
  p.style.setProperty('text-align','left','important');var pr=p.getBoundingClientRect();var right=pr.right-parseFloat(cs.paddingRight||0);
@@ -210,9 +211,9 @@ function one(p){unwrap(p);p.style.removeProperty('text-align');if(!p.offsetWidth
  var plan=[];for(var j=0;j<lines.length;j++){var L=lines[j];var slack=L.right-L.end-1.5;var ls=0;
   if(j<lines.length-1&&slack>0.2&&L.n>=4){ls=slack/(L.n+L.sp);if(LAT&&!THAI)ls=Math.min(ls,fs*0.06);else if(ls>fs*0.25)ls=0;}plan.push({L:L,ls:ls});}
  for(var q=plan.length-1;q>=0;q--){var L=plan[q].L,v=(base+plan[q].ls).toFixed(3)+'px';for(var m=L.segs.length-1;m>=0;m--){var g=L.segs[m];var tn=g.t;
-  if(g.b<tn.data.length)tn.splitText(g.b);var mid=g.a>0?tn.splitText(g.a):tn;var sp=document.createElement('span');sp.className='jl';sp.style.letterSpacing=v;mid.parentNode.replaceChild(sp,mid);sp.appendChild(mid);
+  if(g.b<tn.data.length)tn.splitText(g.b);var mid=g.a>0?tn.splitText(g.a):tn;var sp=document.createElement('span');sp.className='jl';sp.style.letterSpacing=v;if(NOHY)sp.style.whiteSpace='nowrap';mid.parentNode.replaceChild(sp,mid);sp.appendChild(mid);
   if(m===L.segs.length-1&&q<plan.length-1){var wb=document.createElement('wbr');wb.className='jl';sp.parentNode.insertBefore(wb,sp.nextSibling);}}}
- var js=p.querySelectorAll('span.jl');for(var z=0;z<js.length;z++){var x=js[z];for(var tr=0;tr<4&&x.getClientRects().length>1;tr++){var cur2=parseFloat(x.style.letterSpacing)-base;x.style.letterSpacing=(tr<3?(base+cur2/2).toFixed(3)+'px':'');}}
+ var js=p.querySelectorAll('span.jl');for(var z=0;z<js.length;z++){var x=js[z];for(var tr=0;tr<4&&wrapped(x);tr++){var cur2=parseFloat(x.style.letterSpacing)-base;x.style.letterSpacing=(tr<3?(base+cur2/2).toFixed(3)+'px':'');}}
  p.style.removeProperty('text-align');}
 var tm;function later(){clearTimeout(tm);tm=setTimeout(function(){if(window.innerWidth!==lastW){lastW=window.innerWidth;run();}},150);}
 function go(){lastW=window.innerWidth;run();}
