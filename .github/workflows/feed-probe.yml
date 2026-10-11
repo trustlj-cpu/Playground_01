@@ -1,0 +1,54 @@
+name: feed-probe
+# 임시: 2차 확장 13개국 신규 소스 접근 검증(검증 후 삭제)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/feed-probe.yml"
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Probe
+        run: |
+          cat > probe.py <<'PY'
+          import yaml, urllib.request, re, concurrent.futures as cf
+          REG = set("AT BE IE NZ PT CO CL HK EG MY PK KE PE".split())
+          BUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36"
+          BOT = "Mozilla/5.0 (compatible; DailyDropCollector/0.1; +https://github.com/trustlj-cpu/Playground_01)"
+          src = [s for s in yaml.safe_load(open("feed/sources_extra.yaml", encoding="utf-8"))["sources"] if s.get("region") in REG]
+          def get(url, ua):
+              req = urllib.request.Request(url, headers={"User-Agent": ua, "Accept": "*/*", "Accept-Language": "en-US,en;q=0.8"})
+              with urllib.request.urlopen(req, timeout=20) as r:
+                  return r.status, r.read()
+          def count(b):
+              t = b[:400000].decode("utf-8", "ignore")
+              if not re.search(r"<(rss|feed|rdf:RDF)\b", t[:3000], re.I): return -1
+              return len(re.findall(r"<(?:item|entry)[\s>]", t))
+          def probe(s):
+              res = {}
+              for tag, ua in (("bot", BOT), ("browser", BUA)):
+                  try:
+                      st, b = get(s["url"], ua); n = count(b)
+                      res[tag] = (st, n, None) if n >= 0 else (st, -1, "not-a-feed")
+                  except Exception as e:
+                      res[tag] = (None, -1, f"{type(e).__name__}: {str(e)[:60]}")
+                  if res[tag][1] >= 0 and tag == "bot": break
+              return s["id"], res
+          with cf.ThreadPoolExecutor(8) as ex:
+              for i, res in ex.map(probe, src):
+                  if "bot" in res and res["bot"][1] >= 0:
+                      print(f"OK {i} {res['bot'][0]} {res['bot'][1]}")
+                  elif "browser" in res and res["browser"][1] >= 0:
+                      print(f"OK {i} {res['browser'][0]} {res['browser'][1]} needs-browser-ua")
+                  else:
+                      r = res.get("browser") or res["bot"]
+                      print(f"FAIL {i} {r[0]} {r[2]} (bot: {res['bot'][2]})")
+          PY
+          python probe.py

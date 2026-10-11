@@ -43,7 +43,9 @@ def item_id(link: str) -> str:
 LANG_BY_REGION = {"KR": "ko", "JP": "ja", "CN": "zh", "DE": "de", "FR": "fr", "TW": "zh-TW",
                   "BR": "pt", "MX": "es", "ES": "es", "IT": "it", "NL": "nl",
                   "ID": "id", "VN": "vi", "TH": "th", "PH": "en", "AR": "es", "PL": "pl", "TR": "tr", "UA": "uk",
-                  "SA": "ar", "AE": "ar", "IL": "he", "ZA": "en", "NG": "en"}
+                  "SA": "ar", "AE": "ar", "IL": "he", "ZA": "en", "NG": "en",
+                  "AT": "de", "BE": "nl", "IE": "en", "NZ": "en", "PT": "pt", "CO": "es", "CL": "es", "HK": "zh-HK",
+                  "EG": "ar", "MY": "en", "PK": "en", "KE": "en", "PE": "es"}
 
 def future_none(p, now):
     """발행 시각이 1시간 넘게 미래면 버린다(연방의회 의사일정처럼 '예정일'을 발행일로 쓰는 피드가 목록 맨 위로 뜨는 것 방지)."""
