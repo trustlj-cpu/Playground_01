@@ -63,6 +63,9 @@ const handler = {
     const am = request.method === 'GET' && url.pathname.match(/^\/((?:[a-z]{2}\/)?\d{4}-\d\d-\d\d\/)a\/([\w-]+)(\/?)$/);
     if (am) {
       if (!am[3]) return Response.redirect(url.origin + url.pathname + '/' + url.search, 301);
+      // 같은 기사는 한 번 조립한 것을 5분간 재사용(엣지 캐시). 200만 저장하므로 공개 전 기사는 저장되지 않는다.
+      const ck = new Request(url.origin + url.pathname); const cache = typeof caches !== 'undefined' ? caches.default : null;
+      if (cache) { const hit0 = await cache.match(ck); if (hit0) return withCC(hit0, country); }
       const aj = await handler.fetch(new Request(url.origin + '/' + am[1] + 'a.json'), env, ctx);
       if (aj.ok) {
         let J; try { J = await aj.json(); } catch (e) { J = null; }
@@ -70,7 +73,9 @@ const handler = {
         const tpl = it && await env.ASSETS.fetch(new Request(url.origin + '/_art/' + J.r + '.html'));
         if (tpl && tpl.ok) {
           const html = (await tpl.text()).split('@@T@@').join(it.t).split('@@D@@').join(it.d).split('@@U@@').join(it.u).split('@@L@@').join(it.ld).split('@@B@@').join(it.b);
-          return withCC(new Response(html, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } }), country);
+          const out = new Response(html, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } });
+          if (cache) ctx.waitUntil(cache.put(ck, out.clone()));
+          return withCC(out, country);
         }
       }
     }
