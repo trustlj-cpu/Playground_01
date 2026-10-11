@@ -83,7 +83,7 @@ const EDPICK = (lang, region) => `<details class="dd-ed"><summary aria-label="${
 // 판 표기: 그 나라 판의 현지 발행 시각 + 시간대(번역판도 원래 나라 기준). 1~4호 18:00, 5호(10/9)부터 06:00 아침판.
 const TZ_ABBR = { KR: 'KST', JP: 'JST', US: 'ET', CA: 'ET', IN: 'IST', AU: 'AET', TW: 'Taipei', SG: 'SGT', BR: 'BRT', MX: 'CST', AR: 'ART', ID: 'WIB', VN: 'ICT', TH: 'ICT', PH: 'PHT', TR: 'TRT', SA: 'AST', AE: 'GST', IL: 'Israel', ZA: 'SAST', NG: 'WAT' };
 // 약어가 없는 시간대(도시 이름 표기)는 보는 언어로
-const TZ_L = { TW: { 'zh-TW': '台灣時間', ja: '台北時間', ko: '타이베이 시간' } };
+const TZ_L = { TW: { 'zh-TW': '台灣時間', ja: '台北時間', ko: '타이베이 시간' }, IL: { he: 'שעון ישראל', ko: '이스라엘 시간', ja: 'イスラエル時間' } };
 const TZ = (region, d, lang) => { if (TZ_L[region] && TZ_L[region][lang]) return TZ_L[region][lang]; if (TZ_ABBR[region]) return TZ_ABBR[region]; const c = COUNTRIES.find(x => x.code === region); try { return new Intl.DateTimeFormat('en-GB', { timeZone: c.tz, timeZoneName: 'short' }).formatToParts(new Date(d + 'T06:00:00Z')).find(p => p.type === 'timeZoneName').value; } catch (e) { return ''; } };
 const EDTXT = (lang, region, n, d) => { const am = isAM(d), z = TZ(region, d, lang); const num = T(lang, 'editionShort').replace('{n}', n).split(/\s·\s|・/)[0];
   const time = lang === 'en' ? (am ? `6:00 a.m. ${z}` : `6:00 p.m. ${z}`) : `${am ? '06:00' : '18:00'} ${z}`;
