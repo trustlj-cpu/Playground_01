@@ -193,7 +193,7 @@ export default {
       out.sort((a, b) => b.sc - a.sc); const items = out.slice(0, 30);
       for (const it of items) it.u = it.u.map(x => ({ ...x, s: (x.u.match(/^https?:\/\/(?:www\.)?([^/]+)/) || [])[1] || x.s }));
       await liveSum(env, items).catch(() => {});
-      if (url.searchParams.get('raw') !== '1') { const ok = items.filter(i => i.h && i.x); return json({ at: new Date().toISOString(), lang, items: ok }, 200, { 'cache-control': 'public, max-age=300' }); }
+      if (url.searchParams.get('raw') !== '1') { const need = items.filter(i => !i.h); await trBreak(env, need, 'en').catch(() => {}); for (const i of need) i.h = i.t; const ok = items; return json({ at: new Date().toISOString(), lang, items: ok }, 200, { 'cache-control': 'public, max-age=300' }); }
       await trBreak(env, items, lang).catch(() => {});
       return json({ at: new Date().toISOString(), lang, items }, 200, { 'cache-control': 'public, max-age=300' });
     }
@@ -364,11 +364,11 @@ async function liveSum(env, items) {
     const prompt = 'These are headlines from different news outlets about one event:\n' + heads + '\n\nWrite in plain English for an international reader. Use ONLY facts stated in the headlines; do not add names, numbers, causes or opinions that are not there. Reply with JSON only: {"h": "<neutral news headline, max 14 words>", "x": "<2-3 short sentences: what happened, and why it matters to readers, only if the headlines support it>"}';
     try {
       const r = await Promise.race([env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
-      const m = String(r && r.response || '').match(/\{[\s\S]*\}/); if (!m) return;
-      const o = JSON.parse(m[0]); const h = String(o.h || '').trim().slice(0, 160), x = String(o.x || '').trim().slice(0, 700);
+      const resp = r && r.response; let o = resp && typeof resp === 'object' ? resp : null;
+      if (!o) { const m = String(resp || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('no json: ' + String(resp).slice(0, 120)); o = JSON.parse(m[0]); } const h = String(o.h || '').trim().slice(0, 160), x = String(o.x || '').trim().slice(0, 700);
       if (h.length < 15 || x.length < 40) return;
       it.h = h; it.x = x;
       await env.DB.prepare('INSERT OR REPLACE INTO live_sum (id, h, x, at) VALUES (?1, ?2, ?3, ?4)').bind(it.id, h, x, Date.now()).run();
-    } catch (e) {}
+    } catch (e) { await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_err (at INTEGER, e TEXT)').run(); await env.DB.prepare('INSERT INTO live_err VALUES (?1, ?2)').bind(Date.now(), String(e && e.message || e).slice(0, 300)).run(); }
   }));
 }
