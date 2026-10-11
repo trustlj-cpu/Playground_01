@@ -124,7 +124,7 @@ module.exports = function build(C) {
   // 계정 화면 메뉴: 언어 풀다운은 같은 화면의 ?lang= 로. 이 페이지 언어를 '마지막 본 언어'로 기억하지 않고(data-keep), 관리자 화면은 비콘도 보내지 않음
   // 화면 언어가 바뀌면(영어 등) 메뉴 글자가 길어지므로 휴대폰에선 메뉴 줄 안 가로 스크롤(NAVSCROLL)
   const navFor = (page, extra = '') => NAV(page, 'KR', langVariants(page)).replace('<nav class="dd-nav"', `<nav class="dd-nav" data-keep${extra}`).replace('</nav>', NAVSCROLL + '</nav>');
-  const GCID = String(process.env.DD_GOOGLE_CLIENT_ID || '').trim();
+  const GCID = String(process.env.DD_GOOGLE_CLIENT_ID || '970320020887-05mq92p5mqp1hvgsp906c0256eju9iuh.apps.googleusercontent.com').trim(); // 공개 클라이언트 ID(비밀 아님)
   const okGcid = /^[\w.-]+\.apps\.googleusercontent\.com$/.test(GCID) ? GCID : '';
   const runtime = RUNTIME(I18N, NAVLBL, RG);
   const robots = '<meta name="robots" content="noindex">';
