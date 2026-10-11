@@ -69,7 +69,7 @@ main [hidden]{display:none!important}
 .acc-mast{font-family:"Noto Serif KR",Georgia,serif;font-weight:900;font-size:22px;letter-spacing:-.02em;margin:0 0 18px;text-align:center}.acc-mast i{font-style:normal;color:var(--red)}
 .acc h1{text-align:center;font-size:26px;margin:0 0 6px}.acc .lead{text-align:center;margin:0 0 26px}
 .acc-rule{border:0;border-top:2px solid var(--ink);margin:0 0 22px}
-#g-wrap{min-height:44px;display:flex;justify-content:center;margin:0 0 4px}
+#g-wrap{min-height:44px;display:flex;justify-content:center;margin:0 0 4px}#g-wrap,#g-btn,#g-btn iframe{color-scheme:light;background:transparent!important}
 .acc-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--mute);font:12px "Noto Sans KR",sans-serif;letter-spacing:.12em}.acc-or::before,.acc-or::after{content:"";flex:1;border-top:1px solid var(--rule)}
 .seg{display:flex;border:1px solid var(--ink);margin:0 0 16px}.seg button{flex:1;font:inherit;font-size:14px;padding:9px 6px;background:transparent;color:var(--ink);border:0;cursor:pointer}.seg button+button{border-left:1px solid var(--ink)}.seg button[aria-selected="true"]{background:var(--ink);color:var(--paper);font-weight:700}
 .fld{display:block;margin:0 0 12px;font:13px "Noto Sans KR",sans-serif}.fld>span{display:block;margin:0 0 5px;color:var(--ink-2);letter-spacing:.04em}.fld input{width:100%;box-sizing:border-box;font:16px "Noto Sans KR",sans-serif;padding:11px 12px;border:1px solid var(--rule);background:rgba(255,255,255,.35);color:var(--ink);border-radius:0}.fld input:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}.fld small{display:block;margin-top:4px;color:var(--mute);font-size:12px}
