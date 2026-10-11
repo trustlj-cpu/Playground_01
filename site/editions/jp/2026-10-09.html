@@ -1,0 +1,470 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>69,042.11円</b>日経平均 · 10/8 大引け · 続落（−993.60円、−1.42%）安値引け</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>157.86円</b>ドル円 · 10/9 早朝 · 前日比18銭の円高</div>
+    </div>
+    <div class="dateline"><span>第 5 号 · 朝刊</span><b>2026年10月9日 金曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="oil">
+      <div class="kick">国際·エネルギー<span>報道照合 ✓ 5社 · 価格はCNBC、隻数はケプラー集計、外相発言は朝日1社</span></div>
+      <h2 class="hl">原油、ブレント104ドル台へ4%高。ホルムズでタンカー攻撃続く、日本など11カ国は備蓄強化で合意</h2>
+      <p class="deck">中東の緊張が原油をもう一段押し上げた。トランプ氏の「選挙前は攻撃しない」で上げ幅は縮んだが、海峡の船は戻り切っていない。マニラでは日本とアジアの国々が、備蓄で足並みをそろえた。</p>
+      <div class="body">
+        <p>8日の原油市場で、国際指標の北海ブレント先物は前日比約4%高い1バレル104.28ドル、米国のWTI先物は3.6%高い91.49ドルで取引を終えた（米CNBC）。イランがホルムズ海峡を通るタンカーへの攻撃を強めている。CNBCがデータ会社ケプラーの集計として伝えたところでは、海峡周辺で過去1週間に9隻が攻撃を受けた。海峡を出た原油は6日までの1週間で日量950万バレルと、戦争前より約3割少ない。米メキシコ湾ではハリケーン「イサイアス」の接近で、生産の約4分の1が止まった。前日にはイエメンの親イラン武装組織フーシ派がサウジアラビアの2つの空港を攻撃して3人が死亡し、ルフトハンザなどがリヤド便を止めた（ロイター、NHK）。日本は輸入する原油の9割超を中東に頼る。8日の東京外国為替市場では、原油高が物価を押し上げるとの見方から円が売られた（NHK）。今年度上半期の企業倒産は5300件あまりと2年連続で5000件を超え、NHKは中東情勢と円安による仕入れ値の上昇を背景に挙げた。原油の値段は、すでに日本の中小企業の帳簿に届いている。</p>
+        <p>上げ幅を縮めたのはトランプ米大統領の投稿だった。8日、SNSに「11月3日の中間選挙の前にイランを攻撃することはない」と書き、「生産的な協議を行っている」とも主張した（NHK、ロイター）。前日には、国防総省が攻撃再開の準備を指示したと米メディアが報じていた。朝日新聞によると、イランの外相はホルムズ海峡をめぐる米国との間接協議に「数日内に回答する」と述べた。同じ8日、マニラでは日本が主導するアジア・ゼロエミッション共同体（AZEC）の11カ国の閣僚会合が開かれ、石油備蓄を強化し、緊急時には協調放出する枠組みを検討していくことで合意した（NHK）。採択されたのは備蓄強化の作業計画で、放出の条件や量はまだ決まっていない。各国が備蓄を積み増し、足りない国を近隣が支える仕組みづくりは、これから詰める。経済産業省の副大臣は、サウジアラビアとアラブ首長国連邦がアジアの備蓄づくりへの協力に意欲を示したと説明した。米国は同じ日、イランの「影の船団」に新たな制裁を科した（ロイター）。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>104.28ドル</b><span>北海ブレント先物の8日の終値。前日比約4%高（CNBC）</span></div>
+        <div><b>9隻</b><span>ホルムズ海峡周辺で過去1週間に攻撃されたタンカー（ケプラー集計）</span></div>
+        <div><b>11カ国</b><span>マニラのAZEC閣僚会合に参加し、備蓄強化で合意した国の数</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="fr">
+      <div class="kick">経済·企業<span>報道照合 ✓ 4社 · 数値は会社発表、世界順位は報道の試算</span></div>
+      <h3 class="hl">ファストリ、純利益5425億円で過去最高。ユニクロはH&amp;Mを抜き世界2位に</h3>
+      <div class="one">
+        <p>ファーストリテイリングは8日、2026年8月期の連結決算を発表した。売上収益は前期比16.6%増の3兆9633億円、営業利益は31.7%増の7431億円、純利益は25.3%増の5425億円で、いずれも過去最高だった（時事通信、NHK）。純利益は6年連続の最高で、日本の小売業で初めて5000億円を超えた。国内外のユニクロが好調だった。企画から製造、販売までを自社で手がけるSPAの代表格で、円換算の売上高ではスウェーデンのH&amp;M（25年11月期で約3兆6000億円）を上回り、アパレル専門店で世界2位になったと朝日新聞などが伝えた。首位はZARAを展開するスペインのインディテックス。27年8月期の純利益は3.2%増の5600億円を見込む。伸びは前期より大きく鈍る。ロイターは7期連続の最高益の見通しと伝えた。海外の売上が国内を上回る構造はさらに進み、時事通信は海外の好調を最高益の柱に挙げた。朝日新聞は、首位のZARAとの「2強時代」に入ったとする一方、低価格ブランド「ジーユー（GU）」の伸び悩みを、世界一への不安材料として取り上げた。円安で膨らんだ円換算の数字は、為替が戻れば縮む。順位の争いは、為替ではなく出店と商品で決まる。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>SPA<i>製造小売</i></b><p>商品の企画、素材の調達、生産、物流、店頭販売までを一社で手がける業態。中間のもうけを省き、売れ行きを見て生産量を変えられる。ユニクロ、ZARA、H&amp;Mがこの形で世界の上位を争う。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="carson"><b>ノーベル文学賞にカナダの詩人アン・カーソン氏</b><em>古代ギリシャの古典を下敷きにした詩や散文で知られる。代表作『赤の自伝』には日本語訳もある。</em><span>文化 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="cptpp"><b>韓国、CPTPPの年内加盟申請を見送り</b><em>李在明大統領が指示した。国内の農水産業者の反発が強く、合意づくりが足りないと判断した。</em><span>国際·通商 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="boj"><b>日銀、東北と四国の景気判断を引き上げ</b><em>地域経済報告で、AI関連の需要が半導体製造装置や電子部品の生産を押し上げていると報告が相次いだ。</em><span>経済 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="korua"><b>韓国、駐ウクライナ大使を召還へ</b><em>ウクライナが捕虜の北朝鮮兵を韓国へ移送したと公表したことに反発した。両国の関係が冷え込んでいる。</em><span>国際 · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="sato"><b>阪神・佐藤輝明が三冠王</b><em>セ・リーグの打率、本塁打、打点の3部門で1位。史上9人目で、阪神ではバース以来40年ぶり。</em><span>スポーツ · ✓ 5社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="farm">
+      <div class="kick">政治·農業<span>報道照合 ✓ 2社 · 給付率は政府関係者への取材に基づく報道、決定前</span></div>
+      <h3 class="hl">消費減税で手取りが減る中小農家に給付金。売上高の5%程度で政府が調整</h3>
+      <div class="body">
+        <p>政府は、食料品の消費税減税で手取りが減る中小の農家などに、売上高の5%程度の給付金を出す方向で調整に入った。毎日新聞と朝日新聞が8日、伝えた。農家の多くは免税事業者か簡易課税を選ぶ事業者で、減税で売り値に含まれる消費税分が減る一方、肥料や資材を買うときには10%の消費税を払い続ける。その差を埋める狙いだ。給付の仕組みは共同通信が8月に報じていた。</p>
+        <p>制度の細部は27年度予算案の編成の中で決まる。高市早苗首相は8日の国会で、減税の財源を特例公債に頼らず、歳出と歳入の見直しで賄うと繰り返した。農政を担う簗和生農林水産相は地元の道路予算をめぐる発言で辞任を求められているが、首相は「厳しく注意した」として続投させた。立憲民主党は参院の農林水産委員会の開催に応じない考えで、給付金を詰める場の議論も止まっている。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="cyber">
+      <div class="kick">社会·テクノロジー<span>報道照合 ✓ 4社 · 容疑は独当局の主張、件数は会社発表</span></div>
+      <h3 class="hl">ランサム集団「キリン」の中心人物、日本で拘束されドイツで逮捕。カラオケ大手では872万件流出の恐れ</h3>
+      <div class="body">
+        <p>世界で約4000の組織を攻撃したとされるランサムウェア集団「キリン（Qilin）」の中心メンバーとみられるロシア国籍の男（28）が、ドイツ当局に逮捕された。日本の警察が5月に大阪で拘束し、東京高裁の審査を経て10月2日にドイツへ引き渡していた。日独に犯罪人引渡条約はなく、逃亡犯罪人引渡法に基づく手続きだった。ドイツ側は、同国の物流会社を攻撃して身代金を求めた恐喝の疑いがあるとみる。朝日新聞によると、キリンの被害は国内でも53の企業や病院に及ぶ。</p>
+        <p>流出は止まらない。カラオケ「ビッグエコー」を運営する第一興商は8日、個人情報の扱いを委託する会社の従業員の端末がマルウエアに感染し、約872万件が外部に漏れた恐れがあると発表した（NHK、朝日新聞）。朝日新聞は、岩手銀行や四国銀行、損害保険ジャパンでも、関係先への不正アクセスで情報が漏れた疑いがあると報じた。警察庁長官は「解明を進める」と述べた。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="mkt">
+      <div class="kick">経済·市場<span>報道照合 ✓ 3社 · 東京の終値は取引所発表値、米国は取引終了時点の値</span></div>
+      <h3 class="hl">日経平均、993円安で安値引け。米国株も原油高と金利を嫌って下げる</h3>
+      <div class="body">
+        <p>8日の東京株式市場で日経平均株価は続落し、前日比993円60銭（1.42%）安の6万9042円11銭で取引を終えた。この日の最も安い値で終わる安値引けで、2日続けて大きく下げた。米国の長期金利の上昇に原油高が重なり、インフレが再び強まるとの見方が広がった。東京外国為替市場でも、物価上昇への警戒から円が小幅に売られた（NHK）。</p>
+        <p>夜の米国市場でも主要な株価指数がそろって下げた。S&amp;P500種株価指数は前日比0.61%安の7,754.36、ハイテク株の多いナスダック総合指数は1.37%安の27,162.68で終えた。米10年債利回りは5.23%前後と高い水準にある。ロイターは、利回りの上昇と原油高がインフレの危険を示したと伝えた。一方、野村ホールディングスと大和証券グループ本社のトップは、日経平均が今年か来年に8万円に届くとの見方を示しながら、AIをめぐる過熱が相場の重荷になりうると警告した（The Japan Times）。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>今年度上半期の企業倒産は5300件あまりで、2年連続の5000件超え。中東情勢と円安による仕入れ高が中小企業を追い込んだ<span>NHK・The Japan Times</span></li>
+        <li>ビール大手4社のカルテル疑いで、複数社の担当者が公正取引委員会に価格を協議したと認める説明をした<span>NHK・毎日</span></li>
+        <li>中部電力の安井稔新社長、浜岡原発の地震想定データを計算し直す方針。「まずは信頼回復」<span>NHK・朝日・毎日</span></li>
+        <li>中国人民銀行、人民元安の誘導を否定。欧州からの貿易黒字批判に反論した<span>時事・ロイター</span></li>
+        <li>ロシア最高検、国際刑事裁判所（ICC）の赤根智子所長の身柄引き渡しをオランダなどに要請<span>時事・朝日</span></li>
+        <li>韓国、国産初の極超音速ミサイルの試験発射に成功したと発表。北朝鮮への抑止を強める<span>NHK・The Japan Times</span></li>
+        <li>米政府、マイクロソフトを外国人社員の永住権申請の手続きから一時外す。バンス副大統領が明らかにした<span>ロイター・AP</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「トランプ氏、イラン攻撃を断念。」</b> <span>投稿は「中間選挙の前には攻撃しない」まで。選挙後のことには触れていない。前日には国防総省の攻撃再開準備が報じられている。</span></div>
+        <div><b>「習主席が高市首相との会談を拒否した。」</b> <span>香港紙の報道にとどまる。トランプ氏が習氏に高市首相との対話を促したという話も同じ香港紙発で、政府の公式な確認はない。</span></div>
+        <div><b>「免許証を再交付すれば、漏れた情報は無効になる。」</b> <span>NHKは効果は限られると伝えた。氏名や住所、生年月日は再交付しても変わらない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>10/9 金</b><span>参院代表質問 2日目 · ノーベル平和賞の発表（日本時間の夕方） · 株価指数オプションのSQ算出と、3連休前の東京市場 · イランの「回答」とホルムズ海峡の船舶攻撃 · ハリケーン「イサイアス」の進路。</span><b>来週</b><span>12日 スポーツの日で東京市場は休場 · 13・14日 衆院予算委員会の基本的質疑。</span><b>読者へ</b><span>ビッグエコーを使ったことがあれば、第一興商からの案内は公式サイトで確かめる。流出を口実にしたメールや電話のリンクは開かない。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・テクノロジーの用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    oil:{kick:"国際·エネルギー · 報道照合 ✓ 5社 · 価格はCNBC、隻数はケプラー集計、外相発言は朝日1社",title:"原油、ブレント104ドル台へ4%高。ホルムズでタンカー攻撃続く、日本など11カ国は備蓄強化で合意",
+      what:"10月8日の原油市場で、北海ブレント先物は約4%高の1バレル104.28ドル、WTI先物は3.6%高の91.49ドルで取引を終えた（CNBC）。イランがホルムズ海峡を通るタンカーへの攻撃を強め、ケプラーの集計では過去1週間に9隻が攻撃を受けた。海峡を出た原油は日量950万バレルで、戦争前より約3割少ない。米メキシコ湾ではハリケーン「イサイアス」で生産の約4分の1が止まった。トランプ米大統領は8日、SNSに「11月3日の中間選挙の前にイランを攻撃することはない」と投稿し、原油は高値から下げた。朝日新聞によると、イランの外相は米国との間接協議に「数日内に回答する」と述べた。マニラではAZECの11カ国の閣僚会合が、石油備蓄の強化と緊急時の協調放出の枠組みを検討することで合意した。米国はイランの「影の船団」に新たな制裁を科した。",
+      why:"日本は原油の9割超を中東から買っている。値段だけでなく、船が海峡を通れるかどうかが日本の供給を左右する。マニラの合意は、日本が自国の備蓄だけでなく、近隣国の備蓄づくりにも関わることを意味する。アジアのどこかで燃料が尽きれば、工場や物流を通じて日本にも跳ね返るからだ。",
+      me:"ガソリンや灯油、電気代は、原油の値上がりから数週間遅れて動く。円安が重なれば効き方は大きくなる。冬の暖房費を考える時期に入る。家計では、灯油の買い置きを急ぐより、値動きを数週間見てから決めても遅くはない。",
+      a:"トランプ氏が選挙前の攻撃を否定し、イランも回答を約束した。外交の窓が開いている間は、原油の上値は限られる。",
+      b:"タンカーへの攻撃は続き、海峡の流れは戦前の7割にとどまる。投稿一つで変わるのは値段の一部で、船の数は変わっていない。",
+      say:"きょうの数字は「9隻」。値段は投稿で下がったが、攻撃された船の数は下がっていない。見るべきは、イランの「回答」の中身と、海峡を出る原油の量が日量1000万バレル台に戻るかどうか。AZECの合意は「検討」の段階で、放出の量と条件が決まるまでは、日本の備蓄がアジアの最後の頼りになる。",
+      src:"CNBC（10/8、価格・ケプラー集計） · NHK（トランプ氏投稿、AZEC閣僚会合） · ロイター（トランプ氏発言、ルフトハンザ運休、影の船団制裁、アジアの備蓄） · 朝日新聞（イラン外相） · BusinessWorld · Arab News（マニラ会合）（10/7〜9）"},
+    fr:{kick:"経済·企業 · 報道照合 ✓ 4社 · 数値は会社発表、世界順位は報道の試算",title:"ファストリ、純利益5425億円で過去最高。ユニクロはH&Mを抜き世界2位に",
+      what:"ファーストリテイリングは10月8日、2026年8月期の連結決算（国際会計基準）を発表した。売上収益は16.6%増の3兆9633億円、営業利益は31.7%増の7431億円、純利益は25.3%増の5425億円で、いずれも過去最高。純利益は6年連続の最高で、日本の小売業で初めて5000億円を超えた。円換算の売上高で、スウェーデンのH&M（25年11月期で約3兆6000億円）を上回り、アパレル専門店で世界2位になったと報じられた。首位はZARAのインディテックス。27年8月期の純利益は3.2%増の5600億円を見込む。",
+      why:"日本の小売りが世界の上位を争う例は少ない。円安が円換算の売上を押し上げた面はあるが、海外で稼ぐ形が定着した。一方で今期の見通しは3%台の増益にとどまり、成長の速さは落ちる。",
+      me:"ユニクロの値段は、円安と原材料費の上昇の中で決まる。最高益は、値上げを客が受け入れたことの裏返しでもある。株を持つ人は、今期の控えめな見通しに市場がどう反応するかを見る。",
+      a:"海外の店舗が利益の柱になり、為替を除いても強い。世界1位を射程に入れた。",
+      b:"H&Mとの比較は時期も通貨も違う。円安が逆に振れれば順位は揺れる。今期の伸びの鈍化が実力を示している。",
+      say:"きょうの数字は「3.2%」。過去最高より、今期の伸びの小ささの方が次を語る。見るべきは、9日の東京市場での株価の反応と、ジーユー（GU）の立て直し。2位から1位への差は、為替ではなく出店と粗利で詰めるしかない。",
+      src:"時事通信（2026100800778） · NHK（10/9） · 朝日新聞（H&M抜き世界2位、ZARAと2強） · The Japan Times（Uniqlo on track to overtake H&M） · ロイター（今期見通し）（10/8〜9）"},
+    carson:{kick:"文化 · 報道照合 ✓ 4社",title:"ノーベル文学賞にカナダの詩人アン・カーソン氏",
+      what:"スウェーデン・アカデミーは10月8日、2026年のノーベル文学賞をカナダの詩人アン・カーソン氏に贈ると発表した。古典学者でもあり、古代ギリシャの作品を下敷きにした詩や散文で知られる。毎日新聞は授賞理由を「現代文学に新たな形式」をもたらしたものと伝えた。代表作『赤の自伝』は日本語にも訳され、出版社が喜びの声を寄せた。",
+      why:"詩と翻訳と批評の境目を越える書き手への授賞だ。",
+      me:"日本語訳で読める作品がある。",
+      a:"",b:"",
+      say:"きょうの数字は「1冊」。日本語で手に取れる代表作がある。増刷と新訳の動きを見る。",
+      src:"時事通信 · 毎日新聞 · The Japan Times · NHK（すべて10/8）"},
+    cptpp:{kick:"国際·通商 · 報道照合 ✓ 3社",title:"韓国、CPTPPの年内加盟申請を見送り",
+      what:"韓国の李在明大統領は、環太平洋パートナーシップに関する包括的・先進的な協定（CPTPP）への年内の加盟申請を見送るよう指示した。国内の農水産業者の反発が強く、合意づくりが十分でないと判断した。",
+      why:"日本は協定の中心国で、韓国の加盟は日韓の通商関係を変えうる。判断は先送りになった。",
+      me:"なし。日本の農水産品の対韓輸出の条件は当面変わらない。",
+      a:"",b:"",
+      say:"きょうの数字は「年内」。断念ではなく先送りだ。来年の申請の有無を見る。",
+      src:"NHK · 毎日新聞 · 時事通信（すべて10/8〜9）"},
+    boj:{kick:"経済 · 報道照合 ✓ 3社",title:"日銀、東北と四国の景気判断を引き上げ",
+      what:"日本銀行は10月8日、地域経済報告（さくらリポート）を公表し、東北と四国の景気判断を引き上げた。多くの地域から、世界的なAI関連需要の拡大で半導体製造装置や電子部品の生産が増えているとの報告が相次いだ。朝日新聞によると、AI需要は今後3年は続くとの声も出た。",
+      why:"地方の工場にもAI需要が届いている。日銀の利上げ判断の材料の一つになる。",
+      me:"地方の雇用や賃金に波及するかが次の焦点。",
+      a:"",b:"",
+      say:"きょうの数字は「2地域」。広がりが続くかを、次の支店長会議で見る。",
+      src:"NHK · 朝日新聞 · The Japan Times（すべて10/8）"},
+    korua:{kick:"国際 · 報道照合 ✓ 5社",title:"韓国、駐ウクライナ大使を召還へ",
+      what:"ウクライナ政府が、捕虜にした北朝鮮の兵士を韓国に移送したと公表したことに韓国政府が反発し、ウクライナに駐在する大使の召還を決めた。朝日新聞によると、韓国側はウクライナからの謝罪の言葉にも「断固とした措置」をとるとした。",
+      why:"北朝鮮兵の扱いは、韓国にとって国内政治と南北関係に直結する。支援国どうしの対立は異例だ。",
+      me:"なし。",
+      a:"",b:"",
+      say:"きょうの数字は「1人」の大使。関係の修復には、捕虜の扱いをめぐる説明が要る。",
+      src:"NHK · 時事通信 · 毎日新聞 · 朝日新聞 · The Japan Times（すべて10/8）"},
+    sato:{kick:"スポーツ · 報道照合 ✓ 5社",title:"阪神・佐藤輝明が三冠王",
+      what:"プロ野球セ・リーグのレギュラーシーズンが10月8日に終わり、阪神の佐藤輝明選手が打率、本塁打、打点の3部門で1位となって三冠王に輝いた。2022年のヤクルト・村上宗隆選手以来4年ぶりで、史上9人目。阪神では1986年のバース以来、40年ぶりとなる。",
+      why:"球団の歴史に残る記録で、ポストシーズンの戦いにも弾みがつく。",
+      me:"なし。",
+      a:"",b:"",
+      say:"きょうの数字は「40年」。次はクライマックスシリーズで、この打撃が続くかを見る。",
+      src:"NHK · 時事通信 · 朝日新聞 · 毎日新聞（すべて10/8）"},
+    farm:{kick:"政治·農業 · 報道照合 ✓ 2社 · 給付率は政府関係者への取材に基づく報道、決定前",title:"消費減税で手取りが減る中小農家に給付金。売上高の5%程度で政府が調整",
+      what:"政府は、食料品の消費税減税で手取りが減る中小の農家などに、売上高の5%程度の給付金を出す方向で調整に入ったと、毎日新聞と朝日新聞が10月8日に報じた。農家の多くは免税事業者か簡易課税の事業者で、減税後は売り値に含まれる消費税分が減る一方、肥料や資材の仕入れには10%の消費税がかかり続ける。共同通信は8月、この差を埋める給付の検討を伝えていた。制度の細部は27年度予算案の編成過程で決まる。高市首相は8日、減税の財源を特例公債に頼らず賄うと述べた。簗農水相の発言問題で、立憲民主党は参院農林水産委員会の開催に応じない考えだ。",
+      why:"消費税を下げると、買う人の負担は減るが、売る側の小さな事業者の手取りが減るという逆の効果がある。給付金はその穴埋めだが、新たな支出になる。財源の説明と一緒に問われる。",
+      me:"農家から直接買う人や、農業を営む家族がいる人には関係が深い。給付の対象と率は年末の予算編成で決まる。それまでは報道の数字として受け止める。",
+      a:"免税の小規模農家にしわ寄せがいく構造は前からわかっていた。給付で穴を埋めるのは筋が通る。",
+      b:"減税の穴を給付で埋め、その給付の財源をまた探す。制度が複雑になるほど、恩恵の行き先は見えにくくなる。",
+      say:"きょうの数字は「5%程度」。まだ報道の段階で、政府の決定ではない。見るべきは、対象を売上高でどこまでに区切るかと、農林水産委員会が開かれるかどうか。所管の大臣が委員会に立てない状態が続けば、給付の設計は国会の外で決まることになる。",
+      src:"毎日新聞（10/8） · 朝日新聞（10/8） · 共同通信（8/25、秋田魁新報） · NHK · 時事通信（首相答弁・簗氏続投、10/8）"},
+    cyber:{kick:"社会·テクノロジー · 報道照合 ✓ 4社 · 容疑は独当局の主張、件数は会社発表",title:"ランサム集団「キリン」の中心人物、日本で拘束されドイツで逮捕。カラオケ大手では872万件流出の恐れ",
+      what:"ランサムウェア集団「キリン（Qilin）」の中心メンバーとみられるロシア国籍の男（28）が、ドイツ当局に逮捕された。日本の警察が5月に大阪で拘束し、東京高裁の審査を経て10月2日に引き渡していた。日独間に犯罪人引渡条約はなく、逃亡犯罪人引渡法による手続きだった。ドイツ側は、同国の物流会社を攻撃して身代金を求めた恐喝の疑いがあるとみる。キリンは世界で約4000の組織を攻撃したとされ、朝日新聞によると国内でも53の企業や病院が被害を受けた。一方、第一興商は8日、委託先の従業員の端末がマルウエアに感染し、約872万件の個人情報が漏れた恐れがあると発表した。岩手銀行、四国銀行、損害保険ジャパンでも漏洩の疑いが報じられた。",
+      why:"国境を越える攻撃者を、国境を越えて捕まえた例だ。日本が拘束し、被害国に引き渡す協力が実際に動いた。ただ、個人情報の流出は今週も続き、捕まえる速さより漏れる速さが上回っている。",
+      me:"ビッグエコーの会員や、名前の挙がった銀行・保険の契約者は、会社の公式な案内を確かめる。流出を口実に、パスワードやカード番号を聞き出す連絡が来ることがある。リンクは開かず、自分で公式サイトを開く。",
+      a:"条約がなくても引き渡しを実現した。攻撃者にとって日本は安全な場所ではなくなった。",
+      b:"中心人物を一人捕まえても、集団は仕組みごと残る。委託先の端末一台で872万件が漏れる体制の方を直すべきだ。",
+      say:"きょうの数字は「872万件」。一つの会社の、一つの委託先の端末から漏れた数だ。見るべきは、第一興商が漏れた項目を特定して公表するかどうかと、ドイツでの起訴。キリンの被害を受けた53の組織のうち、どこが名乗り出るかも問われる。",
+      src:"朝日新聞（10/8、53の企業・病院、銀行・損保） · 毎日新聞（世界4000社） · 時事通信（国際連携） · The Japan Times（28歳、恐喝容疑） · NHK（第一興商）（10/2〜8）"},
+    mkt:{kick:"経済·市場 · 報道照合 ✓ 3社 · 東京の終値は取引所発表値、米国は取引終了時点の値",title:"日経平均、993円安で安値引け。米国株も原油高と金利を嫌って下げる",
+      what:"10月8日の東京株式市場で日経平均株価は続落し、前日比993円60銭（1.42%）安の6万9042円11銭で取引を終えた。その日の最安値で終わる安値引けだった。米国の長期金利の上昇と原油高で、インフレが再び強まるとの見方が広がった。東京外国為替市場では、原油高による物価上昇への警戒から円が小幅に売られた（NHK）。夜の米国市場では、S&P500種株価指数が0.61%安の7,754.36、ナスダック総合指数が1.37%安の27,162.68で終えた。ドル円は10月9日早朝に1ドル=157.86円前後。野村と大和のトップは日経平均8万円を見込みつつ、AI相場の過熱に注意を促した（The Japan Times）。",
+      why:"下げの理由が、金利と原油という同じ一本の線にまとまってきた。原油高は物価を押し上げ、金利を下げにくくする。金利が高いままなら、値上がりしてきたハイテク株の評価が下がる。東京の下げはその連鎖の入り口にある。",
+      me:"日本株の投資信託や確定拠出年金を持つ人は、2日で2000円近い下げを見た。積み立てを止める理由にはならないが、原油と米金利の向きが変わるまでは、値動きが大きい状態が続くと考えておく。",
+      a:"野村や大和のトップは8万円を見込む。金利と原油の上昇が一服すれば、上昇基調に戻る。",
+      b:"安値引けは、買い手が最後まで戻らなかったしるし。AI相場の過熱を当の証券会社が警告している。",
+      say:"きょうの数字は「安値引け」。終わり際まで買いが入らなかった。見るべきは、9日のSQ算出と3連休前の手じまい売りが下げを広げるかどうか。原油が100ドルを挟む間は、7万円の回復を急ぐ理由は見当たらない。",
+      src:"日本経済新聞（東証大引け、10/8） · NHK（円相場、10/8） · ロイター（Wall St slips、10/8） · CNBC（米市場） · The Japan Times（野村・大和CEO、10/8）"},
+  };
+
+  const G = {
+    "北海ブレント":{f:"エネルギー",d:"英国北海で採れる原油の先物価格。欧州や中東、アジアの原油取引の国際指標になっている。",w:"8日に約4%上がり、1バレル104.28ドルで終わった。"},
+    "WTI":{f:"エネルギー",d:"米テキサス州などで採れる軽質原油の先物価格。ニューヨークで取引され、米国の代表的な原油指標。",w:"8日は3.6%高の91.49ドル。メキシコ湾のハリケーンも押し上げた。"},
+    "ホルムズ海峡":{f:"地理·エネルギー",d:"ペルシャ湾の出口にある幅の狭い海峡。中東産の原油や天然ガスの多くがここを通る。",w:"イランがタンカーへの攻撃を強め、通過する原油は戦争前より約3割少ない。"},
+    "フーシ派":{f:"安全保障",d:"イエメンの反政府武装組織。イランの支援を受け、サウジアラビアなどと対立している。",w:"サウジの2空港を攻撃したと主張し、3人が死亡した。"},
+    "中間選挙":{f:"政治",d:"米大統領の任期4年の折り返しに行われる連邦議会選挙。下院の全議席と上院の約3分の1を改選する。",w:"11月3日。トランプ氏はそれより前にイランを攻撃しないと投稿した。"},
+    "石油備蓄":{f:"エネルギー",d:"供給が止まったときに備え、国や企業が原油や石油製品をためておくこと。日本は国家備蓄と民間備蓄の二本立て。",w:"AZECの11カ国が、各国の備蓄を強化することで合意した。"},
+    "協調放出":{f:"エネルギー",d:"複数の国が足並みをそろえて石油備蓄を市場に出し、供給不足や価格の急騰を和らげること。",w:"マニラの会合では、緊急時に協調放出する枠組みを検討することになった。"},
+    "AZEC":{f:"外交·エネルギー",d:"アジア・ゼロエミッション共同体。日本が主導し、オーストラリアと東南アジア諸国が参加する、脱炭素とエネルギー安全保障の協力の枠組み。",w:"11カ国の閣僚がマニラに集まり、備蓄強化の作業計画を採択した。"},
+    "影の船団":{f:"安全保障·エネルギー",d:"制裁を逃れて原油を運ぶため、船籍や所有者を偽ったり頻繁に変えたりする古いタンカーの群れ。",w:"米国は8日、イランの原油を運ぶ船団に新たな制裁を科した。"},
+    "売上収益":{f:"会計",d:"国際会計基準（IFRS）で売上高にあたる項目。商品やサービスの販売で得た収入の合計。",w:"ファストリは3兆9633億円で、前期より16.6%増えた。"},
+    "営業利益":{f:"会計",d:"売上から原価や人件費、広告費などの営業費用を引いた、本業のもうけ。",w:"ファストリは31.7%増の7431億円で過去最高。"},
+    "純利益":{f:"会計",d:"すべての収益から費用と税金を差し引いて最終的に残る利益。株主に帰属するもうけ。",w:"ファストリは5425億円。日本の小売業で初めて5000億円を超えた。"},
+    "SPA":{f:"経営",d:"製造小売。企画から生産、物流、販売までを一社で手がける業態。在庫と価格を自分で決められる。",w:"ユニクロ、ZARA、H&Mがこの形で世界の上位を争う。"},
+    "免税事業者":{f:"税",d:"年間の課税売上高が1000万円以下などの条件で、消費税の納税を免除されている事業者。",w:"多くの小規模農家がこれに当たり、減税で手取りが減るおそれがある。"},
+    "簡易課税":{f:"税",d:"中小事業者が、売上にかかる消費税に業種ごとの一定の割合を掛けて納税額を計算できる制度。",w:"免税事業者と並び、減税で手取りが減る農家の区分として挙げられた。"},
+    "特例公債":{f:"財政",d:"赤字国債の正式名。税収などで足りない一般の経費を賄うため、毎年の特例法に基づいて出す国債。",w:"首相は、消費減税の財源をこれに頼らないと繰り返した。"},
+    "ランサムウェア":{f:"テクノロジー",d:"感染したコンピューターのデータを暗号化して使えなくし、元に戻す代わりに身代金を要求する不正なプログラム。",w:"「キリン」はこれを使う攻撃を各国で繰り返したとされる。"},
+    "マルウエア":{f:"テクノロジー",d:"コンピューターに害を与えたり、情報を盗んだりする目的で作られた不正なソフトウエアの総称。",w:"第一興商の委託先の従業員の端末が感染し、872万件が漏れた恐れがある。"},
+    "逃亡犯罪人引渡法":{f:"法",d:"外国から犯罪人の引き渡しを求められたときの手続きを定めた日本の法律。条約がなくても、相互主義などの条件を満たせば引き渡せる。",w:"日独に条約はなく、この法律に基づいて東京高裁が審査した。"},
+    "安値引け":{f:"金融",d:"取引時間の最後の値段（終値）が、その日のいちばん安い値段と同じになること。売りが最後まで続いたことを示す。",w:"日経平均は8日、993円安のこの形で終わった。"},
+    "ナスダック総合指数":{f:"金融",d:"米ナスダック市場に上場する全銘柄で作る株価指数。ハイテク株の比重が大きい。",w:"金利と原油の上昇を嫌って、8日は主要指数の中で下げが目立った。"},
+    "CPTPP":{f:"通商",d:"環太平洋パートナーシップに関する包括的・先進的な協定。日本やオーストラリア、カナダなどが参加する自由貿易協定で、関税の撤廃や貿易ルールを定める。",w:"韓国は農水産業者の反発を受け、年内の加盟申請を見送った。"},
+    "地域経済報告":{f:"経済",d:"日本銀行が年4回まとめる、全国9地域の景気の報告。表紙の色から「さくらリポート」とも呼ばれる。",w:"10月の報告で、東北と四国の景気判断が引き上げられた。"},
+    "三冠王":{f:"スポーツ",d:"野球で、一つのシーズンに打率、本塁打、打点の3部門すべてで1位になること。",w:"阪神の佐藤輝明選手が史上9人目、球団では40年ぶりに達成した。"},
+    "ブレント":{f:"経済",d:"北海で産出される原油の指標価格。国際的な原油取引の基準の一つで、「北海ブレント」とも呼ばれる。",w:"8日に1バレル104.28ドルで取引を終え、前日比で約4%上がった。"},
+    "1バレル":{f:"経済",d:"原油の量の単位。1バレルは約159リットル。",w:"ブレント先物は1バレル104.28ドルで取引を終えた。"},
+    "先物":{f:"金融",d:"将来の決めた日に、いまの約束した値段で売買する契約。原油や株価指数などで広く取引される。",w:"ブレントは先物で104.28ドル、WTIは91.49ドルとなった。"},
+    "国際指標":{f:"経済",d:"世界の取引で基準にされる価格。",w:"ブレント先物は、原油の国際指標の一つだ。"},
+    "日量":{f:"経済",d:"1日あたりの量。",w:"海峡を出た原油は、日量950万バレルと戦争前より約3割少ない。"},
+    "親イラン":{f:"国際",d:"イランの政府や考え方を支持する立場。",w:"イエメンの親イラン武装組織フーシ派が、サウジの空港を攻撃した。"},
+    "ルフトハンザ":{f:"企業",d:"ドイツの大手航空会社。",w:"サウジの空港攻撃を受け、リヤド便を止めた。"},
+    "間接協議":{f:"外交",d:"両国の代表が直接会わず、仲介役を通じて意見を伝え合う話し合い。",w:"イランの外相は、米国との間接協議に数日内に回答すると述べた。"},
+    "ゼロエミッション":{f:"環境",d:"温室効果ガスなどの排出を、実質ゼロにすること。",w:"日本が主導するアジア・ゼロエミッション共同体(AZEC)の閣僚会合が開かれた。"},
+    "副大臣":{f:"政治",d:"大臣を助ける政治任用の役職。",w:"経済産業省の副大臣は、サウジとUAEが協力に意欲を示したと説明した。"},
+    "アラブ首長国連邦":{f:"国際",d:"中東の7つの首長国による連邦国家。略称はUAE。産油国で、ドバイやアブダビがある。",w:"サウジとともに、アジアの備蓄づくりへの協力に意欲を示した。"},
+    "連結決算":{f:"経済",d:"親会社と子会社をまとめて、一つの企業グループとして示す決算。",w:"ファーストリテイリングは2026年8月期の連結決算を発表した。"},
+    "前期比":{f:"経済",d:"前の期(決算期間)と比べた増減。",w:"売上収益は前期比16.6%増の3兆9633億円だった。"},
+    "アパレル":{f:"産業",d:"衣料品。衣服の企画・製造・販売に関わる業界。",w:"円換算の売上高で、アパレル専門店として世界2位になった。"},
+    "インディテックス":{f:"企業",d:"スペインに本社を置く衣料品の大手。ZARAなどを展開し、アパレル専門店で世界首位。",w:"ZARAを展開するスペインのインディテックスが首位だ。"},
+    "ZARA":{f:"企業",d:"スペインの衣料品ブランド。インディテックスが展開する。",w:"首位はZARAを展開するインディテックスだ。"},
+    "ジーユー":{f:"企業",d:"ファーストリテイリングが展開する、低価格の衣料品ブランド。GUとも表記する。",w:"ジーユーの伸び悩みが、世界一への不安材料として取り上げられた。"},
+    "見込む":{f:"経済",d:"将来の数字を予想して見積もること。",w:"27年8月期の純利益は、3.2%増の5600億円を見込む。"},
+    "アン・カーソン":{f:"文化",d:"カナダの詩人・古典学者。古代ギリシャの古典を下敷きにした作品で知られる。",w:"代表作『赤の自伝』には日本語訳もある。"},
+    "李在明":{f:"政治",d:"韓国の大統領。",w:"CPTPPの年内加盟申請を見送るよう指示した。"},
+    "加盟申請":{f:"外交",d:"国際的な枠組みや条約に、新しく加わりたいと正式に申し込むこと。",w:"韓国は、CPTPPへの年内の加盟申請を見送る。"},
+    "景気判断":{f:"経済",d:"景気が良いか悪いかを、データや聞き取りをもとに評価したもの。",w:"日銀は東北と四国の景気判断を引き上げた。"},
+    "半導体製造装置":{f:"産業",d:"半導体をつくる工場で使う機械。",w:"AI関連の需要が、半導体製造装置の生産を押し上げているという報告が相次いだ。"},
+    "召還":{f:"外交",d:"外交官を、本国に呼び戻すこと。抗議の意思を示す手段として使われる。",w:"韓国は、ウクライナへの抗議として大使を召還する。"},
+    "打点":{f:"スポーツ",d:"野球で、打者の打撃によって入った得点の数。",w:"セ・リーグの打点で1位になった。"},
+    "バース":{f:"スポーツ",d:"ランディ・バース。1985年に阪神の日本一に貢献した、米国出身の元プロ野球選手。",w:"阪神で三冠王になったのは、バース以来40年ぶりだ。"},
+    "資材":{f:"産業",d:"仕事に使う材料や道具。農業では肥料、苗、農薬、ビニールなど。",w:"農家は肥料や資材を買うとき、10%の消費税を払い続ける。"},
+    "農林水産委員会":{f:"政治",d:"国会で、農業・林業・水産業に関する法案や政策を審議する委員会。",w:"立憲民主党は、参院の農林水産委員会の開催に応じない考えだ。"},
+    "ランサム":{f:"テクノロジー",d:"身代金を意味する英語から。データを暗号化して使えなくし、元に戻す代わりに金銭を要求する攻撃の呼び名。",w:"ランサム集団「キリン」の中心人物が、ドイツ当局に逮捕された。"},
+    "引渡条約":{f:"法",d:"犯罪人を、相手国へ引き渡すルールを定めた国同士の約束。",w:"日独に犯罪人引渡条約はなく、国内法の逃亡犯罪人引渡法に基づく手続きだった。"},
+    "第一興商":{f:"企業",d:"カラオケ機器の製造・リースと、カラオケ店「ビッグエコー」の運営をする会社。",w:"約872万件の情報が外部に漏れた恐れがあると、8日に発表した。"},
+    "ビッグエコー":{f:"企業",d:"第一興商が運営する、カラオケチェーン。",w:"運営会社の第一興商が、情報の漏えいを発表した。"},
+    "四国銀行":{f:"企業",d:"高知市に本店を置く地方銀行。",w:"関係先への不正アクセスで、情報が漏れた疑いがあると報じられた。"},
+    "損害保険ジャパン":{f:"企業",d:"日本の大手損害保険会社。",w:"関係先への不正アクセスで、情報が漏れた疑いがあると報じられた。"},
+    "S&P500":{f:"金融",d:"米国の主要な500社の株価をもとにした指数。米国株全体の動きを見る代表的な指標。",w:"8日は0.61%安の7,754.36で終えた。"},
+    "野村ホールディングス":{f:"企業",d:"野村證券を中核とする、日本の大手金融グループ。",w:"トップが、日経平均が今年か来年に8万円に届くとの見方を示した。"},
+    "公正取引委員会":{f:"行政",d:"独占禁止法を運用し、企業の不公正な取引や談合・カルテルを取り締まる国の機関。",w:"ビール大手のカルテルの疑いで、複数社の担当者が価格を協議したと説明した。"},
+    "人民元":{f:"金融",d:"中国の通貨。",w:"中国人民銀行が、人民元安の誘導を否定した。"},
+    "人民銀行":{f:"金融",d:"中国の中央銀行、中国人民銀行。",w:"人民元安の誘導を否定し、欧州からの貿易黒字批判に反論した。"},
+    "貿易黒字":{f:"経済",d:"モノの輸出額が、輸入額より多い状態。",w:"中国は、欧州からの貿易黒字批判に反論した。"},
+    "ICC":{f:"国際",d:"国際刑事裁判所の略称。戦争犯罪やジェノサイドなどの個人を裁く常設の国際裁判所。",w:"赤根智子所長の身柄引き渡しを、ロシア最高検が求めた。"},
+    "極超音速ミサイル":{f:"安全保障",d:"音速の5倍以上の速さで飛び、軌道を変えられるミサイル。迎撃が難しいとされる。",w:"韓国が、国産初の極超音速ミサイルの試験発射に成功したと発表した。"},
+    "抑止":{f:"安全保障",d:"相手に攻撃をためらわせ、行動を思いとどまらせること。",w:"北朝鮮への抑止を強める狙いがある。"},
+    "永住権":{f:"法",d:"外国人が、期限なしにその国に住み続けられる資格。",w:"米政府は、マイクロソフトを外国人社員の永住権申請の手続きから一時外した。"},
+    "バンス副大統領":{f:"政治",d:"米国のJ・D・バンス副大統領。",w:"米政府の措置を、バンス副大統領が明らかにした。"},
+    "香港紙":{f:"メディア",d:"香港で発行されている新聞。",w:"習主席の会談拒否は、香港紙の報道にとどまる。"},
+    "休場":{f:"金融",d:"取引所が休みで、取引が行われないこと。",w:"12日は東京市場が休場する。"},
+    "地震想定":{f:"科学",d:"将来起こる地震の規模や揺れの大きさを、計算で見積もったもの。原発の安全対策の前提になる。",w:"浜岡原発の地震想定データを計算し直す方針だ。"},
+    "国際刑事裁判所":{f:"国際",d:"戦争犯罪、人道に対する罪、ジェノサイドなどの個人を裁く常設の国際裁判所。オランダのハーグにある。",w:"ロシア最高検が、所長の身柄引き渡しを求めた。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

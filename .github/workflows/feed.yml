@@ -1,0 +1,47 @@
+name: feed-collect-10min
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: feed-collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Resolve Worker URL and ingest key
+        id: cf
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then echo "secrets 없음 → latest.json 모드"; exit 0; fi
+          SUB=$(curl -sS "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/subdomain" -H "Authorization: Bearer $CF_TOKEN" | python3 -c 'import sys,json;print(json.load(sys.stdin)["result"]["subdomain"])')
+          echo "url=https://dailydrop-feed.$SUB.workers.dev" >> "$GITHUB_OUTPUT"
+          echo "::add-mask::$(printf 'dailydrop-ingest:%s:%s' "$CF_ACCOUNT" "$CF_TOKEN" | sha256sum | cut -c1-48)"
+          echo "key=$(printf 'dailydrop-ingest:%s:%s' "$CF_ACCOUNT" "$CF_TOKEN" | sha256sum | cut -c1-48)" >> "$GITHUB_OUTPUT"
+      - name: Collect and ingest
+        env:
+          FEED_URL: ${{ steps.cf.outputs.url }}
+          INGEST_KEY: ${{ steps.cf.outputs.key }}
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        run: python feed/collect_fast.py
+      - name: Commit latest.json (secrets 없을 때만)
+        if: steps.cf.outputs.url == ''
+        run: |
+          git config user.name "feed-bot"; git config user.email "feed-bot@users.noreply.github.com"
+          git add feed/latest.json
+          git diff --cached --quiet || (git commit -m "feed: $(date -u +'%Y-%m-%d %H:%M UTC')" && git push)

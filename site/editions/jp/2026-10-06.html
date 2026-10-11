@@ -1,0 +1,468 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>70,683.98円</b>日経平均 · 10/6 大引け · 続伸、3カ月ぶり7万円台（+737.12円、+1.05%）</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>158.10円</b>ドル円 · 10/6 17時 東京 · 前日比45銭の円安（日経は158.12〜14円）</div>
+    </div>
+    <div class="dateline"><span>第 2 号 · 朝刊</span><b>2026年10月6日 火曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="mkt">
+      <div class="kick">経済·市場<span>報道照合 ✓ 6社 · 数値は日経・共同・時事に帰属</span></div>
+      <h2 class="hl">日経平均、3カ月ぶり7万円台で引ける。円は158円台へ下落</h2>
+      <p class="deck">終値は7万0683円98銭、737円高。米ハイテク株高を受けてAI・半導体株が買われた。円は午後5時に158円10銭前後と、前日より45銭の円安。年金積立金をめぐる報道と、日銀の早期利上げ観測の後退が円売りを誘った</p>
+      <div class="body">
+        <p>10月6日の東京株式市場で日経平均株価は続伸し、前日比737円12銭（1.05%）高の7万0683円98銭で取引を終えた。終値の7万円台は7月1日以来、約3カ月ぶり。前日の米国市場で半導体などハイテク株が上がった流れを受け、アドバンテストやTDKなどAI・半導体関連に買いが集まった。アドバンテストは連日で上場来高値をつけたと日本経済新聞が伝えた。円安を追い風に、トヨタ自動車など輸出株も上げた。前場は134円高の7万0081円53銭と小幅高にとどまり、一部の半導体株には利益確定の売りも出たが、午後に上げ幅を広げた。ロイターは、原油価格の落ち着きと、決算期を前にした業績期待の買いを支えに挙げた。日経は、業績の上振れを先取りする「業績相場」への先回りの買いと表現した。前日5日の終値は6万9946円86銭で、5日も取引時間中に一時7万円を回復していた（共同）。7万円は6月18日に終値で初めて超えた節目で、7月1日を最後に終値ではその下に沈んでいた。夏の調整を経て、約3カ月かけて節目を取り戻したことになる。</p>
+        <p>円相場は午後5時時点で1ドル=158円10〜11銭（時事通信）と、前日の同時刻より45銭の円安ドル高になった。日経は158円12〜14銭と伝えた。昼にかけては、年金積立金管理運用独立行政法人（GPIF）の運用をめぐる報道を受け、円資産への投資が増えるとの期待がしぼんで円が売られた。正午時点は158円01〜03銭で、前日午後5時より36銭の円安だった（日経）。日銀が29・30日の金融政策決定会合で利上げを急がないとの見方も広がった。共同通信は、米長期金利の上昇で日米金利差が改めて意識されたとし、政府・日銀による為替介入への警戒も残ると伝えた。終値の最高値は6月25日の7万2366円34銭で、まだ約1,680円上にある。株高と円安が同じ日に進んだのは、円安が輸出企業の利益を押し上げるとの読みが株の買いを支える構図が続いているからだ。ただ、円安は輸入品の値段を通じて家計の負担にも効く。GPIFをめぐる報道の中身は、政府や同法人の正式な発表としては確認されていない。円の行方は、日銀会合に向けた観測と、この報道の確認次第で揺れやすい。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>737円</b><span>日経平均の上げ幅。前場は134円高、午後に広げた</span></div>
+        <div><b>45銭</b><span>ドル円の前日比（午後5時、時事）。158円台は円安側</span></div>
+        <div><b>1,682円</b><span>終値の最高値（6/25、7万2366円）までの残り</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="nobel">
+      <div class="kick">科学<span>原資料 ✓ ノーベル財団発表 · 報道照合 ✓ 5社 · 日本時間18時45分以降の発表</span></div>
+      <h3 class="hl">物理学賞は南極の氷で「幽霊粒子」を捕らえたハルゼン氏。近年まれな単独受賞</h3>
+      <div class="one">
+        <p>スウェーデン王立科学アカデミーは10月6日、2026年のノーベル物理学賞を米ウィスコンシン大学マディソン校のフランシス・ハルゼン氏に贈ると発表した。ベルギー出身。授賞理由は「IceCubeニュートリノ観測所への決定的な貢献と、天体起源の高エネルギーニュートリノの発見」。ハルゼン氏は1988年、南極点の厚く澄んだ氷が宇宙から来るニュートリノの検出器になると考えた。ニュートリノが氷の中の原子核にぶつかると、かすかな光が出る。観測所は約1立方キロメートルの氷に5,160個の光センサーを埋め、その光をとらえる。遠い銀河から届いた高エネルギーのニュートリノを初めて観測し、新しい天文学を開いたと評価された。数百人が建設に関わった計画で、近年は珍しい単独受賞になった。本人は電話で「大きな驚きだ」と語った。日本からは千葉大学のグループが建設当初から参加し、データ解析を担ってきた。賞金は1,200万スウェーデン・クローナで、授賞式は12月10日にストックホルムで開かれる。ニュートリノ研究では、2002年に小柴昌俊氏、2015年に梶田隆章氏が物理学賞を受けている。前日の医学賞と同じく、今年の受賞者に日本人は含まれなかった。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>ニュートリノ<i>物理</i></b><p>電気を帯びず、質量がきわめて小さい素粒子。ほかの物質とほとんど反応せず、地球も素通りするため「幽霊粒子」と呼ばれる。光や電波と違い途中で曲げられないので、届いた方向をたどれば発生源の天体がわかる。2015年には梶田隆章氏が、この粒子に質量があることを示してノーベル賞を受けた。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="fx"><b>円、158円台に — 昼はGPIF報道、夕方は日銀観測で売り</b><em>12時に158円ちょうど近辺、17時に158円10銭前後。前日比45銭の円安。為替介入への警戒は残る。</em><span>経済 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="rachi"><b>拉致被害者家族、訪米の結果を首相に報告</b><em>家族会らは9月21〜25日に訪米し、米政府関係者や議員と計13回面会。首相は「力強い外交」を求められた。</em><span>政治 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="med"><b>医学賞は「光遺伝学」の3氏 — 5日発表</b><em>光で神経細胞の働きをオン・オフする技術。米スタンフォード大のダイセロス氏、独のヘーゲマン氏、ナーゲル氏。</em><span>科学 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="shionogi"><b>塩野義、米イントラバイオを20億ドルで買収へ</b><em>約3,156億円。希少な神経疾患の薬を得る。5日発表、手続き完了は11〜12月の予定。</em><span>企業 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="suzuki"><b>スズキ初の軽乗用EV「e SKY」、11月16日発売</b><em>6日発表。212万円から、一充電の走行距離310km。月1,000台の販売を目指す。</em><span>企業 · ✓ 3社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="okinawa">
+      <div class="kick">政治·沖縄<span>報道照合 ✓ 4社 · 発言は当事者に帰属</span></div>
+      <h3 class="hl">那覇市議会、米兵事件に全会一致で抗議。知事はあす首相に基地負担の軽減を求める</h3>
+      <div class="body">
+        <p>那覇市のホテルで39歳の女性が殺害され、財布などが奪われた事件で、那覇市議会は10月6日、再発防止と日米地位協定の抜本的な改定を求める抗議決議と意見書を全会一致で可決した。沖縄県警は4日、米軍普天間飛行場所属の海兵隊上等兵（20）を強盗殺人の疑いで逮捕し、5日に送検した。琉球新報によると、容疑を否認している。4日夜には那覇市の県民広場で緊急集会が開かれ、約160人が犠牲になった女性に黙とうをささげた。市議会の決議は、事件が起きるたびに繰り返されてきた形だが、今回も与野党そろっての可決になった。</p>
+        <p>古謝玄太知事は6日、県庁で記者団に対し、7日で調整している高市早苗首相との面会で、県に集中する米軍基地の負担軽減を求める考えを示した。知事は5日、沖縄防衛局長と外務省沖縄担当大使を県庁に呼んで抗議し、米軍の綱紀粛正や隊員教育が「全く機能していない」と批判していた。知事は4日、グラス駐日米大使から電話でお悔やみと捜査への全面協力の意向を伝えられ、その場で抗議している。茂木敏充外相も4日にグラス大使を外務省に呼んで「極めて遺憾」と抗議し、小泉進次郎防衛相は米側に隊員教育の徹底を申し入れた。辺野古移設を容認する立場で政府と協調してきた知事が、どこまで踏み込んだ要求をするかが焦点になる。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="cyber">
+      <div class="kick">社会·テクノロジー<span>報道照合 ✓ 4社 · 件数は各社発表</span></div>
+      <h3 class="hl">GMO系アンケートサイトで最大94万件、楽天ドライブは8カ月間閲覧可能に。不正アクセスの公表が続く</h3>
+      <div class="body">
+        <p>GMOインターネットグループのGMOリサーチ＆AIは、運営するアンケートサイト「infoQ」が不正アクセスを受け、会員の個人情報最大94万8,498件が持ち出された恐れがあると公表した。保有する全件にあたり、氏名、住所、電話番号、メールアドレス、生年月日、暗号化されたパスワードを含む。ソフトウェアの脆弱性を突かれたという。一部の会員のポイントは本人の知らないうちにアマゾンのギフトコードへ換えられ、被害は611件、286万9,500円分。同社は全額を補填する。</p>
+        <p>楽天ドライブは6日、管理用アカウントの認証情報が盗まれ、1万5,382アカウントの写真や文書が1月29日から9月17日まで閲覧できる状態だったと公表した。313アカウントでは暗号化されたパスワードも取られた。前日の5日には、物語コーポレーションが「焼肉きんぐ」アプリの会員1,078万8,963件の漏えいを公表している。登録者のほぼ全員にあたるが、パスワードと決済情報は含まれていないという。いずれも原因と経路は調査中で、事案同士のつながりは確認されていない。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="diet">
+      <div class="kick">政治·国会<span>報道照合 ✓ 5社 · 発言は当事者に帰属</span></div>
+      <h3 class="hl">臨時国会、あすから代表質問。「強い経済と財政の両立」と簗農相の発言が最初の論点に</h3>
+      <div class="body">
+        <p>第222回臨時国会は5日に召集され、会期は12月12日まで。高市早苗首相は同日、衆参両院の本会議で所信表明演説をし、最優先は経済の力で暮らしを守ることだとして、強い経済と財政の持続可能性をともに実現すると述べた。消費税減税で家計にゆとりを生むとの考えも示した。6日は本会議のない調整日で、各党の代表質問は衆院が7・8日、参院が8・9日に行われる。</p>
+        <p>野党がまず取り上げる構えなのが簗和生農林水産相の発言だ。簗氏は5月、地元栃木の党支部の会合で、選挙で応援しなかった2市町の道路予算を「大幅にカットした」と述べたと報じられた。6日の閣議後会見では「高揚感があり少し誇張した表現をしてしまった」と改めて陳謝し、支持する首長の自治体への交付金が増えたとの報道には「私からの働きかけはない」と否定した。井林辰憲国土交通相は、報道のような削減の事実はないとの報告を受けていると述べた。簗氏は2日に発言を認めて辞任を否定し、5日に撤回していた。消費税減税の時期と財源、そして閣僚の続投を首相がどう説明するかが、あすの答弁の中心になる。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>大リーグ地区シリーズ第2戦、ドジャースはブレーブスに2-3で敗れ1勝1敗。大谷翔平は1安打。山本由伸が第3戦に先発<span>NHK・共同</span></li>
+        <li>千葉・印旛沼の決壊箇所をふさぐ工事が3日に完了。水資源機構が管理を始めた1968年以来初の決壊で、排水が続く<span>NHK・共同・国交省</span></li>
+        <li>大和証券、委託先のシステムに不正アクセスで約22万件が漏えいの恐れと5日に公表。自社システムへの侵入は確認されず<span>ITmedia・NHK</span></li>
+        <li>世界柔道はバクーで11日まで。初日の4日、女子48キロ級で古賀若菜が5度目の出場で初優勝、男子60キロ級の永山竜樹は銅<span>共同・euronews</span></li>
+        <li>那覇市の県民広場で4日夜、事件に抗議する緊急集会。約160人が集まり、犠牲になった女性に黙とうをささげた<span>琉球新報・共同</span></li>
+        <li>ノーベル賞は5日の医学賞、6日の物理学賞に続き、7日に化学賞（日本時間午後6時45分以降）、8日に文学賞、9日に平和賞を発表<span>NHK・ノーベル財団</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「きょう衆院で代表質問。」</b> <span>6日は本会議のない調整日。衆院の代表質問は7日からで、きょうの質疑はない。</span></div>
+        <div><b>「物理学賞に日本の研究者も。」</b> <span>受賞はハルゼン氏の単独。千葉大学は観測に参加しているが受賞者ではない。</span></div>
+        <div><b>「ミスターマックス、170万人超の情報流出。」</b> <span>NHKが「流出か」と報じた段階。本紙は2社目の報道と会社発表の原文を確認できず、未確認として扱う。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>これから見るもの</h4>
+        <div><b>10/7 水</b><span>衆院代表質問の初日 · 古謝知事と高市首相の面会（調整中） · ノーベル化学賞（午後6時45分以降） · 山本由伸の地区シリーズ第3戦（日本時間午前7時開始）。</span><b>今週</b><span>8日 文学賞、参院の代表質問始まる · 9日 平和賞 · 簗農相への追及の行方 · 各社の不正アクセスの原因説明。</span><b>読者へ</b><span>一つだけ選ぶならドル円の158円台。日銀が29・30日の会合で動かないとの見方が強まれば、円安は輸入品の値段に効き続ける。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 経済・科学・政治・テクノロジーの用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    mkt:{kick:"経済·市場 · 報道照合 ✓ 6社 · 数値は日経・共同・時事に帰属",title:"日経平均、3カ月ぶり7万円台で引ける。円は158円台へ下落",
+      what:"10月6日の東京株式市場で日経平均株価は続伸し、前日比737円12銭（1.05%）高の7万0683円98銭で取引を終えた。終値で7万円台に乗せたのは7月1日以来、約3カ月ぶり。前日の米国市場でハイテク株が上がった流れを受け、アドバンテストやTDKなどAI・半導体関連株が買われ、アドバンテストは連日で上場来高値をつけた。円安を追い風にトヨタ自動車など輸出株も上げた。前場は134円67銭高の7万0081円53銭と小幅高で、一部の半導体株には利益確定売りも出たが、午後に上げ幅を広げた。ロイターは原油価格の落ち着きと業績期待の買いを支えに挙げ、日経は「業績相場」に先回りした買いと表現した。円相場は午後5時時点で1ドル=158円10〜11銭（時事）、158円10〜13銭（共同）、158円12〜14銭（日経）と、前日より45〜47銭の円安。昼にはGPIFの運用をめぐる報道で円資産への投資期待がしぼみ、夕方にかけては日銀の早期利上げ観測の後退が円売りを促した。終値の最高値は6月25日の7万2366円34銭。",
+      why:"7万円は6月に初めて超えた節目で、7月以降はその下で揉み合っていた。終値で戻したことで、夏の調整がひとまず終わったと見る向きが増える。一方、株高を支えたのは半導体と円安の二本柱で、どちらも外部要因だ。円は158円台に入り、日米金利差と日銀の慎重姿勢が円安を支える構図が続いている。",
+      me:"日経平均に連動する投資信託や確定拠出年金は、きょうの上げがそのまま評価額に出る。同時に158円台の円安は、輸入食品やガソリンの値段を押し上げる方向に働く。資産と家計で逆向きに効く一日だった。",
+      a:"米ハイテク株高と円安、原油の落ち着きがそろった。決算期を前に業績の上振れを先取りする買いは自然で、7万円台の定着は十分あり得る。",
+      b:"上げを主導したのは一部の値がさ半導体株で、前場は小幅高にとどまった。米金利が上がり続ければ、高PER銘柄から崩れやすい。7万円は通過点ではなく試される水準だ。",
+      say:"きょうの数字は「45銭」だ。株の737円高より、円が158円台に入ったことのほうが暮らしに長く効く。見るべきは、日銀が29・30日の会合で何を示すかと、GPIFをめぐる報道の中身が正式に確認されるかどうか。この二つで円の方向が決まる。",
+      src:"日本経済新聞（東証大引け、外為12時・17時） · 共同通信（熊本日日・新潟日報・山陰中央、東証終値・東京円） · 時事通信（円相場午後5時） · ロイター（Newsweek日本版・dメニュー） · 神戸経済ニュース · NHK（すべて10/6） · 東証原データの直接照合は未完了"},
+    nobel:{kick:"科学 · 原資料 ✓ ノーベル財団発表 · 報道照合 ✓ 5社 · 日本時間18時45分以降の発表",title:"物理学賞は南極の氷で「幽霊粒子」を捕らえたハルゼン氏。近年まれな単独受賞",
+      what:"スウェーデン王立科学アカデミーは10月6日、2026年のノーベル物理学賞を米ウィスコンシン大学マディソン校のフランシス・ハルゼン氏に贈ると発表した。ベルギー出身。授賞理由は「IceCubeニュートリノ観測所への決定的な貢献と、天体起源の高エネルギーニュートリノの発見」。ハルゼン氏は1988年、南極点の厚く澄んだ氷が宇宙から来るニュートリノの検出器になると考えた。ニュートリノが氷の中の原子核にぶつかるとかすかな光が出る。観測所は約1立方キロメートルの氷に5,160個の光センサーを埋め、その光をとらえる。アカデミーは、彼の仕事が観測所の土台となり、遠い銀河からの高エネルギーニュートリノの初観測につながって新しい天文学への道を開いたとした。数百人が建設に関わった計画で、近年は珍しい単独受賞になった。ハルゼン氏は電話で「大きな驚きだ。まったく予期していなかった」と述べた。日本からは千葉大学のグループが建設当初から参加し、データ解析を担ってきた。賞金は1,200万スウェーデン・クローナ、授賞式は12月10日。",
+      why:"光や電波では見えない宇宙の現場を、ニュートリノという別の「目」で見る分野が、ノーベル賞で正式に認められた。ニュートリノは途中で曲がらず吸収もされにくいため、届いた方向をたどれば発生源がわかる。ブラックホールの周りのような激しい天体の内側を調べる道具になる。",
+      me:"暮らしがすぐ変わる話ではない。ただ、日本はスーパーカミオカンデで小柴昌俊氏・梶田隆章氏とニュートリノ研究で二度の物理学賞を得ており、今回の計画にも千葉大学が参加している。日本の基礎研究の延長線上にある受賞だ。",
+      a:"巨大な共同研究でも、最初の着想と長年の推進役がはっきりしていれば個人に贈るのは筋が通る。1988年の着想から30年以上かけた成果だ。",
+      b:"数百人の研究者と多くの国の予算で建てた観測所だ。単独受賞は、共同研究の時代にノーベル賞の「最大3人」という枠が合わなくなっていることも映している。",
+      say:"覚えておく数字は「1988年」。南極の氷を望遠鏡にするという着想から、約40年で賞に届いた。見るべきは、12月の授賞講演でハルゼン氏が次の計画として何を挙げるか。本人は新しい提案書を準備中だと語ったと報じられている。",
+      src:"ノーベル財団 プレスリリース（10/6） · Al Jazeera · Physics World · Interesting Engineering · ITV · SCMP（すべて10/6） · 千葉大学 研究紹介資料（IceCube参加） · NHK（発表時刻、10/5）"},
+    fx:{kick:"経済 · 報道照合 ✓ 4社 · 数値は配信元で数銭の差",title:"円、158円台に — 昼はGPIF報道、夕方は日銀観測で売り",
+      what:"6日の東京外国為替市場で円は対ドルで下落した。日経によると正午時点は1ドル=158円01〜03銭で、前日午後5時より36銭の円安。GPIFをめぐる報道を受けて、円資産への投資が増えるとの期待がしぼんだ。午後5時時点は時事が158円10〜11銭（前日比45銭の円安）、共同が158円10〜13銭、日経が158円12〜14銭（47銭の円安）と伝えた。日経は、日銀が29・30日の会合で早期の利上げに慎重になるとの見方を挙げ、共同は米長期金利の上昇による日米金利差を挙げた。市場では政府・日銀の為替介入への警戒も残る。",
+      why:"158円台は、介入への警戒が意識される水準に近い。円安の理由が「日銀が動かない」という見方なら、日銀会合まで流れは変わりにくい。",
+      me:"輸入品とガソリンの値段に効く。海外旅行や外貨の買い物は、きょうの水準では割高だ。",
+      a:"",b:"",
+      say:"報道一つで36銭動いた。GPIFの話は正式な発表ではない。中身が確認されるまで、きょうの円安には仮の値札がついていると考える。",
+      src:"日本経済新聞（外為12時・17時） · 時事通信（円相場午後5時） · 共同通信（東京新聞・中日・デイリー・琉球新報、東京円）（すべて10/6）"},
+    rachi:{kick:"政治 · 報道照合 ✓ 3社",title:"拉致被害者家族、訪米の結果を首相に報告",
+      what:"北朝鮮による拉致被害者の家族らは10月6日、首相官邸で高市早苗首相と面会し、9月の訪米の結果を報告した。NHKによると、家族らは「力強い外交を進めて」と求めた。首相はトランプ米大統領に対し、米朝首脳会談が行われた場合には金正恩総書記に日朝首脳会談に応じるよう働きかけてほしいと依頼していると説明した。訪米団は家族会、救う会、拉致議連の関係者で構成し、9月21日に出国、25日に帰国した。米政府関係者や議員と計13回面会した。面会には木原稔官房長官も同席した（時事・首相動静）。",
+      why:"米朝の接触があれば、日本の拉致問題を米側から持ち出してもらう以外に足がかりは少ない。家族の高齢化が進み、時間の制約は年ごとに重くなっている。",
+      me:"直接の影響はない。ただ、日朝首脳会談が実現するかどうかは、米朝の動きにかかっている状態だ。",
+      a:"",b:"",
+      say:"米国頼みの構図が続く。見るべきは、米朝首脳会談の日程が具体化するかどうか。",
+      src:"NHK（10/6 14:28） · 時事通信 首相動静（10/6） · 秋田魁新報（共同、訪米団帰国、9/25）"},
+    med:{kick:"科学 · 報道照合 ✓ 2社",title:"医学賞は「光遺伝学」の3氏 — 5日発表",
+      what:"スウェーデンのカロリンスカ研究所は10月5日、2026年のノーベル生理学・医学賞を、光遺伝学の技術を確立した米スタンフォード大学のカール・ダイセロス氏、独フンボルト大学のペーター・ヘーゲマン氏、独ビュルツブルク大学のゲオルク・ナーゲル氏に贈ると発表した。ヘーゲマン氏とナーゲル氏は単細胞の藻類から、光が当たるとイオンを通すタンパク質チャネルロドプシンを見つけた。ダイセロス氏はその遺伝子を神経細胞に入れ、青い光で神経の信号を起こすことに成功した。これにより、生きた脳の中で特定の神経細胞の活動を光でオン・オフできるようになった。日本人の受賞はなかった。",
+      why:"脳のどの細胞がどの行動に関わるかを、因果関係として確かめられるようになった。神経科学の実験の方法そのものを変えた技術だ。",
+      me:"治療への応用は研究段階だが、失明した人の視覚の一部回復を目指す臨床試験も進んでいる分野だ。",
+      a:"",b:"",
+      say:"きのうの医学賞、きょうの物理学賞。どちらも「見えなかったものを見る道具」への賞だった。",
+      src:"Newsweek日本版 · 新華社（10/5） · ノーベル財団発表（直接確認は未完了）"},
+    shionogi:{kick:"企業 · 報道照合 ✓ 3社 · 金額は会社発表に帰属",title:"塩野義、米イントラバイオを20億ドルで買収へ",
+      what:"塩野義製薬は10月5日、米国のグループ会社を通じて、米バイオ医薬品企業イントラバイオを20億ドル（約3,156億円）で買収し、完全子会社にすると発表した。イントラバイオは希少な神経変性疾患と遺伝性の神経疾患の薬に特化し、ニーマン・ピック病C型の治療薬「AQNEURSA」を欧米で販売している。取引の完了は2026年11〜12月の予定で、各国の競争法上の手続きと規制当局の承認が前提になる。",
+      why:"感染症に強い塩野義が、希少疾患へ事業を広げる動きの一つだ。患者は少ないが薬価が高く、競合も少ない分野である。",
+      me:"直接の影響はない。製薬株を持つなら、買収額に見合う売り上げが出るかを見ていくことになる。",
+      a:"",b:"",
+      say:"20億ドルで買ったのは主に一つの承認薬だ。次の薬が続くかどうかで、この買収の評価が決まる。",
+      src:"日本M&Aセンター M&A速報（10/5） · 日刊薬業 · Pharmaphorum · MLex · Dealroom（10/5〜6）"},
+    suzuki:{kick:"企業 · 報道照合 ✓ 3社 · 数値は会社発表に帰属",title:"スズキ初の軽乗用EV「e SKY」、11月16日発売",
+      what:"スズキは10月6日、同社初の軽乗用の電気自動車「e SKY（イースカイ）」を発表した。発売は11月16日、価格は212万円から、月間の販売目標は1,000台。電池容量は26kWhのリン酸鉄リチウムイオン電池で、一充電の走行距離は310km。車両重量は1,030kg。8月に世界初公開していた。",
+      why:"軽EVは日産サクラ、ホンダN-ONE e:などが先行する。軽で最大の販売台数を持つスズキが参入し、価格と走行距離の基準が一段上がる。",
+      me:"軽の買い替えを考えているなら、補助金を引いた実際の支払額と、自宅で充電できるかが判断の軸になる。",
+      a:"",b:"",
+      say:"数字は「310km」。軽EVの弱点だった走行距離が、日常使いの不安をほぼ消す水準に来た。",
+      src:"レスポンス · Car Watch · NHK（10/6） · くるまのニュース · selectra（8月の初公開時）"},
+    okinawa:{kick:"政治·沖縄 · 報道照合 ✓ 4社 · 発言は当事者に帰属",title:"那覇市議会、米兵事件に全会一致で抗議。知事はあす首相に基地負担の軽減を求める",
+      what:"那覇市のホテルで39歳の女性が首を絞められて殺害され、財布などが奪われた事件で、那覇市議会は10月6日、再発防止と日米地位協定の抜本的な改定を求める抗議決議と意見書を全会一致で可決した。沖縄県警は4日、米軍普天間飛行場所属の海兵隊上等兵（20）を強盗殺人の疑いで逮捕し、5日に那覇地検に送検した。琉球新報によると、容疑者は「私は知りません」と否認している。古謝玄太知事は6日、県庁で記者団に対し、7日で調整している高市早苗首相との面会で、県に集中する米軍基地の負担軽減を求める考えを示した。知事は4日にグラス駐日米大使から電話でお悔やみと捜査への全面協力の意向を伝えられ、その場で抗議した。5日には沖縄防衛局長と外務省沖縄担当大使を県庁に呼んで抗議し、米軍の綱紀粛正や隊員教育が「全く機能していない」と批判した。茂木敏充外相は4日、グラス大使を外務省に呼んで「極めて遺憾」と抗議し、小泉進次郎防衛相も米側に隊員教育の徹底を申し入れた。4日夜には那覇市で緊急集会が開かれ、約160人が集まった。",
+      why:"9月に就任した古謝知事は辺野古移設を容認する立場で、政府と協調してきた。その知事が「全く機能していない」と米軍を批判し、首相に直接会って負担軽減を求める。協調路線の知事でも抗議の形を強めざるを得ない事件だということだ。",
+      me:"日米地位協定は沖縄だけでなく全国の米軍基地に共通する。那覇市議会の「抜本的な改定」の要求が国会でどう扱われるかは、本土の基地の周辺にも関わる。",
+      a:"政府は外相・防衛相レベルで素早く抗議した。今回は日本の警察が逮捕・送検しており、捜査は日本の手で進んでいる。",
+      b:"事件のたびに抗議と綱紀粛正の約束が繰り返される。地位協定の運用を変えないかぎり、再発防止は言葉で終わる。",
+      say:"あすの面会で見るのは、首相が負担軽減について「具体的な場」を約束するかどうか。日付のない「適切に対応する」で終われば、那覇市議会の決議は過去の決議と同じ棚に並ぶ。",
+      src:"共同通信（熊本日日、10/5〜6） · 琉球新報（10/4〜6） · 秋田魁新報（共同、逮捕） · 神奈川新聞（共同）（すべて10/4〜6） · 容疑者の氏名は本紙は記載しない"},
+    cyber:{kick:"社会·テクノロジー · 報道照合 ✓ 4社 · 件数は各社発表",title:"GMO系アンケートサイトで最大94万件、楽天ドライブは8カ月間閲覧可能に。不正アクセスの公表が続く",
+      what:"GMOインターネットグループのGMOリサーチ＆AIは、運営するアンケートサイト「infoQ」が第三者の不正アクセスを受け、会員の個人情報が外部へ持ち出されたと公表した。対象は最大94万8,498件で、同社が保有する全件にあたる。氏名、住所、電話番号、メールアドレス、生年月日、暗号化されたパスワード、会員ID、保有ポイント数が含まれる。不正アクセスは10月2日以降に起き、使っていたソフトウェアの脆弱性が悪用された。一部会員のポイントが本人の意思によらずアマゾンのギフトコードに交換され、611件、286万9,500円分の被害が出た。同社は全額を補填する。サービスは停止している。NHKは6日にこれを報じた。楽天ドライブは6日、管理用アカウントの認証情報が不正に取得され、1万5,382アカウントの写真や文書が1月29日から9月17日まで閲覧できる状態だったと公表した。313アカウントでは暗号化されたパスワード情報も取得された。前日の5日には、物語コーポレーションが「焼肉きんぐ」アプリ会員1,078万8,963件の漏えいを、大和証券が委託先経由で約22万件の漏えいの恐れを公表している。",
+      why:"狙われているのは、ポイントや会員情報を大量に抱える身近なサービスだ。infoQでは情報が盗まれただけでなく、ポイントが実際に換金された。漏えいが金銭被害に直結した例になる。",
+      me:"infoQや楽天ドライブを使っているなら、同じパスワードを他のサービスで使い回していないか、きょう確かめる。各社を名乗るメールやSMSのリンクは開かず、公式アプリから確認する。",
+      a:"各社とも確認から数日で公表し、補填も約束した。初動は速い。",
+      b:"保有する全件が一度に持ち出せる設計だったことが問題だ。脆弱性の放置や管理用アカウントの保護不足は基本の失敗で、説明が要る。",
+      say:"きょうの数字は「286万9,500円」。件数ではなく、盗まれた情報が現金に換わった額だ。見るべきは、各社が原因を具体的な言葉で説明する日。",
+      src:"NHK nd-20261006de55007（GMO） · rocket-boys（infoQ公表内容） · セキュリティ対策Lab · coki（楽天ドライブ） · ITmedia NEWS（大和証券） · ASCII.jp（焼肉きんぐ）（10/5〜6） · 各社発表原文の直接確認は一部未完了"},
+    diet:{kick:"政治·国会 · 報道照合 ✓ 5社 · 発言は当事者に帰属",title:"臨時国会、あすから代表質問。「強い経済と財政の両立」と簗農相の発言が最初の論点に",
+      what:"第222回臨時国会は10月5日に召集され、会期は12月12日まで。高市早苗首相は同日、衆参両院の本会議で所信表明演説をし、最優先課題は経済の力で国民の暮らしを守ることだとして、強い経済と財政の持続可能性をともに実現すると述べた。消費税減税で家計にゆとりを生むとの考えも示した。6日は衆参とも本会議のない調整日で、各党の代表質問は衆院が7・8日、参院が8・9日に行われる。野党は簗和生農林水産相の発言をまず追及する方針だ。簗氏は5月24日、栃木県の自民党支部の懇親会で、選挙で応援しなかった那須烏山市と那珂川町の道路予算を「大幅にカットした」と述べたと報じられた。10月2日に発言を認めて「誤解を招いた」と釈明し、辞任は否定。5日に撤回して陳謝した。6日の閣議後会見では「党員が集まっている中で高揚感があり、少し誇張した表現をしてしまった」と改めて陳謝し、支持する首長の自治体への交付金が増えたとの報道には「私からの働きかけはない。国土交通省で適切に判断している」と述べた。井林辰憲国交相は同日、報道のような道路予算の削減の事実はないとの報告を受けていると述べた。",
+      why:"所信表明は「強い経済」と「財政の持続可能性」の両立をうたったが、消費税減税と財政規律がどう両立するのかは代表質問で問われる。簗氏の件は、閣僚が予算を選挙の見返りに使えると口にしたこと自体が問題視されている。実際に削減がなかったとしても、発言の重さは残る。",
+      me:"消費税減税が本当に実施されるのか、いつ、どの品目で、どれだけ下がるのか。家計に直接効く話は、あすからの答弁で少しずつ具体化する。",
+      a:"簗氏は発言を撤回し、陳謝した。国交省も削減の事実はないとしている。国会の時間は経済対策に使うべきだ。",
+      b:"「誇張した」という説明は、そう言えば支持が集まると考えていたことの裏返しだ。予算の私物化を示唆した閣僚の責任は、撤回では消えない。",
+      say:"あす見るのは二つ。首相が消費税減税の時期と財源をどこまで語るか、そして簗氏の続投を首相がどう説明するか。前者は家計の話、後者は政権の規律の話だ。",
+      src:"NHK（所信表明全文 10/5、簗農相 10/6） · 日本経済新聞（所信表明 10/5） · 共同通信（秋田魁新報・熊本日日、簗農相 10/2〜6） · policynews（会期） · 衆院日程の解説（本家いなてい）"},
+  };
+
+  const G = {
+    "日経平均":{f:"金融",d:"東証プライムの代表的な225銘柄の株価から算出する指数。値がさ株の影響が大きく、半導体関連が動くと指数が大きく振れる。",w:"きょう7万0683円98銭で、終値として約3カ月ぶりに7万円台を回復した。"},
+    "続伸":{f:"金融",d:"前の日に続いて値上がりすること。2日続けて上がれば続伸、下がれば続落という。",w:"日経平均は5日に続き6日も上げ、7万円台で引けた。"},
+    "利益確定":{f:"金融",d:"値上がりした株を売って、利益を現金にすること。節目の前後に出やすい。",w:"前場は一部の半導体株にこの売りが出て、上げ幅は小さかった。"},
+    "上場来高値":{f:"金融",d:"その銘柄が上場してから一度もつけたことのない高い株価。",w:"アドバンテストが連日でこの水準をつけたと日経が伝えた。"},
+    "GPIF":{f:"金融·年金",d:"年金積立金管理運用独立行政法人。日本の公的年金の積立金を運用する世界最大級の機関。資産の配分（基本ポートフォリオ）は市場に大きな影響を持つ。",w:"運用をめぐる報道で、円資産への投資が増えるとの期待がしぼみ、昼に円が売られた。報道の中身は本紙未確認。"},
+    "金融政策決定会合":{f:"金融",d:"日銀が政策金利などを決める会合。年8回開く。",w:"次回は10月29・30日。早期の利上げに慎重との見方が円売りにつながった。"},
+    "日米金利差":{f:"金融·国際",d:"米国と日本の金利の差。差が広がるとドルで運用したほうが有利になり、円売りドル買いが起きやすい。",w:"米長期金利の上昇でこの差が意識され、円安が進んだと共同通信が伝えた。"},
+    "為替介入":{f:"金融",d:"急な円安や円高を抑えるため、政府の判断で日銀が円やドルを売買すること。財務省が決める。",w:"158円台では、市場に介入への警戒が残っている。"},
+    "ニュートリノ":{f:"物理",d:"電気を帯びず質量がきわめて小さい素粒子。物質とほとんど反応せず、地球も素通りする。",w:"ハルゼン氏は南極の氷を使い、遠い銀河から来る高エネルギーのものを初めてとらえた。"},
+    "IceCube":{f:"物理",d:"南極点の氷の中に光センサーを埋めたニュートリノ観測所。約1立方キロメートルの氷全体を検出器として使う。",w:"ハルゼン氏が1988年に着想し、建設を主導した。千葉大学も参加している。"},
+    "単独受賞":{f:"科学",d:"ノーベル賞を一人だけで受けること。賞は1分野最大3人まで。共同研究が大型化した近年の自然科学賞では珍しい。",w:"数百人が関わった計画だが、物理学賞はハルゼン氏一人に贈られた。"},
+    "日米地位協定":{f:"外交·法",d:"在日米軍の法的な地位を定めた日米間の協定。米軍人の裁判権や身柄の扱い、基地の管理などを規定する。1960年以来、本文は改定されていない。",w:"那覇市議会は抗議決議で「抜本的な改定」を求めた。"},
+    "抗議決議":{f:"政治·地方",d:"地方議会が、事件や政策に対する抗議の意思を示すために可決する決議。法的な拘束力はない。",w:"那覇市議会が6日、全会一致で可決した。"},
+    "意見書":{f:"政治·地方",d:"地方議会が国や関係機関に意見を伝えるために出す文書。地方自治法に基づき、国会や政府に提出できる。",w:"那覇市議会は抗議決議とあわせて、地位協定の改定などを求める意見書を可決した。"},
+    "送検":{f:"法",d:"警察が逮捕した容疑者の身柄や事件の書類を検察に送ること。検察が起訴するかどうかを判断する。",w:"海兵隊上等兵は5日に送検された。"},
+    "不正アクセス":{f:"テクノロジー·法",d:"正当な権限なくシステムに入り込むこと。不正アクセス禁止法で処罰される。盗んだ認証情報でログインする手口も含む。",w:"GMOリサーチ＆AIのinfoQ、楽天ドライブ、大和証券の委託先で相次いで公表された。"},
+    "脆弱性":{f:"テクノロジー",d:"ソフトウェアやシステムの欠陥で、攻撃者に悪用されうる弱点。修正プログラムで塞ぐ。",w:"infoQでは、使っていたソフトウェアの脆弱性が突かれたという。"},
+    "委託先":{f:"テクノロジー·経済",d:"業務の一部を外部に任せた相手の会社。顧客データを扱う委託先が破られると、本体のシステムが無事でも情報は漏れる。",w:"大和証券の件は委託先のシステムが対象だった。"},
+    "臨時国会":{f:"政治",d:"通常国会とは別に、内閣の決定などで召集される国会。補正予算や重要法案を審議する。",w:"第222回臨時国会が5日に召集され、会期は12月12日まで。"},
+    "所信表明演説":{f:"政治",d:"臨時国会や特別国会の冒頭に、首相が内閣の基本方針を述べる演説。通常国会では施政方針演説という。",w:"高市首相は5日、「強い経済」と財政の持続可能性の両立を訴えた。"},
+    "代表質問":{f:"政治",d:"首相の演説に対し、各党の代表が本会議で質問すること。首相が答弁する。",w:"衆院は7・8日、参院は8・9日。6日は質疑のない調整日だった。"},
+    "消費税減税":{f:"政治·経済",d:"消費税の税率を引き下げること。食料品などに限る案や期間を区切る案など、形はさまざまだ。",w:"首相は所信表明で家計にゆとりを生むと述べた。時期と財源が代表質問の焦点になる。"},
+    "地区シリーズ":{f:"スポーツ",d:"米大リーグのポストシーズンで、ワイルドカードシリーズの次に行われる5回戦制のシリーズ。3勝した側がリーグ優勝決定シリーズに進む。",w:"ドジャースはブレーブスと1勝1敗。山本由伸が第3戦に先発する。"},
+    "アドバンテスト":{f:"企業",d:"半導体の性能を調べる検査装置を手がける日本の大手メーカー。AI向け半導体の需要で注目されている。",w:"連日で上場来高値をつけたと日本経済新聞が伝えた。"},
+    "TDK":{f:"企業",d:"電子部品や磁気テープなどを手がける日本の大手メーカー。",w:"アドバンテストなどとともに、AI・半導体関連として買われた。"},
+    "輸出株":{f:"金融",d:"自動車や機械など、海外への輸出が多い企業の株式。円安になると利益が増えるとの見方から買われやすい。",w:"円安を追い風に、トヨタ自動車など輸出株も上げた。"},
+    "前場":{f:"金融",d:"東京証券取引所の午前の取引時間。午後の取引は後場と呼ぶ。",w:"前場は134円高の7万0081円53銭と小幅高にとどまった。"},
+    "業績相場":{f:"金融",d:"企業の業績の伸びを手がかりに株価が上がる局面。業績が良くなるという期待で先に買われやすい。",w:"日経は、業績の上振れを先取りする「業績相場」への先回りの買いと表現した。"},
+    "先回り":{f:"金融",d:"材料が表に出る前に、見込みで先に売買すること。",w:"業績相場への先回りの買いが入ったと日経が伝えた。"},
+    "決算期":{f:"経済",d:"企業が1年間の成績をまとめる区切り。日本では3月末が多く、9月末は中間決算にあたる。",w:"決算期を前にした業績期待の買いが入った。"},
+    "節目":{f:"金融",d:"相場の判断で目安とされる区切りの値段。",w:"7万円は6月18日に終値で初めて超えた節目だった。"},
+    "円資産":{f:"金融",d:"円建ての株式や債券、預金など。海外の投資家が円資産を買うと、円が買われる要因になる。",w:"GPIFの運用をめぐる報道で、円資産への投資が増えるとの期待がしぼんだ。"},
+    "米長期金利":{f:"金融",d:"米国で、10年物の国債などの利回り。世界の金利の目安とされる。",w:"米長期金利の上昇で日米金利差が改めて意識された。"},
+    "円売り":{f:"金融",d:"円を売って他の通貨を買うこと。円安の要因になる。",w:"日銀の早期利上げ観測の後退が円売りを誘った。"},
+    "年金積立金":{f:"金融",d:"公的年金の保険料のうち、将来の給付に備えて積み立てているお金。GPIFが運用している。",w:"年金積立金の運用をめぐる報道で、昼にかけて円が売られた。"},
+    "スウェーデン王立科学アカデミー":{f:"科学",d:"スウェーデンの学術団体。ノーベル物理学賞、化学賞、経済学賞の選考と発表を担う。",w:"10月6日、2026年のノーベル物理学賞を発表した。"},
+    "素粒子":{f:"科学",d:"物質を構成する最も小さな単位とされる粒子。電子やニュートリノなどがある。",w:"ニュートリノは、電気を帯びずほとんど反応しない素粒子だ。"},
+    "検出器":{f:"科学",d:"目に見えない粒子や放射線を、光や電気の信号に変えてとらえる装置。",w:"ハルゼン氏は、南極の厚く澄んだ氷が宇宙から来るニュートリノの検出器になると考えた。"},
+    "原子核":{f:"科学",d:"原子の中心にある、陽子と中性子が集まった部分。",w:"ニュートリノが氷の中の原子核にぶつかると、かすかな光が出る。"},
+    "観測所":{f:"科学",d:"天体や自然現象を観測するための施設。",w:"IceCubeは、約1立方キロメートルの氷に光センサーを埋めた観測所だ。"},
+    "光センサー":{f:"科学",d:"光を電気信号に変えて検出する部品。",w:"観測所は約1立方キロメートルの氷に5,160個の光センサーを埋めている。"},
+    "高エネルギー":{f:"科学",d:"粒子が持つエネルギーが大きいこと。宇宙の激しい現象から飛んでくる粒子に多い。",w:"遠い銀河から届いた高エネルギーのニュートリノを初めて観測した。"},
+    "小柴昌俊":{f:"科学",d:"日本の物理学者。岐阜県のカミオカンデで超新星からのニュートリノを観測し、2002年にノーベル物理学賞を受けた。",w:"ニュートリノ研究では、2002年に小柴氏が物理学賞を受けている。"},
+    "クローナ":{f:"経済",d:"スウェーデンなどで使われる通貨の名称。ノーベル賞の賞金はスウェーデン・クローナで示される。",w:"賞金は1,200万スウェーデン・クローナだ。"},
+    "家族会":{f:"外交",d:"北朝鮮による拉致被害者の家族がつくる団体。",w:"家族会は米政府関係者や議員と計13回面会した。"},
+    "塩野義":{f:"企業",d:"大阪に本社を置く、日本の製薬大手。塩野義製薬の通称。",w:"塩野義が米イントラバイオを20億ドルで買収すると5日に発表した。"},
+    "神経疾患":{f:"医療",d:"脳や脊髄、末梢神経などの病気の総称。",w:"買収で、希少な神経疾患の薬を得る。"},
+    "普天間飛行場":{f:"安全保障",d:"沖縄県宜野湾市にある米海兵隊の基地。市街地に囲まれ、危険性が指摘されてきた。",w:"逮捕された上等兵は、この飛行場の所属だ。"},
+    "海兵隊":{f:"安全保障",d:"米軍の部門の一つで、上陸作戦などを担う部隊。沖縄には多くの部隊が駐留する。",w:"逮捕された容疑者は海兵隊の上等兵（20）だ。"},
+    "辺野古":{f:"安全保障",d:"沖縄県名護市の地名。普天間飛行場の移設先として、新しい基地の建設が進められている。",w:"知事は辺野古移設を容認する立場で、政府と協調してきた。"},
+    "基地負担":{f:"安全保障",d:"米軍基地があることで地域が受ける騒音や事故、事件などの負担。沖縄に集中している。",w:"知事は首相との面会で、基地負担の軽減を求める考えを示した。"},
+    "沖縄防衛局":{f:"行政",d:"防衛省の出先機関。沖縄の米軍基地や自衛隊に関わる業務を担当する。",w:"知事は5日、沖縄防衛局長を県庁に呼んで抗議した。"},
+    "ギフトコード":{f:"テクノロジー",d:"ネット通販などで商品の代わりに使える、金額分の番号。換金しやすく、不正に使われやすい。",w:"会員のポイントが、本人の知らないうちにアマゾンのギフトコードへ換えられた。"},
+    "補填":{f:"経済",d:"損失や不足を埋め合わせること。",w:"同社はポイントの被害を全額補填する。"},
+    "認証情報":{f:"テクノロジー",d:"ログインに使うIDやパスワードなど、本人であることを確かめる情報。",w:"楽天ドライブでは、管理用アカウントの認証情報が盗まれた。"},
+    "管理用アカウント":{f:"テクノロジー",d:"システムの設定や利用者の管理ができる、特別な権限を持つアカウント。",w:"楽天ドライブの管理用アカウントの認証情報が盗まれ、写真や文書が閲覧できる状態だった。"},
+    "調整日":{f:"政治",d:"国会で本会議や委員会を開かず、日程の調整や準備にあてる日。",w:"6日は本会議のない調整日で、代表質問は7日から始まる。"},
+    "本会議":{f:"政治",d:"衆議院・参議院のすべての議員が出席して開く会議。法案の採決や首相の演説などが行われる。",w:"首相は5日、衆参両院の本会議で所信表明演説をした。"},
+    "閣議後会見":{f:"政治",d:"閣議のあと、閣僚が記者団に対して行う記者会見。",w:"簗農水相は6日の閣議後会見で、改めて陳謝した。"},
+    "交付金":{f:"行政",d:"国が地方自治体などに、使い道を定めて交付するお金。",w:"支持する首長の自治体への交付金が増えたとの報道を、簗氏は否定した。"},
+    "大リーグ":{f:"スポーツ",d:"米国のプロ野球の最上位リーグ、MLBの日本での呼び方。",w:"地区シリーズ第2戦で、ドジャースはブレーブスに2-3で敗れた。"},
+    "水資源機構":{f:"行政",d:"ダムや用水路などの水の施設を管理する独立行政法人。",w:"機構が管理を始めた1968年以来、初めての決壊だった。"},
+    "光遺伝学":{f:"科学",d:"光に反応するタンパク質の遺伝子を特定の神経細胞に組み込み、光でその細胞の働きをオン・オフする技術。",w:"5日のノーベル医学賞の授賞理由になった。"},
+    "利上げ":{f:"金融",d:"中央銀行が政策金利を引き上げること。預金金利やローン金利が上がりやすくなり、円高要因にもなる。",w:"日銀の早期利上げ観測の後退が、円売りにつながった。"},
+    "円安ドル高":{f:"金融",d:"円の価値が下がり、ドルの価値が上がること。",w:"午後5時は、前日の同時刻より45銭の円安ドル高になった。"},
+    "上げ幅":{f:"金融",d:"株価などが前日の終値から上がった幅。",w:"午後に上げ幅を広げ、737円高で終えた。"},
+    "為替":{f:"金融",d:"通貨と通貨を交換する仕組みや、その比率。",w:"為替介入への警戒も残ると共同通信は伝えた。"},
+    "綱紀粛正":{f:"行政·軍",d:"組織の規律を引き締め、不正や不祥事を防ぐこと。",w:"知事は、米軍の綱紀粛正や隊員教育が全く機能していないと批判した。"},
+    "ミスターマックス":{f:"企業",d:"九州を中心に店舗を展開する、日本のディスカウントストア。",w:"同社の情報流出はNHKが報じた段階で、本紙は確認できていない。"},
+    "楽天ドライブ":{f:"テクノロジー",d:"楽天グループが提供する、写真や文書を保存するクラウドサービス。",w:"管理用アカウントの認証情報が盗まれ、1万5,382アカウントのデータが閲覧できる状態だった。"},
+    "上振れ":{f:"経済",d:"実際の数字が、見込みより上回ること。",w:"日経は、業績の上振れを先取りする買いと表現した。"},
+    "利上げ観測":{f:"金融",d:"中央銀行が近く政策金利を引き上げるだろうという市場の見方。",w:"日銀の早期利上げ観測が後退した。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

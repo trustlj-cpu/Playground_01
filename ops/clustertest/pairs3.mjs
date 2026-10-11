@@ -1,0 +1,3 @@
+import { clusterItems } from '/home/user/Playground_01/feed/worker/src/cluster.js';
+const P=[["Everton owners open to sale of controlling stake","Premier League: Finanzskandal um City – Urteil erwartet","en","de"],["Comment obtenir des billets pour Espagne-France","Comment obtenir des billets pour Celine Dion à Paris","fr","fr"],["Everton owners open to sale of controlling stake","Premier League club Everton up for sale","en","en"]];
+for(const [a,b,l1,l2] of P){const cl=clusterItems([{title:a,link:'x1',source:'s1',lang:l1},{title:b,link:'x2',source:'s2',lang:l2}]);console.log(cl.length===1?'MERGED':'split',a.slice(0,30),'|',b.slice(0,30))}

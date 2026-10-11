@@ -1,0 +1,372 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>7,729.69</b>CAC40 · 10/8 終値 · −0.51%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · フランス版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>1.121</b>ユーロ/ドル · 10/8 夜 · +0.1%</div>
+    </div>
+    <div class="dateline"><span>第4号 · 朝刊</span><b>2026年10月8日 木曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="brent">
+      <div class="kick">経済 · エネルギー · 市場<span>報道照合 ✓ 6社 · ブレント：取引時間中の水準、終値は未確認</span></div>
+      <h2 class="hl">ブレントが5%急騰し105ドル前後に。パリ市場は下落、フランスの金利はさらに上昇</h2>
+      <p class="deck">湾岸で船舶への攻撃が相次いでいる。大西洋の両側で国債の利回りが上がるなか、ECBは動かない。</p>
+      <div class="body">
+        <p>木曜、ブレント原油は約5%上昇し、105ドル前後で取引された。AFPとReutersが伝えた。背景には中東情勢の緊張がある。Reutersは、湾岸で船舶への攻撃が相次いでいること、ワシントンがイランに対する大規模な軍事作戦を再開する可能性があることを挙げる。フーシ派はサウジアラビアの空港を攻撃し、リヤドによれば3人が死亡した。欧州の株式市場は下落している。CAC40は取引時間中に1%近く下げ（13時50分に7,700.73ポイント）、終値は7,729.69ポイントで0.51%安となった。水曜は1.22%安だった。米国のWTIは夜に3.7%近く上昇し、91.5ドル前後をつけた。OPmobilityの株価は約16%下落した。業績予想を下方修正し、人員削減を発表したためだと、ZonebourseとLes Échosは伝える。ウォール街では先物が約0.5%下げ、米10年債の利回りは2002年以来の高水準に近い。</p>
+        <p>フランスでも、借り入れ金利が再び上昇に転じた。OAT10年物の金利は前日に約4.90%で、10月1日には取引時間中に4.96%の天井をつけていた。フランス銀行のエマニュエル・ムーラン総裁は、地政学上のショックがいまや金融ショックに変わっていると述べる。AFPによれば、ECBは当面動かない。経済大臣と理事の一人は介入を適切でないとみており、別の理事は利上げの可能性に言及している。Le Mondeでは、23人のエコノミストが議員に対し「フランスの転落を止める」ために動くよう求めた。同紙は、米国がフランスの状況を懸念する理由も解説している。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>≈105ドル</b><span>木曜のブレント1バレル。取引時間中に約+5%（AFP、Reuters）</span></div>
+        <div><b>−0.51%</b><span>CAC40の終値、7,729.69ポイント（水曜は7,769.21、−1.22%）</span></div>
+        <div><b>4.90%</b><span>前日のフランス10年物金利。10月1日の取引時間中の最高は4.96%</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="carson">
+      <div class="kick">文化 · ノーベル賞<span>報道照合 ✓ 7社 · 原資料 ✓ スウェーデン・アカデミー</span></div>
+      <h3 class="hl">ノーベル文学賞、カナダの詩人アン・カーソン氏に</h3>
+      <div class="one">
+        <p>スウェーデン・アカデミーは木曜、ストックホルムで、カナダのアン・カーソン（Anne Carson）氏、76歳に賞を贈ると発表した。「大胆で独創的」な作品が評価された。詩人、エッセイスト、翻訳家であり、古典学の専門家でもある。ギリシャ・ローマの文学を糧に、詩とエッセイと小説を交ぜ合わせる。代表作に、ゲリュオンの神話を作り替えた韻文小説『Autobiography of Red』と、古代ギリシャの欲望を論じたエッセイ『Eros the Bittersweet』がある。女性の受賞者は19人目で、ハンガリーのクラスナホルカイ・ラースロー（László Krasznahorkai）氏に続く。賞金は1200万スウェーデン・クローナ、約107万ユーロ。発表の時、本人はアイスランドにいた。次の著作『Éros doux-amer』は、11月6日にArche Éditeurからフランス語版が出る予定だ。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>文献学者<i>文学</i></b><p>古い文献を研究する専門家。文献の確定、言語、歴史を扱う。ノーベル委員会の委員長は、カーソン氏において、言葉への文献学者のこだわりと、新しい意味を見いだそうとする詩人の望みが出会っていると称えた。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="niche"><b>国民議会、RNが議事日程を握るも、初めから少数派に</b><em>木曜、会派専用日の議題は7〜8本。マヨットの飲料水、シェンゲン圏の見直し、低排出ゾーンの廃止などだ。日付が変わる午前0時に終わる。</em><span>政治 · ✓ 報道4社</span></div>
+      <div class="it story" tabindex="0" data-id="riyad"><b>サウジの空港へのフーシ派攻撃で3人死亡</b><em>リヤドは死者3人と発表し、攻撃には応じると約束した。首都では爆発音が聞こえた。</em><span>世界 · ✓ 報道3社</span></div>
+      <div class="it story" tabindex="0" data-id="maricarmen"><b>スペイン：マリカルメン・アバスカルさんの死去で、住宅への怒りが再燃</b><em>マドリードのデモ参加者は「不動産投機による殺人」だと訴える。前倒し総選挙は11月29日に決まっている。</em><span>世界 · ✓ 報道3社</span></div>
+      <div class="it story" tabindex="0" data-id="bresil8"><b>ブラジル：「ボルソナーロはもうたくさん」、決選投票を前に数千人がデモ</b><em>フラビオ・ボルソナーロ氏とルラ氏の一騎打ちは10月25日。前者が後者を2ポイント足らず上回った。</em><span>世界 · ✓ 報道2社</span></div>
+      <div class="it story" tabindex="0" data-id="adenot"><b>ソフィー・アデノ飛行士、まもなく地球へ</b><em>franceinfoが木曜に帰還を生中継で追う。Les Échosは、欧州最長となった滞在が歴史に残ると指摘する。</em><span>科学 · ✓ 報道2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="total">
+      <div class="kick">労働 · エネルギー<span>報道照合 ✓ 5社 · 参加率はCGTと経営側で食い違う</span></div>
+      <h3 class="hl">TotalEnergiesでスト：複数の製油所で燃料の出荷が止まる、とCGT</h3>
+      <div class="body">
+        <p>CGTは、TotalEnergiesのフランス国内の全拠点で24時間のストライキを呼びかけた。franceinfoによれば、従業員は夜明けから、同社の複数の製油所とバイオ精製所で燃料の出荷を止めている。ノルマンディー、ドンジュ、ラ・メード、ル・アーブルなどだ。組合は雇用と賃金を求めている。欠員の不補充、派遣労働や反復する有期契約（CDD）、下請けの多用を批判し、一部の子会社では賃金が最低賃金（Smic）に追いつかれていると訴える。</p>
+        <p>参加率の数字は食い違う。CGTの同グループ調整役エリック・セリニ氏は、これらの拠点で勤務する従業員の「50%超がスト参加」と発表した。経営側は、出荷の阻止は争わないまま、全拠点で「2%未満」とみる。ドンジュではCGTが60%を主張する。経営側は、ガソリンスタンドと顧客への供給は維持されていると説明する。スタンドについては、子会社Argedisの約180店のうち27店が閉まっているとCGTは言い、経営側は11店とする。この動きは、首相が軽油の備蓄放出を発表した翌日に起きた。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="acte4">
+      <div class="kick">社会 · 教育<span>報道照合 ✓ 7社 · 数字は教育省の発表、デモ参加者数は未確認</span></div>
+      <h3 class="hl">高校生運動「第4幕」：375校が全面または一部閉鎖。警察の介入に問いが集まる</h3>
+      <div class="body">
+        <p>木曜、全国で4度目の大規模な封鎖とデモが行われている。午前8時の時点で、375校が一部または全面で閉鎖された。内訳は全面が224校、一部が151校で、国民教育省の速報値としてLes Échosが伝えた。franceinfoは、運動が新たな学校と海外県・海外領土に広がっていると指摘する。Le Mondeは、高校生運動から購買力の低下まで「危機の重なりに打ちのめされた」セバスチャン・ルコルニュ氏を描き、「2週間の警察の介入が突きつけた問い」を取り上げる。</p>
+        <p>捜査も相次ぐ。マルセイユでは、高校生が頭部に負傷した件で故意の暴行の捜査が始まった。ダンケルクでは、高校生の真ん中で警察が「ロデオ」をした件で懲戒の調査が行われている（Le Figaro）。オルレアンでは、高校で撮影された動画をめぐり、未成年3人がテロ擁護の疑いで警察拘束された（Le Monde）。発射器から撃つ音響手榴弾は、当面使用停止のままだ。木曜夜、エドゥアール・ジェフレ氏は代替教員3000人の投入を発表した（franceinfo、生中継）。franceinfoが伝える世論調査では、フランス人の2人に1人が運動を支持している。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="agri">
+      <div class="kick">政治 · 農業<span>報道照合 ✓ 4社 · 措置は2027年度予算の採決次第</span></div>
+      <h3 class="hl">干ばつ：農業大臣が20億ユーロ規模の無利子融資を発表</h3>
+      <div class="body">
+        <p>アニー・ジュヌヴァール農業大臣は木曜、クルノン＝ドーヴェルニュの畜産サミット（Sommet de l'élevage）で、干ばつと熱波に見舞われた農家への新たな支援策を示した。無利子融資は、飼料や資材の購入などを想定し、残高20億ユーロまでを対象にできる。銀行が約2.5%で貸し、利子は国が負担する。新規就農者向けには返済繰り延べの仕組みも設け、被害の大きい農場のために2億3500万ユーロの枠を県知事に預ける。</p>
+        <p>この仕組みは2027年度予算への修正案を通じて実現するため、議会の採決次第となる。今回の発表は、9月に示した10億ユーロ超の緊急計画の延長線上にある。大臣は、これが「最終的な精算ではない」と強調した。Le Mondeは、農業界の社会不安を和らげる試みだとみる。農民連盟（Confédération paysanne）が高校生との合流を呼びかけているためだ。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>アポロ計画のコンピューター・システムを開発したマーガレット・ハミルトンさんが死去<span>Le Monde</span></li>
+        <li>CAN2025決勝：スポーツ仲裁裁判所がモロッコとセネガルの間で裁定へ<span>Le Monde · franceinfo</span></li>
+        <li>北京がWHO事務局長ポストへの立候補を表明<span>Le Monde</span></li>
+        <li>黒海：NATOの排他的経済水域がドローンの標的に<span>Les Échos · Le Monde</span></li>
+        <li>中間選挙：民主党、納税者の資金による広告をめぐりトランプ氏を提訴<span>franceinfo</span></li>
+        <li>ドナルド・トランプ氏、自身のゴルフ施設の一つを公式の大統領公邸にしたい意向<span>Le Monde</span></li>
+        <li>生成AI、影響を受けやすい職種で若者の採用を凍結させている。初の数字が示す<span>Le Monde · Les Échos</span></li>
+        <li>マリーヌ・ル・ペン氏、大統領にふさわしい風格でエドゥアール・フィリップ氏との差を広げる<span>Le Figaro</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「フランスで燃料不足が起きる。」</b> <span>CGTによれば複数の製油所で出荷が止まっているが、TotalEnergiesの経営側は、スタンドへの供給は維持していると説明する。閉鎖中のスタンドの数は、組合が27店、経営側が11店と食い違う。</span></div>
+        <div><b>「フランスの10年物金利が5%を超えた。」</b> <span>終値での確認はない。裏が取れた最高値は10月1日の取引時間中の4.96%で、前日の金利は4.90%前後だった。</span></div>
+        <div><b>「ECBが利上げに動く。」</b> <span>理事の一人が利上げの可能性に触れているが、AFPによれば、ECBは当面動かず、複数の幹部は介入を適切でないとみている。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>これから見るもの</h4>
+        <div><b>10/9 金</b><span>オスロでノーベル平和賞 · TotalEnergiesのストの続報とガソリンスタンドの状況 · ブレント105ドルへの市場の反応 · 木曜に生中継で追ったソフィー・アデノ飛行士の地球帰還のその後。</span><b>今週</b><span>10月13日から2027年度予算の本会議審議 · 10月14日に米国のインフレ指標 · 10月16日に教員の代替配置の点検 · 10月27日にイスラエルの選挙 · 10月25日にブラジルの決選投票。</span><b>読者へ</b><span>給油の前に比べてみてほしい。12〜18セントの値下げは11月1日が目標で、それより前ではない。いつものスタンドが閉まっていたら、近くの同じ系列の店を見るとよい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    brent:{"kick": "経済 · エネルギー · 市場 · 報道照合 ✓ 6社 · ブレント：取引時間中の水準、終値は未確認", "title": "ブレントが5%急騰し105ドル前後に。パリ市場は下落、フランスの金利はさらに上昇", "what": "10月8日（木）、ブレント原油は約5%上昇し、105ドル前後で取引された。AFPとReutersが伝えた。Reutersは、湾岸で船舶への攻撃が相次いでいること、米国がイランに対して軍事作戦を行う可能性があることを挙げる。フーシ派はサウジアラビアの空港を攻撃し、リヤドによれば3人が死亡した。欧州の株式市場は下落した。CAC40は取引時間中に1%近く下げ、終値は7,729.69ポイントで0.51%安。水曜は1.22%安だった。米国のWTIは夜に3.7%近く上昇し、91.5ドル前後をつけた。OPmobilityは業績予想を見直し、人員削減を発表して約16%下落した。ウォール街では先物が約0.5%下げ、米10年債の利回りは2002年以来の高水準に近い。30年債は24年ぶりの高値をつけた。フランスでは借り入れ金利が上がっている。フランス銀行総裁は、地政学上のショックが金融ショックになっていると見ており、AFPによれば、ECBは動かない。23人のエコノミストがLe Mondeで議員に呼びかけた。", "why": "原油が105ドルになれば、インフレを押し上げ、金利を上げる。折しも、フランスは高い財政赤字の資金繰りを探っている。エネルギー価格、債務、財政運営は、互いに悪循環を強める。", "me": "運転する人にとって、政府の計画があっても軽油は11月まで下がらないかもしれない。借り手にとっては、金利の上昇基調がローンに跳ね返る。", "a": "市場は、エネルギー高と重い債務が、予算を通せない国にとって危険だと告げている。急いで動くべきだ。", "b": "この日の動きはおもに湾岸の地政学によるもので、フランスのどんな予算でも解決できない。パニックをあおる声は悪い助言者で、ECBには動く余地が残っている。", "say": "覚えておきたい数字は三つ。ブレントが100ドル超、CAC40が7,700ポイント割れ、OAT10年物が5%近く。三つは連動して動く。流れが反転するかどうかは、予算の決定より先に、金曜の原油の動きで見たい。", "src": "AFP（Le Singulier経由、ブレント+5%）· Reuters（Boursorama経由、船舶、イラン、ウォール街）· ZonebourseとBFM Bourse（CAC40の取引時間中、OPmobility）· CAC40（7,729.69、−0.51%）とWTI夜間の終値 · Orange · Le Monde（エコノミスト、米国の懸念）· Les Échos（金利、企業）· ブレントの終値は未確認"},
+    carson:{"kick": "文化 · ノーベル賞 · 報道照合 ✓ 7社 · 原資料 ✓ スウェーデン・アカデミー", "title": "ノーベル文学賞、カナダの詩人アン・カーソン氏に", "what": "10月8日（木）、スウェーデン・アカデミーはストックホルムで、2026年のノーベル文学賞をカナダのアン・カーソン氏、76歳に贈ると発表した。「大胆で独創的」な作品が評価された。トロント生まれで、古典学の専門家として、米国とカナダで教えた。1981年に刊行された博士論文の題は「Odi et Amo Ergo Sum」。古代ギリシャ文学の欲望を論じた『Eros the Bittersweet』と、韻文小説『Autobiography of Red』を著した。女性の受賞者は19人目で、ハンガリーのクラスナホルカイ・ラースロー氏に続く。賞金は1200万スウェーデン・クローナ。次の著作『Éros doux-amer』は、11月6日にArche Éditeurからフランス語版が出る。翻訳はヴァナセ・カンポマラ（Vanasay Khamphommala）氏。", "why": "ジャンルを混ぜ合わせ、古代と現代を対話させる作品に贈られた。めったに選ばれない詩を前面に出す選考でもある。", "me": "読んでみたい人には、著作がフランス語訳で流通している。11月6日の『Éros doux-amer』の刊行が入り口になる。", "a": "水準が高く、理由も明快な選考で、形式の発明に報いた。", "b": "難解な作品で、読者は限られる。", "say": "金曜にはノーベル平和賞が続く。文学で次に注目したいのは、フランス語版の刊行だ。", "src": "Le Monde · Les Échos · ActuaLitté · Livres Hebdo · CNN · NBC News · Noovo（10月8日）· スウェーデン・アカデミー"},
+    total:{"kick": "労働 · エネルギー · 報道照合 ✓ 5社 · 参加率はCGTと経営側で食い違う", "title": "TotalEnergiesでスト：複数の製油所で燃料の出荷が止まる、とCGT", "what": "CGTは、TotalEnergiesのフランス国内の全拠点で24時間のストライキを呼びかけた。franceinfoによれば、複数の製油所とバイオ精製所で、夜明けから燃料の出荷が止まっている。ノルマンディー、ドンジュ、ラ・メード、ル・アーブルなどだ。組合は雇用と賃金を求め、派遣労働の多用、反復する有期契約、下請けを批判する。CGTは、これらの拠点で勤務する従業員の50%超がスト参加で、ドンジュでは60%だと主張する。経営側は、出荷の阻止は争わないまま、グループ全体で参加は2%未満とする。スタンドへの供給は維持されていると説明する。子会社Argedisの約180店のうち、閉鎖は27店とCGTは言い、経営側は11店とする。", "why": "TotalEnergiesの製油所は、フランスの燃料網の大きな部分に供給している。たとえ1日でも出荷が止まれば、政府が備蓄を放出する折だけに、供給のもろさがあらわになる。", "me": "いまのところ、全国的な不足を示す材料はない。流通業者は供給が続いていると説明する。いつものスタンドが閉まっていたら、同じ系列の別の店を試してほしい。", "a": "グループが高い原油価格で稼ぐなか、従業員は自分たちの取り分を求めている。", "b": "ストはエネルギーが逼迫した最中に経済を止めている。経営側によれば、実際の参加は少ない。", "say": "期間を見てほしい。24時間のストは、収まるか、延長されるかのどちらかだ。大事なのは、各陣営が自分に都合よく示すスト参加率ではなく、金曜朝に品切れになったスタンドの数だ。", "src": "franceinfo（封鎖、CGT）· Les Échos · Le JDD · ICI · Titres de presse（スト参加者、スタンド）· 参加率と閉鎖スタンド数は独立した裏付けなし"},
+    acte4:{"kick": "社会 · 教育 · 報道照合 ✓ 7社 · 数字は教育省の発表、デモ参加者数は未確認", "title": "高校生運動「第4幕」：375校が全面または一部閉鎖。警察の介入に問いが集まる", "what": "10月8日（木）、4度目の大規模動員の日となった。午前8時の時点で、375校が一部または全面で閉鎖された。内訳は全面が224校、一部が151校で、国民教育省の速報値による。ナントやバスク地方などの都市では、午前6時から封鎖が報告された。franceinfoは、運動が新たな学校と海外県・海外領土に広がっていると指摘する。Le Mondeは、ルコルニュ氏が「危機の重なりに打ちのめされている」と書く。捜査も相次ぐ。マルセイユでは高校生が頭部に負傷した件で故意の暴行の捜査、ダンケルクでは警察の「ロデオ」をめぐる懲戒の調査、オルレアンではテロ擁護の疑いで未成年3人が警察拘束された。発射器から撃つ音響手榴弾は、当面使用停止となっている。木曜夜、エドゥアール・ジェフレ大臣は代替教員3000人の投入を発表した。franceinfoの生中継による。同局が伝える世論調査では、フランス人の2人に1人が運動を支持している。", "why": "運動は4週目に入ったが、具体的な回答はない。首相は「月末」に決定を示すと約束している。治安維持の問題が、学校をめぐる要求を押しのけかねない。", "me": "家庭にとっては、多くの学校が一部閉鎖になっており、授業への影響が続く。学校からの連絡を確認してほしい。", "a": "高校生は具体的な措置を求めており、日程のない協議の場では納得しない。", "b": "封鎖は数千人の生徒の学業を乱している。デモの周辺で起きる暴力も、訴えを曇らせる。", "say": "追うべき数字は、封鎖された高校の数ではなく、IGPNの捜査の件数だ。政治の回答は月末に来る。それまでは、一つ一つの出来事が動員に再び火をつけうる。", "src": "Les Échos（375校）· franceinfo（第4幕、海外県・海外領土）· Le Monde（ルコルニュ氏、警察の介入、オルレアン）· Le Figaro（マルセイユ、ダンケルク）· Titres de presseのライブ（224/151）· デモ参加者数は未確認 · 代替教員3000人と世論調査：franceinfoのみ"},
+    agri:{"kick": "政治 · 農業 · 報道照合 ✓ 4社 · 措置は2027年度予算の採決次第", "title": "干ばつ：農業大臣が20億ユーロ規模の無利子融資を発表", "what": "10月8日（木）、クルノン＝ドーヴェルニュの畜産サミットで、アニー・ジュヌヴァール農業大臣は、干ばつと熱波に見舞われた農家への新たな措置を発表した。無利子融資は、飼料や資材の購入のために、残高20億ユーロまでを対象にできる。銀行が約2.5%で貸し、利子は国が負担する。新規就農者向けには返済繰り延べの仕組みを設け、2億3500万ユーロを県知事に預ける。この措置は、審議中の2027年度予算への修正案として提出される。9月に示した10億ユーロ超の緊急計画の延長で、大臣は、これが「最終的な精算ではない」と述べた。", "why": "農家は、熱波と不作の夏を過ごした。2026年のブドウ収穫は歴史的な低水準だった。政府は、高校生運動と合流しかねない社会不安を和らげようとしている。", "me": "農家の方は、取引銀行と県庁に問い合わせてほしい。この制度は予算の採決次第だ。", "a": "無利子融資は、農場の資金繰りへの素早い対応になる。", "b": "支援は成立していない予算に頼っており、生産者に支払われる価格の問題は解決しない。", "say": "修正案の採決に注目したい。予算がなければ、融資もない。もろい与党にとっての試金石だ。", "src": "franceinfoとPublic Sénat（発表、10月8日）· Le Monde（危機を和らげるための支援）· 措置は議会の採決次第"},
+    niche:{"kick": "政治 · 報道照合 ✓ 4社", "title": "国民議会、RNが議事日程を握るも、初めから少数派に", "what": "10月8日（木）、議員数で国民議会第1会派のRNが、午前0時に終わる会派専用日の議事日程を握る。情報源によって7本または8本の議題が示されている。マヨットでの飲料水への継続的なアクセス、公共調達における国民優先の決議、シェンゲン圏の見直し、オランプ・ド・グージュのパンテオン入り、低排出ゾーンの廃止、公営住宅の条件づけなどだ。franceinfoは、RNが初めから少数派に置かれていると指摘する。", "why": "RNは、大統領選の半年前に、この日を使って自党のテーマを打ち出し、対立する側に採決の態度を迫る。", "me": "これらの議案がすぐに施行されることはない。上院を通らなければならない。", "a": "党の優先課題を議論する機会だ。", "b": "選挙を意識した宣伝の場だ。", "say": "午前0時までに可決される議案の数を数えてほしい。おそらく、ごくわずかだ。", "src": "franceinfo · LCP · Le JDD · CNews · Le Monde（国民優先）· 議題の数は情報源によって異なる"},
+    riyad:{"kick": "世界 · 中東 · 報道照合 ✓ 3社", "title": "サウジの空港へのフーシ派攻撃で3人死亡", "what": "イエメンのフーシ派によるサウジアラビアの空港への攻撃で、リヤドの空港を含め、3人が死亡した。Le Monde、franceinfo、Les Échosが伝えた。首都では爆発音が聞こえた。リヤドは、攻撃には応じると約束している。", "why": "原油が上がり、世界最大の輸出国の安全が脅かされる。", "me": "燃料価格がこれに左右される。", "a": "リヤドは、さらなる攻撃を思いとどまらせるために応じなければならない。", "b": "報復は、地域全体に火が広がる危険を高める。", "say": "金曜の取引再開時のブレントに注目したい。", "src": "Le Monde · franceinfo · Les Échos（10月8日）· 死者数はリヤドの発表"},
+    maricarmen:{"kick": "世界 · スペイン · 報道照合 ✓ 3社", "title": "スペイン：マリカルメン・アバスカルさんの死去で、住宅への怒りが再燃", "what": "スペインの住宅危機の象徴だったマリカルメン・アバスカルさん、87歳の死去で、怒りが再燃していると、franceinfoとLe Mondeは伝える。マドリードのデモ参加者は「不動産投機による殺人」だと訴える。前倒し総選挙は11月29日に決まっている。", "why": "住宅は、選挙戦の中心的な争点になった。", "me": "フランスの読者に直接の影響はない。", "a": "社会の緊急性を突きつける悲劇だ。", "b": "政治目的に利用された象徴だ。", "say": "10月10〜11日のデモに注意したい。", "src": "franceinfo · Le Monde（10月7〜8日）"},
+    bresil8:{"kick": "世界 · ブラジル · 報道照合 ✓ 2社", "title": "ブラジル：「ボルソナーロはもうたくさん」、決選投票を前に数千人がデモ", "what": "10月25日の決選投票を前に、ブラジルで数千人が「ボルソナーロはもうたくさん」のスローガンの下でデモを行ったと、franceinfoは伝える。フラビオ・ボルソナーロ氏は第1回投票で、ルラ氏を2ポイント足らず上回った。", "why": "決選投票は接戦で、分断が深いものになりそうだ。", "me": "間接的な影響にとどまる。", "a": "動員は、ルラ陣営が目を覚ましていることを示す。", "b": "デモだけでは、投票行動は分からない。", "say": "世論調査を待ちたい。", "src": "franceinfo（10月8日）· 高等選挙裁判所"},
+    adenot:{"kick": "科学 · 報道照合 ✓ 2社", "title": "ソフィー・アデノ飛行士、まもなく地球へ", "what": "フランスの宇宙飛行士ソフィー・アデノ氏が国際宇宙ステーションから帰還する。franceinfoは木曜に帰還を生中継で追い、待ち受ける身体的な課題を伝える。Les Échosは、長期の滞在が歴史に残ると指摘する。9月3日に軌道上で230日を超え、専門メディアによれば欧州の女性宇宙飛行士として最長だった。", "why": "着水海域の天候による延期が重なり、任務は予定より長くなった。", "me": "直接の影響はない。", "a": "欧州宇宙機関にとっての成果だ。", "b": "任務の長期化は、宇宙飛行士の健康という問いを突きつける。", "say": "帰還の日取りは、カリフォルニアの天気しだいだ。", "src": "franceinfo · Les Échos · AFP（帰還の延期）"},
+  };
+
+  // ───── 用語集: 本文・ポップアップ内の用語に点線の下線、押すと説明
+  const G = {
+    "ブレント":{"f": "エネルギー", "d": "北海産の原油。欧州の原油価格の指標。", "w": "木曜に約5%上昇し、105ドル前後。"},
+    "OAT":{"f": "市場", "d": "フランス政府の中長期の債務証券（国債）の一種。10年物の金利は、住宅ローン金利の目安になる。", "w": "10年物の金利は前日に約4.90%だった。"},
+    "利回り":{"f": "市場", "d": "債券が毎年生む収益を、価格に対する割合で示したもの。債券の価格が下がると上がる。", "w": "米10年債の利回りは、2002年以来の高水準に近い。"},
+    "先物":{"f": "市場", "d": "将来の日付に資産を売買する契約。取引開始前の市場の気分を映す。", "w": "ウォール街の先物は、木曜午後に約0.5%下げていた。"},
+    "ECB":{"f": "経済", "d": "欧州中央銀行。ユーロ圏の政策金利を決める。", "w": "AFPによれば、当面は動かない。"},
+    "文献学者":{"f": "文学", "d": "古い文献の専門家。文献の確定、言語、歴史を扱う。", "w": "ノーベル委員会は、カーソン氏における言葉への文献学者のこだわりを称えた。"},
+    "古典学":{"f": "文学", "d": "古代ギリシャ・ローマの言語、文献、文明を研究する学問。", "w": "アン・カーソン氏は、この分野の専門家だ。"},
+    "派遣労働":{"f": "労働", "d": "派遣会社を通じ、期間を限った業務に就く一時的な働き方。", "w": "CGTは、TotalEnergiesでの多用を批判している。"},
+    "下請け":{"f": "労働", "d": "仕事の一部を外部の企業に任せること。", "w": "派遣労働とともに、CGTの不満の一つ。"},
+    "バイオ精製所":{"f": "エネルギー", "d": "原油ではなく、生物由来の原料から燃料をつくる工場。", "w": "ラ・メードの施設が、封鎖の対象に含まれる。"},
+    "警察拘束":{"f": "法", "d": "フランスの「ガルド・ア・ヴュ」。犯罪の疑いのある人の自由を奪う措置で、24時間まで、更新も可能。検察の監督下で行われる。", "w": "オルレアンでは、テロ擁護の疑いで未成年3人がこの措置を受けた。"},
+    "テロ擁護":{"f": "法", "d": "テロ行為を、公然と好意的に示す行為を罪とするもの。", "w": "オルレアンでは、高校で撮影された動画をめぐり、未成年3人が対象となった。"},
+    "無利子融資":{"f": "経済", "d": "利子を国が負担する融資。借り手が返すのは元本だけ。", "w": "アニー・ジュヌヴァール氏が、20億ユーロ分を発表した。"},
+    "返済繰り延べ":{"f": "金融", "d": "債務の返済期間を組み直し、毎回の負担を軽くすること。", "w": "新規就農者向けに設けられる。"},
+    "会派専用日":{"f": "政治", "d": "国民議会で、毎月1日、野党または少数派の会派が議事日程を決められる日。午前0時に終わる。原語は「ニッシュ・パルルマンテール」。", "w": "RNの会派専用日は、10月8日（木）に当たる。"},
+    "低排出ゾーン":{"f": "環境", "d": "排出の多い車の乗り入れが禁止される都市部の区域。", "w": "RNは廃止を求めている。憲法院は5月にその撤廃を違憲とした。"},
+    "WTI":{"f": "市場", "d": "ウェスト・テキサス・インターミディエート。米国の指標となる原油で、価格は1バレルあたりのドルで示される。", "w": "夜に3.7%近く上昇し、91.5ドル前後。"},
+    "OPmobility":{"f": "経済", "d": "フランスの自動車部品メーカー。プラスチック部品と車両のエネルギーシステムを専門とする。", "w": "業績予想の下方修正と人員削減を受け、株価は約16%下落した。"},
+    "米10年債":{"f": "市場", "d": "米国政府が資金調達のために発行する債務証券。その利回りは世界の金利の指標になる。", "w": "10年物の利回りは2002年以来の高水準に近い。"},
+    "金融ショック":{"f": "市場", "d": "借り入れ金利の急上昇のように、資金調達の条件が急に悪化すること。国、企業、家計に重くのしかかる。", "w": "フランス銀行の総裁は、地政学上のショックがいまやこれに変わっていると述べる。"},
+    "借り入れ金利":{"f": "市場", "d": "国や企業、家計が資金を借りるときの利率。", "w": "フランスの金利は再び上昇に転じた。"},
+    "スウェーデン・アカデミー":{"f": "文化", "d": "ノーベル文学賞を毎年選ぶ、ストックホルムの機関。", "w": "木曜、カナダのアン・カーソン氏に賞を贈ると発表した。"},
+    "ゲリュオン":{"f": "文化", "d": "ギリシャ神話に出てくる3つの体を持つ巨人。ヘラクレスの12の功業の一つで倒された。", "w": "アン・カーソンの韻文小説『Autobiography of Red』は、その神話を作り替えている。"},
+    "スウェーデン・クローナ":{"f": "経済", "d": "スウェーデンの通貨。ノーベル賞には数百万クローナの賞金が付く。", "w": "賞金は1200万クローナで、約107万ユーロ。"},
+    "シェンゲン圏":{"f": "法", "d": "欧州の多くの国の間で人の移動が自由な地域。域内の国境での検査は原則なくなっている。", "w": "その見直しが、RNの会派専用日の法案に入っている。"},
+    "議事日程":{"f": "政治", "d": "議会が1回の会議で審議する案件の一覧。", "w": "RNは会派専用日にこれを握るが、初めから少数派に置かれる。"},
+    "マヨット":{"f": "社会", "d": "インド洋にあるフランスの県。コモロ諸島に属し、水の確保に苦しんでいる。", "w": "飲料水の問題が、RNの会派専用日の法案に入っている。"},
+    "有期契約":{"f": "労働", "d": "あらかじめ決めた日に終わる雇用契約。", "w": "CGTは、TotalEnergiesでそれが繰り返されていると批判する。"},
+    "Smic":{"f": "労働", "d": "成長に連動する職種横断の最低賃金。フランスの法定の最低時給。", "w": "CGTは、一部の子会社では賃金がこれに追いつかれていると訴える。"},
+    "発射器":{"f": "安全保障", "d": "手で投げるより遠くへ、手榴弾などの弾を飛ばす武器。", "w": "発射器で撃つ音響手榴弾は、当面使用停止のままだ。"},
+    "懲戒の調査":{"f": "法", "d": "職員が義務に反したかを確かめる、行政機関内部の手続き。刑事捜査とは別である。", "w": "ダンケルクで、高校生の真ん中での警察の「ロデオ」をめぐって始まった。"},
+    "CGT":{"f": "労働", "d": "労働総同盟。フランスの主要な労働組合の一つ。", "w": "TotalEnergiesの拠点で24時間のストを呼びかけた。"},
+    "畜産サミット":{"f": "農業", "d": "クルノン＝ドーヴェルニュで毎年開かれる、畜産の大規模な専門見本市。大臣もよく訪れる。", "w": "農業大臣はそこで新たな支援策を発表した。"},
+    "飼料":{"f": "農業", "d": "草や干し草など、家畜のえさになる植物。", "w": "干ばつの時期には買わねばならず、無利子融資がその費用に充てられる。"},
+    "資材":{"f": "農業", "d": "農業で生産に使う品々。肥料、種子、家畜のえさ、燃料など。", "w": "融資は、その購入を助けるためのものだ。"},
+    "残高":{"f": "金融", "d": "ある時点で、貸し出されてまだ返済されていない融資の総額。", "w": "無利子融資は、残高20億ユーロまでを対象にできる。"},
+    "最終的な精算":{"f": "法", "d": "雇用契約の終了時に署名する、従業員への支払額をまとめた書類。転じて、問題に決着をつける清算。", "w": "大臣は、この仕組みが「最終的な精算ではない」と述べる。"},
+    "ソフィー・アデノ":{"f": "科学", "d": "欧州宇宙機関のフランス人宇宙飛行士。宇宙に滞在した。", "w": "地球への帰還が木曜に生中継で追われる。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

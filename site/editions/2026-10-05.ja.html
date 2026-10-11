@@ -1,0 +1,458 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>7,003.74</b>KOSPI · 10/2 終値 · 7000台を辛うじて維持</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>1,350.6ウォン</b>ウォン・ドル · 10/2 · 前日比7.8ウォン下落（ウォン高）</div>
+    </div>
+    <div class="dateline"><span>第 1 号 · 朝刊</span><b>2026年10月5日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <!-- トップ -->
+    <article class="col c3 story" tabindex="0" data-id="mine">
+      <div class="kick">安全保障<span>報道照合 ✓ 4社 · 合同参謀本部発表に帰属</span></div>
+      <h2 class="hl">「北朝鮮が埋めた地雷だった」<br>軍の結論、問題はその先だ</h2>
+      <p class="deck">合同参謀本部、DMZ爆発の最終調査結果を発表。「流失ではなく埋設」… 謝罪を要求、同日昼に地雷除去作戦を実施</p>
+      <div class="body">
+        <p>先月21日、西部戦線の非武装地帯で兵士3人が負傷した爆発事故の原因は、北朝鮮が軍事境界線の南側に埋めた地雷だと結論づけられた。韓国軍の合同参謀本部（합동참모본부）は5日、最終調査結果を発表し、三つの根拠を挙げた。現場を見た兵士の証言、発見された地雷が埋まっていた深さ、そして負傷者の体から出た破片の成分が、過去に臨津江（イムジン江）で回収した北朝鮮製地雷と同じだという国立科学捜査研究院の鑑定だ。</p>
+        <p>軍は北朝鮮に謝罪を要求し、同じ日の昼12時51分、軍事境界線南側で北朝鮮の地雷の除去作戦を実施した。北朝鮮は数日前、「われわれの責任ではない」として報復を予告していた。「流れてきた地雷」と「埋めた地雷」はまったく別の話だ。前者は事故であり、後者は休戦協定違反である。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>3</b><span>合同参謀本部が挙げた根拠：証言・埋設の深さ・破片の成分</span></div>
+        <div><b>12:51</b><span>同日昼、地雷除去作戦を実施した時刻</span></div>
+        <div><b>1953.7.27</b><span>休戦協定の署名日。「違反」の基準</span></div>
+      </div></div>
+    </article>
+
+    <!-- 2面 -->
+    <article class="col c2 vr story" tabindex="0" data-id="export">
+      <div class="kick">経済<span>原資料 ✓ 産業通商部 · 報道照合 ✓ 6社</span></div>
+      <h3 class="hl">輸出は過去最大、KOSPIは7000。<br>なのに私の通帳はなぜ変わらないのか</h3>
+      <figure>
+        <svg viewBox="0 0 320 150" role="img" aria-label="9月輸出の構成：半導体603億ドル、その他606億ドル">
+          <rect x="10" y="30" width="149" height="54" fill="var(--ink)"/>
+          <rect x="161" y="30" width="149" height="54" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="18" y="63" font-family="Noto Sans KR,sans-serif" font-size="13" fill="var(--paper)" font-weight="700">半導体 603億$</text>
+          <text x="169" y="63" font-family="Noto Sans KR,sans-serif" font-size="13" fill="var(--ink)" font-weight="700">その他 606億$</text>
+          <text x="10" y="18" font-family="Noto Sans KR,sans-serif" font-size="11" fill="var(--mute)">9月輸出1,209億ドルの内訳</text>
+          <line x1="160" y1="26" x2="160" y2="90" stroke="var(--red)" stroke-width="1.5"/>
+          <text x="160" y="104" text-anchor="middle" font-family="Noto Sans KR,sans-serif" font-size="11" fill="var(--red)" font-weight="700">49.9%</text>
+          <text x="10" y="134" font-family="Noto Sans KR,sans-serif" font-size="11" fill="var(--mute)">半導体 +262.8%  ·  全体 +83.5%  ·  自動車 −5.5%  ·  家電 −13%</text>
+        </svg>
+        <figcaption>資料：産業通商部（산업통상부）9月輸出入動向（10/1）。一つの品目が半分を占める。</figcaption>
+      </figure>
+      <div class="one">
+        <p>9月の輸出は1,209億ドルで、月間として過去最大を記録した。半導体だけで603億ドル、1年前より263%増えた。貿易黒字も498億ドルで最大。KOSPIは金曜日、7,003.74で7000台を再び踏んだ。数字が良すぎて、かえって不安になる局面だ。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>スーパーサイクル<i>経済</i></b><p>ある商品の価格・需要が通常の景気循環（3〜4年）を超え、10年近く上がり続ける長期好況。AI投資が半導体需要を構造的に変えたのならスーパーサイクル、一時的な偏りならただのサイクルだ。</p></div>
+    </article>
+
+    <!-- 索引 -->
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="nobel"><b>ノーベル生理学・医学賞、「光で脳をつけ、消す」光遺伝学に</b><span>科学 · ✓</span></div>
+      <div class="it story" tabindex="0" data-id="ag"><b>アジア大会総合3位で帰国、祝福より先に謝罪</b><span>スポーツ · ✓</span></div>
+      <div class="it story" tabindex="0" data-id="brazil"><b>ブラジル、ボルソナロ（息子）47%対ルラ45%、決選投票へ</b><span>国際 · ✓</span></div>
+      <div class="it story" tabindex="0" data-id="kyiv"><b>ロシア、キーウの橋を4日連続で攻撃</b><span>国際 · ✓</span></div>
+      <div class="it story" tabindex="0" data-id="scotus"><b>米最高裁、「石油会社に気候コストを請求できるか」</b><span>国際 · ✓</span></div>
+      <div class="it story" tabindex="0" data-id="audit"><b>国政監査まであと1日、846機関</b><span>政治 · ✓</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="nino">
+      <div class="kick">気候<span>原資料 ✓ NOAA CPC（9/10予測） · NPR · Newsweek</span></div>
+      <h3 class="hl">太平洋が沸く。史上最強エルニーニョの確率75%</h3>
+      <div class="body">
+        <p>米海洋大気庁（NOAA）は、10〜12月のエルニーニョが1950年の観測開始以来最も強くなる確率を75%とみる。「非常に強い」エルニーニョになる確率は90%以上。この時期の基準ではすでに史上最強で、2027年初めまで続くという予測だ。9月10日に出た予測が今週、米メディアで再び大きく取り上げられた。</p>
+        <p>エルニーニョは地球の天気のリモコンだ。米南部の洪水、豪州・東南アジアの干ばつ、韓国はおおむね暖かく雨の多い冬。農産物・コーヒー・砂糖・パーム油といった国際商品の価格が先に動く。75%は「海水温が記録を超える確率」であって、「韓国で災害が起きる確率」ではない。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>スペイン首相、住宅法令の否決を受け11月29日の前倒し総選挙を宣言<span>AP·ユーロニュース</span></li>
+        <li>米8月貿易赤字1,056億ドル、関税発効直前以来の最大<span>ロイター·CNBC</span></li>
+        <li>サウジ・トルコ・パキスタン、リヤド緊急会議で部隊配備に合意<span>アルジャジーラ</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「兵役免除だけを見て走った」発言にネットは真っ二つ。</b> <span>世論調査の数字なし。コメントとコミュニティの反応のみ。</span></div>
+        <div><b>「KOSPI 7000はバブル」対「まだ始まったばかり」。</b> <span>根拠はそれぞれの口座。確認されたのは終値だけ。</span></div>
+        <div><b>「この冬は記録的に暖かい」を先取り中。</b> <span>予報に寄りかかった推測。11月のNOAA更新まで未確認。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>これから見るもの</h4>
+        <div><b>10/6 火</b><span>国政監査初日 · ノーベル物理学賞 · 閣議。北朝鮮が反応するかどうか。</span><b>今週</b><span>サムスン電子の暫定決算 · 米雇用統計。7000定着の物差し。</span><b>読者へ</b><span>一つだけ覚えるなら「49.9%」。輸出の半分が半導体だ。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 105語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    mine:{kick:"安全保障 · 報道照合 ✓ · 合同参謀本部発表に帰属",title:"「北朝鮮が埋めた地雷だった。」軍の結論、問題はその先だ",
+      what:"先月21日、西部戦線のDMZで兵士3人が負傷した爆発。合同参謀本部がきょう、「北朝鮮が軍事境界線の南側に埋設した地雷」だと最終判断した。根拠は三つ。目撃した兵士の証言、地雷が埋まっていた深さ、国立科学捜査研究院が破片の成分を北朝鮮製と照合した結果。軍は北朝鮮に謝罪を要求し、同じ日の昼12時51分、軍事境界線南側で北朝鮮の地雷の除去作戦を実施した（京郷新聞 10/5 夕）。埋設の時期は媒体によって表現が異なるため載せない。",
+      why:"「流失」ではなく「埋設」という一語が核心だ。流れてきた地雷なら事故だが、埋めた地雷なら休戦協定違反であり、意図があったことになる。北朝鮮は数日前、「われわれの責任ではない、報復する」と言った。双方の言い分が正面からぶつかる。",
+      me:"すぐに変わるものはない。接境地域の安保観光が制限される可能性があり、外国人投資家はこの種のニュースに敏感だ。為替が理由もなく跳ねる日があれば、理由はこれかもしれない。",
+      a:"証拠は三重だ。証言、深さ、成分。ここで退けば次の地雷はもっと南に埋められる。当日の除去は当然の手順。",
+      b:"除去作戦とは、わが兵士が再び地雷原に入るということだ。北朝鮮が報復を予告した状況で、偶発衝突が一度起きれば制御不能。京郷新聞の社説も同じ懸念を示した。",
+      say:"どちらも正しいから難しい。だから見るべきは「結論」ではなく「速度」だ。除去はすでに始まった。これから見るのは、北朝鮮が沈黙するか、国連軍司令部がどんな立場を出すか、追加の地雷がさらに出てくるか。この三つが今週の安全保障ニュースのすべてで、残りは雑音だ。",
+      src:"プレシアン ［速報］軍「北朝鮮設置の地雷でわが兵士負傷と最終判断…休戦協定違反」 · 亜洲経済「DMZ爆発、北の埋設地雷と最終判断」 · 釜山日報 · 京郷新聞 社説（いずれも10/5）"},
+    export:{kick:"経済 · 原資料 ✓ 産業通商部 · 取引所の数値は報道照合",title:"輸出は過去最大、KOSPIは7000。なのに私の通帳はなぜ変わらないのか",
+      what:"9月の輸出は1,209億ドルで月間として過去最大。半導体だけで603億ドル、全体の半分だ。1年前より半導体は263%、全体は83.5%増えた。貿易黒字（貿易収支）498億ドルも最大。KOSPIは金曜日、7,003.74で7000台を再び踏み、ウォン・ドル相場は1,350ウォン台に下がった。",
+      why:"数字が良すぎて不安になる局面だ。輸出の49.9%が半導体。この値が折れれば半分が揺れる。自動車（−5.5%）・一般機械・家電（−13%）はむしろ減った。半導体を除いても23%増えたのは慰めだが、体感景気は韓国銀行が見通した「10月の物価3%前後」とともに動く（9月の全国物価は2.9%）。",
+      me:"株を持つ人と持たない人の体感が、今年ほど開いたことはない。今週のサムスン電子の暫定決算と米雇用統計が7000定着を分ける。1,350ウォン台の為替は、海外通販と旅行には息抜きだ。",
+      a:"半導体のスーパーサイクルはAIによるもので、AI投資はまだ始まったばかりだ。証券各社がKOSPIの目標を次々と引き上げる理由。",
+      b:"一つの品目が輸出の半分を占める国は、その品目のサイクルをそのまま受ける。2018年に半導体が折れると、輸出は1年以上マイナスだった。",
+      say:"良い数字は楽しみつつ、「一品目で49.9%」は冷蔵庫に貼っておこう。ラリーに乗っているなら比率の点検を。乗っていないなら、いま飛び込むより、為替がくれた機会（ドル資産、海外決済）を拾うほうが悔いは少ない。",
+      src:"産業通商部 9月輸出入動向（10/1） · ニュースピム · ソウル新聞 · ソウル経済（10/1） · 亜洲経済「KOSPI 7003.74で取引終了」 · マネートゥデイ · ソウル新聞「為替1350.6ウォン」（10/2） · ファイナンシャルニュース 週間株式展望（10/4）"},
+    nino:{kick:"気候 · 原資料 ✓ NOAA CPC 9/10予測",title:"太平洋が沸く。史上最強エルニーニョの確率75%",
+      what:"米海洋大気庁（NOAA）が、10〜12月のエルニーニョが1950年の観測開始以来最も強くなる確率を75%とみている。「非常に強い」エルニーニョになる確率は90%以上。この時期の基準ではすでに史上最強で、2027年初めまで続くという予測だ。9月10日の予測が今週、米メディアで再び大きく取り上げられた。",
+      why:"エルニーニョは地球の天気のリモコンだ。米南部の洪水、豪州・東南アジアの干ばつ、韓国はおおむね暖かく雨の多い冬。農産物・コーヒー・砂糖・パーム油といった国際商品の価格が先に動く。75%は「海水温が記録を超える確率」であって、「韓国で災害が起きる確率」ではない。",
+      me:"冬の暖房費は減るかもしれない。代わりに来春の食卓の物価が心配だ。1997年、2015年のスーパーエルニーニョの翌年、コーヒー・チョコレート・砂糖の値段が跳ねた。物価3%前後に天気まで乗る構図。",
+      a:"予報は予報だ。2023年にも「記録的」の声が出たが、冬は平凡だった。75%は、25%の「そうならない可能性」でもある。",
+      b:"今回は出発点が違う。海水温はすでに記録を破った。1982年、1997年と比べても速く、強いというのがNOAAの数字だ。",
+      say:"天気に投資はしないでおこう。暮らしは変えられる。コーヒー豆、オリーブオイルのようにエルニーニョに弱い品目はセールで2か月分。冬服に大金を使う前に11月の予報をもう一度。農業を営む親がいるなら、この記事を送ること。",
+      src:"NOAA 気候予測センター ENSO診断（9/10） · NPR「What is a Super El Niño?」（10/5） · Newsweek · FOX Weather"},
+    nobel:{kick:"科学 · 報道照合 ✓ · ノーベル委員会発表に帰属",title:"ノーベル生理学・医学賞、「光で脳をつけ、消す」光遺伝学に",
+      what:"スタンフォード大のカール・ダイセロス、独フンボルト大のペーター・ヘーゲマン、ヴュルツブルク大のゲオルク・ナーゲルが共同受賞。委員会は「光開閉性イオンチャネルと光遺伝学に関する発見」を功績に挙げた。",
+      why:"神経細胞に光のスイッチを取り付け、生きた脳の中で記憶・感情・行動がどこで生まれるかをのぞけるようにした技術だ。2005年の最初の論文から20年での受賞。うつ病・パーキンソン病・視覚回復研究の土台である。",
+      me:"当面は研究室の話だ。ただ「光で特定の神経だけをつける」という概念は、すでに網膜疾患の臨床に入っている。10年後、眼科・精神科の診察室で再び聞くことになる名前。",
+      a:"道具を作った人に与える賞。光遺伝学は脳科学の顕微鏡だ。遅すぎたほどである。",
+      b:"基礎科学への賞なので、患者が体感するまでの距離は遠い。期待を前倒しで使い過ぎないこと。",
+      say:"ニュースに「革命」という語が付くときはたいてい誇張だ。これは珍しく、そうでない側。脳を「見る」から「触る」に変えた技術だからだ。",
+      src:"ソウルファイナンス · 世界日報 · ニュースピム · ヘラルド経済（10/5）"},
+    ag:{kick:"スポーツ · 報道照合 ✓ · 発言の原文は追加確認中",title:"アジア大会総合3位で帰国、祝福より先に謝罪",
+      what:"大韓体育会の柳承敏（ユ・スンミン）会長と選手団約90人が5日、仁川空港に帰国した。男子サッカーは日本を1-0で下し、史上初の4連覇。ところが「軍隊には行かない」「兵役免除を見て走った」という選手の発言が物議を醸した。",
+      why:"柳会長は解団式で「一部選手の軽率な発言で傷ついた国民と国軍将兵にお詫びする」と頭を下げた。金メダルの兵役特例制度そのものを問い直す声へと広がりつつある。",
+      me:"制度論争は長引くだろう。当面は「一言がメダルを覆う」という教訓。どの組織でも同じだ。",
+      a:"率直な20代の言葉だ。制度がそう設計されているのに選手を責めるのは偽善。",
+      b:"あの場で言うことではなかった。同じ時間、DMZでは兵士が地雷で負傷していた。",
+      say:"きょうの一面トップ（地雷）とこの記事を並べて読めば、なぜ世論が冷めたのかが見える。タイミングがメッセージだった。",
+      src:"SBS · ニュースピム · マネートゥデイ · デイリーアン · ソウル経済（10/5）"},
+    brazil:{kick:"国際 · 原資料 ✓ TSE",title:"ブラジル、ボルソナロ（息子）47%対ルラ45%、決選投票へ",
+      what:"10月4日の第1回投票（開票99.99%、ブラジル選挙裁判所TSE基準）でフラビオ・ボルソナロ47.03%、ルラ大統領45.16%。合計92.19%だが、誰も過半数に届かなかった。決選投票は10月25日。",
+      why:"フラビオがサンパウロ・ミナスジェライスを取り、ルラは北東部を守った。勝負は敗退候補の7.8%の票と棄権層が分ける。南米最大の経済の行方であり、米国と中国の間の綱渡りの方向でもある。",
+      me:"ブラジルは韓国の鉄鉱石・大豆・コーヒーの供給元だ。決選投票の結果でレアルと商品価格が揺れれば、コーヒー1杯の値段にまで届く。",
+      a:"第1回の首位はフラビオ（47.03%）。サンパウロ・ミナスジェライスを取った勢いは決選投票まで続く。",
+      b:"現職のプレミアムと北東部の組織票、敗退候補の7.8%の票がルラ側にさらに動く可能性がある。",
+      say:"3週間後の結果より、その間に双方が何を約束するかのほうが重要だ。財政の約束が膨らむほどレアルは弱くなる。",
+      src:"ブラジル選挙裁判所（TSE）公式発表（10/5 00:36 現地） · CNN「Key takeaways as Brazil heads to presidential runoff」（10/5）"},
+    kyiv:{kick:"国際 · 報道照合 ✓ · 数値は追加確認中",title:"ロシア、キーウの橋を4日連続で攻撃",
+      what:"ジェットドローンでドニプロ川の南橋と北橋を攻撃。南橋は閉鎖、北橋は通行制限。ウクライナ当局は「首都が事実上二つに分かれた」とした。今週のドローンは1,900機以上、うち800機がジェット型。",
+      why:"標的が発電所から橋に変わった。速いジェットドローンを防ぐ迎撃手段がウクライナに不足していることが核心。8月末からロシアがこの隙を押し続けている。",
+      me:"欧州のエネルギー・穀物市場が再び神経質になる。韓国には為替・原油価格の経路で届く。",
+      a:"橋梁攻撃は民間被害を避けつつ軍需の流れを断つ「精密」戦略だという解釈。",
+      b:"首都の交通を断つのは民間生活を直接狙ったもの。冬の前の圧力だという解釈。",
+      say:"戦争ニュースで「標的が変わった」という信号はいつも重要だ。橋の次は何かを見ることになる。",
+      src:"CNN（10/3） · NPR（10/5） · キーウ・インディペンデント · ブルームバーグ（10/3）"},
+    scotus:{kick:"国際 · 報道照合 ✓",title:"米最高裁、「石油会社に気候コストを請求できるか」",
+      what:"コロラド州ボルダー郡がサンコア・エクソンモービルに山火事・洪水の復旧費と欺瞞的マーケティングの責任を問うた訴訟（Suncor v. Boulder）の口頭弁論が5日に開かれた。争点は州法による訴訟が可能か、連邦法がそれを妨げるか。",
+      why:"全米数十件の類似訴訟の運命がかかる。たばこ訴訟のように進むか、連邦レベルで阻まれるか。",
+      me:"判決は来年。結果次第で世界のエネルギー企業の「気候コスト」会計が変わり、韓国の精油・化学各社にも間接的に影響する。",
+      a:"被害を受けた自治体が責任を問うのは当然の法治。",
+      b:"気候は地球全体の問題であり、一つの郡の法廷が扱うことではない。",
+      say:"この事件は「誰が気候コストを払うのか」を最高裁が初めて正面から問う場だ。結果より、問いそのものが歴史である。",
+      src:"CNN · クリスチャン・サイエンス・モニター · KGOU · American Action Forum（10/5）"},
+    audit:{kick:"政治 · 報道照合 ✓ · 国会の原資料は確認中",title:"国政監査まであと1日、846機関",
+      what:"6日から30日まで2026年の国政監査。被監査機関は846で、昨年より36増えた。初日は法制司法委員会が大法院、企画財政委員会が財政経済部、外交統一委員会が外交部。同じ日の朝には大統領主宰の閣議。",
+      why:"3週間、政策ニュースがあふれる。今年は物価・半導体偏重・安全保障が定番の質疑になる見通し。",
+      me:"国政監査の期間は「○○論争」記事が普段の3倍だ。数字の付いたものだけを選んで読めばいい。",
+      a:"行政府を牽制する核心の装置。",
+      b:"怒号と写真撮影で終わる年中行事だという疲労感。",
+      say:"DailyDropは国政監査の期間、「数字の出た質疑」だけを選んで伝える。残りは雑音だ。",
+      src:"ニューシス · ニュースピム · 法律新聞 国会日程（10/2〜10/5）"}
+  };
+
+  // ───── 用語集: 本文・ポップアップ内の用語に点線の下線、押すと説明
+  const G = {
+    "休戦協定":{f:"歴史・安全保障",d:"1953年7月27日、国連軍・北朝鮮軍・中国軍が署名した朝鮮戦争の休戦合意。戦争を「終えた」のではなく「止めた」文書であり、朝鮮半島は法的にまだ戦時状態にある。",w:"軍が「休戦協定違反」と言い切ったのは、事故ではなく合意を破った行為と規定したという意味だ。"},
+    "軍事境界線":{f:"安全保障・地理",d:"南北を分ける248kmの線（MDL）。この線の両側2kmずつが非武装地帯（DMZ）。線そのものに鉄柵はなく、1,292本の標識が立っている。",w:"「軍事境界線の南側に埋設」という言葉は、韓国側の管轄地に北朝鮮が手を付けたという意味であり、重みが違う。"},
+    "国立科学捜査研究院":{f:"法科学",d:"行政安全部所属の国家鑑定機関（国科捜）。事件の指紋・DNA・化学成分・爆発残留物を分析し、法廷の証拠をつくる。",w:"破片の成分が過去の北朝鮮製地雷と同じだという鑑定は、「誰が作った地雷か」を分ける核心の物証だ。"},
+    "貿易黒字":{f:"経済",d:"輸出額が輸入額より多いときの差。国全体が外で稼いだ金が使った金より多いという意味。",w:"498億ドルの黒字はドルが国内に入ってくるという意味であり、為替を押し下げる力になる。"},
+    "スーパーサイクル":{f:"経済",d:"ある商品の価格・需要が通常の景気循環（3〜4年）を超え、10年近く上がり続ける長期好況。",w:"AI投資が半導体需要を構造的に変えたのならスーパーサイクル、一時的な偏りならただのサイクルだ。この区別が投資家の論点である。"},
+    "物価":{f:"経済",d:"消費者物価から、天候や国際原油価格に揺れる食料品とエネルギーを除いた物価。物価の「体温」であり、中央銀行が金利決定でより重視する。",w:"コア物価が高いと韓国銀行は金利を下げにくい。だから預金金利も簡単には下がらない。"},
+    "エルニーニョ":{f:"気候科学",d:"赤道東太平洋の海水温が平年より0.5℃以上高い状態が数か月続く現象。2〜7年ごとに現れ、世界の降水・気温のパターンを変える。",w:"「史上最強」は海水温の記録が基準だ。韓国にはふつう、暖かく雨の多い冬として現れる。"},
+    "NOAA":{f:"機関",d:"米海洋大気庁。気象・海洋・気候を観測し予報する連邦機関で、傘下の気候予測センター（CPC）が毎月エルニーニョの見通しを出す。",w:"75%という数字はこの機関の9月10日の見通しから出た。"},
+    "光遺伝学":{f:"神経科学",d:"光に反応するたんぱく質（光開閉性イオンチャネル）を特定の神経細胞に入れ、光を当ててその細胞だけをつけたり消したりする技術。2005年に初めて報告された。",w:"「脳のどの細胞がどの行動を生むのか」を実験で直接確かめられるようにし、脳科学を変えた。"},
+    "決選投票":{f:"政治",d:"第1回投票で誰も過半数（50%＋1票）を得られなかった場合、上位2候補だけで再び争う第2回投票。フランス・ブラジルなどが使う。",w:"第1回の得票が47%でも、決選投票で敗退候補の支持層がどこへ行くかで逆転しうる。"},
+    "ジェットドローン":{f:"軍事技術",d:"プロペラの代わりに小型ジェットエンジンを積んだ攻撃用無人機。時速500km前後で、プロペラ型ドローン（150〜200km）よりはるかに速く、迎撃が難しい。",w:"速度のため既存の対空砲・迎撃ドローンでは防ぎにくく、ウクライナ防空網の弱点になった。"},
+    "連邦法":{f:"法・米国",d:"米連邦政府が作った法。州法と衝突すれば連邦法が優先する（専占の原則）。どこまでを「衝突」とみるかが常に争いになる。",w:"石油会社は、気候問題は連邦レベルの事案であり州法で訴訟はできないと主張する。"},
+    "国政監査":{f:"政治",d:"国会が毎年、定期国会の期間に行政府と公共機関の1年の仕事を点検する制度。憲法61条に基づき、ふつう10月に3週間開かれる。",w:"846機関が対象なので、この期間は政策・不正のニュースが普段よりはるかに多くあふれる。"},
+    "貿易収支":{f:"経済",d:"一定期間の輸出額から輸入額を引いた値。プラスなら黒字、マイナスなら赤字。",w:"黒字が大きいとは外貨が積み上がるという意味だが、半導体一つに頼った黒字は半導体が折れれば一緒に折れる。"},
+    "合同参謀本部":{f:"安全保障",d:"大統領と国防部長官を補佐し、陸海空軍の作戦を統合して指揮する軍令機関。軍の公式発表を出す。",w:"地雷事故の最終調査結果を合同参謀本部が発表し、この記事の「軍の結論」はその発表に基づく。"},
+    "西部戦線":{f:"安全保障",d:"休戦ラインの西側区間で、臨津江や京畿道北部一帯を指す軍の用語。東部戦線・中部戦線と区別して呼ぶ。",w:"兵士3人が負傷した爆発は、西部戦線のDMZで起きた。"},
+    "国連軍司令部":{f:"安全保障",d:"朝鮮戦争の時に作られた司令部。休戦協定の履行を監督し、非武装地帯への出入りを管理する。",w:"今後の注目点の一つが、国連軍司令部がこの件でどんな立場を出すかだ。"},
+    "埋設":{f:"安全保障",d:"地雷や管などを地中に埋めて設置すること。軍事の文脈では意図的に設置したという意味になる。",w:"「埋設」という一語が、単なる事故と休戦協定違反を分ける核心だ。"},
+    "流失":{f:"安全保障",d:"水や災害で物が元の場所を離れて失われること。地雷の流失は、洪水などで位置が変わる場合を指す。",w:"軍は「流失ではなく埋設」と結論づけ、偶発の事故ではないと断じた。"},
+    "DMZ":{f:"安全保障・地理",d:"非武装地帯（Demilitarized Zone）の英語略称。軍事境界線の南北各2kmの緩衝地帯。",w:"見出しや記事の随所にあるDMZが、爆発の現場を指す。"},
+    "安保観光":{f:"社会",d:"軍事的に対峙する地域の展望台・トンネル・観測所などを見て回る観光。接境地域の代表的な観光商品。",w:"緊張が高まれば、接境地域の安保観光が制限される可能性がある。"},
+    "接境地域":{f:"地理・行政",d:"休戦ラインに接するか近い市・郡。軍事施設保護の規制が多く、北朝鮮関連ニュースの影響を最初に受ける。",w:"地雷事件の余波は、接境地域の住民と観光にまず及ぶ。"},
+    "産業通商部":{f:"機関",d:"韓国の産業・通商・エネルギー政策を担う中央省庁。毎月初めに前月の輸出入統計を発表する。",w:"9月の輸出入動向を発表した機関だ。"},
+    "一般機械":{f:"産業",d:"工作機械・建設機械・産業用装置などをまとめて呼ぶ製造業の分野。韓国の主要な輸出品目の一つ。",w:"半導体が伸びるなか、一般機械はむしろ輸出が減った。"},
+    "証券各社":{f:"金融",d:"投資家の株式・債券の売買を仲介し、企業分析のレポートを出す金融会社。",w:"証券各社がKOSPIの目標を次々と引き上げているという見通しが出ている。"},
+    "ラリー":{f:"金融",d:"株価がしばらく大きく上がり続ける流れ。英語のrallyから来た言葉。",w:"ラリーに乗れたかどうかで、今回の好況の体感が分かれる。"},
+    "暫定決算":{f:"企業・経済",d:"企業が確定決算の前に先に知らせる、おおよその売上・営業利益の数字。後で確定の数字と少し変わることがある。",w:"今週のサムスン電子の暫定決算が、7000定着の物差しとされる。"},
+    "雇用統計":{f:"経済",d:"就業者数・失業率・新規雇用など、働き口の状況を示す統計。米国では毎月第1金曜日前後の発表が市場を動かす。",w:"今週の米雇用統計が株価の流れの変数に挙げられている。"},
+    "レアル":{f:"金融",d:"ブラジルの通貨。政治の不確実性が高まると価値が揺らぎやすい新興国通貨とされる。",w:"決選投票の結果次第でレアルと商品価格が揺れうると指摘した。"},
+    "鉄鉱石":{f:"産業",d:"製鉄の原料に使われる鉱物。ブラジルと豪州が最大の輸出国。",w:"ブラジルは韓国に鉄鉱石・大豆・コーヒーを売る供給元だ。"},
+    "大豆":{f:"農産物",d:"豆。食用油・豆腐・飼料の原料になり、ブラジルは世界最大級の生産・輸出国。",w:"韓国がブラジルから輸入する主要品目として挙げられた。"},
+    "パーム油":{f:"農産物",d:"アブラヤシの実から搾った植物性の油。ラーメン・菓子・石鹸などに広く使われる。",w:"エルニーニョでパーム油のような国際商品の価格が先に動きうるという。"},
+    "商品価格":{f:"経済",d:"原油・穀物・鉱物など基本的な材料の国際相場。物価に影響を与える。",w:"エルニーニョは農産物や商品価格を揺らす要因として説明された。"},
+    "米海洋大気庁":{f:"機関",d:"米商務省に属し、海洋・大気の研究と天気予報を担う機関（NOAA）。",w:"この機関が史上最強のエルニーニョの確率を75%とみている。"},
+    "気候予測センター":{f:"機関",d:"米NOAAの傘下で、季節・年単位の気候予測を出す組織（CPC）。毎月エルニーニョ・ラニーニャの状況を発表する。",w:"記事のエルニーニョ確率は、このセンターの9月10日の予測が出所だ。"},
+    "スーパーエルニーニョ":{f:"気候科学",d:"エルニーニョのなかでも特に海水温の上昇幅が大きい場合を指す非公式な表現。世界の天気と商品価格に大きな影響を与える。",w:"1997年、2015年のスーパーエルニーニョの翌年に、コーヒー・チョコレート・砂糖の値段が跳ねたと紹介される。"},
+    "ノーベル生理学・医学賞":{f:"科学",d:"ノーベル賞6部門のうち、医学・生命科学分野の業績に贈られる賞。毎年10月の第1週に最初に発表される。",w:"今年は光で神経をつけたり消したりする光遺伝学が受賞した。"},
+    "委員会":{f:"機関",d:"ノーベル賞の候補を審査し、受賞者を決める機関。生理学・医学賞はスウェーデンのカロリンスカ研究所が担う。",w:"受賞理由を発表した主体で、この記事の根拠になる。"},
+    "スタンフォード":{f:"教育",d:"米カリフォルニア州にある名門私立大学。シリコンバレーに近く、科学・技術の研究で有名。",w:"共同受賞者カール・ダイセロスの所属。"},
+    "フンボルト大":{f:"教育",d:"ドイツ・ベルリンの大学（フンボルト大学）。ドイツ近代大学のモデルとして知られる。",w:"共同受賞者ペーター・ヘーゲマンの所属として紹介された。"},
+    "ヴュルツブルク大":{f:"教育",d:"ドイツ・バイエルン州ヴュルツブルクにある大学。科学史上、多くのノーベル賞受賞者を出した。",w:"共同受賞者ゲオルク・ナーゲルの所属として紹介された。"},
+    "光開閉性イオンチャネル":{f:"科学",d:"光を受けると開いたり閉じたりして電気信号を起こす細胞膜のタンパク質。光遺伝学が使う中核の部品。",w:"委員会は、このチャネルと光遺伝学の発見を受賞の功績に挙げた。"},
+    "パーキンソン病":{f:"医学",d:"ドーパミン神経細胞が減って、手の震えや動きの鈍化が起きる変性性の脳疾患。",w:"光遺伝学が研究に使われる代表的な疾患として挙げられた。"},
+    "網膜":{f:"医学",d:"目の奥で光を受け、電気信号に変える薄い組織。視覚情報はここから始まる。",w:"光で特定の神経をつける概念が、すでに網膜疾患の臨床に入っているという説明だ。"},
+    "臨床":{f:"医学",d:"実際の患者を対象に、治療法が安全で効果があるかを確かめる段階（臨床試験）。",w:"光遺伝学に基づく治療が臨床の段階に入ったという箇所で使われた。"},
+    "基礎科学":{f:"科学",d:"目先の応用よりも、自然の原理を明らかにすることを目的とした研究。のちに技術や治療の土台になる。",w:"今回の賞は基礎科学への賞なので、患者が体感するまでには時間がかかると指摘した。"},
+    "解団式":{f:"スポーツ",d:"大会を終えた選手団が公式に解散するときに行う式。",w:"柳会長が解団式で、選手たちの発言について謝罪した。"},
+    "兵役特例":{f:"制度",d:"オリンピックのメダルなど一定の成果を上げた選手に、短い基礎軍事訓練とスポーツ・芸術分野での服務で兵役を代えさせる制度。公平性をめぐる論争が繰り返される。",w:"金メダルの兵役特例制度そのものを問い直す声へと広がっている。"},
+    "ブラジル選挙裁判所":{f:"機関",d:"選挙の管理と紛争を担う裁判所級の機関。ブラジルではTSEが開票と結果の確定を担う。",w:"ブラジルの第1回投票結果の公式な出所だ。"},
+    "TSE":{f:"機関",d:"ブラジル選挙裁判所（Tribunal Superior Eleitoral）の略称。",w:"得票率の数字は、この機関の発表が基準だ。"},
+    "第1回投票":{f:"政治",d:"決選投票制で最初に行う投票。誰も過半数を得られなければ、上位2人の候補が決選投票を戦う。",w:"ブラジルでは二人とも過半数に届かず、決選投票に進んだ。"},
+    "現職":{f:"政治",d:"現在その職についている人。選挙では現職候補は知名度と組織の面で有利とされる。",w:"ルラは大統領として現職のプレミアムを抱えている。"},
+    "棄権":{f:"政治",d:"投票権はあるが投票しない、または投票しても支持を示さないこと。",w:"敗退候補の票と棄権層が、決選投票の勝負を分ける変数に挙げられた。"},
+    "サンパウロ":{f:"地理",d:"ブラジル最大の都市、およびその経済の中心がある州。",w:"フラビオがこの州を取った。"},
+    "ミナスジェライス":{f:"地理",d:"ブラジル南東部の人口の多い内陸の州。選挙では重要な激戦区とされる。",w:"フラビオがこの州を取った。"},
+    "ドニプロ川":{f:"地理",d:"ウクライナ中部を流れて黒海に注ぐ大きな川。キーウを二つに分ける。",w:"この川の南橋と北橋が攻撃の対象だった。"},
+    "迎撃":{f:"軍事",d:"飛んでくるミサイルやドローンを空中で撃ち落とすこと。",w:"速いジェットドローンを防ぐ迎撃手段が不足していることが核心として紹介された。"},
+    "サンコア":{f:"企業",d:"カナダの大手石油・オイルサンド企業。",w:"コロラド州ボルダー郡が気候被害の責任を問うた被告の一つ。"},
+    "エクソンモービル":{f:"企業",d:"米国の世界的な石油・ガス企業。",w:"ボルダー郡訴訟の被告の一つ。"},
+    "口頭弁論":{f:"法",d:"裁判所の前で弁護人が口頭で主張を述べ、裁判官の質問に答える手続き。米最高裁は書面とともにこの手続きを行う。",w:"訴訟の口頭弁論が5日に開かれた。"},
+    "州法":{f:"法",d:"米国で各州が定める法。連邦法と衝突すれば連邦法が優先する。",w:"州法で石油会社を訴えられるかが争点だ。"},
+    "ボルダー郡":{f:"行政",d:"米コロラド州の郡。郡は米国で州の下の行政単位で、韓国の郡・市にあたる。",w:"気候被害の費用を求めて訴訟を起こした主体だ。"},
+    "欺瞞的マーケティング":{f:"法",d:"企業が製品の有害さや事実を隠したりぼかしたりして消費者を欺く広告・宣伝。",w:"自治体は、石油会社が気候リスクを知りながら隠したとして欺瞞的マーケティングの責任を問うた。"},
+    "たばこ訴訟":{f:"法",d:"喫煙被害の費用をたばこ会社に請求した米国の大型訴訟。1990年代の巨額和解につながり、似た訴訟の先例となった。",w:"気候訴訟がたばこ訴訟のように進むかが関心事として挙げられた。"},
+    "精油":{f:"産業",d:"原油を精製してガソリンや軽油などの石油製品をつくる産業。",w:"判決が韓国の精油・化学各社にも間接的に影響しうると指摘した。"},
+    "法制司法委員会":{f:"国会",d:"国会の委員会で、法務部・大法院などを監査し、法案の法体系を審査する。",w:"国政監査の初日は大法院を監査する。"},
+    "企画財政委員会":{f:"国会",d:"国会の委員会で、予算・税金・経済政策を扱う。",w:"初日は財政経済部を監査する。"},
+    "外交統一委員会":{f:"国会",d:"国会の委員会で、外交部と統一分野を扱う。",w:"初日は外交部を監査する。"},
+    "被監査機関":{f:"国会",d:"国政監査を受ける政府省庁と公共機関。",w:"今年の被監査機関は846で、昨年より36増えた。"},
+    "財政経済部":{f:"機関",d:"韓国政府の経済・財政政策を統括する省庁。",w:"企画財政委員会が国政監査の初日に監査する対象だ。"},
+    "関税":{f:"経済",d:"輸入品にかける税。国内産業の保護にも、政治的な圧力の手段にも使われる。",w:"米貿易赤字が関税発効直前以来の最大という文脈で出てくる。"},
+    "リヤド":{f:"地理",d:"サウジアラビアの首都。",w:"サウジ・トルコ・パキスタンがここでの緊急会議で部隊配備に合意した。"},
+    "海外通販":{f:"消費",d:"海外のオンラインショップで消費者が直接商品を買うこと。",w:"為替が下がれば海外通販や旅行に息抜きができるとした。"},
+    "ドル資産":{f:"金融",d:"ドルで価値が表示された預金・債券・株式など。為替が安いときに買っておけば為替差益を狙える。",w:"為替がくれた機会として、ドル資産や海外決済を拾うよう勧める助言が出た。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）の中なら、モーダルの上に浮かせる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
