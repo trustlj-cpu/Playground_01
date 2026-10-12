@@ -1,7 +1,9 @@
 // 데일리드롭 사이트 Worker: 정적 자산 서빙 + 호스트 리다이렉트(www·임시 주소 → dailydropnewspaper.com) + 회원·북마크·방문 통계 API(account.js)
-import { handleAccount } from './account.js';
+import { handleAccount, subUser } from './account.js';
+import { handleSub } from './sub.js';
 const CANON = 'dailydropnewspaper.com';
 const OLD_HOSTS = new Set(['dailydrop.kr', 'www.dailydrop.kr', 'thedailydrop.today', 'www.thedailydrop.today', 'www.dailydropnewspaper.com']);
+const SUB_PAGE = /^\/me\/(plan|front|words|search)(\/|\/index\.html)?$/;
 const ACCOUNT_API = /^\/api\/(auth\/|me$|bookmarks$|hit$|admin\/)/;
 const handler = {
   async fetch(request, env, ctx) {
@@ -10,6 +12,14 @@ const handler = {
       url.hostname = CANON; url.protocol = 'https:'; url.port = '';
       return Response.redirect(url.toString(), 301);
     }
+    // 구독(비공개 테스트): sub=1 계정만. 화면(/me/plan|front|words|search/)은 아니면 1면으로 302, API는 403. 검색 제외(noindex)·캐시 금지.
+    if (url.pathname.startsWith('/api/sub/')) return handleSub(request, env, url, p => handler.fetch(new Request(url.origin + p), env, ctx));
+    if (SUB_PAGE.test(url.pathname)) {
+      if (!(await subUser(env, request).catch(() => null))) return new Response(null, { status: 302, headers: { location: '/', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' } });
+      const r = await env.ASSETS.fetch(new Request(url.origin + url.pathname.replace(/index\.html$/, '')));
+      const h = new Headers(r.headers); h.set('cache-control', 'private, no-store'); h.set('x-robots-tag', 'noindex'); return new Response(r.body, { status: r.status, headers: h });
+    }
+    if (url.pathname.startsWith('/_sub/')) return new Response('Not found', { status: 404 });
     // 회원(로그인·가입·마이페이지)·북마크·방문 비콘·관리자 통계: D1(UDB)
     if (ACCOUNT_API.test(url.pathname)) return handleAccount(request, env, url, ctx);
     // 1면 실시간 시세: 같은 도메인으로 피드 Worker 시세를 전달(20초 캐시). 페이지는 /api/quotes.json 만 부른다.

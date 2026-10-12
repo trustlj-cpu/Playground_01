@@ -73,13 +73,22 @@ const clearCookies = () => [`${SID}=; Path=/; Max-Age=0; HttpOnly; Secure; SameS
 const withCookies = (res, cookies) => { for (const c of cookies) res.headers.append('set-cookie', c); return res; };
 
 // 쿠키(dd_sid)가 있으면 쿠키로만, 없으면 Bearer 토큰으로. cookieOnly: 앱 코드 발급처럼 브라우저 세션이어야 하는 곳.
-async function currentUser(env, req, cookieOnly = false) {
+export async function currentUser(env, req, cookieOnly = false) {
   const c = cookieOf(req, SID); const t = c != null ? c : cookieOnly ? null : bearerOf(req); if (!t || t.length > 100) return null;
   const row = await env.UDB.prepare('SELECT u.*, s.token_hash AS sid_hash, s.expires_at AS sid_exp FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?').bind(await sha256(t)).first();
   if (!row) return null;
   if (row.sid_exp < Date.now()) { await env.UDB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(row.sid_hash).run(); return null; }
   return row;
 }
+// 구독(비공개 테스트): users.sub(1=켬, 결제 없음)·users.front(나만의 1면 나라 JSON). 열이 없던 DB를 위해 Worker 인스턴스마다 한 번 열을 더한다(이미 있으면 오류 무시).
+let SUBCOLS = false;
+export async function ensureSubCols(env) {
+  if (SUBCOLS) return; SUBCOLS = true;
+  for (const q of ['ALTER TABLE users ADD COLUMN sub INTEGER', 'ALTER TABLE users ADD COLUMN front TEXT']) { try { await env.UDB.prepare(q).run(); } catch (e) { } }
+}
+// 구독 화면·API를 쓸 수 있는 계정: 로그인(인증 마침) + sub=1
+export async function subUser(env, req) { if (!env.UDB) return null; await ensureSubCols(env); const u = await currentUser(env, req); return u && active(env, u) && u.sub === 1 ? u : null; }
+export { sameOrigin };
 const adminList = env => String(env.ADMIN_EMAILS || '').toLowerCase().split(/[,\s]+/).filter(Boolean);
 // 관리자: ADMIN_EMAILS 목록에 있고 이메일이 인증된 계정(아무나 그 주소로 이메일 가입해 관리자가 되는 것을 막음)
 const isAdmin = (env, u) => !!u && u.email_verified === 1 && adminList(env).includes(String(u.email).toLowerCase());
@@ -88,7 +97,7 @@ const cfMail = env => !!(env.EMAIL && env.MAIL_LIVE === '1' && env.MAIL_FROM);
 const verifyOn = env => cfMail(env) || !!(env.RESEND_API_KEY && env.MAIL_FROM);
 // 인증 메일이 켜져 있으면, 이메일 인증을 마쳐야 회원으로 쓴다(사장님 10/9: 코드 입력해야 가입 완료). 그 전엔 '가입 대기'.
 const active = (env, u) => !!u && (!verifyOn(env) || u.email_verified === 1);
-const publicUser = (env, u) => ({ id: u.id, email: u.email, name: u.name || '', method: u.google_sub && u.pw_hash ? 'both' : u.google_sub ? 'google' : 'email', verified: u.email_verified === 1, admin: isAdmin(env, u), created_at: u.created_at });
+const publicUser = (env, u) => ({ id: u.id, email: u.email, name: u.name || '', method: u.google_sub && u.pw_hash ? 'both' : u.google_sub ? 'google' : 'email', verified: u.email_verified === 1, admin: isAdmin(env, u), sub: u.sub === 1, created_at: u.created_at });
 
 async function afterLogin(env, req, u) {
   const role = isAdmin(env, u) ? 'admin' : 'member';
