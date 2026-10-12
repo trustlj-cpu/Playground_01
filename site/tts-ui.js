@@ -10,7 +10,7 @@ function anchorOf(a, d) {
   const ids = new Set(d.stories.map(s => s.id)), cl = t => String(t || '').replace(/\s+/g, ' ').trim();
   if (!a || a.date !== d.date) throw new Error(`anchor ${d.date}: date mismatch (${a && a.date})`);
   const stories = (a.stories || []).map(s => { if (!ids.has(s.id)) throw new Error(`anchor ${d.date}: unknown story id ${s.id}`); return { id: s.id, transition: cl(s.transition), lines: (s.lines || []).map(cl).filter(Boolean) }; });
-  return { date: a.date, opening: cl(a.opening), stories, closing: cl(a.closing) };
+  return { date: a.date, opening: cl(a.opening), indices: cl(a.indices), stories, closing: cl(a.closing) };
 }
 // 지면(편집본 HTML)에서 1면 기사들을 지면 순서대로: 분야·제목·부제·본문
 function ttsData(html, date) {
@@ -49,12 +49,12 @@ const ICON = {
   next: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17.5 5.5v13M6 5.8v12.4L14.8 12z"/></svg>',
   x: '<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M1.5 1.5l11 11M12.5 1.5l-11 11"/></svg>',
 };
-// 재생 아이콘 위치: 공유(.dd-sh, 오른쪽 15px·폭 34·아이콘 오른쪽 여백 2)와 북마크(.dd-bm) 아이콘 사이 간격(18px 간격)을 그대로 한 칸 더 → 오른쪽 33px
+// 아이콘 세 개(재생·공유·북마크)는 모두 36px 단추에 18px 아이콘을 가운데 놓고, 아이콘 중심 간격을 30px(아이콘 사이 12px)로 똑같이 맞춘다: 북마크 right:-10 → 공유 right:20 → 재생 right:50
 const CSS = `<style>
-.dd-pl{position:absolute;top:-8px;right:33px;width:34px;height:36px;display:flex;align-items:center;justify-content:flex-end;margin:0;padding:0 2px 0 0;box-sizing:border-box;border:0;border-radius:50%;background:transparent;color:var(--ink,#121212);cursor:pointer;z-index:5;-webkit-tap-highlight-color:transparent}
+.dd-pl{position:absolute;top:-8px;right:50px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;margin:0;padding:0;box-sizing:border-box;border:0;border-radius:50%;background:transparent;color:var(--ink,#121212);cursor:pointer;z-index:5;-webkit-tap-highlight-color:transparent}
 .dd-pl svg,.dd-tts-all svg{width:18px;height:18px;display:block;overflow:visible}.dd-pl path,.dd-tts-all path,#dd-tts path{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .dd-pl:hover,.dd-pl[aria-pressed="true"]{color:var(--red,#8d2f22)}.dd-pl:focus-visible,.dd-tts-all:focus-visible,#dd-tts button:focus-visible{outline:2px solid var(--red,#8d2f22);outline-offset:-3px}
-.story.has-bm.dd-has-pl>.kick{max-width:calc(100% - 76px)!important}
+.story.has-bm.dd-has-pl>.kick{max-width:calc(100% - 88px)!important}
 .dd-tts-all{display:flex;align-items:center;justify-content:center;width:24px;height:24px;margin:0;padding:0;border:0;background:transparent;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}.dd-tts-all svg{width:14px;height:14px}.dd-tts-all[aria-pressed="true"]{color:var(--red,#8d2f22)}
 @keyframes ddTtsPulse{0%,100%{color:inherit}50%{color:#e2765f}}
 .story.dd-tts-on,.story.dd-tts-on *{animation:ddTtsPulse 2.8s ease-in-out infinite}
@@ -116,7 +116,7 @@ function pause(){if(audio)audio.pause();st.playing=false;sync();}
 function finish(){st.playing=false;sync();if(st.only){close();return;}status('다 읽었습니다');}
 function storyIdx(dir){if(!st.segs)return;var cur=st.segs[st.i]&&st.segs[st.i].story,ids=[];st.segs.forEach(function(x){if(x.story&&ids.indexOf(x.story)<0)ids.push(x.story);});var k=ids.indexOf(cur);var t=dir>0?(k<0?0:k+1):(k<=0?0:k-1);if(dir<0&&k>=0){var f0=-1;for(var j=0;j<st.segs.length;j++)if(st.segs[j].story===cur&&st.segs[j].kind!=='trans'){f0=j;break;}if(st.i>f0||(audio&&audio.currentTime>3))t=k;}if(t>=ids.length){finish();return;}for(var i=0;i<st.segs.length;i++)if(st.segs[i].story===ids[t]&&st.segs[i].kind!=='trans'){st.i=i;break;}go();}
 function mark(s){var el=s.story&&byId[s.story];if(st.cur&&st.cur!==el)st.cur.classList.remove('dd-tts-on');if(el){el.classList.add('dd-tts-on');if(st.cur!==el)try{el.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});}catch(e){}}st.cur=el||st.cur;
-var t=el?(byId[s.story].querySelector('.hl,b')||{}).textContent:'';bar.querySelector('.now').textContent=(t||(s.kind==='open'?'여는 말':s.kind==='close'?'닫는 말':'')).replace(/\\s+/g,' ').trim();}
+var t=el?(byId[s.story].querySelector('.hl,b')||{}).textContent:'';bar.querySelector('.now').textContent=(t||(s.kind==='open'?'여는 말':s.kind==='indices'?'시장 지표':s.kind==='close'?'닫는 말':'')).replace(/\\s+/g,' ').trim();}
 function sync(){var on=st.playing;if(bar){var pp=bar.querySelector('.pp');pp.innerHTML=on?IC.pause:IC.play;pp.setAttribute('aria-label',on?'멈춤':'재생');}
 if(allBtn){var a=st.open&&!st.only&&on;allBtn.innerHTML=a?IC.pause:IC.play;allBtn.setAttribute('aria-pressed',a?'true':'false');allBtn.setAttribute('aria-label',a?'멈춤':'1면 전체 듣기');}
 Object.keys(pls).forEach(function(id){var b=pls[id],a=st.open&&on&&(st.only===id||(!st.only&&st.cur===byId[id]));b.innerHTML=a?IC.pause:IC.play;b.setAttribute('aria-pressed',a?'true':'false');b.setAttribute('aria-label',a?'멈춤':'이 기사 듣기');});

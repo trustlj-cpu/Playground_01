@@ -148,17 +148,25 @@ const MAXSEG = 220;
 // 문장 묶기: 음성 조각 하나(≤220자)에 들어가는 문장들. 조각마다 lines(문장 목록)를 같이 내 자막이 문장 단위로 넘어가게 한다.
 const chunkLines = (sents, max = MAXSEG) => { const out = []; let cur = []; for (const s of sents) { if (cur.length && (cur.join(' ') + ' ' + s).length > max) { out.push(cur); cur = [s]; } else cur.push(s); } if (cur.length) out.push(cur); return out; };
 const clean = t => String(t || '').replace(/\s+/g, ' ').trim();
-// 앵커 원고(site/editions/anchor/<날짜>.json): {date, opening, stories:[{id, transition, lines:[..]}], closing}
+// 앵커 원고(site/editions/anchor/<날짜>.json): {date, opening, indices(시장 지표), stories:[{id, transition, lines:[..]}] (주요 기사만 · 1면 전부가 아님), closing}
 export const hasAnchor = data => !!(data && data.anchor && Array.isArray(data.anchor.stories) && data.anchor.stories.some(s => Array.isArray(s.lines) && s.lines.length));
 // data = tts.json {date, stories:[{id, cat, title, deck, body:[..]}], anchor?}. only = 기사 id(그 기사 부분만, 여는·넘어가는·닫는 말 없음)
 export function buildScript(data, only = '') {
   const segs = [];
   const push = (story, kind, lines) => { lines = lines.map(clean).filter(Boolean); for (const g of chunkLines(lines)) segs.push({ i: segs.length, story, kind, text: g.join(' '), lines: g }); };
+  // 앵커 원고에 없는 기사(주요 기사만 읽는 방송에서 빠진 기사) 한 건을 지면 글자로 읽기: 제목 → 부제 → 본문
+  const printed = s => { push(s.id, 'title', [String(s.title || '')]); if (s.deck) push(s.id, 'deck', broadcastText(s.deck)); (s.body || []).forEach(p => push(s.id, 'body', broadcastText(p))); };
   if (hasAnchor(data)) {
-    const A = data.anchor, st = A.stories.filter(s => s && s.id && (!only || s.id === only));
-    if (!only) push(null, 'open', sentences(A.opening));
-    st.forEach((s, k) => { if (!only && clean(s.transition)) push(s.id, 'trans', sentences(s.transition)); push(s.id, 'body', s.lines || []); });
-    if (!only) push(null, 'close', sentences(A.closing));
+    const A = data.anchor;
+    if (only) { // 기사 하나: 앵커 원고에 있으면 그 기사 부분만, 없으면 지면 글자로 대신(여는·넘어가는·닫는 말 없음)
+      const s = A.stories.find(x => x && x.id === only); if (s) push(s.id, 'body', s.lines || []);
+      else { const p = (data.stories || []).find(x => x.id === only); if (p) printed(p); }
+      return segs;
+    }
+    push(null, 'open', sentences(A.opening));
+    if (clean(A.indices)) push(null, 'indices', sentences(A.indices)); // 시장 지표: 여는 말 바로 다음
+    A.stories.filter(s => s && s.id).forEach(s => { if (clean(s.transition)) push(s.id, 'trans', sentences(s.transition)); push(s.id, 'body', s.lines || []); });
+    push(null, 'close', sentences(A.closing));
     return segs;
   }
   // 앵커 원고가 없는 판: 지면 글자로 대신 읽기(제목 → 부제 → 본문)
@@ -168,9 +176,7 @@ export function buildScript(data, only = '') {
   st.forEach(s => {
     const idx = (data.stories || []).indexOf(s);
     if (!only && idx > 0) push(s.id, 'trans', [L.trans[idx - 1]]);
-    push(s.id, 'title', [String(s.title || '')]);
-    if (s.deck) push(s.id, 'deck', broadcastText(s.deck));
-    (s.body || []).forEach(p => push(s.id, 'body', broadcastText(p)));
+    printed(s);
   });
   if (!only) push(null, 'close', sentences(L.close));
   return segs;

@@ -3,7 +3,11 @@
 // ① 숫자: 원고의 모든 숫자열이 판 글에 그대로 있어야 한다. 말로 쓴 숫자(쉰 차례·다섯 개·두 발…)는 값으로 바꿔 판 글의 숫자와 맞춘다.
 // ② 고유명사: 사람(직함 앞 이름)·기관·매체·영문 약어(말로 쓴 것 포함)가 판 글에 있어야 한다. 판 글에 없는 낱말은 모두 목록으로 낸다(사람이 훑어봄).
 // ③ 규칙(괄괄이 2287): 한 문장 60자 이하, 괄호·기호·영문 없음, 격식체 「~니다.」, 「~죠/~거든요」·물음 없음, 같은 말끝 세 번 연속 없음,
-//    한 문장 숫자 하나(날짜·시각·기간 묶음은 하나로 셈), 넘어가는 말은 판 안에서 겹치지 않음, 나에게는/두 시선/데일리드롭의 생각 코너 없음.
+//    한 문장 숫자 하나(날짜·시각·기간·금액 묶음은 하나로 셈. 시장 지표 문장만 수준+등락률 둘까지), 나에게는/두 시선/데일리드롭의 생각 코너 없음.
+// ④ 짜임(사장님 10/12): 여는 말 → 시장 지표(indices: 코스피·코스닥·원 달러) → 머리기사 → 주요 기사(판 기사 전부를 읽지 않는다) → 단신 1~3개 → 닫는 말.
+//    머리기사는 반드시, 본문이 길거나 문단이 둘 이상인 기사도 반드시, 1면의 분야(kick 첫 낱말)는 한 번씩(시장 분야는 지표가 맡음).
+//    기사 사이는 앵커가 말로 잇는다: 넘어가는 말은 한 문장, 「정치 소식입니다」식 꼬리표 금지, bridge 종류(follow 이어받기·shift 자리 옮기기·impact 영향 잇기·group 묶어 넘기기·none 바로)를
+//    기사마다 적고 같은 종류를 연달아 쓰지 않으며(none 제외), 사망·재난을 다룬 기사 뒤에는 none(꼬리표 없이 바로)만 쓴다.
 const fs = require('fs'), path = require('path');
 const ROOT = __dirname;
 const plain = x => String(x || '').replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, ' $1 ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\\u[0-9a-f]{4}/gi, m => String.fromCharCode(parseInt(m.slice(2), 16))).replace(/\s+/g, ' ');
@@ -16,7 +20,7 @@ const natVal = w => { let v = 0, r = w; for (const t of ['스물', '스무', '�
 const SPOKEN = [
   ['에스앤피', ['S&P']], ['에스유브이', ['SUV']], ['에이아이', ['AI']], ['에스케이', ['SK']], ['엔피알', ['NPR']], ['디엔', ['DN']],
   ['퍼센트', ['%']], ['킬로미터', ['㎞', 'km']], ['데시리터당', ['㎗']], ['마이크로그램', ['㎍']], ['십이삼', ['12·3']], ['1천만', ['1000만']],
-  ['원 달러', ['원/달러']], ['나흘', ['나흘', '4일']], ['이틀', ['이틀']], ['아흐레', ['9일']],
+  ['원 달러', ['원/달러']], ['에스비에스', ['SBS']], ['4천억', ['4000억']], ['나흘', ['나흘', '4일']], ['이틀', ['이틀']], ['아흐레', ['9일']],
 ];
 const PART = /(이라는|이라며|이라고|라는|라며|라고|에서는|에서도|에서|에게|께서|으로|로는|로|은|는|이|가|을|를|의|에|와|과|도|까지|만|이며|이고|이었습니다|였습니다|입니다|쪽|당국)$/;
 const TITLE = /^(대통령|장관|의원|의원실|총재|위원장|청장|회장|대표|교수|씨|직무대행|국무위원장)/;
@@ -29,16 +33,38 @@ function check(date) {
   const has = x => ED.includes(x) || EDn.includes(String(x).replace(/[\s,]/g, ''));
   const err = (m) => out.errors.push(m), warn = m => out.warns.push(m);
   if (A.date !== date) err(`date field ${A.date} ≠ ${date}`);
-  // 판 1면 기사 id
+  // 판 1면 기사 id · 분야 · 길이
   const html = fs.readFileSync(ef, 'utf8'); const ids = [...html.matchAll(/class="[^"]*\bstory\b[^"]*"[^>]*data-id="([\w-]+)"/g)].map(m => m[1]);
-  for (const s of A.stories) if (!ids.includes(s.id)) err(`story id ${s.id} not on the front page`);
-  for (const id of ids) if (!A.stories.some(s => s.id === id)) warn(`front-page story ${id} has no anchor part`);
+  const PG = Object.fromEntries(require('./tts-ui.js').ttsData(html, date).stories.map(x => [x.id, x]));
+  const secOf = id => String((PG[id] || {}).cat || '').split(/[·\s]+/)[0];
+  const ST = A.stories || [], seen = new Set();
+  for (const s of ST) { if (!ids.includes(s.id)) err(`story id ${s.id} not on the front page`); if (seen.has(s.id)) err(`story ${s.id} listed twice`); seen.add(s.id); }
+  if (ST.length && ids.length && ST[0].id !== ids[0]) err(`first story must be the lead (${ids[0]}), got ${ST[0].id}`);
+  for (const id of ids) { const g = PG[id]; if (g && !seen.has(id) && (g.body.length >= 2 || g.body.join('').length >= 500)) err(`long main story ${id} is not in the script (lead and long stories are mandatory)`); }
+  const MKT = /^(시장|증시|금융시장)$/; const covered = new Set(ST.map(s => secOf(s.id)));
+  for (const id of ids) { const c = secOf(id); if (c && !covered.has(c) && !MKT.test(c)) { warn(`front-page section 「${c}」 (${id}) has no story in the script`); covered.add(c); } }
+  const nBrief = ST.filter(s => (s.lines || []).length <= 2).length; if (nBrief < 1 || nBrief > 3) warn(`${nBrief} brief items (1–2 lines each); target 2–3`);
+  out.info = `${ST.length} of ${ids.length} front-page stories read (${ST.map(s => s.id).join(', ')}); skipped: ${ids.filter(i => !seen.has(i)).join(', ') || '-'}`;
   const all = []; // {where, text}
   sentences(A.opening).forEach(t => all.push({ where: 'opening', text: t }));
-  const trans = [];
-  A.stories.forEach((s, k) => { if (s.transition) { trans.push(s.transition); sentences(s.transition).forEach(t => all.push({ where: s.id + '/transition', text: t })); }
-    if (k > 0 && !s.transition) warn(`${s.id}: no transition`);
-    const n = (s.lines || []).length; if (n < 3 || n > 10) err(`${s.id}: ${n} sentences (short item 3–4, main story lead 1–2 + body 4–8)`);
+  const ix = sentences(A.indices); if (ix.length < 3) err('indices: missing or too short (index level, change and 원 달러 are read right after the opening)');
+  if (A.indices && !/코스피/.test(A.indices)) err('indices: 코스피 not mentioned'); if (A.indices && /원 달러|환율/.test(ED) && !/환율/.test(A.indices)) err('indices: 환율 not mentioned');
+  ix.forEach((t, j) => all.push({ where: `indices#${j + 1}`, text: t }));
+  const trans = [], TYPES = ['follow', 'shift', 'impact', 'group', 'none'], HEAVY = /숨졌|숨진|사망|희생|참사|재난|살해|피살|붕괴/;
+  const LABEL = /소식(입니다|을 전합니다|을 전해 드립니다|\s?하나 더 전해 드립니다)\.$/;
+  let prevType = null;
+  ST.forEach((s, k) => {
+    const tr = (s.transition || '').trim(), ty = s.bridge;
+    if (k === 0) { if (tr) err(`${s.id}: the lead has no transition`); }
+    else {
+      if (!TYPES.includes(ty)) err(`${s.id}: bridge must be one of ${TYPES.join('/')}`);
+      if ((ty === 'none') !== !tr) err(`${s.id}: bridge ${ty} but transition ${tr ? 'present' : 'empty'}`);
+      if (ty && ty !== 'none' && ty === prevType) err(`${s.id}: same bridge type 「${ty}」 twice in a row`);
+      if (tr) { trans.push(tr); const ss = sentences(tr); if (ss.length !== 1) err(`${s.id}: transition must be exactly one sentence`); if (LABEL.test(tr)) err(`${s.id}: label-style transition 「${tr}」 (bridge like a live anchor instead)`); ss.forEach(t => all.push({ where: s.id + '/transition', text: t })); }
+      if (HEAVY.test((ST[k - 1].lines || []).join(' ')) && tr) err(`${s.id}: no bridge after a story about deaths/disaster (${ST[k - 1].id}); go straight in`);
+      prevType = ty === 'none' ? null : ty;
+    }
+    const n = (s.lines || []).length; if (n < 1 || n > 10) err(`${s.id}: ${n} sentences (brief 1–2, main story 3–10: lead 1–2 + body)`);;
     (s.lines || []).forEach((t, j) => { const ss = sentences(t); if (ss.length !== 1) err(`${s.id}#${j}: line is not exactly one sentence`); all.push({ where: `${s.id}#${j + 1}`, text: t, story: s.id }); }); });
   sentences(A.closing).forEach(t => all.push({ where: 'closing', text: t }));
   if (new Set(trans).size !== trans.length) err('transition repeated within the edition');
@@ -57,8 +83,8 @@ function check(date) {
     const end = t.replace(/\.$/, '').split(' ').pop().slice(-4); prevEnd.push(end); if (prevEnd.length > 3) prevEnd.shift();
     if (prevEnd.length === 3 && prevEnd.every(e => e === prevEnd[0])) err(`${where}: same ending 「${end}」 three times in a row`);
     // 숫자 하나: 날짜(월 일)·시각(시 분)·기간(년 개월)·「1억 7천만」 같은 한 값은 하나로 센다
-    const grp = t.replace(/에스앤피 500/g, '에스앤피').replace(/\d+월 \d+일/g, 'D').replace(/(아홉|\d+) ?시 \d+분/g, 'T').replace(/\d+년 \d+개월/g, 'P').replace(/\d+억 \d+천만/g, 'N').replace(/\d+[\d,.]*/g, 'N');
-    const nn = (grp.match(/[NDTP]/g) || []).length; if (nn > 1) err(`${where}: ${nn} numbers in one sentence 「${t}」`);
+    const grp = t.replace(/에스앤피 500/g, '에스앤피').replace(/\d+월 \d+일/g, 'D').replace(/(아홉|\d+) ?시 \d+분/g, 'T').replace(/\d+년 \d+개월/g, 'P').replace(/\d+억 \d+천만/g, 'N').replace(/\d+조 \d+천억/g, 'N').replace(/\d+[\d,.]*/g, 'N');
+    const nn = (grp.match(/[NDTP]/g) || []).length; if (nn > (where.startsWith('indices') ? 2 : 1)) err(`${where}: ${nn} numbers in one sentence 「${t}」`);
     // ① 숫자열
     for (const m of t.matchAll(/\d[\d,.]*\d|\d/g)) { if (!has(m[0])) err(`${where}: number ${m[0]} not in the edition text`); }
     // 말로 쓴 숫자
@@ -85,7 +111,7 @@ module.exports = { check };
 if (require.main === module) {
   let bad = 0;
   for (const d of process.argv.slice(2)) { const r = check(d); console.log(`\n=== ${d}: ${r.sentences} sentences · ${r.errors.length} errors · ${r.warns.length} warnings`);
-    r.errors.forEach(e => console.log('  ERROR ' + e)); r.warns.forEach(e => console.log('  warn  ' + e)); console.log('  spoken-number / spelled-out mappings:'); r.spoken.forEach(e => console.log('    ' + e));
+    console.log('  ' + r.info); r.errors.forEach(e => console.log('  ERROR ' + e)); r.warns.forEach(e => console.log('  warn  ' + e)); console.log('  spoken-number / spelled-out mappings:'); r.spoken.forEach(e => console.log('    ' + e));
     console.log(`  words not found verbatim in the edition (${r.novel.length}; broadcast phrasing — reviewed by hand): ${r.novel.join(' ')}`); if (r.errors.length) bad++; }
   process.exit(bad ? 1 : 0);
 }
