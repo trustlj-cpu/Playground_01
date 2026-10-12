@@ -365,11 +365,11 @@ async function trBreak(env, items, lang) {
   }));
 }
 
-// /live/ 소식 요약: 묶음의 기사 제목들만 근거로 영어 제목(h)과 2~3문장 요약(x)을 만든다(Workers AI). D1 live_sum2에 저장해 한 번만 생성, 한 번에 새로 6건까지
+// /live/ 소식 요약: 묶음의 기사 제목들만 근거로 영어 제목(h)과 2~3문장 요약(x)을 만든다(Workers AI). D1 live_sum3에 저장해 한 번만 생성, 한 번에 새로 6건까지
 async function liveSum(env, items, max = 6) {
   if (!env.AI || !items.length) return;
-  await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_sum2 (id TEXT PRIMARY KEY, h TEXT, x TEXT, k TEXT, at INTEGER)').run();
-  const { results } = await env.DB.prepare(`SELECT id, h, x, k FROM live_sum2 WHERE id IN (${items.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...items.map(i => i.id)).all();
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_sum3 (id TEXT PRIMARY KEY, h TEXT, x TEXT, k TEXT, at INTEGER)').run();
+  const { results } = await env.DB.prepare(`SELECT id, h, x, k FROM live_sum3 WHERE id IN (${items.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...items.map(i => i.id)).all();
   const have = new Map(results.map(r => [r.id, r]));
   const todo = [];
   for (const it of items.slice().sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0))) { const r = have.get(it.id); if (r) { it.h = r.h; it.x = r.x; it.k = r.k; } else if (todo.length < max) todo.push(it); }
@@ -379,14 +379,14 @@ async function liveSum(env, items, max = 6) {
     const heads = [it.t, ...it.u.map(u => u.t)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 6).map(t => '- ' + t).join('\n');
     const leads = sm.map(r => String(r.summary || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400)).filter(x => x.length > 40).slice(0, 4).map(t => '- ' + t).join('\n');
     const cn = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(it.r); } catch (e) { return it.r; } })();
-    const prompt = 'Country of the outlets: ' + cn + '.\nHeadlines from different news outlets about one event:\n' + heads + (leads ? '\n\nOpening lines of their reports:\n' + leads : '') + '\n\nWrite in plain English for an international reader who knows nothing about this country. Name the country and who is involved (e.g. "New Zealand\'s National Party", not "National"). Describe ONLY the event in the FIRST headline; ignore any headline or line about a different event. Use ONLY facts stated above; do not add names, numbers, causes or opinions that are not there. Avoid vague phrases like "a financial issue" - be concrete or leave it out. Reply with JSON only: {"k": "<news | opinion | lifestyle>  (opinion = editorial, column, commentary; lifestyle = property listings, shopping, recipes, celebrity gossip)", "h": "<neutral news headline, max 14 words>", "x": "<2-3 short concrete sentences on what happened; if the text above gives no concrete facts beyond the headline, use an empty string. Never write filler such as \"It is a notable development\" or claims about who is affected unless stated above>"}';
+    const prompt = 'Country of the outlets: ' + cn + '.\nHeadlines from different news outlets about one event:\n' + heads + (leads ? '\n\nOpening lines of their reports:\n' + leads : '') + '\n\nWrite in plain English for an international reader who knows nothing about this country. Name the country and who is involved (e.g. "New Zealand\'s National Party", not "National"). Describe ONLY the event in the FIRST headline; ignore any headline or line about a different event. Use ONLY facts stated above; do not add names, numbers, causes or opinions that are not there. Keep attribution: if a claim, accusation or allegation comes from a person or group, write who says it (e.g. "Andy Burnham says Russia interfered"), never state it as fact. Write entirely in English and translate every foreign word. Avoid vague phrases like "a financial issue" - be concrete or leave it out. Reply with JSON only: {"k": "<news | opinion | lifestyle | minor>  (opinion = editorial, column, commentary; lifestyle = property listings, shopping, recipes, celebrity gossip, reality TV, awards; minor = local crime, traffic accidents, local council matters or anything of little interest outside one city)", "h": "<neutral news headline, max 14 words>", "x": "<2-3 short concrete sentences on what happened; if the text above gives no concrete facts beyond the headline, use an empty string. Never write filler such as \"It is a notable development\" or claims about who is affected unless stated above>"}';
     try {
       const r = await Promise.race([env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
       const resp = r && r.response; let o = resp && typeof resp === 'object' ? resp : null;
       if (!o) { const m = String(resp || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('no json: ' + String(resp).slice(0, 120)); o = JSON.parse(m[0]); } const h = String(o.h || '').trim().slice(0, 160), x = String(o.x || '').trim().slice(0, 700);
       let x2 = /notable development|this is news about|affects people|it is (an? )?(important|significant)/i.test(x) ? '' : x; if (h.length < 15) return; if (x2.length < 40) x2 = '';
       it.h = h; it.x = x2; it.k = String(o.k || 'news').toLowerCase().trim();
-      await env.DB.prepare('INSERT OR REPLACE INTO live_sum2 (id, h, x, k, at) VALUES (?1, ?2, ?3, ?4, ?5)').bind(it.id, h, x2, it.k, Date.now()).run();
+      await env.DB.prepare('INSERT OR REPLACE INTO live_sum3 (id, h, x, k, at) VALUES (?1, ?2, ?3, ?4, ?5)').bind(it.id, h, x2, it.k, Date.now()).run();
     } catch (e) { await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_err (at INTEGER, e TEXT)').run(); await env.DB.prepare('INSERT INTO live_err VALUES (?1, ?2)').bind(Date.now(), String(e && e.message || e).slice(0, 300)).run(); }
   }));
 }
