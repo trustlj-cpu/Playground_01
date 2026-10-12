@@ -360,8 +360,12 @@ async function liveSum(env, items) {
   const todo = [];
   for (const it of items) { const r = have.get(it.id); if (r) { it.h = r.h; it.x = r.x; } else if (todo.length < 6) todo.push(it); }
   await Promise.all(todo.map(async it => {
+    const links = it.u.map(u => u.u);
+    const { results: sm } = await env.DB.prepare(`SELECT title, summary FROM items WHERE link IN (${links.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...links).all().catch(() => ({ results: [] }));
     const heads = [it.t, ...it.u.map(u => u.t)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 6).map(t => '- ' + t).join('\n');
-    const prompt = 'These are headlines from different news outlets about one event:\n' + heads + '\n\nWrite in plain English for an international reader. Use ONLY facts stated in the headlines; do not add names, numbers, causes or opinions that are not there. Reply with JSON only: {"h": "<neutral news headline, max 14 words>", "x": "<2-3 short sentences: what happened, and why it matters to readers, only if the headlines support it>"}';
+    const leads = sm.map(r => String(r.summary || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400)).filter(x => x.length > 40).slice(0, 4).map(t => '- ' + t).join('\n');
+    const cn = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(it.r); } catch (e) { return it.r; } })();
+    const prompt = 'Country of the outlets: ' + cn + '.\nHeadlines from different news outlets about one event:\n' + heads + (leads ? '\n\nOpening lines of their reports:\n' + leads : '') + '\n\nWrite in plain English for an international reader who knows nothing about this country. Name the country and who is involved (e.g. "New Zealand\'s National Party", not "National"). Use ONLY facts stated above; do not add names, numbers, causes or opinions that are not there. Avoid vague phrases like "a financial issue" - be concrete or leave it out. Reply with JSON only: {"h": "<neutral news headline, max 14 words>", "x": "<2-3 short sentences: what happened, and why it matters to readers, only if the headlines support it>"}';
     try {
       const r = await Promise.race([env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
       const resp = r && r.response; let o = resp && typeof resp === 'object' ? resp : null;
