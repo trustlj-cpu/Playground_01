@@ -189,16 +189,18 @@ const FEED = {
           let id = 0; for (const ch of k) id = (id * 31 + ch.charCodeAt(0)) >>> 0;
           const at = c.items.map(i => Date.parse(i.published_at) || 0).reduce((a, b) => Math.max(a, b), 0);
           out.push({ id: id.toString(36), t: String(c.topic || '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, ''), l: c.lang || '', f: c.field, r: c.region, ns: c.n_sources, s: c.sources, at: at ? new Date(at).toISOString() : null,
-            u: its.slice(0, 4).map(i => ({ t: i.title, s: i.source, u: i.link })), sp: c.field === '스포츠' || (c.items || []).some(i => /sport|deport|esporte|calcio|football|soccer|nfl|nba/i.test(i.link || '')), sc: (c.n_sources * 2 + (c.n_items || 0)) * (c.field === '스포츠' || (c.items || []).some(i => /sport|deport|esporte|calcio|football|soccer|nfl|nba/i.test(i.link || '')) ? 0.4 : 1) * (1 - hi * 0.25) });
+            u: its.slice(0, 4).map(i => ({ t: i.title, s: i.source, u: i.link })), cc: [...new Set((c.items || []).map(i => i.region).filter(Boolean))], sp: c.field === '스포츠' || (c.items || []).some(i => /sport|deport|esporte|calcio|football|soccer|nfl|nba/i.test(i.link || '')), sc: (c.n_sources * 2 + (c.n_items || 0)) * (c.field === '스포츠' || (c.items || []).some(i => /sport|deport|esporte|calcio|football|soccer|nfl|nba/i.test(i.link || '')) ? 0.4 : 1) * (1 - hi * 0.25) });
         } });
+      for (const o of out) { const age = o.at ? (Date.now() - Date.parse(o.at)) / 3600_000 : 6; o.sc *= (1 + 0.8 * (o.cc.length - 1)) * Math.exp(-Math.max(0, age) / 3); }
       out.sort((a, b) => b.sc - a.sc);
       const bg = t => { const x = String(t).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''), o = new Set(); for (let i = 0; i < x.length - 1; i++) o.add(x.slice(i, i + 2)); return o; };
       const sim = (a, b) => { let n = 0; for (const k of a) if (b.has(k)) n++; return n / ((a.size + b.size - n) || 1); };
       const items = [], kept = []; let sport = 0;
       for (const it of out) { const b = bg(it.t), dom = new Set(it.u.map(u => u.u.split('/')[2]));
-        if (kept.some(k => sim(k.b, b) >= 0.4 || [...dom].filter(d => k.dom.has(d)).length && sim(k.b, b) >= 0.2)) continue;
+        const dk = kept.find(k => sim(k.b, b) >= 0.4 || [...dom].filter(d => k.dom.has(d)).length && sim(k.b, b) >= 0.2); if (dk) { dk.it.sc += it.sc * 0.7; dk.it.cc = [...new Set([...dk.it.cc, ...it.cc])]; continue; }
         if (it.sp && ++sport > 4) continue;
-        kept.push({ b, dom }); items.push(it); if (items.length >= 30) break; }
+        kept.push({ b, dom, it }); items.push(it); if (items.length >= 40) break; }
+      items.sort((a, b) => b.sc - a.sc); items.length = Math.min(items.length, 30);
       for (const it of items) it.u = it.u.map(x => ({ ...x, s: (x.u.match(/^https?:\/\/(?:www\.)?([^/]+)/) || [])[1] || x.s }));
       { const warm = url.searchParams.get('warm') === '1'; const run = liveSum(env, items, warm ? 15 : 6).catch(() => {}); if (warm) await run; else { await Promise.race([run, new Promise(r => setTimeout(r, 3000))]); if (ctx && ctx.waitUntil) ctx.waitUntil(run); } }
       if (url.searchParams.get('raw') !== '1') { for (let i = items.length - 1; i >= 0; i--) if (items[i].k && items[i].k !== 'news') items.splice(i, 1);
@@ -370,14 +372,14 @@ async function liveSum(env, items, max = 6) {
   const { results } = await env.DB.prepare(`SELECT id, h, x, k FROM live_sum2 WHERE id IN (${items.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...items.map(i => i.id)).all();
   const have = new Map(results.map(r => [r.id, r]));
   const todo = [];
-  for (const it of items) { const r = have.get(it.id); if (r) { it.h = r.h; it.x = r.x; it.k = r.k; } else if (todo.length < max) todo.push(it); }
+  for (const it of items.slice().sort((a, b) => (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0))) { const r = have.get(it.id); if (r) { it.h = r.h; it.x = r.x; it.k = r.k; } else if (todo.length < max) todo.push(it); }
   await Promise.all(todo.map(async it => {
     const links = it.u.map(u => u.u);
     const { results: sm } = await env.DB.prepare(`SELECT title, summary FROM items WHERE link IN (${links.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...links).all().catch(() => ({ results: [] }));
     const heads = [it.t, ...it.u.map(u => u.t)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 6).map(t => '- ' + t).join('\n');
     const leads = sm.map(r => String(r.summary || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400)).filter(x => x.length > 40).slice(0, 4).map(t => '- ' + t).join('\n');
     const cn = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(it.r); } catch (e) { return it.r; } })();
-    const prompt = 'Country of the outlets: ' + cn + '.\nHeadlines from different news outlets about one event:\n' + heads + (leads ? '\n\nOpening lines of their reports:\n' + leads : '') + '\n\nWrite in plain English for an international reader who knows nothing about this country. Name the country and who is involved (e.g. "New Zealand\'s National Party", not "National"). Use ONLY facts stated above; do not add names, numbers, causes or opinions that are not there. Avoid vague phrases like "a financial issue" - be concrete or leave it out. Reply with JSON only: {"k": "<news | opinion | lifestyle>  (opinion = editorial, column, commentary; lifestyle = property listings, shopping, recipes, celebrity gossip)", "h": "<neutral news headline, max 14 words>", "x": "<2-3 short concrete sentences on what happened; if the text above gives no concrete facts beyond the headline, use an empty string. Never write filler such as \"It is a notable development\" or claims about who is affected unless stated above>"}';
+    const prompt = 'Country of the outlets: ' + cn + '.\nHeadlines from different news outlets about one event:\n' + heads + (leads ? '\n\nOpening lines of their reports:\n' + leads : '') + '\n\nWrite in plain English for an international reader who knows nothing about this country. Name the country and who is involved (e.g. "New Zealand\'s National Party", not "National"). Describe ONLY the event in the FIRST headline; ignore any headline or line about a different event. Use ONLY facts stated above; do not add names, numbers, causes or opinions that are not there. Avoid vague phrases like "a financial issue" - be concrete or leave it out. Reply with JSON only: {"k": "<news | opinion | lifestyle>  (opinion = editorial, column, commentary; lifestyle = property listings, shopping, recipes, celebrity gossip)", "h": "<neutral news headline, max 14 words>", "x": "<2-3 short concrete sentences on what happened; if the text above gives no concrete facts beyond the headline, use an empty string. Never write filler such as \"It is a notable development\" or claims about who is affected unless stated above>"}';
     try {
       const r = await Promise.race([env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
       const resp = r && r.response; let o = resp && typeof resp === 'object' ? resp : null;
