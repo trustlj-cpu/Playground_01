@@ -38,7 +38,7 @@ const handler = {
       if (!lm[2]) return Response.redirect(url.origin + url.pathname + '/', 301);
       const ck = new Request(url.origin + url.pathname), priv = r => { const o = new Response(r.body, r); o.headers.set('cache-control', 'private, max-age=60'); return o; }, hit = await caches.default.match(ck); if (hit) return priv(hit);
       let d = { items: [] }; try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/top.json?lang=en', { cf: { cacheTtl: 300, cacheEverything: true } }); if (r.ok) d = await r.json(); } catch (e) {}
-      const res = await livePage(env, url, d, lm[1] || ''); if (res.status === 200) ctx.waitUntil(caches.default.put(ck, res.clone())); return res.status === 200 ? priv(res) : res;
+      const res = await livePage(env, url, d, lm[1] || ''); if (res.status === 200 && (d.items || []).length) ctx.waitUntil(caches.default.put(ck, res.clone())); return res.status === 200 ? priv(res) : res;
     }
     // 국가판 라우팅. live.json(빌드 산출물) = 현재 발행 중인 나라 목록 [{code,prefix}].
     // ?r=XX 로 고르면 쿠키(dd_region)에 기억. 쿠키가 없고 루트(/)로 들어오면 접속 국가(Cloudflare cf.country)의 판으로.

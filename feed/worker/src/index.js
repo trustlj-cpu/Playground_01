@@ -192,7 +192,7 @@ export default {
         } });
       out.sort((a, b) => b.sc - a.sc); const items = out.slice(0, 30);
       for (const it of items) it.u = it.u.map(x => ({ ...x, s: (x.u.match(/^https?:\/\/(?:www\.)?([^/]+)/) || [])[1] || x.s }));
-      await liveSum(env, items).catch(() => {});
+      { const run = liveSum(env, items).catch(() => {}); await Promise.race([run, new Promise(r => setTimeout(r, 3000))]); if (ctx && ctx.waitUntil) ctx.waitUntil(run); }
       if (url.searchParams.get('raw') !== '1') { const need = items.filter(i => !i.h); await trBreak(env, need, 'en').catch(() => {}); for (const i of need) i.h = i.t; const ok = items; return json({ at: new Date().toISOString(), lang, items: ok }, 200, { 'cache-control': 'public, max-age=300' }); }
       await trBreak(env, items, lang).catch(() => {});
       return json({ at: new Date().toISOString(), lang, items }, 200, { 'cache-control': 'public, max-age=300' });
