@@ -31,7 +31,7 @@ const handler = {
       const no = (s, c) => new Response(JSON.stringify({ error: c }), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
       if (request.method !== 'GET') return no(405, 'method');
       let u = null; try { u = await currentUser(env, request); } catch (e) { u = null; }
-      if (!u) return no(401, 'login_required'); if (!isAdmin(env, u)) return no(403, 'admin_only');
+      if (!u) return no(401, 'login_required'); if (!(isAdmin(env, u) || u.sub === 1)) return no(403, 'preview_only'); // 관리자 또는 미리보기 계정(users.sub=1, 사장님 10/13 'B')
       const q = new URLSearchParams(); for (const k of ['date', 'mode', 'story', 'i']) { const v = (url.searchParams.get(k) || '').slice(0, 40); if (v) q.set(k, v); }
       try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev' + url.pathname.slice(4) + '?' + q); const h = new Headers({ 'content-type': r.headers.get('content-type') || 'application/octet-stream', 'cache-control': r.ok && url.pathname.endsWith('/audio') ? 'private, max-age=86400' : 'no-store' }); if (r.headers.get('content-length')) h.set('content-length', r.headers.get('content-length')); if (r.headers.get('x-tts-cache')) h.set('x-tts-cache', r.headers.get('x-tts-cache')); return new Response(r.body, { status: r.status, headers: h }); }
       catch (e) { return no(502, 'feed'); }

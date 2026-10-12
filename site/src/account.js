@@ -88,7 +88,7 @@ const cfMail = env => !!(env.EMAIL && env.MAIL_LIVE === '1' && env.MAIL_FROM);
 const verifyOn = env => cfMail(env) || !!(env.RESEND_API_KEY && env.MAIL_FROM);
 // 인증 메일이 켜져 있으면, 이메일 인증을 마쳐야 회원으로 쓴다(사장님 10/9: 코드 입력해야 가입 완료). 그 전엔 '가입 대기'.
 const active = (env, u) => !!u && (!verifyOn(env) || u.email_verified === 1);
-const publicUser = (env, u) => ({ id: u.id, email: u.email, name: u.name || '', method: u.google_sub && u.pw_hash ? 'both' : u.google_sub ? 'google' : 'email', verified: u.email_verified === 1, admin: isAdmin(env, u), created_at: u.created_at });
+const publicUser = (env, u) => ({ id: u.id, email: u.email, name: u.name || '', method: u.google_sub && u.pw_hash ? 'both' : u.google_sub ? 'google' : 'email', verified: u.email_verified === 1, admin: isAdmin(env, u), preview: isAdmin(env, u) || u.sub === 1, created_at: u.created_at });
 
 async function afterLogin(env, req, u) {
   const role = isAdmin(env, u) ? 'admin' : 'member';

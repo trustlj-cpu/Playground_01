@@ -71,7 +71,7 @@ const CSS = `<style>
 const ttsScript = date => `${CSS}<script>(function(){if(window.__ddApp||window.__ddTts)return;window.__ddTts=1;
 if(!/(?:^|;\\s*)dd_in=1/.test(document.cookie)||!window.ddMe)return;
 var D=${js(date)},IC=${js(ICON)};
-window.ddMe().then(function(u){if(u&&u.admin===true)init();}).catch(function(){});
+window.ddMe().then(function(u){if(u&&(u.admin===true||u.preview===true))init();}).catch(function(){});
 function init(){var d=document,stories=[].slice.call(d.querySelectorAll('.story[data-id]')),byId={};stories.forEach(function(s){byId[s.getAttribute('data-id')]=s;});
 var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 var st={segs:null,i:0,mode:'news',only:'',rate:1,playing:false,cur:null,open:false,tok:0},audio=null,bar=null,allBtn=null,pls={};
