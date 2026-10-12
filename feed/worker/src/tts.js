@@ -1,6 +1,7 @@
 // 기사 읽어주기(한국판 1면, 관리자 전용 시험 기능) — 대본 만들기 · 음성 엔진 어댑터 · 음성 캐시(D1)
-// 흐름: 사이트 빌드가 /<날짜>/tts.json(지면에 찍힌 제목·부제·본문 + 팝업의 나에게는/두 시선/데일리드롭 생각)을 낸다
-//  → 이 Worker가 그 파일로 대본을 만든다(지면 글자 그대로, 문장 끝 「~다」→「~습니다」만 바꿈, 괄호 출처는 「○○ 보도입니다」)
+// 원고는 판마다 하나(사장님 10/12: 「한가지 원고로만 간다. 뉴스 방송용 원고로 실제 뉴스 앵커가 말하듯이 보도.」). 기사만/라디오 모드는 없앴다.
+// 흐름: 사이트 빌드가 /<날짜>/tts.json(지면 제목·부제·본문 + anchor: site/editions/anchor/<날짜>.json 앵커 원고)을 낸다
+//  → 이 Worker가 앵커 원고(anchor)로 대본을 만든다. 앵커 원고가 없는 판만 지면 글자로 대신 읽는다(문장 끝 「~다」→「~습니다」, 괄호 출처는 「○○ 보도입니다」)
 //  → 대본 조각마다 음성을 한 번만 만들어 D1(tts_audio)에 저장하고 다시 쓴다. 매분 크론이 오늘 판 조각을 미리 만들어 둔다.
 // 엔진 교체: 아래 ENGINES 에 어댑터를 하나 더 두고 ENGINE 이름만 바꾸면 된다(캐시 키에 엔진·목소리 id가 들어가 섞이지 않음).
 
@@ -25,6 +26,15 @@ export const ENGINES = {
   'gemini-tts': {
     id: 'gemini-tts-UNSET', mime: 'audio/wav', voice: '(미정 — 차분한 여성 뉴스 톤)',
     async synth() { throw new Error('gemini-tts adapter is a stub: not configured'); },
+  },
+  // ▲▲▲
+  // ▼▼▼ 교체 자리(아직 쓰지 않음): ElevenLabs TTS(사장님 10/12 「일레븐랩스로 해보자」). 키 없음 · 호출 없음.
+  //     쓰게 되면: ELEVENLABS_API_KEY 를 wrangler secret 으로 넣고, 고른 목소리 id를 voice 에, 모델(예: eleven v4 계열)을 정해
+  //     POST https://api.elevenlabs.io/v1/text-to-speech/<voice_id> (xi-api-key 헤더, {text, model_id}) → audio/mpeg 바이트를 돌려준다.
+  //     id 를 바꾸면 캐시 키가 달라져 MeloTTS 음성과 섞이지 않는다.
+  'elevenlabs-tts': {
+    id: 'elevenlabs-UNSET', mime: 'audio/mpeg', voice: '(미정 — 한국어 뉴스 앵커 톤 성우 목소리)',
+    async synth() { throw new Error('elevenlabs-tts adapter is a stub: not configured'); },
   },
   // ▲▲▲
 };
@@ -134,25 +144,35 @@ export function links(date, cats) { // cats: 둘째 기사부터의 분야 목�
 const catOf = kick => { const c = String(kick || '').split(/[·\s]*[·]\s*(?:보도|원자료|✓)|\s·\s/)[0].trim(); return c || '다음'; };
 
 // ───────────────────────── 대본 ─────────────────────────
-const CORNERS = [['me', '나에게는'], ['a', '이렇게 보는 쪽'], ['b', '저렇게 보는 쪽'], ['say', '데일리드롭의 생각']];
 const MAXSEG = 220;
-const chunk = (sents, max = MAXSEG) => { const out = []; let cur = ''; for (const s of sents) { if (cur && (cur + ' ' + s).length > max) { out.push(cur); cur = s; } else cur = cur ? cur + ' ' + s : s; } if (cur) out.push(cur); return out; };
-// data = tts.json {date, stories:[{id, kick, cat, title, deck, body:[..], corners:{me,a,b,say}}]}
-export function buildScript(data, mode = 'news', only = '') {
-  const radio = mode === 'radio'; const segs = [];
+// 문장 묶기: 음성 조각 하나(≤220자)에 들어가는 문장들. 조각마다 lines(문장 목록)를 같이 내 자막이 문장 단위로 넘어가게 한다.
+const chunkLines = (sents, max = MAXSEG) => { const out = []; let cur = []; for (const s of sents) { if (cur.length && (cur.join(' ') + ' ' + s).length > max) { out.push(cur); cur = [s]; } else cur.push(s); } if (cur.length) out.push(cur); return out; };
+const clean = t => String(t || '').replace(/\s+/g, ' ').trim();
+// 앵커 원고(site/editions/anchor/<날짜>.json): {date, opening, stories:[{id, transition, lines:[..]}], closing}
+export const hasAnchor = data => !!(data && data.anchor && Array.isArray(data.anchor.stories) && data.anchor.stories.some(s => Array.isArray(s.lines) && s.lines.length));
+// data = tts.json {date, stories:[{id, cat, title, deck, body:[..]}], anchor?}. only = 기사 id(그 기사 부분만, 여는·넘어가는·닫는 말 없음)
+export function buildScript(data, only = '') {
+  const segs = [];
+  const push = (story, kind, lines) => { lines = lines.map(clean).filter(Boolean); for (const g of chunkLines(lines)) segs.push({ i: segs.length, story, kind, text: g.join(' '), lines: g }); };
+  if (hasAnchor(data)) {
+    const A = data.anchor, st = A.stories.filter(s => s && s.id && (!only || s.id === only));
+    if (!only) push(null, 'open', sentences(A.opening));
+    st.forEach((s, k) => { if (!only && clean(s.transition)) push(s.id, 'trans', sentences(s.transition)); push(s.id, 'body', s.lines || []); });
+    if (!only) push(null, 'close', sentences(A.closing));
+    return segs;
+  }
+  // 앵커 원고가 없는 판: 지면 글자로 대신 읽기(제목 → 부제 → 본문)
   const st = (data.stories || []).filter(s => !only || s.id === only);
   const L = links(data.date, (data.stories || []).slice(1).map(s => s.cat || catOf(s.kick)));
-  const push = (story, kind, text) => { if (text && text.trim()) segs.push({ i: segs.length, story, kind, text: text.trim() }); };
-  if (!only) push(null, 'open', L.open);
-  st.forEach((s, k) => {
+  if (!only) push(null, 'open', sentences(L.open));
+  st.forEach(s => {
     const idx = (data.stories || []).indexOf(s);
-    if (!only && idx > 0) push(s.id, 'trans', L.trans[idx - 1]);
-    push(s.id, 'title', String(s.title || '').replace(/\s+/g, ' ').trim());
-    if (s.deck) chunk(broadcastText(s.deck)).forEach(t => push(s.id, 'deck', t));
-    (s.body || []).forEach(p => chunk(broadcastText(p)).forEach(t => push(s.id, 'body', t)));
-    if (radio) for (const [key, label] of CORNERS) { const v = s.corners && s.corners[key]; if (!v) continue; chunk([label + '.', ...broadcastText(v)]).forEach((t, j) => push(s.id, 'corner', t)); }
+    if (!only && idx > 0) push(s.id, 'trans', [L.trans[idx - 1]]);
+    push(s.id, 'title', [String(s.title || '')]);
+    if (s.deck) push(s.id, 'deck', broadcastText(s.deck));
+    (s.body || []).forEach(p => push(s.id, 'body', broadcastText(p)));
   });
-  if (!only) push(null, 'close', L.close);
+  if (!only) push(null, 'close', sentences(L.close));
   return segs;
 }
 
@@ -167,7 +187,7 @@ export function sinoNum(str) {
 }
 const LETTERS = { A: '에이', B: '비', C: '씨', D: '디', E: '이', F: '에프', G: '지', H: '에이치', I: '아이', J: '제이', K: '케이', L: '엘', M: '엠', N: '엔', O: '오', P: '피', Q: '큐', R: '알', S: '에스', T: '티', U: '유', V: '브이', W: '더블유', X: '엑스', Y: '와이', Z: '지' };
 const WORDS = { 'S&P': '에스앤피', 'AT&T': '에이티앤티', 'K-': '케이 ', '%p': ' 퍼센트포인트', '%': ' 퍼센트' };
-const COUNTER = '명|차례|가지|곳|개|살|번째|번|시간|척|마리|권|잔|채';
+const COUNTER = '명|차례|가지|곳|개(?!월)|살|번째|번|시간|척|마리|권|잔|채';
 const MONTH = { 6: '유월', 10: '시월' };
 export function speechText(t) {
   let s = String(t);
@@ -215,7 +235,7 @@ export async function loadEdition(date) {
 }
 const kstDate = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 
-// 매분 크론: 오늘 판에서 아직 없는 음성 조각을 몇 개씩 미리 만든다(기사만 → 라디오 순). 다 만들어졌으면 아무것도 하지 않는다.
+// 매분 크론: 오늘 판의 원고 하나에서 아직 없는 음성 조각을 몇 개씩 미리 만든다. 다 만들어졌으면 아무것도 하지 않는다(옛 라디오 조각은 더 만들지 않음).
 export async function prewarm(env, date = kstDate(), budget = 4) {
   if (!env.AI || !env.DB) return { made: 0 };
   // 자정~06시(KST)에는 오늘 판이 아직 공개 전이므로 어제 판(지금 1면에 떠 있는 판)을 미리 만든다
@@ -224,7 +244,7 @@ export async function prewarm(env, date = kstDate(), budget = 4) {
   await ensureTable(env); let made = 0;
   // 오래된 음성은 지운다(하루 약 90조각 · 수 MB — 7일만 보관해 D1 용량이 쌓이지 않게)
   await env.DB.prepare('DELETE FROM tts_audio WHERE created_at < ?1').bind(new Date(Date.now() - 7 * 864e5).toISOString()).run();
-  for (const mode of ['news', 'radio']) for (const s of buildScript(ed, mode)) {
+  for (const s of buildScript(ed)) {
     if (made >= budget) return { made, date };
     const k = await audioKey(s.text);
     if (await env.DB.prepare('SELECT 1 FROM tts_audio WHERE k = ?1').bind(k).first()) continue;
@@ -234,15 +254,15 @@ export async function prewarm(env, date = kstDate(), budget = 4) {
 }
 
 // ───────────────────────── HTTP ─────────────────────────
-// GET /tts/script.json?date=&mode=news|radio[&story=id]  ·  GET /tts/audio?date=&mode=&i=[&story=]
+// GET /tts/script.json?date=[&story=id]  ·  GET /tts/audio?date=&i=[&story=]   (mode 없음 — 원고 하나. 예전 mode= 는 무시)
 // 공개 Worker 주소지만 판 파일에 실린 문장만 읽을 수 있고, 같은 문장은 한 번만 만든다(무엇이든 읽히는 통로가 아님). 화면 노출·권한은 사이트 Worker(/api/tts/*, 관리자만)에서.
 export async function handleTTS(req, env, url) {
-  const date = url.searchParams.get('date') || '', mode = url.searchParams.get('mode') === 'radio' ? 'radio' : 'news', story = (url.searchParams.get('story') || '').replace(/[^\w-]/g, '').slice(0, 40);
+  const date = url.searchParams.get('date') || '', story = (url.searchParams.get('story') || '').replace(/[^\w-]/g, '').slice(0, 40);
   const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
   if (!okDate(date)) return J({ error: 'bad date' }, 400);
   const ed = await loadEdition(date); if (!ed) return J({ error: 'no edition' }, 404);
-  const segs = buildScript(ed, mode, story);
-  if (url.pathname === '/tts/script.json') return J({ date, mode, story: story || null, engine: ENGINE, voice: engine().voice, segments: segs, stories: ed.stories.map(s => ({ id: s.id, title: s.title })) });
+  const segs = buildScript(ed, story);
+  if (url.pathname === '/tts/script.json') return J({ date, story: story || null, script: hasAnchor(ed) ? 'anchor' : 'text', engine: ENGINE, voice: engine().voice, segments: segs, stories: ed.stories.map(s => ({ id: s.id, title: s.title })) });
   if (url.pathname === '/tts/audio') {
     const i = Number(url.searchParams.get('i')); const s = segs[i]; if (!Number.isInteger(i) || !s) return J({ error: 'bad segment' }, 404);
     try { const a = await getAudio(env, date, s.text); return new Response(a.bytes, { headers: { 'content-type': a.mime, 'content-length': String(a.bytes.length), 'cache-control': 'private, max-age=86400', 'x-tts-cache': a.hit ? 'hit' : 'miss' } }); }
