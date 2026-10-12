@@ -218,7 +218,9 @@ const kstDate = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 1
 // 매분 크론: 오늘 판에서 아직 없는 음성 조각을 몇 개씩 미리 만든다(기사만 → 라디오 순). 다 만들어졌으면 아무것도 하지 않는다.
 export async function prewarm(env, date = kstDate(), budget = 4) {
   if (!env.AI || !env.DB) return { made: 0 };
-  const ed = await loadEdition(date); if (!ed) return { made: 0, date, missing: 'edition' };
+  // 자정~06시(KST)에는 오늘 판이 아직 공개 전이므로 어제 판(지금 1면에 떠 있는 판)을 미리 만든다
+  let ed = await loadEdition(date); if (!ed) { date = new Date(Date.parse(date + 'T00:00:00Z') - 864e5).toISOString().slice(0, 10); ed = await loadEdition(date); }
+  if (!ed) return { made: 0, date, missing: 'edition' };
   await ensureTable(env); let made = 0;
   // 오래된 음성은 지운다(하루 약 90조각 · 수 MB — 7일만 보관해 D1 용량이 쌓이지 않게)
   await env.DB.prepare('DELETE FROM tts_audio WHERE created_at < ?1').bind(new Date(Date.now() - 7 * 864e5).toISOString()).run();
