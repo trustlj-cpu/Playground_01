@@ -118,6 +118,34 @@ function err(code){return T['e_'+code]||T.e_generic;}
 function remember(u){try{if(u)sessionStorage.setItem('dd_me',JSON.stringify({t:Date.now(),u:u}));else sessionStorage.removeItem('dd_me');}catch(e){}}
 return {L:L,T:T,R:R,pre:pre,RG:RG,fmtDate:fmtDate,safeNext:safeNext,api:api,err:err,remember:remember};})();</script>`;
 
+// ── 구독(비공개 테스트) 문구(ko·en, 나머지 언어는 en)·임시 값·화면 CSS
+const SUB_T = {
+  ko: { navLabel: '구독', front: '나만의 1면', words: '내 단어장', search: '지난 호 검색', plan: '구독 안내', edit: '나라 고치기', add: '더하기', save: '저장', cancel: '취소', loading: '불러오는 중…', country: '나라', pickHint: '나라를 3~5곳 고르세요. 고른 순서대로 실립니다.', e_count: '나라는 3곳 이상 5곳 이하로 골라 주세요. (지금 {n}곳)', e_generic: '저장하지 못했습니다. 잠시 후 다시 해 주세요.', remove: '빼기', localTime: '현지 {t} 발행', yest: '어제 판', pending: '번역 준비 중', noEd: '아직 나온 판이 없습니다', view: '이 판 1면 보기 →', count: '{n}개', firstSeen: '처음 본 기사', saved: '담은 날', emptyWords: '아직 담은 말이 없습니다. 기사 속 점선 밑줄 말이나 용어사전에서 「단어장에 담기」를 누르세요.', glossary: '용어사전', q: '찾을 말', qph: '예: 국정원', range: '기간', d7: '최근 7일', d30: '최근 30일', all: '전체', go: '찾기', none: '찾는 말이 든 기사가 없습니다.', more: '더 보기', priceTable: '나라별 값(임시)', addWord: '단어장에 담기', addedWord: '단어장에 담김' },
+  en: { navLabel: 'Subscription', front: 'My front page', words: 'My words', search: 'Past editions', plan: 'About the plan', edit: 'Change countries', add: 'Add', save: 'Save', cancel: 'Cancel', loading: 'Loading…', country: 'Country', pickHint: 'Pick 3 to 5 countries. They appear in the order you pick them.', e_count: 'Pick at least 3 and at most 5 countries. (now {n})', e_generic: 'Could not save. Please try again shortly.', remove: 'Remove', localTime: 'published {t} local time', yest: "Yesterday's edition", pending: 'Translation coming', noEd: 'No edition yet', view: 'Open this front page →', count: '{n} words', firstSeen: 'First seen in', saved: 'Saved', emptyWords: 'No words yet. Tap “Add to My words” on a dotted-underlined word or in the glossary.', glossary: 'Glossary', q: 'Word', qph: 'e.g. tariff', range: 'Period', d7: 'Last 7 days', d30: 'Last 30 days', all: 'All', go: 'Search', none: 'No stories contain that word.', more: 'More', priceTable: 'Price by country (provisional)', addWord: 'Add to My words', addedWord: 'In My words' },
+};
+const SUB_PRICES = [['KR', '한국', 'Korea', '1,000원'], ['US', '미국', 'United States', '$1'], ['JP', '일본', 'Japan', '150円'], ['EU', '유로권', 'Euro area', '€1'], ['GB', '영국', 'United Kingdom', '£1']];
+const SUB_CSS = `<style>
+.sub .acc-mast{margin:4px 0 6px}.sub .acc-mast a{color:inherit;display:block}
+.sub-nav{margin:0 0 18px;border-top:2px solid var(--ink)}.sub-nav a{font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 2px;margin-right:22px;color:var(--mute);text-decoration:none;white-space:nowrap}.sub-nav a[aria-current]{color:var(--ink);border-bottom-color:var(--red);font-weight:700}
+.sub .me-h{flex-wrap:wrap}.sub .me-h h1{font-size:clamp(22px,5vw,28px)}
+.fronts .fb{border-bottom:1px solid var(--rule);padding:16px 0 18px}.fb-m{font:12px/1.5 "Noto Sans KR",sans-serif;letter-spacing:.04em;color:var(--mute);margin:0 0 6px}.fb-m b{color:var(--ink);font-weight:700}.fb .tag{display:inline-block;border:1px solid var(--red);color:var(--red);padding:0 5px;margin-left:6px;font-size:11px}
+.fb .hl{font-size:clamp(21px,4.6vw,27px);line-height:1.3;margin:0 0 8px;text-wrap:balance;border:0;padding:0}.fb .hl:lang(ko){word-break:keep-all}
+.plan:lang(ko) p,.plan:lang(ko) dd,.fb .deck:lang(ko){word-break:keep-all}.fb .deck,.wl .df,.plan p,.plan dd{text-align:justify;hyphens:auto;-webkit-hyphens:auto;line-height:1.7}.fb .deck{margin:0 0 8px;color:var(--ink-2)}.fb .more{font:700 13px "Noto Sans KR",sans-serif;color:var(--red);text-decoration:none}
+.sub-ed{border:1px solid var(--rule);padding:12px 14px;margin:14px 0}.chosen{margin:8px 0;padding-left:22px}.chosen li{display:flex;justify-content:space-between;align-items:center;border-bottom:1px dotted var(--rule)}
+.sub select{font:15px "Noto Sans KR",sans-serif;padding:9px 8px;border:1px solid var(--rule);background:transparent;color:var(--ink);max-width:100%;min-width:0}
+.wl .bm-it{grid-template-columns:1fr auto}.wl b{font-size:18px}.wl .df{margin:4px 0;color:var(--ink-2);font-size:15px}.wm{margin:0;font:12px/1.6 "Noto Sans KR",sans-serif;color:var(--mute)}.wm a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:3px}.wx{width:auto;font-size:13px;border-radius:0;padding:0 6px;border:1px solid var(--rule)}
+.sf .fld input{font-size:16px}.sf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sf-row select{width:100%}.sr .bm-it{grid-template-columns:1fr}.sr .hit{display:inline;font-size:inherit;font-weight:800;color:var(--ink)}#more{margin:14px auto 0;width:auto;display:block}
+.plan h1{font-size:clamp(24px,5.4vw,32px);margin:6px 0 12px;text-wrap:balance}.plan h1:lang(ko){word-break:keep-all}.perks{margin:14px 0}.perks dt{font-weight:700;margin-top:10px}.perks dt a{color:inherit;text-decoration-color:var(--red)}.perks dd{margin:2px 0 0}.price{font:900 26px "Noto Serif KR",Georgia,serif;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);padding:10px 0;text-align:center;margin:18px 0 8px}.trial{color:var(--red);font-weight:700;text-align:center!important}
+.prices{border-collapse:collapse;margin:18px auto 0;font:14px "Noto Sans KR",sans-serif;min-width:220px}.prices caption{color:var(--mute);font-size:12px;letter-spacing:.06em;margin-bottom:6px}.prices th,.prices td{border-bottom:1px dotted var(--rule);padding:6px 10px;text-align:left}.prices td{text-align:right;font-variant-numeric:tabular-nums}
+.sub-in{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px "Noto Sans KR",sans-serif;padding:10px 0;border-bottom:1px solid var(--rule)}.sub-in a{color:inherit;text-decoration-color:var(--red);text-underline-offset:3px}.sub-in b{color:var(--red)}
+</style>`;
+// 용어사전 페이지(/glossary/, /<나라>/glossary/)의 「단어장에 담기」: 구독 계정(sub)에만 보인다. 다른 독자에게는 아무것도 안 바뀜.
+// 단추는 호 페이지 책갈피(.dd-bm)와 같은 크기(36px)·아이콘. 저장은 기존 /api/bookmarks(kind 'term').
+const subGloss = (region, lang) => `<style>.term h3{position:relative;padding-right:40px}.term .dd-bm{position:absolute;top:-6px;right:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:transparent;color:var(--ink,#121212);cursor:pointer}.term .dd-bm svg{width:18px;height:18px}.term .dd-bm path{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}.term .dd-bm[aria-pressed="true"]{color:var(--red,#8d2f22)}.term .dd-bm[aria-pressed="true"] path{fill:currentColor}</style><script>(function(){if(window.__ddApp||!window.ddMe||!/(?:^|;\\s*)dd_in=1/.test(document.cookie))return;var R=${js(region)},LG=${js(lang)},SVG=${js(SVG_BM)},L=${js({ on: SUB_T.ko.addedWord, off: SUB_T.ko.addWord })},LE=${js({ on: SUB_T.en.addedWord, off: SUB_T.en.addWord })};if(!/^ko/.test(LG))L=LE;
+window.ddMe().then(function(u){if(!u||!u.sub)return;return fetch('/api/bookmarks?kind=term',{credentials:'same-origin',cache:'no-store'}).then(function(r){return r.ok?r.json():{items:[]};}).then(function(j){var have={};(j.items||[]).forEach(function(x){have[x.ref]=x.id;});
+[].forEach.call(document.querySelectorAll('.term[data-sl]'),function(t){var k=t.getAttribute('data-sl'),h=t.querySelector('h3');if(!h)return;var b=document.createElement('button');b.type='button';b.className='dd-bm';b.innerHTML=SVG;function set(on){b.setAttribute('aria-pressed',on?'true':'false');b.setAttribute('aria-label',(on?L.on:L.off)+': '+k);b.title=on?L.on:L.off;}set(k in have);
+b.addEventListener('click',function(e){e.preventDefault();var on=b.getAttribute('aria-pressed')!=='true';set(on);var d=t.querySelector(':scope>div:not(.w):not(.src)');fetch('/api/bookmarks',{method:on?'POST':'DELETE',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'term',region:R,lang:LG,ref:k,title:k,url:location.pathname,note:d?d.textContent.slice(0,380):''})}).then(function(r){if(!r.ok)throw 0;}).catch(function(){set(!on);});});h.appendChild(b);});});}).catch(function(){});})();</script>`;
+
 module.exports = function build(C) {
   const { fs, path, OUT, esc, I18N, HEAD, FONTS, BASECSS, NAV, NAVSCROLL, NAVL, NAV_KEYS, LANGCODE, COUNTRIES, REGIONS, LIVE, latestKR } = C;
   const ko = pick(I18N, 'ko');
@@ -188,13 +216,14 @@ if(GCID)gsi(GCID);else A.api('GET','/api/auth/config').then(function(j){if(j&&j.
 
   // ── /me/: 기사 북마크 · 용어 북마크 · 계정
   const empty = (k, href) => `<div class="empty" id="e-${k}" hidden>${SVG_BM}<p data-t="${k === 'article' ? 'emptyArticles' : 'emptyTerms'}">${k === 'article' ? ko.emptyArticles : ko.emptyTerms}</p><a class="btn" id="e-${k}-a" href="${href}" data-t="${k === 'article' ? 'readLatest' : 'glossaryLink'}">${k === 'article' ? ko.readLatest : ko.glossaryLink}</a></div>`;
-  write('me', head('데일리드롭 — 마이페이지', '북마크한 기사와 용어', '/me/') + FONTS + BASECSS + PAGE_CSS + navFor('/me/') + `<main class="me">
+  write('me', head('데일리드롭 — 마이페이지', '북마크한 기사와 용어', '/me/') + FONTS + BASECSS + PAGE_CSS + SUB_CSS + navFor('/me/') + `<main class="me">
 <header class="me-h"><h1 data-t="me">${ko.me}</h1><p class="mute" id="who"></p></header>
 <div class="tabs" role="tablist" aria-label="${esc(ko.me)}">
 <button type="button" role="tab" id="t-article" aria-controls="p-article" aria-selected="true"><span data-t="tabArticles">${ko.tabArticles}</span><span class="n" id="n-article"></span></button>
 <button type="button" role="tab" id="t-term" aria-controls="p-term" aria-selected="false"><span data-t="tabTerms">${ko.tabTerms}</span><span class="n" id="n-term"></span></button>
 <button type="button" role="tab" id="t-account" aria-controls="p-account" aria-selected="false"><span data-t="tabAccount">${ko.tabAccount}</span></button>
 </div>
+<nav class="sub-in" id="sub-in" hidden><b>★</b>${['front', 'words', 'search', 'plan'].map(k => `<a href="/me/${k}/" data-s="${k}">${esc(SUB_T.ko[k])}</a>`).join('')}</nav>
 <section id="p-article" role="tabpanel" aria-labelledby="t-article"><p class="mute" id="loading" data-t="loading">${ko.loading}</p><ul class="bm-list" id="l-article"></ul>${empty('article', '/')}</section>
 <section id="p-term" role="tabpanel" aria-labelledby="t-term" hidden><ul class="bm-list" id="l-term"></ul>${empty('term', '/glossary/')}</section>
 <section id="p-account" role="tabpanel" aria-labelledby="t-account" hidden>
@@ -224,12 +253,92 @@ document.getElementById('a-method').textContent=u.method==='both'?'Google · '+T
 var d=new Date(u.created_at);document.getElementById('a-joined').textContent=isNaN(d)?'':A.fmtDate(d.toISOString().slice(0,10));
 var v=document.getElementById('a-verify');v.textContent='';if(!u.verified){var p=document.createElement('p');p.className='acc-ok';if(verify){var b=document.createElement('button');b.type='button';b.className='linkbtn';b.textContent=T.resend;b.addEventListener('click',function(){A.api('POST','/api/auth/email/send').then(function(j){if(!j.ok){p.textContent=A.err(j.error);return;}p.textContent=T.checkLead.replace('{email}',u.email);var fm=document.createElement('form');fm.className='acts';fm.innerHTML='<input class="code-in" style="font:16px sans-serif;padding:9px;max-width:9em;border:1px solid var(--rule);background:transparent;color:inherit" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="'+T.code+'"><button class="acc-btn" type="submit">'+T.verify+'</button>';fm.addEventListener('submit',function(e){e.preventDefault();A.api('POST','/api/auth/email/verify',{code:fm.querySelector('input').value}).then(function(r){if(r.ok){A.remember(r.user);location.reload();}else p.firstChild.textContent=A.err(r.error)+' ';});});p.appendChild(fm);});});p.appendChild(document.createTextNode(T.unverified+' · '));p.appendChild(b);}else p.textContent=T.soon;v.appendChild(p);}
 if(u.admin){var ad=document.createElement('a');ad.className='acc-btn ghost';ad.href='/admin/';ad.textContent='Admin →';document.querySelector('#p-account .acts').appendChild(ad);}}
-A.api('GET','/api/me').then(function(j){if(!j.user){A.remember(null);location.replace('/login/?next=/me/'+(j.pending?'&verify=1':''));return;}A.remember(j.user);account(j.user,j.verify);load();});
+A.api('GET','/api/me').then(function(j){if(!j.user){A.remember(null);location.replace('/login/?next=/me/'+(j.pending?'&verify=1':''));return;}A.remember(j.user);account(j.user,j.verify);load();if(j.user.sub){var si=document.getElementById('sub-in');if(A.L!=='ko')[].forEach.call(si.querySelectorAll('[data-s]'),function(x){x.textContent=${js(SUB_T.en)}[x.getAttribute('data-s')];});si.hidden=false;}});
 document.getElementById('logout').addEventListener('click',function(){A.api('POST','/api/auth/logout').then(function(){A.remember(null);location.replace('/'+A.pre);});});
 document.getElementById('del').addEventListener('click',function(){this.hidden=true;document.getElementById('del-c').hidden=false;document.getElementById('del-n').focus();});
 document.getElementById('del-n').addEventListener('click',function(){document.getElementById('del-c').hidden=true;var d=document.getElementById('del');d.hidden=false;d.focus();});
 document.getElementById('del-y').addEventListener('click',function(){var b=this;b.disabled=true;A.api('DELETE','/api/me',{confirm:true}).then(function(j){if(j.ok){A.remember(null);location.replace('/'+A.pre);}else{b.disabled=false;}});});
 })();</script></body></html>`);
+
+  // ── 구독(비공개 테스트): /me/plan/ · /me/front/ · /me/words/ · /me/search/ — sub=1 계정만(Worker가 아니면 1면으로 302). 틀은 계정 화면과 같음(로고·메뉴·종이·글꼴)
+  const ST = SUB_T, sko = ST.ko;
+  const subNav = cur => `<nav class="sub-nav tabs" aria-label="${esc(sko.navLabel)}">${['front', 'words', 'search', 'plan'].map(k => `<a href="/me/${k}/"${k === cur ? ' aria-current="page"' : ''} data-s="${k}">${esc(sko[k])}</a>`).join('')}</nav>`;
+  const subPage = (k, desc, body, script) => write('me/' + k, head(`데일리드롭 — ${sko[k]}`, desc, `/me/${k}/`) + FONTS + BASECSS + PAGE_CSS + SUB_CSS + navFor(`/me/${k}/`, ' data-nohit') + `<main class="me sub">
+<p class="acc-mast"><a href="/" aria-label="DailyDrop."><span class="dd-logo" role="img" aria-label="DailyDrop." style="width:min(220px,60vw);margin:0 auto">DailyDrop.</span></a></p>
+${subNav(k)}${body}</main>${runtime}<script>var SUBS=${js(ST)};(function(){var A=DDA,S=SUBS[A.L]||(A.L==='ko'?SUBS.ko:SUBS.en);DDA.S=S;[].forEach.call(document.querySelectorAll('[data-s]'),function(el){var k=el.getAttribute('data-s');if(S[k]!=null)el.textContent=S[k];});[].forEach.call(document.querySelectorAll('[data-sp]'),function(el){var k=el.getAttribute('data-sp');if(S[k]!=null)el.setAttribute('placeholder',S[k]);});
+function cname(c){try{return new Intl.DisplayNames([A.L],{type:'region'}).of(c);}catch(e){return c;}}DDA.cname=cname;DDA.flag=function(c){return (A.RG[c]||{}).f||'';};})();</script><script>${script}</script></body></html>`);
+
+  // 안내(/me/plan/): 문안은 규격 그대로. 시험 운영 — 결제 없음.
+  subPage('plan', '구독 안내 · 시험 운영(결제 없음)', `<article class="plan" lang="ko" id="plan-ko">
+<h1>신문 한 부 값으로 한 달</h1>
+<p>매일 아침 1면과 속보는 지금처럼 누구나 읽습니다. 구독하시면 세 가지가 더해집니다.</p>
+<dl class="perks"><dt><a href="/me/front/">나만의 1면</a></dt><dd>고르신 나라들의 머리기사를 한 장에 모아 드립니다.</dd><dt><a href="/me/words/">내 단어장</a></dt><dd>어려운 말을 담아 두고 다시 보실 수 있습니다.</dd><dt><a href="/me/search/">지난 호 검색</a></dt><dd>날짜나 낱말로 지난 기사를 찾아 드립니다.</dd></dl>
+<p class="price">한 달 1,000원</p>
+<p class="trial">지금은 시험 운영 중입니다. 결제는 받지 않습니다.</p>
+</article><article class="plan" lang="en" id="plan-en" hidden>
+<h1>A month for the price of one paper</h1>
+<p>The front page and breaking news stay free for everyone, every morning. Subscribers get three more things.</p>
+<dl class="perks"><dt><a href="/me/front/">My front page</a></dt><dd>The lead stories of the countries you pick, gathered on one page.</dd><dt><a href="/me/words/">My words</a></dt><dd>Keep the hard words you meet and come back to them.</dd><dt><a href="/me/search/">Past editions</a></dt><dd>Find past stories by date or by word.</dd></dl>
+<p class="price">$1 a month</p>
+<p class="trial">This is a trial. No payment is taken.</p>
+</article>
+<table class="prices"><caption data-s="priceTable">${esc(sko.priceTable)}</caption><tbody>${SUB_PRICES.map(([c, ko, en, v]) => `<tr><th scope="row"><span data-ko="${esc(ko)}" data-en="${esc(en)}">${esc(ko)}</span></th><td>${esc(v)}</td></tr>`).join('')}</tbody></table>`,
+    `(function(){var A=DDA,ko=A.L==='ko';document.getElementById('plan-ko').hidden=!ko;document.getElementById('plan-en').hidden=ko;[].forEach.call(document.querySelectorAll('.prices [data-ko]'),function(s){s.textContent=ko?s.getAttribute('data-ko'):s.getAttribute('data-en');});})();`);
+
+  // A. 나만의 1면(/me/front/): 고른 순서대로 나라마다 한 덩어리
+  subPage('front', '나만의 1면', `<header class="me-h"><h1><span data-s="front">${esc(sko.front)}</span> · <span id="fd"></span></h1><button type="button" class="linkbtn" id="edit" data-s="edit">${esc(sko.edit)}</button></header>
+<section id="ed" class="sub-ed" hidden><p class="mute" data-s="pickHint">${esc(sko.pickHint)}</p><ol id="chosen" class="chosen"></ol>
+<div class="acts"><select id="add" aria-label="${esc(sko.country)}"></select><button type="button" class="acc-btn ghost" id="addb" data-s="add">${esc(sko.add)}</button></div>
+<p class="acc-err" id="ferr" role="alert" hidden></p><div class="acts"><button type="button" class="acc-btn" id="save" data-s="save">${esc(sko.save)}</button><button type="button" class="acc-btn ghost" id="cancel" data-s="cancel">${esc(sko.cancel)}</button></div></section>
+<p class="mute" id="loading" data-s="loading">${esc(sko.loading)}</p><div id="fronts" class="fronts"></div>`,
+    `(function(){var A=DDA,S=A.S,cur=[],live=[],draft=[];
+document.getElementById('fd').textContent=new Intl.DateTimeFormat(A.L,{year:'numeric',month:'long',day:'numeric',weekday:'short'}).format(new Date());
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function tm(at,tz){try{return new Intl.DateTimeFormat(A.L,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:tz}).format(new Date(at));}catch(e){return '';}}
+function render(j){var box=document.getElementById('fronts');box.textContent='';(j.items||[]).forEach(function(x){var s=el('section','fb');var m=el('p','fb-m');m.appendChild(el('b',null,A.flag(x.code)+' '+A.cname(x.code)));
+if(x.none){m.appendChild(el('span',null,' · '+S.noEd));s.appendChild(m);box.appendChild(s);return;}
+m.appendChild(el('span',null,' · '+S.localTime.replace('{t}',tm(x.at,x.tz))));if(x.yest){m.appendChild(el('span','tag',S.yest));}if(x.pending){m.appendChild(el('span','tag',S.pending));}s.appendChild(m);
+var h=el('h2','hl',x.t);if(x.pending)h.lang=x.lang;s.appendChild(h);if(x.d){var d=el('p','deck',x.d);if(x.pending)d.lang=x.lang;s.appendChild(d);}
+var a=el('a','more',S.view);a.href=x.url;s.appendChild(a);box.appendChild(s);});}
+function sel(){var s=document.getElementById('add');s.textContent='';live.filter(function(c){return draft.indexOf(c)<0;}).map(function(c){return [c,A.cname(c)];}).sort(function(a,b){return a[1].localeCompare(b[1],A.L);}).forEach(function(c){var o=el('option',null,A.flag(c[0])+' '+c[1]);o.value=c[0];s.appendChild(o);});}
+function list(){var ol=document.getElementById('chosen');ol.textContent='';draft.forEach(function(c,i){var li=el('li');li.appendChild(el('span',null,A.flag(c)+' '+A.cname(c)));var x=el('button','bm-x','×');x.type='button';x.setAttribute('aria-label',S.remove+': '+A.cname(c));x.addEventListener('click',function(){draft.splice(i,1);list();});li.appendChild(x);ol.appendChild(li);});sel();}
+function edit(on){document.getElementById('ed').hidden=!on;if(on){draft=cur.slice();list();show('');}}
+function show(t){var e=document.getElementById('ferr');e.textContent=t;e.hidden=!t;}
+document.getElementById('edit').addEventListener('click',function(){edit(document.getElementById('ed').hidden);});
+document.getElementById('cancel').addEventListener('click',function(){edit(false);});
+document.getElementById('addb').addEventListener('click',function(){var v=document.getElementById('add').value;if(v&&draft.indexOf(v)<0){draft.push(v);list();}});
+document.getElementById('save').addEventListener('click',function(){var b=this;b.disabled=true;A.api('PUT','/api/sub/front',{countries:draft}).then(function(j){b.disabled=false;if(j.ok){edit(false);load();}else show(j.error==='count'?S.e_count.replace('{n}',draft.length):S.e_generic);});});
+function load(){A.api('GET','/api/sub/front?lang='+encodeURIComponent(A.L)).then(function(j){document.getElementById('loading').hidden=true;if(j.status===403){location.replace('/');return;}cur=j.countries||[];live=j.live||[];render(j);if(!cur.length)edit(true);});}
+load();})();`);
+
+  // B. 내 단어장(/me/words/): 담은 말 최신순, 뜻은 용어사전 글자 그대로(Worker가 _sub/gloss.json 에서)
+  subPage('words', '내 단어장', `<header class="me-h"><h1 data-s="words">${esc(sko.words)}</h1><p class="mute" id="wn"></p></header>
+<p class="mute" id="loading" data-s="loading">${esc(sko.loading)}</p><ul class="bm-list wl" id="wl"></ul><div class="empty" id="we" hidden>${SVG_BM}<p data-s="emptyWords">${esc(sko.emptyWords)}</p><a class="btn" id="wg" href="/glossary/" data-s="glossary">${esc(sko.glossary)}</a></div>`,
+    `(function(){var A=DDA,S=A.S;document.getElementById('wg').href='/'+A.pre+'glossary/';
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function cnt(){var n=document.getElementById('wl').children.length;document.getElementById('wn').textContent=S.count.replace('{n}',n);document.getElementById('we').hidden=n>0;}
+function day(ms){var d=new Date(ms);return isNaN(d)?'':new Intl.DateTimeFormat(A.L,{year:'numeric',month:'short',day:'numeric'}).format(d);}
+function item(x){var li=el('li','bm-it');var w=el('div','wd');w.appendChild(el('b',null,x.term));if(x.d||x.note)w.appendChild(el('p','df',x.d||x.note));
+var m=el('p','wm');if(x.first){m.appendChild(el('span',null,S.firstSeen+' '));var a=el('a',null,x.first.t||A.fmtDate(x.first.date));a.href=x.first.url;m.appendChild(a);m.appendChild(document.createTextNode(' · '));}m.appendChild(el('span',null,S.saved+' '+day(x.saved)));w.appendChild(m);li.appendChild(w);
+var del=el('button','bm-x wx',S.remove);del.type='button';del.setAttribute('aria-label',S.remove+': '+x.term);del.addEventListener('click',function(){li.remove();cnt();A.api('DELETE','/api/bookmarks',{id:x.id}).then(function(j){if(!j.ok)load();});});li.appendChild(del);return li;}
+function load(){A.api('GET','/api/sub/words').then(function(j){document.getElementById('loading').hidden=true;if(j.status===403){location.replace('/');return;}var l=document.getElementById('wl');l.textContent='';(j.items||[]).forEach(function(x){l.appendChild(item(x));});cnt();});}
+load();})();`);
+
+  // C. 지난 호 검색(/me/search/): 낱말 + 나라(기본: 독자의 나라) + 기간. 결과 문장은 textContent 로만 넣고 낱말만 <b>
+  subPage('search', '지난 호 검색', `<header class="me-h"><h1 data-s="search">${esc(sko.search)}</h1></header>
+<form id="sf" class="sf" role="search"><label class="fld"><span data-s="q">${esc(sko.q)}</span><input type="search" name="q" id="q" maxlength="60" required data-sp="qph" placeholder="${esc(sko.qph)}"></label>
+<div class="sf-row"><label class="fld"><span data-s="country">${esc(sko.country)}</span><select name="r" id="r"></select></label><label class="fld"><span data-s="range">${esc(sko.range)}</span><select name="days" id="days"><option value="7" data-s="d7">${esc(sko.d7)}</option><option value="30" selected data-s="d30">${esc(sko.d30)}</option><option value="all" data-s="all">${esc(sko.all)}</option></select></label></div>
+<button class="acc-btn" type="submit" data-s="go">${esc(sko.go)}</button></form>
+<p class="mute" id="st" role="status"></p><ul class="bm-list sr" id="sr"></ul><button type="button" class="acc-btn ghost" id="more" hidden data-s="more">${esc(sko.more)}</button>`,
+    `(function(){var A=DDA,S=A.S,f=document.getElementById('sf'),page=0,last=null;
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+A.api('GET','/live.json').then(function(j){var r=document.getElementById('r'),codes=[];for(var k in j)if(j[k]&&j[k].code)codes.push(j[k].code);codes.map(function(c){return [c,A.cname(c)];}).sort(function(a,b){return a[1].localeCompare(b[1],A.L);}).forEach(function(c){var o=el('option',null,A.flag(c[0])+' '+c[1]);o.value=c[0];r.appendChild(o);});r.value=codes.indexOf(A.R)>=0?A.R:'KR';
+var p=new URLSearchParams(location.search);if(p.get('q')){f.q.value=p.get('q');if(p.get('r'))r.value=p.get('r');if(p.get('days'))f.days.value=p.get('days');run(0);}});
+function row(x){var li=el('li','bm-it');var a=el('a');a.href=x.url;a.appendChild(el('span','bm-ed',A.flag(x.r)+' '+A.fmtDate(x.date)+' · '+A.cname(x.r)));a.appendChild(el('b',null,x.t));var sn=el('span','nt');sn.appendChild(document.createTextNode(x.s[0]));sn.appendChild(el('b','hit',x.s[1]));sn.appendChild(document.createTextNode(x.s[2]));a.appendChild(sn);li.appendChild(a);return li;}
+function run(pg){var q=f.q.value.trim();if(!q)return;var key='q='+encodeURIComponent(q)+'&r='+encodeURIComponent(f.r.value)+'&days='+encodeURIComponent(f.days.value);if(pg===0){document.getElementById('sr').textContent='';try{history.replaceState(null,'',location.pathname+'?'+key);}catch(e){}}
+var st=document.getElementById('st'),mb=document.getElementById('more');st.textContent=S.loading;mb.hidden=true;last=key;
+A.api('GET','/api/sub/search?'+key+'&page='+pg).then(function(j){if(key!==last)return;if(j.status===403){location.replace('/');return;}page=pg;var l=document.getElementById('sr');(j.items||[]).forEach(function(x){l.appendChild(row(x));});var n=l.children.length;st.textContent=n?'':S.none;mb.hidden=!j.more;});}
+f.addEventListener('submit',function(e){e.preventDefault();run(0);});document.getElementById('more').addEventListener('click',function(){run(page+1);});})();`);
 
   // ── /admin/: 방문 리포트(관리자 전용). 데이터는 /api/admin/stats?range= (Worker가 ADMIN_EMAILS·이메일 인증 확인, 아니면 403)
   write('admin', head('데일리드롭 — 방문 리포트', '관리자 전용', '/admin/') + FONTS + BASECSS + PAGE_CSS + ADMIN_CSS + navFor('/admin/', ' data-nohit') + `<main class="adm">
@@ -269,6 +378,7 @@ module.exports.NAV_JS = NAV_JS;
 module.exports.navItem = navItem;
 module.exports.bmScript = bmScript;
 module.exports.pick = pick;
+module.exports.subGloss = subGloss;
 
 // ── 관리자 대시보드 CSS·JS (외부 라이브러리 없이 인라인 SVG)
 const ADMIN_CSS = `<style>
