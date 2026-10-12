@@ -69,4 +69,3 @@ CREATE TABLE IF NOT EXISTS app_codes (
   challenge TEXT NOT NULL,               -- PKCE S256 code_challenge (base64url 43자)
   expires_at INTEGER NOT NULL            -- ms epoch, 발급 + 60초
 );
--- 구독(비공개 테스트) 열: src/account.js ensureSubCols()가 자동으로 더한다(ALTER TABLE users ADD COLUMN sub INTEGER / front TEXT). 켜기는 수동: UPDATE users SET sub = 1 WHERE email = '<이메일>';
