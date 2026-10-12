@@ -188,9 +188,16 @@ export default {
           let id = 0; for (const ch of k) id = (id * 31 + ch.charCodeAt(0)) >>> 0;
           const at = c.items.map(i => Date.parse(i.published_at) || 0).reduce((a, b) => Math.max(a, b), 0);
           out.push({ id: id.toString(36), t: String(c.topic || '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, ''), l: c.lang || '', f: c.field, r: c.region, ns: c.n_sources, s: c.sources, at: at ? new Date(at).toISOString() : null,
-            u: its.slice(0, 4).map(i => ({ t: i.title, s: i.source, u: i.link })), sc: (c.n_sources * 2 + (c.n_items || 0)) * (c.field === '스포츠' ? 0.6 : 1) * (1 - hi * 0.25) });
+            u: its.slice(0, 4).map(i => ({ t: i.title, s: i.source, u: i.link })), sp: c.field === '스포츠' || (c.items || []).some(i => /sport|deport|esporte|calcio|football|soccer|nfl|nba/i.test(i.link || '')), sc: (c.n_sources * 2 + (c.n_items || 0)) * (c.field === '스포츠' || (c.items || []).some(i => /sport|deport|esporte|calcio|football|soccer|nfl|nba/i.test(i.link || '')) ? 0.4 : 1) * (1 - hi * 0.25) });
         } });
-      out.sort((a, b) => b.sc - a.sc); const items = out.slice(0, 30);
+      out.sort((a, b) => b.sc - a.sc);
+      const bg = t => { const x = String(t).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''), o = new Set(); for (let i = 0; i < x.length - 1; i++) o.add(x.slice(i, i + 2)); return o; };
+      const sim = (a, b) => { let n = 0; for (const k of a) if (b.has(k)) n++; return n / ((a.size + b.size - n) || 1); };
+      const items = [], kept = []; let sport = 0;
+      for (const it of out) { const b = bg(it.t), dom = new Set(it.u.map(u => u.u.split('/')[2]));
+        if (kept.some(k => sim(k.b, b) >= 0.4 || [...dom].filter(d => k.dom.has(d)).length && sim(k.b, b) >= 0.2)) continue;
+        if (it.sp && ++sport > 4) continue;
+        kept.push({ b, dom }); items.push(it); if (items.length >= 30) break; }
       for (const it of items) it.u = it.u.map(x => ({ ...x, s: (x.u.match(/^https?:\/\/(?:www\.)?([^/]+)/) || [])[1] || x.s }));
       { const run = liveSum(env, items).catch(() => {}); await Promise.race([run, new Promise(r => setTimeout(r, 3000))]); if (ctx && ctx.waitUntil) ctx.waitUntil(run); }
       if (url.searchParams.get('raw') !== '1') { const need = items.filter(i => !i.h); await trBreak(env, need, 'en').catch(() => {}); for (const i of need) i.h = i.t; const ok = items; return json({ at: new Date().toISOString(), lang, items: ok }, 200, { 'cache-control': 'public, max-age=300' }); }
@@ -365,14 +372,14 @@ async function liveSum(env, items) {
     const heads = [it.t, ...it.u.map(u => u.t)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 6).map(t => '- ' + t).join('\n');
     const leads = sm.map(r => String(r.summary || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400)).filter(x => x.length > 40).slice(0, 4).map(t => '- ' + t).join('\n');
     const cn = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }).of(it.r); } catch (e) { return it.r; } })();
-    const prompt = 'Country of the outlets: ' + cn + '.\nHeadlines from different news outlets about one event:\n' + heads + (leads ? '\n\nOpening lines of their reports:\n' + leads : '') + '\n\nWrite in plain English for an international reader who knows nothing about this country. Name the country and who is involved (e.g. "New Zealand\'s National Party", not "National"). Use ONLY facts stated above; do not add names, numbers, causes or opinions that are not there. Avoid vague phrases like "a financial issue" - be concrete or leave it out. Reply with JSON only: {"h": "<neutral news headline, max 14 words>", "x": "<2-3 short sentences: what happened, and why it matters to readers, only if the headlines support it>"}';
+    const prompt = 'Country of the outlets: ' + cn + '.\nHeadlines from different news outlets about one event:\n' + heads + (leads ? '\n\nOpening lines of their reports:\n' + leads : '') + '\n\nWrite in plain English for an international reader who knows nothing about this country. Name the country and who is involved (e.g. "New Zealand\'s National Party", not "National"). Use ONLY facts stated above; do not add names, numbers, causes or opinions that are not there. Avoid vague phrases like "a financial issue" - be concrete or leave it out. Reply with JSON only: {"h": "<neutral news headline, max 14 words>", "x": "<2-3 short concrete sentences on what happened; if the text above gives no concrete facts beyond the headline, use an empty string. Never write filler such as \"It is a notable development\" or claims about who is affected unless stated above>"}';
     try {
       const r = await Promise.race([env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
       const resp = r && r.response; let o = resp && typeof resp === 'object' ? resp : null;
       if (!o) { const m = String(resp || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('no json: ' + String(resp).slice(0, 120)); o = JSON.parse(m[0]); } const h = String(o.h || '').trim().slice(0, 160), x = String(o.x || '').trim().slice(0, 700);
-      if (h.length < 15 || x.length < 40) return;
-      it.h = h; it.x = x;
-      await env.DB.prepare('INSERT OR REPLACE INTO live_sum (id, h, x, at) VALUES (?1, ?2, ?3, ?4)').bind(it.id, h, x, Date.now()).run();
+      let x2 = /notable development|this is news about|affects people|it is (an? )?(important|significant)/i.test(x) ? '' : x; if (h.length < 15) return; if (x2.length < 40) x2 = '';
+      it.h = h; it.x = x2;
+      await env.DB.prepare('INSERT OR REPLACE INTO live_sum (id, h, x, at) VALUES (?1, ?2, ?3, ?4)').bind(it.id, h, x2, Date.now()).run();
     } catch (e) { await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_err (at INTEGER, e TEXT)').run(); await env.DB.prepare('INSERT INTO live_err VALUES (?1, ?2)').bind(Date.now(), String(e && e.message || e).slice(0, 300)).run(); }
   }));
 }
