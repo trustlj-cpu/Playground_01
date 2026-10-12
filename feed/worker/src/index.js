@@ -226,7 +226,7 @@ const FEED = {
       // 스포츠·'record-breaking' 오탐 제외(속보 검색 경로는 field 구분이 없어 제목으로 거른다, 10/12)
       const NOTBRK = /record[- ]breaking|breaking (?:ball|point|news? of the week)|야구|KBO|MLB|홈런|타자|투수|이닝|축구|K리그|프리미어리그|골프|LPGA|PGA|농구|배구|NBA|NFL|NHL|월드시리즈|포스트시즌|와일드카드|준플레이오프|플레이오프|챔피언십|野球|サッカー|ゴルフ|プロ野球|甲子園|fútbol|futebol|béisbol|calcio|Bundesliga|Premier League|LaLiga|Serie A|Grand Prix|F1 /i;
       const ENBRK = /^\s*(?:BREAKING\b|Breaking(?:\s+news)?\s*[:|–-]|Just in\s*:)/; // 영어 'Breaking'은 대문자 BREAKING 또는 'Breaking:' 꼴만(LIKE는 대소문자를 안 가려 'Breaking Down' 같은 제목이 걸렸다)
-      for (let i = results.length - 1; i >= 0; i--) { const tt = String(results[i].title || ''); if (NOTBRK.test(tt) || /late[- ]breaking|groundbreaking|breaking ground|breaking down/i.test(tt) || (/^\s*(breaking|just in)\b/i.test(tt) && !ENBRK.test(tt))) results.splice(i, 1); }
+      for (let i = results.length - 1; i >= 0; i--) { const tt = String(results[i].title || ''); if (NOTBRK.test(tt) || /\/(sports?|baseball|soccer|football|golf|basketball|volleyball|esports?)\//i.test(String(results[i].link || '')) || /late[- ]breaking|groundbreaking|breaking ground|breaking down/i.test(tt) || (/^\s*(breaking|just in)\b/i.test(tt) && !ENBRK.test(tt))) results.splice(i, 1); }
       results.sort((x, y) => (Date.parse(y.published_at) || 0) - (Date.parse(x.published_at) || 0));
       const seen = new Set(), items = [];
       for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at, l: r.lang || '', ot: r.title }); if (items.length >= (past ? 12 : 8)) break; }
@@ -245,7 +245,7 @@ const FEED = {
       if (!b) return json({ error: 'not found' }, 404, { 'cache-control': 'public, max-age=60' });
       const it = { id: b.id, t: b.t, u: b.u, s: b.s, at: b.at, ot: b.ot };
       const row = await env.DB.prepare('SELECT h, x FROM brk_sum WHERE id = ?1 AND lang = ?2').bind(id, lang).first();
-      if (row) { it.t = row.h || it.t; it.x = row.x || ''; } else await brkSum(env, it, lang, true).catch(() => {});
+      if (row) { it.t = row.h || it.t; it.x = sameAsTitle(row.x, it.t) ? '' : (row.x || ''); } else await brkSum(env, it, lang, true).catch(() => {});
       delete it.ot; return json(it, 200, { 'cache-control': 'public, max-age=300' });
     }
     // 오늘의 단어(독자 클릭 순위): 용어 클릭 1회 = POST /term/hit {r,d,l,t}; GET /term/top?r=&d=&l= → 상위 5
@@ -433,7 +433,7 @@ async function brkStore(env, items, lang, region, ctx) {
   const { results } = await env.DB.prepare(`SELECT id, h, x FROM brk_sum WHERE lang = ?1 AND id IN (${items.map((_, i) => '?' + (i + 2)).join(',')})`).bind(lang || 'en', ...items.map(i => i.id)).all();
   const have = new Map(results.map(r => [r.id, r]));
   const todo = [];
-  for (const it of items) { const r = have.get(it.id); if (r) { if (r.h) it.t = r.h; it.x = r.x || ''; } else if (todo.length < 3) todo.push({ ...it }); }
+  for (const it of items) { const r = have.get(it.id); if (r) { if (r.h) it.t = r.h; it.x = sameAsTitle(r.x, it.t) ? '' : (r.x || ''); } else if (todo.length < 3) todo.push({ ...it }); }
   if (todo.length && ctx && ctx.waitUntil) ctx.waitUntil(Promise.all(todo.map(it => brkSum(env, it, lang || 'en').catch(() => {}))));
 }
 async function brkSum(env, it, lang, aiHead) {
@@ -447,6 +447,13 @@ async function brkSum(env, it, lang, aiHead) {
   if (!o) { const m = String(resp || '').match(/\{[\s\S]*\}/); if (!m) return; o = JSON.parse(m[0]); }
   const h = aiHead ? String(o.h || '').trim().slice(0, 200) : String(it.t || '').slice(0, 200), x = String(o.x || '').trim().slice(0, 700);
   if (h.length < 4) return;
-  it.t = h; it.x = x.length >= 30 ? x : '';
+  it.t = h; it.x = x.length >= 30 && !sameAsTitle(x, h) ? x : '';
   await env.DB.prepare('INSERT OR REPLACE INTO brk_sum (id, lang, h, x, at) VALUES (?1, ?2, ?3, ?4, ?5)').bind(it.id, lang, h, it.x, Date.now()).run();
+}
+
+// 요약이 제목을 되풀이할 뿐이면(글자 두 개씩 겹치는 비율이 높으면) 요약을 비운다(괄괄이 10/13)
+function sameAsTitle(x, t) {
+  const bg = v => { const z = String(v || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''), o = new Set(); for (let i = 0; i < z.length - 1; i++) o.add(z.slice(i, i + 2)); return o; };
+  const a = bg(x), b = bg(t); if (!a.size || !b.size) return false; let n = 0; for (const k of b) if (a.has(k)) n++;
+  return n / b.size >= 0.7 && a.size <= b.size * 2.2;
 }
