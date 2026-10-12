@@ -348,3 +348,5 @@ data=j;$('gate').hidden=true;$('dash').hidden=false;render();clicks();}).catch(f
 [].forEach.call(document.querySelectorAll('.rng button'),function(b){b.addEventListener('click',function(){range=+b.getAttribute('data-r');[].forEach.call(document.querySelectorAll('.rng button'),function(x){x.setAttribute('aria-checked',x===b?'true':'false');});load();});});
 var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(data)render();},200);});
 load();setInterval(function(){if(!document.hidden)load();},300000);})();`;
+module.exports.SVG_BM = SVG_BM;
+module.exports.SVG_SH = SVG_SH;

@@ -33,17 +33,24 @@ const handler = {
       catch (e) { return new Response('{"items":[]}', { status: 502, headers: { 'content-type': 'application/json' } }); }
     }
     // 링크 미리보기 봇(X·페이스북·카톡 등)이 루트(/)를 읽으면 국가판 1면 대신 고정 제목·설명의 카드용 페이지(사람 방문은 그대로 국가판으로)
+    const BOTS = /Twitterbot|facebookexternalhit|Facebot|Slackbot|LinkedInBot|Discordbot|TelegramBot|kakaotalk|WhatsApp|Pinterest|redditbot|Applebot/i;
+    const bq = (url.searchParams.get('b') || '').replace(/[^a-z0-9]/g, '').slice(0, 12);
+    if (bq && BOTS.test(request.headers.get('user-agent') || '') && /^\/(?:[a-z]{2}\/)?$/.test(url.pathname)) {
+      let it = null; try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/breaking/item.json?id=' + bq + '&lang=en', { cf: { cacheTtl: 300, cacheEverything: true } }); if (r.ok) it = await r.json(); } catch (e) {}
+      if (it && it.t) { const e2 = x => String(x || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); const T = e2(it.t) + ' · DailyDrop', D = e2(it.x || ('Breaking · ' + (it.s || ''))), U = 'https://dailydropnewspaper.com/?b=' + bq;
+        return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${T}</title><meta name="description" content="${D}"><link rel="canonical" href="${U}"><meta property="og:type" content="article"><meta property="og:site_name" content="DailyDrop"><meta property="og:url" content="${U}"><meta property="og:title" content="${T}"><meta property="og:description" content="${D}"><meta property="og:image" content="https://dailydropnewspaper.com/og.png?v=5"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${T}"><meta name="twitter:description" content="${D}"><meta name="twitter:image" content="https://dailydropnewspaper.com/og.png?v=5"></head><body><a href="${U}">${T}</a></body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=600' } }); }
+    }
+    // 속보 한 건(1면 속보 팝업용): 피드 Worker /breaking/item.json 을 같은 도메인으로
+    if (url.pathname === '/api/breaking/item.json') {
+      const q = new URLSearchParams({ id: (url.searchParams.get('id') || '').slice(0, 12), lang: (url.searchParams.get('lang') || 'en').slice(0, 5) });
+      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/breaking/item.json?' + q, { cf: { cacheTtl: 300, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=300' } }); }
+      catch (e) { return new Response('{}', { status: 502, headers: { 'content-type': 'application/json' } }); }
+    }
+    // 예전 /live/ 페이지는 없앴다(사장님 10/12): 1면으로
+    if (/^\/live(\/|$)/.test(url.pathname)) return Response.redirect(url.origin + '/', 301);
     if (url.pathname === '/' && /Twitterbot|facebookexternalhit|Facebot|Slackbot|LinkedInBot|Discordbot|TelegramBot|kakaotalk|WhatsApp|Pinterest|redditbot|Applebot/i.test(request.headers.get('user-agent') || '')) {
       const T = 'DailyDrop — the world\'s news, every morning', D = 'One page from 43 countries every morning at 06:00 local time, plus live news confirmed by three or more outlets. Read in your language.';
       return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${T}</title><meta name="description" content="${D}"><link rel="canonical" href="https://dailydropnewspaper.com/"><meta property="og:type" content="website"><meta property="og:site_name" content="DailyDrop"><meta property="og:url" content="https://dailydropnewspaper.com/"><meta property="og:title" content="${T}"><meta property="og:description" content="${D}"><meta property="og:image" content="https://dailydropnewspaper.com/og.png?v=5"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${T}"><meta name="twitter:description" content="${D}"><meta name="twitter:image" content="https://dailydropnewspaper.com/og.png?v=5"></head><body><a href="https://dailydropnewspaper.com/">DailyDrop</a></body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
-    }
-    // 지금 중요한 소식(/live/, /live/<id>/): 피드 Worker /top.json 을 받아 서버에서 그린다(5분 캐시). X 글이 가리킬 우리 주소
-    const lm = url.pathname.match(/^\/live(?:\/([a-z0-9]{1,10}))?(\/?)$/);
-    if (lm) {
-      if (!lm[2]) return Response.redirect(url.origin + url.pathname + '/', 301);
-      const ck = new Request(url.origin + url.pathname), priv = r => { const o = new Response(r.body, r); o.headers.set('cache-control', 'private, max-age=60'); return o; }, hit = await caches.default.match(ck); if (hit) return priv(hit);
-      let d = { items: [] }; try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/top.json?lang=en', { cf: { cacheTtl: 300, cacheEverything: true } }); if (r.ok) d = await r.json(); } catch (e) {}
-      const res = await livePage(env, url, d, lm[1] || ''); if (res.status === 200 && (d.items || []).length) ctx.waitUntil(caches.default.put(ck, res.clone())); return res.status === 200 ? priv(res) : res;
     }
     // 국가판 라우팅. live.json(빌드 산출물) = 현재 발행 중인 나라 목록 [{code,prefix}].
     // ?r=XX 로 고르면 쿠키(dd_region)에 기억. 쿠키가 없고 루트(/)로 들어오면 접속 국가(Cloudflare cf.country)의 판으로.
@@ -60,7 +67,7 @@ const handler = {
     if (url.pathname === '/' && request.method === 'GET') {
       const cookie = request.headers.get('cookie') || ''; const m = cookie.match(/(?:^|;\s*)dd_region=([A-Z]{2})/);
       const region = m && live[m[1]] !== undefined ? m[1] : live[country] !== undefined ? country : (country === 'KR' || !country ? 'KR' : 'US');
-      if (region !== 'KR' && live[region] !== undefined) return withCC(Response.redirect(url.origin + '/' + live[region], 302), country);
+      if (region !== 'KR' && live[region] !== undefined) return withCC(Response.redirect(url.origin + '/' + live[region] + (url.searchParams.get('b') ? '?b=' + encodeURIComponent(url.searchParams.get('b')) : ''), 302), country);
     }
     // 예약 발행: schedule.json의 공개 시각(at)이 지난 호가 있으면 그 나라 1면·그 호 페이지(앱 API /app/v1 의 그 호 JSON·index·glossary 포함)를 _sched 사본으로 내보낸다. _sched 직접 접근은 막는다.
     if (url.pathname.startsWith('/_sched/') || url.pathname === '/schedule.json') return new Response('Not found', { status: 404 });
@@ -130,22 +137,3 @@ async function schedule(env, url) {
   SCHED_AT = Date.now(); return SCHED;
 }
 
-const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-function ago(t) { const m = Math.round((Date.now() - Date.parse(t)) / 60000); return !(m >= 0) ? '' : m < 60 ? m + ' min ago' : Math.round(m / 60) + ' h ago'; }
-async function livePage(env, url, d, id) {
-  const items = d.items || [], one = id ? items.find(i => i.id === id) : null;
-  if (id && !one) return Response.redirect(url.origin + '/live/', 302);
-  let tpl = ''; try { const r = await env.ASSETS.fetch(new Request(url.origin + '/_art/US.html')); if (r.ok) tpl = await r.text(); } catch (e) {}
-  if (!tpl) return new Response('Live page unavailable', { status: 503 });
-  const T = one ? one.h : 'Live: what matters now', D = one ? (one.x || 'Reported by ' + one.ns + ' outlets.') : 'Stories reported by three or more outlets in the last few hours, summarised in plain English. Updated every 10 minutes.';
-  const U = '/live/' + (one ? one.id + '/' : '');
-  const meta = i => `${esc(i.ns)} outlets · ${esc(ago(i.at))}`;
-  const st = '<style>@font-face{font-family:"DD Blackletter";font-display:swap;src:url(/brand/nyt-display.woff) format("woff")}.lv .mast{text-align:center;margin:6px 0 4px}.lv .mast a{color:inherit;text-decoration:none;font-family:"DD Blackletter",Georgia,serif;font-size:clamp(40px,8vw,72px);letter-spacing:-.02em;line-height:1}.lv .mast i{font-style:normal;color:var(--red,#c0392b)}.lv h2{font-size:1.2em;line-height:1.35;margin:1.4em 0 .3em;text-wrap:balance}.lv h2 a{color:inherit;text-decoration:none}.lv .lm{opacity:.7;font-size:.85em;margin:.2em 0 0}</style>';
-  const body = one
-    ? `<main class="lv">${st}<div class="ak">Live · ${meta(one)}</div><h1 class="at">${esc(one.h)}</h1>${one.x ? `<p>${esc(one.x)}</p><p class="lm">Summary based on the headlines of the outlets below. Read their full reports for detail.</p>` : '<p class="lm">Reported by the outlets below. A short summary is being prepared.</p>'}<ul class="as">${(one.u || []).map(u => `<li><a href="${esc(u.u)}" rel="noopener nofollow" target="_blank">${esc(u.s)}</a></li>`).join('')}</ul><p><a class="btn" href="/">Today’s morning edition →</a></p></main>`
-    : `<main class="lv">${st}<div class="ak">Live · reported by 3+ outlets · updated every 10 minutes</div><h1 class="at">What matters now</h1>${items.length ? items.map(i => `<h2><a href="/live/${esc(i.id)}/">${esc(i.h)}</a></h2>${i.x ? `<p>${esc(i.x)}</p>` : ''}<p class="lm">${meta(i)}</p>`).join('') : '<p>New stories appear here as soon as three or more outlets report them. Check back in a few minutes.</p>'}<p><a class="btn" href="/">Today’s morning edition →</a></p></main>`;
-  const ld = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': one ? 'NewsArticle' : 'CollectionPage', headline: T, description: D, url: 'https://dailydropnewspaper.com' + U, inLanguage: 'en', ...(one && one.at ? { datePublished: one.at } : {}), image: ['https://dailydropnewspaper.com/og.png?v=5'], publisher: { '@type': 'NewsMediaOrganization', name: 'DailyDrop', url: 'https://dailydropnewspaper.com/' } }).replace(/</g, '\\u003c')}</script>`;
-  tpl = tpl.replace(/ aria-current="page"/g, '');
-  const html = tpl.split('@@T@@').join(esc(T + ' · DailyDrop')).split('@@D@@').join(esc(D)).split('@@U@@').join(U).split('@@L@@').join(ld).split('@@B@@').join(body);
-  return new Response(html, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } });
-}

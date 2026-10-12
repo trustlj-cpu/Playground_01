@@ -224,11 +224,24 @@ const FEED = {
       try { const minSrc = region === 'KR' ? 4 : 3, lo = past ? untilQ - 24 * 3600_000 : Date.now() - 3 * 3600_000, hi = past ? untilQ : Date.now() + 60_000; const hk = t => new Date(t).toISOString().slice(0, 13); const { results: hrs } = await env.DB.prepare('SELECT digest FROM hourly WHERE hour >= ?1 AND hour <= ?2 ORDER BY hour DESC LIMIT 26').bind(hk(lo - 3600_000), hk(hi)).all(); for (const h of hrs || []) for (const c of (JSON.parse(h.digest).clusters || [])) { if ((c.n_sources || 0) < minSrc || c.field === '스포츠' || c.field === '예측시장') continue; if (!(c.region === region || (c.region === 'GLB' && (c.n_sources || 0) >= 5))) continue; const pl = (lang || '').split('-')[0], its = (c.items || []).filter(x => 'AB'.includes(x.tier)), pool = its.length ? its : (c.items || []); const it = pool.find(x => String(x.lang || '').split('-')[0] === pl) || pool.find(x => String(x.lang || '').split('-')[0] === 'en') || pool[0]; const newest = Math.max(...(c.items || []).map(x => Date.parse(x.published_at) || 0)); if (!it || newest < lo || newest > hi) continue; results.push({ title: it.title || c.topic, link: it.link, source: it.source, published_at: new Date(newest).toISOString(), region: c.region, lang: it.lang || '' }); /* 묶음 대표 제목 대신 그 판 언어(없으면 영어) 기사 제목을 쓰고 언어를 같이 넘긴다(번역 가능하게) */ } } catch (e) {}
       results.sort((x, y) => (Date.parse(y.published_at) || 0) - (Date.parse(x.published_at) || 0));
       const seen = new Set(), items = [];
-      for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at, l: r.lang || '' }); if (items.length >= (past ? 12 : 8)) break; }
+      for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at, l: r.lang || '', ot: r.title }); if (items.length >= (past ? 12 : 8)) break; }
       await trBreak(env, items, lang).catch(() => {}); // 번역판(영어·일본어 등)이면 속보 제목을 그 언어로(사장님 10/9)
       // 안전장치(사장님 10/9 '국가판별 언어 제대로'): 판 언어와 다른 언어 제목은 번역에 성공한 것만 남긴다
       { const pl = String(lang || '').toLowerCase().split('-')[0]; if (pl) for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; const src = String(it.l || '').toLowerCase().split('-')[0] || scriptLang(it.o || it.t); const isLatin = !scriptLang(it.o || it.t); const same = src ? src === pl : (isLatin ? !['ko', 'ja', 'zh', 'hi'].includes(pl) : false); if (!same && !it.o) items.splice(i, 1); } }
+      await brkStore(env, items, lang, region, ctx).catch(() => {});
+      for (const it of items) delete it.ot;
       return json({ region, at: new Date().toISOString(), past, items }, 200, { 'cache-control': past ? 'public, max-age=86400' : 'public, max-age=60' });
+    }
+    // 속보 한 건(1면 속보 팝업·공유 주소 /?b=번호): 번호로 저장된 소식 + 독자 언어 요약(없으면 그 자리에서 만든다). 30일 보관
+    if (url.pathname === '/breaking/item.json') {
+      const id = (url.searchParams.get('id') || '').replace(/[^a-z0-9]/g, '').slice(0, 12), lang = (url.searchParams.get('lang') || 'en').toLowerCase().replace(/[^a-z-]/g, '').slice(0, 5);
+      await env.DB.prepare(BRK_DDL).run(); await env.DB.prepare(BRKS_DDL).run();
+      const b = id && await env.DB.prepare('SELECT id, t, u, s, at, region, ot FROM brk WHERE id = ?1 AND created > ?2').bind(id, Date.now() - 30 * 86400_000).first();
+      if (!b) return json({ error: 'not found' }, 404, { 'cache-control': 'public, max-age=60' });
+      const it = { id: b.id, t: b.t, u: b.u, s: b.s, at: b.at, ot: b.ot };
+      const row = await env.DB.prepare('SELECT h, x FROM brk_sum WHERE id = ?1 AND lang = ?2').bind(id, lang).first();
+      if (row) { it.t = row.h || it.t; it.x = row.x || ''; } else await brkSum(env, it, lang, true).catch(() => {});
+      delete it.ot; return json(it, 200, { 'cache-control': 'public, max-age=300' });
     }
     // 오늘의 단어(독자 클릭 순위): 용어 클릭 1회 = POST /term/hit {r,d,l,t}; GET /term/top?r=&d=&l= → 상위 5
     if (url.pathname === '/term/hit' && req.method === 'POST') {
@@ -391,3 +404,40 @@ async function liveSum(env, items, max = 6) {
   }));
 }
 export default FEED;
+
+// 1면 속보 팝업: 속보마다 번호(링크 해시)를 붙여 30일 보관하고, 독자 언어 제목·2~3문장 요약(x)을 붙인다(없으면 뒤에서 만들어 다음 갱신에 붙음)
+const BRK_DDL = 'CREATE TABLE IF NOT EXISTS brk (id TEXT PRIMARY KEY, t TEXT, u TEXT, s TEXT, at TEXT, region TEXT, ot TEXT, created INTEGER)';
+const BRKS_DDL = 'CREATE TABLE IF NOT EXISTS brk_sum (id TEXT, lang TEXT, h TEXT, x TEXT, at INTEGER, PRIMARY KEY (id, lang))';
+const brkId = u => { let h = 0; for (const ch of String(u)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; let g = 7; for (const ch of String(u)) g = (g * 131 + ch.charCodeAt(0)) >>> 0; return h.toString(36) + g.toString(36).slice(0, 3); };
+function srcName(s, ot, u, lang) {
+  s = String(s || '');
+  const tail = (String(ot || '').match(/\s[-–|]\s([^-–|]{2,40})$/) || [])[1];
+  if (/^(구글뉴스|속보 검색|Google|발언 인용|X·SNS|셀럽)/.test(s) || /news\.google\./.test(u || '')) return (tail || '').trim();
+  if (String(lang || '').startsWith('ko')) return s.replace(/\s*[(（][^)）]*[)）]\s*$/, '').replace(/\s+(최신|전체|주요뉴스|주요|헤드라인|속보|이 시각 이슈|경제|정치|사회|국제|1면|홈|톱뉴스|세계)$/, '').trim();
+  return ((String(u || '').match(/^https?:\/\/(?:www\.|m\.|edition\.|english\.)?([^/]+)/) || [])[1] || s).replace(/^news\./, '');
+}
+async function brkStore(env, items, lang, region, ctx) {
+  if (!items.length) return;
+  await env.DB.prepare(BRK_DDL).run(); await env.DB.prepare(BRKS_DDL).run();
+  for (const it of items) { it.id = brkId(it.u); it.s = srcName(it.s, it.ot, it.u, lang); }
+  await env.DB.batch(items.map(it => env.DB.prepare('INSERT OR IGNORE INTO brk (id, t, u, s, at, region, ot, created) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)').bind(it.id, it.o || it.t, it.u, it.s, it.at, region, it.ot || it.t, Date.now())));
+  const { results } = await env.DB.prepare(`SELECT id, h, x FROM brk_sum WHERE lang = ?1 AND id IN (${items.map((_, i) => '?' + (i + 2)).join(',')})`).bind(lang || 'en', ...items.map(i => i.id)).all();
+  const have = new Map(results.map(r => [r.id, r]));
+  const todo = [];
+  for (const it of items) { const r = have.get(it.id); if (r) { if (r.h) it.t = r.h; it.x = r.x || ''; } else if (todo.length < 3) todo.push({ ...it }); }
+  if (todo.length && ctx && ctx.waitUntil) ctx.waitUntil(Promise.all(todo.map(it => brkSum(env, it, lang || 'en').catch(() => {}))));
+}
+async function brkSum(env, it, lang, aiHead) {
+  if (!env.AI) return;
+  const ln = (() => { try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(lang) || lang; } catch (e) { return lang; } })();
+  const { results: sm } = await env.DB.prepare('SELECT summary FROM items WHERE link = ?1 LIMIT 1').bind(it.u).all().catch(() => ({ results: [] }));
+  const lead = String((sm[0] || {}).summary || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 600);
+  const prompt = 'Breaking news headline: ' + (it.ot || it.t) + (lead.length > 40 ? '\nOpening of the report: ' + lead : '') + '\n\nWrite in ' + ln + ' for a general reader. Use ONLY facts stated above; never add names, numbers, causes or reactions that are not there. Keep attribution: if a claim comes from a person or group, say who says it. Reply with JSON only: {"h": "<the headline in ' + ln + ', neutral, without tags like [Breaking]>", "x": "<2-3 short sentences in ' + ln + ' on what happened; empty string if the text above has no facts beyond the headline>"}';
+  const r = await Promise.race([env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', { messages: [{ role: 'user', content: prompt }], max_tokens: 300, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000))]);
+  const resp = r && r.response; let o = resp && typeof resp === 'object' ? resp : null;
+  if (!o) { const m = String(resp || '').match(/\{[\s\S]*\}/); if (!m) return; o = JSON.parse(m[0]); }
+  const h = aiHead ? String(o.h || '').trim().slice(0, 200) : String(it.t || '').slice(0, 200), x = String(o.x || '').trim().slice(0, 700);
+  if (h.length < 4) return;
+  it.t = h; it.x = x.length >= 30 ? x : '';
+  await env.DB.prepare('INSERT OR REPLACE INTO brk_sum (id, lang, h, x, at) VALUES (?1, ?2, ?3, ?4, ?5)').bind(it.id, lang, h, it.x, Date.now()).run();
+}
