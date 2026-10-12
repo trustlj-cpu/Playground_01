@@ -363,7 +363,7 @@ async function liveSum(env, items) {
     const heads = [it.t, ...it.u.map(u => u.t)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 6).map(t => '- ' + t).join('\n');
     const prompt = 'These are headlines from different news outlets about one event:\n' + heads + '\n\nWrite in plain English for an international reader. Use ONLY facts stated in the headlines; do not add names, numbers, causes or opinions that are not there. Reply with JSON only: {"h": "<neutral news headline, max 14 words>", "x": "<2-3 short sentences: what happened, and why it matters to readers, only if the headlines support it>"}';
     try {
-      const r = await Promise.race([env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
+      const r = await Promise.race([env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', { messages: [{ role: 'user', content: prompt }], max_tokens: 260, temperature: 0.2 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))]);
       const resp = r && r.response; let o = resp && typeof resp === 'object' ? resp : null;
       if (!o) { const m = String(resp || '').match(/\{[\s\S]*\}/); if (!m) throw new Error('no json: ' + String(resp).slice(0, 120)); o = JSON.parse(m[0]); } const h = String(o.h || '').trim().slice(0, 160), x = String(o.x || '').trim().slice(0, 700);
       if (h.length < 15 || x.length < 40) return;
