@@ -1,4 +1,5 @@
 import { jevShadow, jevTerms } from './jev.js';
+import { handleTTS, prewarm as ttsPrewarm } from './tts.js';
 // 데일리드롭 피드 Worker (v1.3 — 읽기 전용 digest 경로, 결정적 클러스터링): 10분 수집분 저장(D1) → 목록 페이지 / JSON / 1시간 취합본
 const KST = 9 * 3600 * 1000;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -283,12 +284,16 @@ const FEED = {
       return json(row ? JSON.parse(row.digest) : await buildHourly(env, hour));
     }
     if (url.pathname === '/hourly' || url.pathname === '/hourly/') { const { results } = await env.DB.prepare('SELECT hour, built_at, n_items FROM hourly ORDER BY hour DESC LIMIT 72').all(); return json(results); }
+    // 기사 읽어주기(한국판 1면): 대본·음성 조각(같은 문장은 D1 tts_audio 에 한 번만 만들어 재사용). 사이트 Worker의 /api/tts/* (관리자만) 가 이리로 전달
+    if (url.pathname === '/tts/script.json' || url.pathname === '/tts/audio') return handleTTS(req, env, url);
     if (url.pathname === '/') return page(env, url);
     return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/breaking.json?region=XX&lang=xx', '/top.json?lang=xx', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
     // /live/ 요약 미리 채우기: 10분마다 /top.json 을 한 번 불러 새 묶음 요약을 만들어 둔다(방문이 없어도)
     if (ev.cron === '*/10 * * * *') ctx.waitUntil(FEED.fetch(new Request('https://feed.local/top.json?warm=1'), env, ctx).catch(() => {}));
+    // 기사 읽어주기: 오늘 한국판이 공개돼 있으면 아직 없는 음성 조각을 매분 몇 개씩 미리 만든다(다 만들면 할 일 없음)
+    if (ev.cron === '* * * * *') ctx.waitUntil(ttsPrewarm(env).catch(() => {}));
     if (ev.cron === '* * * * *') { ctx.waitUntil(jevTerms(env).catch(() => {})); ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
     // GitHub schedule은 기본 브랜치(main)의 워크플로만 실행하므로, paycheck-page에만 있는 issuedrop.yml(KST 06/12/18시 자료보고서)도 여기서 호출한다.
