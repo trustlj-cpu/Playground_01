@@ -1,5 +1,5 @@
 // 데일리드롭 사이트 Worker: 정적 자산 서빙 + 호스트 리다이렉트(www·임시 주소 → dailydropnewspaper.com) + 회원·북마크·방문 통계 API(account.js)
-import { handleAccount } from './account.js';
+import { handleAccount, currentUser, isAdmin } from './account.js';
 const CANON = 'dailydropnewspaper.com';
 const OLD_HOSTS = new Set(['dailydrop.kr', 'www.dailydrop.kr', 'thedailydrop.today', 'www.thedailydrop.today', 'www.dailydropnewspaper.com']);
 const ACCOUNT_API = /^\/api\/(auth\/|me$|bookmarks$|hit$|admin\/)/;
@@ -25,6 +25,16 @@ const handler = {
     if (url.pathname === '/api/term/top') {
       try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/term/top' + url.search, { cf: { cacheTtl: 30, cacheEverything: true } }); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=30' } }); }
       catch (e) { return new Response('{"top":[]}', { status: 502, headers: { 'content-type': 'application/json' } }); }
+    }
+    // 기사 읽어주기(관리자만 — ADMIN_EMAILS + 이메일 인증 계정): 대본·음성은 피드 Worker(Workers AI·D1 캐시)에서 만들어 같은 도메인으로 전달
+    if (url.pathname === '/api/tts/script.json' || url.pathname === '/api/tts/audio') {
+      const no = (s, c) => new Response(JSON.stringify({ error: c }), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+      if (request.method !== 'GET') return no(405, 'method');
+      let u = null; try { u = await currentUser(env, request); } catch (e) { u = null; }
+      if (!u) return no(401, 'login_required'); if (!isAdmin(env, u)) return no(403, 'admin_only');
+      const q = new URLSearchParams(); for (const k of ['date', 'mode', 'story', 'i']) { const v = (url.searchParams.get(k) || '').slice(0, 40); if (v) q.set(k, v); }
+      try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev' + url.pathname.slice(4) + '?' + q); const h = new Headers({ 'content-type': r.headers.get('content-type') || 'application/octet-stream', 'cache-control': r.ok && url.pathname.endsWith('/audio') ? 'private, max-age=86400' : 'no-store' }); if (r.headers.get('content-length')) h.set('content-length', r.headers.get('content-length')); if (r.headers.get('x-tts-cache')) h.set('x-tts-cache', r.headers.get('x-tts-cache')); return new Response(r.body, { status: r.status, headers: h }); }
+      catch (e) { return no(502, 'feed'); }
     }
     // 긴급속보 띠: 피드 Worker의 /breaking.json 을 같은 도메인으로(60초 캐시)
     if (url.pathname === '/api/breaking.json') {

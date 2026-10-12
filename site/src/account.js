@@ -73,7 +73,7 @@ const clearCookies = () => [`${SID}=; Path=/; Max-Age=0; HttpOnly; Secure; SameS
 const withCookies = (res, cookies) => { for (const c of cookies) res.headers.append('set-cookie', c); return res; };
 
 // 쿠키(dd_sid)가 있으면 쿠키로만, 없으면 Bearer 토큰으로. cookieOnly: 앱 코드 발급처럼 브라우저 세션이어야 하는 곳.
-async function currentUser(env, req, cookieOnly = false) {
+export async function currentUser(env, req, cookieOnly = false) {
   const c = cookieOf(req, SID); const t = c != null ? c : cookieOnly ? null : bearerOf(req); if (!t || t.length > 100) return null;
   const row = await env.UDB.prepare('SELECT u.*, s.token_hash AS sid_hash, s.expires_at AS sid_exp FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?').bind(await sha256(t)).first();
   if (!row) return null;
@@ -82,7 +82,7 @@ async function currentUser(env, req, cookieOnly = false) {
 }
 const adminList = env => String(env.ADMIN_EMAILS || '').toLowerCase().split(/[,\s]+/).filter(Boolean);
 // 관리자: ADMIN_EMAILS 목록에 있고 이메일이 인증된 계정(아무나 그 주소로 이메일 가입해 관리자가 되는 것을 막음)
-const isAdmin = (env, u) => !!u && u.email_verified === 1 && adminList(env).includes(String(u.email).toLowerCase());
+export const isAdmin = (env, u) => !!u && u.email_verified === 1 && adminList(env).includes(String(u.email).toLowerCase());
 // 발송 경로: Cloudflare Email Service 바인딩(EMAIL, MAIL_LIVE='1' 일 때) 우선, 없으면 Resend 키
 const cfMail = env => !!(env.EMAIL && env.MAIL_LIVE === '1' && env.MAIL_FROM);
 const verifyOn = env => cfMail(env) || !!(env.RESEND_API_KEY && env.MAIL_FROM);
