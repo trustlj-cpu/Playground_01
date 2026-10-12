@@ -92,7 +92,7 @@ async function fcmAccessToken(env) {
   const j = await r.json(); _fcmTok = { t: Date.now(), v: j.access_token, project: sa.project_id }; return _fcmTok;
 }
 
-export default {
+const FEED = {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response(null, { headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } });
@@ -200,10 +200,10 @@ export default {
         if (it.sp && ++sport > 4) continue;
         kept.push({ b, dom }); items.push(it); if (items.length >= 30) break; }
       for (const it of items) it.u = it.u.map(x => ({ ...x, s: (x.u.match(/^https?:\/\/(?:www\.)?([^/]+)/) || [])[1] || x.s }));
-      { const run = liveSum(env, items).catch(() => {}); await Promise.race([run, new Promise(r => setTimeout(r, 3000))]); if (ctx && ctx.waitUntil) ctx.waitUntil(run); }
+      { const warm = url.searchParams.get('warm') === '1'; const run = liveSum(env, items, warm ? 15 : 6).catch(() => {}); if (warm) await run; else { await Promise.race([run, new Promise(r => setTimeout(r, 3000))]); if (ctx && ctx.waitUntil) ctx.waitUntil(run); } }
       if (url.searchParams.get('raw') !== '1') { for (let i = items.length - 1; i >= 0; i--) if (items[i].k && items[i].k !== 'news') items.splice(i, 1);
-        { const wt = t => new Set(String(t || '').toLowerCase().replace(/[^\p{L}\p{N} ]+/gu, ' ').split(/\s+/).filter(w => w.length > 3)); const seenH = []; for (let i = 0; i < items.length; i++) { if (!items[i].h) continue; const a = wt(items[i].h); if (seenH.some(b => { let n = 0; for (const w of a) if (b.has(w)) n++; return n >= 2 && n / Math.min(a.size, b.size) >= 0.5; })) { items.splice(i--, 1); continue; } seenH.push(a); } }
-        const need = items.filter(i => !i.h); await trBreak(env, need, 'en').catch(() => {}); for (const i of need) i.h = i.t; const ok = items; return json({ at: new Date().toISOString(), lang, items: ok }, 200, { 'cache-control': 'public, max-age=300' }); }
+        { const wt = t => new Set(String(t || '').toLowerCase().replace(/[^\p{L}\p{N} ]+/gu, ' ').split(/\s+/).filter(w => w.length > 2 && !['the','and','for','with','from','after','over','says','said'].includes(w))); const seenH = []; for (let i = 0; i < items.length; i++) { if (!items[i].h) continue; const a = wt(items[i].h); if (seenH.some(b => { let n = 0; for (const w of a) if (b.has(w)) n++; return n >= 2 && n / Math.min(a.size, b.size) >= 0.5; })) { items.splice(i--, 1); continue; } seenH.push(a); } }
+        const ok = items.filter(i => i.h); return json({ at: new Date().toISOString(), lang, items: ok }, 200, { 'cache-control': 'public, max-age=300' }); }
       await trBreak(env, items, lang).catch(() => {});
       return json({ at: new Date().toISOString(), lang, items }, 200, { 'cache-control': 'public, max-age=300' });
     }
@@ -268,6 +268,8 @@ export default {
     return json({ error: 'not found', routes: ['/', '/items.json?since=ISO', '/breaking.json?region=XX&lang=xx', '/top.json?lang=xx', 'POST /push/register', 'POST /push/unregister', 'POST /push/send(INGEST_KEY)', '/hourly/latest.json', '/hourly/YYYY-MM-DDTHH.json(?rebuild=1)', '/hourly', '/batches.json', '/cron.json', 'POST /ingest'] }, 404);
   },
   async scheduled(ev, env, ctx) {
+    // /live/ 요약 미리 채우기: 10분마다 /top.json 을 한 번 불러 새 묶음 요약을 만들어 둔다(방문이 없어도)
+    if (ev.cron === '*/10 * * * *') ctx.waitUntil(FEED.fetch(new Request('https://feed.local/top.json?warm=1'), env, ctx).catch(() => {}));
     if (ev.cron === '* * * * *') { ctx.waitUntil(jevTerms(env).catch(() => {})); ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
     // GitHub schedule은 기본 브랜치(main)의 워크플로만 실행하므로, paycheck-page에만 있는 issuedrop.yml(KST 06/12/18시 자료보고서)도 여기서 호출한다.
@@ -362,13 +364,13 @@ async function trBreak(env, items, lang) {
 }
 
 // /live/ 소식 요약: 묶음의 기사 제목들만 근거로 영어 제목(h)과 2~3문장 요약(x)을 만든다(Workers AI). D1 live_sum2에 저장해 한 번만 생성, 한 번에 새로 6건까지
-async function liveSum(env, items) {
+async function liveSum(env, items, max = 6) {
   if (!env.AI || !items.length) return;
   await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_sum2 (id TEXT PRIMARY KEY, h TEXT, x TEXT, k TEXT, at INTEGER)').run();
   const { results } = await env.DB.prepare(`SELECT id, h, x, k FROM live_sum2 WHERE id IN (${items.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...items.map(i => i.id)).all();
   const have = new Map(results.map(r => [r.id, r]));
   const todo = [];
-  for (const it of items) { const r = have.get(it.id); if (r) { it.h = r.h; it.x = r.x; it.k = r.k; } else if (todo.length < 6) todo.push(it); }
+  for (const it of items) { const r = have.get(it.id); if (r) { it.h = r.h; it.x = r.x; it.k = r.k; } else if (todo.length < max) todo.push(it); }
   await Promise.all(todo.map(async it => {
     const links = it.u.map(u => u.u);
     const { results: sm } = await env.DB.prepare(`SELECT title, summary FROM items WHERE link IN (${links.map((_, i) => '?' + (i + 1)).join(',')})`).bind(...links).all().catch(() => ({ results: [] }));
@@ -386,3 +388,4 @@ async function liveSum(env, items) {
     } catch (e) { await env.DB.prepare('CREATE TABLE IF NOT EXISTS live_err (at INTEGER, e TEXT)').run(); await env.DB.prepare('INSERT INTO live_err VALUES (?1, ?2)').bind(Date.now(), String(e && e.message || e).slice(0, 300)).run(); }
   }));
 }
+export default FEED;
