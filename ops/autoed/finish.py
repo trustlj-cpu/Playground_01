@@ -10,6 +10,12 @@ now = dt.datetime.now(dt.timezone.utc)
 for a in sys.argv[1:]:
     code, date = a.split(':'); c = C[code]
     path = os.path.join(run.SITE, 'editions', c['prefix'] + date + '.html')
+    sp = f'{META}/{code}_{date}_spec.json'
+    if os.path.exists(sp):  # 새 방식: spec JSON → render.py 로 HTML·meta 생성
+        import subprocess
+        r = subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'render.py'), sp, '--meta', f'{META}/{code}_{date}_meta.json'], capture_output=True, text=True)
+        if r.returncode:
+            print('RENDER FAIL', a, (r.stderr or r.stdout)[-300:]); continue
     try:
         info = run.validate(path, 30000)
         meta = json.load(open(f'{META}/{code}_{date}_meta.json'))
