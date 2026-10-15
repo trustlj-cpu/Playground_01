@@ -24,7 +24,7 @@ const CBY = Object.fromEntries(COUNTRIES.map(c => [c.code, c]));
 const I18N = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n.json'), 'utf8'));
 // 홍콩판(zh-HK): 대만 번체 문구를 그대로 쓰고 언어 이름만 바꾼다
 if (!I18N['zh-HK']) I18N['zh-HK'] = { ...I18N['zh-TW'], langname: '繁體中文（香港）' };
-const TRANSLATE_LANGS = new Set(['ko', 'en', 'ja', 'es', 'fr', 'zh-TW']); // 번역판을 제공하는 언어(사장님 10/16). 이 밖의 번역 파일은 있어도 사이트에 붙이지 않는다.
+const TRANSLATE_LANGS = new Set(['ko', 'en', 'ja', 'es', 'fr', 'zh-TW', 'it', 'de', 'pt']); // 번역판을 제공하는 언어(사장님 10/16). 이 밖의 번역 파일은 있어도 사이트에 붙이지 않는다.
 const LANGS = ['en', 'ko', 'ja', ...Object.keys(I18N).filter(l => !['en', 'ko', 'ja'].includes(l))]; // 언어 메뉴 순서
 const T = (l, k) => (I18N[l] && I18N[l][k] != null ? I18N[l][k] : I18N.en[k]);
 // 회원(로그인·마이페이지·북마크·방문 비콘·관리자 리포트) UI: account-ui.js, API: src/account.js
