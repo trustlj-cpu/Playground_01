@@ -17,6 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FEED = os.environ.get('DD_FEED', 'https://dailydrop-feed.trustlj.workers.dev')
 MODEL = os.environ.get('DD_MODEL') or 'claude-sonnet-5-5'
 NO1 = dt.date(2026, 10, 5)
+D1_FEED = '0f239386-f7cf-42ed-838d-46eb896bea87'
 WINDOW = (3, 12)  # 현지 03:00 이상 12:00 미만에만 만든다(06:00 이후면 즉시 공개)
 
 LANG = {  # 판 언어 설명(REGION_RUNBOOK 표 기준)
@@ -67,8 +68,57 @@ def due(countries, editions, now, only):
     return out
 
 
-def prev_edition(editions, code):
-    rows = sorted((e for e in editions if (e.get('region') or 'KR') == code), key=lambda e: e['date'])
+def backfill(countries, editions, dates, only, now):
+    """지난 날짜 소급(사장님 10/16 '3번'): 그 날짜 판이 없는 나라를 즉시 공개(publish_at 없음)로 만든다."""
+    have = {(e['date'], e.get('region') or 'KR') for e in editions}
+    out = []
+    for d in dates:
+        day = dt.date.fromisoformat(d)
+        for c in countries:
+            if (only and c['code'] not in only) or (d, c['code']) in have:
+                continue
+            six = dt.datetime.combine(day, dt.time(6), ZoneInfo(c['tz'])).astimezone(dt.timezone.utc)
+            if six > now:
+                continue
+            out.append({'c': c, 'date': d, 'no': (day - NO1).days + 1, 'publish_at': None, 'six': six})
+    out.sort(key=lambda x: (x['date'], x['six']))
+    return out
+
+
+def window(job, now):
+    five = dt.datetime.combine(dt.date.fromisoformat(job['date']), dt.time(5), ZoneInfo(job['c']['tz'])).astimezone(dt.timezone.utc)
+    end = min(five, now)
+    return end - dt.timedelta(hours=30), end
+
+
+def d1(sql, params):
+    acct, tok = os.environ.get('CLOUDFLARE_ACCOUNT_ID'), os.environ.get('CLOUDFLARE_API_TOKEN')
+    if not acct or not tok:
+        return None
+    req = urllib.request.Request(f'https://api.cloudflare.com/client/v4/accounts/{acct}/d1/database/{D1_FEED}/query',
+                                 data=json.dumps({'sql': sql, 'params': params}).encode(), method='POST',
+                                 headers={'authorization': 'Bearer ' + tok, 'content-type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            res = json.load(r)
+        return res['result'][0]['results']
+    except Exception as e:
+        print('  D1 query failed, falling back to /items.json:', str(e)[:200], flush=True)
+        return None
+
+
+def items_for(job, now, recent):
+    lo, hi = window(job, now)
+    f = lambda t: t.strftime('%Y-%m-%dT%H:%M:%S')
+    rows = d1("SELECT title, source, tier, region, published_at, link, batch FROM items WHERE region IN (?1,'GLB') AND published_at >= ?2 AND published_at <= ?3 AND batch NOT LIKE '%bf-%' ORDER BY tier, published_at DESC LIMIT 600",
+              [job['c']['code'], f(lo), f(hi) + 'Z'])
+    if rows is not None:
+        return rows
+    return [i for i in recent if f(lo) <= str(i.get('published_at') or '')[:19] <= f(hi)]
+
+
+def prev_edition(editions, code, before):
+    rows = sorted((e for e in editions if (e.get('region') or 'KR') == code and e['date'] < before), key=lambda e: e['date'])
     for e in reversed(rows):
         p = os.path.join(SITE, e['file'])
         if os.path.exists(p):
@@ -113,7 +163,7 @@ def prompt(job, tpl_html, lines, jl, ql, brief, runbook):
 
 === THIS RUN ===
 - Region {c['code']}, prefix "{c['prefix']}", date {job['date']}, No. {job['no']}. Cover the previous ~24h up to ~05:00 local on {job['date']}; 'what to watch' = TODAY {job['date']}.
-- U.S. figures: the latest COMPLETED U.S. session before 05:00 local.
+- U.S. figures: the latest COMPLETED U.S. session before 05:00 local.{' LATE (back-filled) issue: write it exactly as it would have read at 05:00 local on that date — nothing that happened later; QUOTES are current values and may be newer than that date, so use them for ears ONLY if their asof is on/before the edition cut-off, else "—".' if job.get('late') else ''}
 - Story selection: lead = Jev's highest-rated story that 2+ outlets carry; main stories from Jev's top distinct stories; single-outlet items only as attributed briefs.
 - Ears and figures: ONLY the QUOTES below (or "—"). Never invent numbers, names, quotes or dates. Separate event date from report date.
 - Keep the template's skeleton, CSS, script and the exact `  const A = {{` / `  const G = {{` … `  }};` lines. Every data-id has an A entry (each with "title") and vice versa. Close every <article>. No <br> in headlines. Glossary keys must appear literally in the body; notes describe this issue only.
@@ -211,6 +261,21 @@ def register(job, meta):
         f.write(json.dumps(e, ensure_ascii=False, indent=2) + '\n')
 
 
+def commit(msg):
+    """판 하나 끝날 때마다 바로 push(긴 소급 실행이 중간에 끊겨도 앞의 판은 남게). DD_COMMIT=1 일 때만."""
+    if os.environ.get('DD_COMMIT') != '1':
+        return
+    g = lambda *a: subprocess.run(['git', *a], cwd=ROOT, capture_output=True, text=True)
+    g('add', 'site/editions', 'site/editions.json', 'site/markets.json', 'site/pool.json')
+    if g('diff', '--cached', '--quiet').returncode == 0:
+        return
+    g('commit', '-m', msg)
+    for i in range(4):
+        if g('pull', '--rebase', 'origin', 'paycheck-page').returncode == 0 and g('push', 'origin', 'HEAD:paycheck-page').returncode == 0:
+            return
+    print('  push failed (will retry with the next edition / final step)', flush=True)
+
+
 def build_ok():
     r = subprocess.run(['node', 'build.js', 'editions.json'], cwd=SITE, capture_output=True, text=True)
     return r.returncode == 0, (r.stderr or r.stdout)[-600:]
@@ -227,7 +292,7 @@ def restore(snap):
 
 def make(job, editions, items, jev_by, quotes, brief, runbook):
     c = job['c']
-    _, tpl = prev_edition(editions, c['code'])
+    _, tpl = prev_edition(editions, c['code'], job['date'])
     if not tpl:
         raise ValueError('no previous edition to use as template')
     tpl_html = open(tpl, encoding='utf-8').read()
@@ -256,21 +321,29 @@ def main():
     ap.add_argument('--only', default=os.environ.get('DD_ONLY', ''))
     ap.add_argument('--max', type=int, default=int(os.environ.get('DD_MAX', '14')))
     ap.add_argument('--workers', type=int, default=4)
+    ap.add_argument('--dates', default=os.environ.get('DD_DATES', ''), help='소급: 2026-10-13,2026-10-14')
     ap.add_argument('--dry', action='store_true')
     a = ap.parse_args()
     only = {x.strip().upper() for x in a.only.split(',') if x.strip()}
     now = dt.datetime.now(dt.timezone.utc)
     countries = jload(os.path.join(SITE, 'countries.json'))
     editions = jload(os.path.join(SITE, 'editions.json'))
-    jobs = due(countries, editions, now, only)[:a.max]
+    dates = [x.strip() for x in a.dates.split(',') if x.strip()]
+    jobs = (backfill(countries, editions, dates, only, now) if dates else due(countries, editions, now, only))[:a.max]
+    for j in jobs:
+        j['late'] = bool(dates)
     print(f'{now:%Y-%m-%d %H:%M}Z due:', [(j['c']['code'], j['date'], j['publish_at'] or 'now') for j in jobs], flush=True)
     if not jobs or a.dry:
         return 0
     if not os.environ.get('ANTHROPIC_API_KEY'):
         print('ANTHROPIC_API_KEY 없음 — 저장소 Settings → Secrets 에 추가해야 자동 발행이 돈다.')
         return 1
-    since = (now - dt.timedelta(hours=30)).strftime('%Y-%m-%dT%H:%M:%S')
-    items = get('/items.json?since=' + since).get('items', [])
+    since = (now - dt.timedelta(hours=36)).strftime('%Y-%m-%dT%H:%M:%S')
+    try:
+        recent = get('/items.json?since=' + since).get('items', [])
+    except Exception as e:
+        recent = []
+        print('  /items.json failed:', e, flush=True)
     quotes = get('/quotes.json').get('q', {})
     jev_by = {}
     for j in jobs:
@@ -280,10 +353,10 @@ def main():
             jev_by[j['c']['code']] = []
     brief = open(os.path.join(HERE, 'BRIEF.md'), encoding='utf-8').read()
     runbook = open(os.path.join(HERE, 'REGION_RUNBOOK.md'), encoding='utf-8').read()
-    print(f'items {len(items)} · quotes {len(quotes)} · model {MODEL}', flush=True)
+    print(f'recent items {len(recent)} · quotes {len(quotes)} · model {MODEL}', flush=True)
     done, failed = [], []
     with cf.ThreadPoolExecutor(a.workers) as ex:
-        futs = {ex.submit(make, j, editions, items, jev_by, quotes, brief, runbook): j for j in jobs}
+        futs = {ex.submit(make, j, editions, items_for(j, now, recent), jev_by, quotes, brief, runbook): j for j in jobs}
         for f in cf.as_completed(futs):
             j = futs[f]
             code = j['c']['code']
@@ -303,6 +376,7 @@ def main():
                 print(f'  FAIL {code} build: {log}', flush=True)
                 continue
             done.append(code)
+            commit(f"autoed: {code} {j['date']} No.{j['no']}" + (' (late)' if j.get('late') else ''))
             print(f"  OK {code} {j['date']} No.{j['no']} {info} · in {usage.input_tokens} out {usage.output_tokens}", flush=True)
     summary = {'at': now.isoformat(), 'done': done, 'failed': failed}
     os.makedirs(os.path.join(ROOT, 'ops', 'autoed', 'log'), exist_ok=True)

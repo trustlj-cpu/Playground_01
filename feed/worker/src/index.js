@@ -297,10 +297,9 @@ const FEED = {
     if (ev.cron === '* * * * *') { ctx.waitUntil(jevTerms(env).catch(() => {})); ctx.waitUntil(refreshQuotes(env).catch(e => env.DB.prepare('INSERT INTO cron_runs (scheduled_at, ran_at, hour, status, n_items, error) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(new Date(ev.scheduledTime).toISOString(), new Date().toISOString(), 'quotes', 'error', null, String(e && e.stack || e).slice(0, 1000)).run().catch(() => {}))); return; }
     // 깃허브 예약 실행 대체: PAT(GH_DISPATCH_TOKEN)이 있을 때만 워크플로를 호출. 없으면 조용히 기록만.
     // GitHub schedule은 기본 브랜치(main)의 워크플로만 실행하므로, paycheck-page에만 있는 issuedrop.yml(KST 06/12/18시 자료보고서)도 여기서 호출한다.
-    const DISPATCH = { '*/10 * * * *': { wf: 'codex-feed-schedule.yml', ref: 'main', tag: 'dispatch' }, '0 21,3,9 * * *': { wf: 'issuedrop.yml', ref: 'paycheck-page', tag: 'dispatch:issuedrop' }, '4 * * * *': { wf: 'site-deploy.yml', ref: 'paycheck-page', tag: 'dispatch:site' } };
+    const DISPATCH = { '*/10 * * * *': { wf: 'codex-feed-schedule.yml', ref: 'main', tag: 'dispatch' }, '0 21,3,9 * * *': { wf: 'issuedrop.yml', ref: 'paycheck-page', tag: 'dispatch:issuedrop' }, '4 * * * *': [{ wf: 'site-deploy.yml', ref: 'paycheck-page', tag: 'dispatch:site' }, { wf: 'autoed.yml', ref: 'paycheck-page', tag: 'dispatch:autoed' }] }; // autoed = 자동 조간(ops/autoed, 10/16) — 크론 5개 한도라 매시 04분에 같이 호출
     if (DISPATCH[ev.cron]) {
-      const { wf, ref, tag } = DISPATCH[ev.cron];
-      ctx.waitUntil((async () => {
+      for (const { wf, ref, tag } of [].concat(DISPATCH[ev.cron])) ctx.waitUntil((async () => {
         const sched = new Date(ev.scheduledTime).toISOString(); let status = 'skipped(no token)', error = null;
         if (env.GH_DISPATCH_TOKEN) {
           // GitHub가 5xx/네트워크 오류를 돌려주면 2초·5초 뒤 최대 2번 더 시도(15:10 UTC HTTP 500으로 회차 하나가 비었음). 4xx는 재시도 안 함.

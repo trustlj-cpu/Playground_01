@@ -1,6 +1,8 @@
 # 데일리드롭 자동 조간 (Claude 세션 없이)
 
-`.github/workflows/autoed.yml` 이 매시 07분에 `ops/autoed/run.py` 를 돌린다.
+피드 Worker 크론(매시 04분)이 GH_DISPATCH_TOKEN으로 `.github/workflows/autoed.yml` 을 호출하고, 그것이 `ops/autoed/run.py` 를 돌린다. (GitHub 자체 schedule은 main 브랜치 파일만 실행해서 쓰지 않는다.)
+
+소급: Actions → autoed-morning → Run workflow, `dates` 에 `2026-10-13,2026-10-14` 처럼. 판마다 바로 push된다.
 
 1. 나라마다 현지 시각이 03:00–11:59 이고 그 날짜 판이 `site/editions.json` 에 없으면 대상.
 2. 피드 Worker 공개 자료(`/items.json` 30시간, `/quotes.json`, `/jev.json`)와 그 나라 직전 판(템플릿)으로 Anthropic API가 판을 쓴다.
