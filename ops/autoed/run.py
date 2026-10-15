@@ -2,20 +2,24 @@
 """DailyDrop 자동 조간 — Claude Code 세션 없이 GitHub Actions에서 판을 만든다.
 
 매시 실행된다. countries.json 의 나라마다 '현지 시각이 03:00–11:59이고 그 날짜 판이 아직 없으면' 판을 만든다.
-- 자료: 피드 Worker 공개 엔드포인트(/items.json, /quotes.json, /jev.json) — D1 토큰 불필요
-- 작성: Anthropic API (ANTHROPIC_API_KEY, 모델은 DD_MODEL, 기본 claude-sonnet-5-5)
-- 검증: A/G 파싱, data-id ↔ A 일치, <article> 닫힘, 크기, build.js 통과
+- 자료: D1(토큰 있으면) 또는 피드 Worker 공개 엔드포인트(/items.json, /quotes.json, /jev.json). 제목 중복을 합친 압축본만 모델에 준다
+- 작성: Anthropic API 1회 호출(ANTHROPIC_API_KEY, 모델 DD_MODEL 기본 claude-sonnet-5-5, 노력 DD_EFFORT 기본 medium). 모델은 본문 spec JSON만 쓴다(SPEC.md)
+- 조립: render.py 가 그 나라 직전 판의 뼈대·라벨에 spec 을 채운다. 검증: check_spec(구조·용어·금지문구) → A/G 파싱·data-id ↔ A·<article> → build.js
 - 등록: editions.json(publish_at = 현지 06:00, 이미 지났으면 즉시) + markets.json + pool.json
 커밋·push·배포는 워크플로가 한다. 사용: python ops/autoed/run.py [--only KR,JP] [--max 12] [--dry]
 """
 import argparse, concurrent.futures as cf, datetime as dt, json, os, re, subprocess, sys, urllib.request
 from zoneinfo import ZoneInfo
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import check_spec, prep, render
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SITE = os.path.join(ROOT, 'site')
 HERE = os.path.dirname(os.path.abspath(__file__))
 FEED = os.environ.get('DD_FEED', 'https://dailydrop-feed.trustlj.workers.dev')
 MODEL = os.environ.get('DD_MODEL') or 'claude-sonnet-5-5'
+EFFORT = os.environ.get('DD_EFFORT') or 'medium'  # low|medium|high — 생각에 쓰는 토큰을 정한다
 NO1 = dt.date(2026, 10, 5)
 D1_FEED = '0f239386-f7cf-42ed-838d-46eb896bea87'
 WINDOW = (3, 12)  # 현지 03:00 이상 12:00 미만에만 만든다(06:00 이후면 즉시 공개)
@@ -107,14 +111,19 @@ def d1(sql, params):
         return None
 
 
-def items_for(job, now, recent):
+def region_rows(job, now, recent):
+    """나라 기사·세계 기사를 제목 중복을 합친 압축 행(t,src,n,tier,pub,sm)으로. D1 우선, 없으면 Worker /items.json 에서 같은 압축."""
     lo, hi = window(job, now)
     f = lambda t: t.strftime('%Y-%m-%dT%H:%M:%S')
-    rows = d1("SELECT title, source, tier, region, published_at, link, batch FROM items WHERE region IN (?1,'GLB') AND published_at >= ?2 AND published_at <= ?3 AND batch NOT LIKE '%bf-%' ORDER BY tier, published_at DESC LIMIT 600",
-              [job['c']['code'], f(lo), f(hi) + 'Z'])
-    if rows is not None:
-        return rows
-    return [i for i in recent if f(lo) <= str(i.get('published_at') or '')[:19] <= f(hi)]
+    code = job['c']['code']
+    r = d1(prep.sql_region(code, f(lo), f(hi)), [])
+    w = d1(prep.sql_world(f(lo), f(hi), 30), [])
+    inwin = lambda i: f(lo) <= str(i.get('published_at') or '')[:19] <= f(hi)
+    if r is None:
+        r = prep.compact([i for i in recent if i.get('region') == code and inwin(i) and 'bf-' not in str(i.get('batch') or '')], 40)
+    if w is None:
+        w = prep.compact([i for i in recent if i.get('region') == 'GLB' and i.get('tier') in ('A', 'B') and inwin(i) and 'bf-' not in str(i.get('batch') or '')], 30)
+    return r, w
 
 
 def prev_edition(editions, code, before):
@@ -126,82 +135,122 @@ def prev_edition(editions, code, before):
     return None, None
 
 
-def material(code, items, jev, quotes, keys):
-    pool = [i for i in items if i.get('region') in (code, 'GLB') and 'bf-' not in str(i.get('batch') or '')]
-    pool.sort(key=lambda i: (str(i.get('tier') or 'Z'), -(dt.datetime.fromisoformat(str(i.get('published_at') or '1970-01-01T00:00:00+00:00').replace('Z', '+00:00')).timestamp() if i.get('published_at') else 0)))
-    lines = [f"{i.get('tier','?')} | {i.get('region')} | {i.get('source','')} | {str(i.get('published_at',''))[:16]} | {str(i.get('title','')).strip()} | {i.get('link','')}" for i in pool[:350]]
+def row_lines(rows):
+    return [f"{r.get('n')}|{r.get('tier')}|{str(r.get('pub', ''))[5:16]}|{str(r.get('t', '')).strip()}|{r.get('src', '')}|{str(r.get('sm') or '').strip()}" for r in rows]
+
+
+def quote_lines(quotes, keys, cutoff):
+    ql = []
+    for k in keys:
+        q = quotes.get(k)
+        if q and q.get('ts'):
+            asof = dt.datetime.fromtimestamp(q['ts'] / 1000, dt.timezone.utc)
+            ok = 'ok' if asof <= cutoff else 'AFTER CUT-OFF — use "—"'
+            ql.append(f"{k}: v={q.get('v')} chg={q.get('chg')} state={q.get('state')} asof={asof:%Y-%m-%d %H:%M}Z [{ok}]")
+        else:
+            ql.append(f'{k}: (no quote — "—")')
+    return ql
+
+
+def style_ref(tpl_html):
+    """직전 판의 고정 문구(날짜줄·귀퉁이 설명·'다음' 라벨)를 알려 줘 같은 말투·언어를 잇게 한다."""
+    dl = re.search(r'<div class="dateline"><span>([^<]*)</span><b>([^<]*)</b>', tpl_html)
+    ears = re.findall(r'<div class="ear(?: r)?"><b>[^<]*</b>([^<]*)</div>', tpl_html)
+    nx = re.findall(r'<b>([^<]{1,40})</b><span>', tpl_html[tpl_html.find('class="next"'):][:3000])
+    return f"dateline left: {dl.group(1) if dl else '?'} | date: {dl.group(2) if dl else '?'}\near captions: {ears[:2]}\nnext labels: {nx[:4]}"
+
+
+SYS_NOTE = """[API MODE] You cannot run tools or read files: ignore every instruction in the spec below about files, SQL, check_spec.py, world_*.json or reports. All material is in the user message.
+Respond with ONE JSON object only (the spec), no markdown fence, no commentary. Everything you write is final page text: follow the editorial rules exactly.
+
+"""
+
+
+def call(system, user):
+    import anthropic
+    cl = anthropic.Anthropic(max_retries=4)
+    with cl.messages.stream(model=MODEL, max_tokens=32000, output_config={'effort': EFFORT},
+                            system=[{'type': 'text', 'text': system, 'cache_control': {'type': 'ephemeral'}}],
+                            messages=[{'role': 'user', 'content': user}]) as st:
+        msg = st.get_final_message()
+    return ''.join(b.text for b in msg.content if getattr(b, 'type', '') == 'text'), msg.usage
+
+
+def parse_spec(txt):
+    t = txt.strip()
+    i, j = t.find('{'), t.rfind('}')
+    if i < 0 or j < i:
+        raise ValueError('no JSON object in output')
+    return json.loads(t[i:j + 1])
+
+
+def build_user(job, rows, world, jl, ql, ref):
+    c = job['c']
+    late = (' LATE (back-filled) issue: write it exactly as it would have read at 05:00 local on that date — nothing that happened later.' if job.get('late') else '')
+    return f"""Write the {c['code']} MORNING edition: region {c['code']}, date {job['date']}, No. {job['no']}, language {LANG.get(c['code'], 'the edition language')}, time zone {c['tz']}, published 06:00 local. Window ends ≈05:00 local; later events only under "what to watch today" ({job['date']}).{late}
+Spec fields: "region":"{c['code']}", "date":"{job['date']}". Dateline number: No. {job['no']}.
+
+=== STYLE REFERENCE (previous {c['code']} edition's fixed strings; keep wording/language/format) ===
+{ref}
+
+=== JEV RANKING (front 0-3; title | outlets) ===
+{chr(10).join(jl) or '(none)'}
+
+=== QUOTES (ears/markets: only [ok] completed closes, else "—") ===
+{chr(10).join(ql)}
+
+=== REGION ITEMS (outlets|tier|UTC|title|which outlets|gist; merged duplicates, more outlets = bigger story) ===
+{chr(10).join(row_lines(rows))}
+
+=== WORLD ITEMS (same columns; adapt for this country's readers, do not invent beyond them) ===
+{chr(10).join(row_lines(world))}
+"""
+
+
+def make(job, editions, rows, world, jev, quotes, system):
+    c = job['c']
+    _, tpl = prev_edition(editions, c['code'], job['date'])
+    if not tpl:
+        raise ValueError('no previous edition to use as template')
+    tpl_html = open(tpl, encoding='utf-8').read()
+    if len(rows) < 8:
+        raise ValueError(f'too few items ({len(rows)})')
+    lo, hi = window(job, dt.datetime.now(dt.timezone.utc))
     jv = sorted((r for r in jev if not r.get('err')), key=lambda r: (-(r.get('front') or 0), -(r.get('conf') or 0)))
     seen, jl = set(), []
     for r in jv:
         k = str(r.get('title', ''))[:60]
-        if k in seen:
-            continue
-        seen.add(k)
-        jl.append(f"front {r.get('front')} · conf {r.get('conf')} · n {r.get('n')} · {r.get('title')}")
-        if len(jl) >= 40:
+        if k not in seen:
+            seen.add(k)
+            jl.append(f"{r.get('front')} | {r.get('title')} | n{r.get('n')}")
+        if len(jl) >= 8:
             break
-    ql = []
-    for k in keys:
-        q = quotes.get(k)
-        if q:
-            asof = dt.datetime.fromtimestamp((q.get('ts') or 0) / 1000, dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC') if q.get('ts') else '?'
-            ql.append(f"{k}: v={q.get('v')} chg={q.get('chg')} prev={q.get('prev')} state={q.get('state')} asof={asof}")
-        else:
-            ql.append(f'{k}: (no quote — show "—" if not confirmable)')
-    return lines, jl, ql
-
-
-def prompt(job, tpl_html, lines, jl, ql, brief, runbook):
-    c = job['c']
-    return f"""You are the DailyDrop desk. Write the {c['code']} MORNING edition No. {job['no']} dated {job['date']} in {LANG.get(c['code'], 'the edition language')}, published at 06:00 local ({c['tz']}).
-
-=== HOUSE BRIEF ===
-{brief}
-
-=== RUNBOOK (region table and rules; ignore tool/session steps — you only write the page) ===
-{runbook}
-
-=== THIS RUN ===
-- Region {c['code']}, prefix "{c['prefix']}", date {job['date']}, No. {job['no']}. Cover the previous ~24h up to ~05:00 local on {job['date']}; 'what to watch' = TODAY {job['date']}.
-- U.S. figures: the latest COMPLETED U.S. session before 05:00 local.{' LATE (back-filled) issue: write it exactly as it would have read at 05:00 local on that date — nothing that happened later; QUOTES are current values and may be newer than that date, so use them for ears ONLY if their asof is on/before the edition cut-off, else "—".' if job.get('late') else ''}
-- Story selection: lead = Jev's highest-rated story that 2+ outlets carry; main stories from Jev's top distinct stories; single-outlet items only as attributed briefs.
-- Ears and figures: ONLY the QUOTES below (or "—"). Never invent numbers, names, quotes or dates. Separate event date from report date.
-- Keep the template's skeleton, CSS, script and the exact `  const A = {{` / `  const G = {{` … `  }};` lines. Every data-id has an A entry (each with "title") and vice versa. Close every <article>. No <br> in headlines. Glossary keys must appear literally in the body; notes describe this issue only.
-
-=== JEV RANKING (front 0–3, higher = more front-page) ===
-{chr(10).join(jl) or '(none)'}
-
-=== QUOTES ===
-{chr(10).join(ql)}
-
-=== ITEMS (tier | region | source | published UTC | title | link) ===
-{chr(10).join(lines)}
-
-=== TEMPLATE (previous {c['code']} edition — reproduce this structure exactly with today's content) ===
-{tpl_html}
-
-=== OUTPUT FORMAT (strict) ===
-First the complete HTML file between the lines <<<HTML and HTML>>>.
-Then a JSON object between <<<META and META>>>: {{"blurb": "three key items joined by ' · ' in the edition language", "markets": {{"<tape key>": {{"v": number, "chg": number, "asof": "M/D"}}, ...only confirmed figures}}, "pool": ["10–16 one-line briefs in the edition language, each ending with (Source)"]}}.
-Nothing else."""
-
-
-def call(p):
-    import anthropic
-    cl = anthropic.Anthropic(max_retries=4)
-    with cl.messages.stream(model=MODEL, max_tokens=64000, messages=[{'role': 'user', 'content': p}]) as s:
-        msg = s.get_final_message()
-    txt = ''.join(b.text for b in msg.content if getattr(b, 'type', '') == 'text')
-    return txt, msg.usage
-
-
-def parse(txt):
-    h = re.search(r'<<<HTML\s*\n(.*?)\n\s*HTML>>>', txt, re.S)
-    m = re.search(r'<<<META\s*\n(.*?)\n\s*META>>>', txt, re.S)
-    if not h or not m:
-        raise ValueError('output markers missing')
-    meta = json.loads(re.sub(r'^```(?:json)?|```$', '', m.group(1).strip()).strip())
-    return h.group(1).strip() + '\n', meta
+    ql = quote_lines(quotes, [t[1] for t in c.get('tape', [])], hi)
+    user = build_user(job, rows, world, jl, ql, style_ref(tpl_html))
+    last, usage_all = None, []
+    for attempt in range(2):
+        txt, usage = call(system, user + (f'\n\nYour previous answer failed these checks — fix them and answer again with the full JSON: {last}' if last else ''))
+        usage_all.append(usage)
+        try:
+            spec = parse_spec(txt)
+            spec['region'], spec['date'] = c['code'], job['date']
+            errs = check_spec.check(spec)
+            if errs:
+                raise ValueError('; '.join(errs)[:500])
+            try:
+                render.check_ids(spec)
+                html = render.render(spec, tpl)
+            except SystemExit as se:
+                raise ValueError(f'render: {se}')
+            out = os.path.join(SITE, 'editions', c['prefix'] + job['date'] + '.html')
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+            open(out, 'w', encoding='utf-8').write(html)
+            info = validate(out, len(tpl_html.encode()))
+            return out, render.meta_of(spec), info, usage_all
+        except Exception as ex:
+            last = str(ex)[:500]
+            print(f"  {c['code']} attempt {attempt + 1} invalid: {ex}", flush=True)
+    raise ValueError(f'invalid after retries: {last}')
 
 
 CHECK_JS = r"""
@@ -290,32 +339,6 @@ def restore(snap):
         open(os.path.join(SITE, f), 'w', encoding='utf-8').write(t)
 
 
-def make(job, editions, items, jev_by, quotes, brief, runbook):
-    c = job['c']
-    _, tpl = prev_edition(editions, c['code'], job['date'])
-    if not tpl:
-        raise ValueError('no previous edition to use as template')
-    tpl_html = open(tpl, encoding='utf-8').read()
-    keys = [t[1] for t in c.get('tape', [])]
-    lines, jl, ql = material(c['code'], items, jev_by.get(c['code'], []), quotes, keys)
-    if len(lines) < 15:
-        raise ValueError(f'too few items ({len(lines)})')
-    last = None
-    for attempt in range(2):
-        txt, usage = call(prompt(job, tpl_html, lines, jl, ql, brief, runbook))
-        try:
-            html, meta = parse(txt)
-            out = os.path.join(SITE, 'editions', c['prefix'] + job['date'] + '.html')
-            os.makedirs(os.path.dirname(out), exist_ok=True)
-            open(out, 'w', encoding='utf-8').write(html)
-            info = validate(out, len(tpl_html.encode()))
-            return out, meta, info, usage
-        except Exception as ex:
-            last = ex
-            print(f"  {c['code']} attempt {attempt + 1} invalid: {ex}", flush=True)
-    raise ValueError(f'invalid after retries: {last}')
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--only', default=os.environ.get('DD_ONLY', ''))
@@ -351,17 +374,21 @@ def main():
             jev_by[j['c']['code']] = get('/jev.json?region=' + j['c']['code']).get('rows', [])
         except Exception:
             jev_by[j['c']['code']] = []
-    brief = open(os.path.join(HERE, 'BRIEF.md'), encoding='utf-8').read()
-    runbook = open(os.path.join(HERE, 'REGION_RUNBOOK.md'), encoding='utf-8').read()
-    print(f'recent items {len(recent)} · quotes {len(quotes)} · model {MODEL}', flush=True)
+    system = SYS_NOTE + open(os.path.join(HERE, 'SPEC.md'), encoding='utf-8').read()
+    print(f'recent items {len(recent)} · quotes {len(quotes)} · model {MODEL} · effort {EFFORT}', flush=True)
     done, failed = [], []
+
+    def work(j):
+        rows, world = region_rows(j, now, recent)
+        return make(j, editions, rows, world, jev_by.get(j['c']['code'], []), quotes, system)
+
     with cf.ThreadPoolExecutor(a.workers) as ex:
-        futs = {ex.submit(make, j, editions, items_for(j, now, recent), jev_by, quotes, brief, runbook): j for j in jobs}
+        futs = {ex.submit(work, j): j for j in jobs}
         for f in cf.as_completed(futs):
             j = futs[f]
             code = j['c']['code']
             try:
-                out, meta, info, usage = f.result()
+                out, meta, info, usages = f.result()
             except Exception as e:
                 failed.append((code, str(e)[:300]))
                 print(f'  FAIL {code}: {e}', flush=True)
@@ -377,7 +404,8 @@ def main():
                 continue
             done.append(code)
             commit(f"autoed: {code} {j['date']} No.{j['no']}" + (' (late)' if j.get('late') else ''))
-            print(f"  OK {code} {j['date']} No.{j['no']} {info} · in {usage.input_tokens} out {usage.output_tokens}", flush=True)
+            tot = lambda k: sum(getattr(u, k, 0) or 0 for u in usages)
+            print(f"  OK {code} {j['date']} No.{j['no']} {info} · in {tot('input_tokens')} (cache read {tot('cache_read_input_tokens')}) out {tot('output_tokens')} · calls {len(usages)}", flush=True)
     summary = {'at': now.isoformat(), 'done': done, 'failed': failed}
     os.makedirs(os.path.join(ROOT, 'ops', 'autoed', 'log'), exist_ok=True)
     with open(os.path.join(ROOT, 'ops', 'autoed', 'log', now.strftime('%Y-%m-%d') + '.jsonl'), 'a', encoding='utf-8') as f:
