@@ -1,0 +1,62 @@
+name: autoed-morning
+
+# 데일리드롭 자동 조간 — Claude Code 세션 없이 매시 돈다(ops/autoed/run.py).
+# 현지 03:00–11:59 이고 그 날짜 판이 없는 나라만 만든다. publish_at = 현지 06:00 → Worker가 그 시각에 공개.
+# 필요: Secrets ANTHROPIC_API_KEY (사장님이 추가). 선택: Variables DD_MODEL(기본 claude-sonnet-5-5), DD_MAX, DD_PAUSE=1(일시 정지).
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "나라 코드만(예: KR,JP). 비우면 시간이 된 나라 전부"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: autoed
+  cancel-in-progress: false
+
+jobs:
+  write:
+    if: ${{ vars.DD_PAUSE != '1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: paycheck-page
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install anthropic
+      - name: Write due editions
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DD_MODEL: ${{ vars.DD_MODEL }}
+          DD_MAX: ${{ vars.DD_MAX || '14' }}
+          DD_ONLY: ${{ inputs.only }}
+        run: python ops/autoed/run.py
+      - name: Commit and push
+        id: push
+        if: always()
+        run: |
+          git config user.name "dailydrop-autoed"
+          git config user.email "dailydrop-autoed@users.noreply.github.com"
+          git add site/editions site/editions.json site/markets.json site/pool.json ops/autoed/log
+          if git diff --cached --quiet; then echo "changed=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          git commit -m "autoed: editions $(date -u +'%Y-%m-%d %H:%M UTC')"
+          for i in 1 2 3 4; do git pull --rebase origin paycheck-page && git push origin HEAD:paycheck-page && break; sleep $((i*5)); done
+          echo "changed=1" >> "$GITHUB_OUTPUT"
+      - name: Deploy (push by GITHUB_TOKEN does not trigger site-deploy by itself)
+        if: always() && steps.push.outputs.changed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run site-deploy.yml --ref paycheck-page
