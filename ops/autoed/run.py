@@ -360,8 +360,8 @@ def main():
     if not jobs or a.dry:
         return 0
     if not os.environ.get('ANTHROPIC_API_KEY'):
-        print('ANTHROPIC_API_KEY 없음 — 저장소 Settings → Secrets 에 추가해야 자동 발행이 돈다.')
-        return 1
+        print('ANTHROPIC_API_KEY 없음 — 폴백 작성은 건너뜀(Claude 세션이 판을 올리는 운영). 키를 넣으면 폴백이 켜진다.')
+        return 0
     since = (now - dt.timedelta(hours=36)).strftime('%Y-%m-%dT%H:%M:%S')
     try:
         recent = get('/items.json?since=' + since).get('items', [])
