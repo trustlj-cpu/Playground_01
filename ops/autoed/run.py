@@ -261,9 +261,9 @@ def register(job, meta):
         f.write(json.dumps(e, ensure_ascii=False, indent=2) + '\n')
 
 
-def commit(msg):
+def commit(msg, force=False):
     """판 하나 끝날 때마다 바로 push(긴 소급 실행이 중간에 끊겨도 앞의 판은 남게). DD_COMMIT=1 일 때만."""
-    if os.environ.get('DD_COMMIT') != '1':
+    if os.environ.get("DD_COMMIT") != "1" and not force:
         return
     g = lambda *a: subprocess.run(['git', *a], cwd=ROOT, capture_output=True, text=True)
     g('add', 'site/editions', 'site/editions.json', 'site/markets.json', 'site/pool.json')
