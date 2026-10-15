@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DailyDrop 자동 조간 — Claude Code 세션 없이 GitHub Actions에서 판을 만든다.
 
-매시 실행된다. countries.json 의 나라마다 '현지 시각이 03:00–11:59이고 그 날짜 판이 아직 없으면' 판을 만든다.
+매시 실행된다. countries.json 의 나라마다 '현지 시각이 05:30–11:59이고 그 날짜 판이 아직 없으면' 판을 만든다(Claude 세션이 못 올렸을 때의 폴백).
 - 자료: D1(토큰 있으면) 또는 피드 Worker 공개 엔드포인트(/items.json, /quotes.json, /jev.json). 제목 중복을 합친 압축본만 모델에 준다
 - 작성: Anthropic API 1회 호출(ANTHROPIC_API_KEY, 모델 DD_MODEL 기본 claude-sonnet-5-5, 노력 DD_EFFORT 기본 medium). 모델은 본문 spec JSON만 쓴다(SPEC.md)
 - 조립: render.py 가 그 나라 직전 판의 뼈대·라벨에 spec 을 채운다. 검증: check_spec(구조·용어·금지문구) → A/G 파싱·data-id ↔ A·<article> → build.js
@@ -22,7 +22,8 @@ MODEL = os.environ.get('DD_MODEL') or 'claude-sonnet-5-5'
 EFFORT = os.environ.get('DD_EFFORT') or 'medium'  # low|medium|high — 생각에 쓰는 토큰을 정한다
 NO1 = dt.date(2026, 10, 5)
 D1_FEED = '0f239386-f7cf-42ed-838d-46eb896bea87'
-WINDOW = (3, 12)  # 현지 03:00 이상 12:00 미만에만 만든다(06:00 이후면 즉시 공개)
+# 폴백 전용: 평소엔 Claude 세션이 현지 05:00 전에 판을 올려 두므로, 현지 05:30 이후에도 판이 없을 때만 API로 채운다(중복 작성 방지). 06:00 이후면 즉시 공개.
+WINDOW_MIN = (5 * 60 + 30, 12 * 60)
 
 LANG = {  # 판 언어 설명(REGION_RUNBOOK 표 기준)
     'KR': 'Korean', 'JP': 'Japanese', 'US': 'American English', 'GB': 'British English', 'DE': 'German', 'FR': 'French',
@@ -63,7 +64,7 @@ def due(countries, editions, now, only):
             continue
         loc = now.astimezone(ZoneInfo(c['tz']))
         d = loc.date().isoformat()
-        if (d, code) in have or not (WINDOW[0] <= loc.hour < WINDOW[1]):
+        if (d, code) in have or not (WINDOW_MIN[0] <= loc.hour * 60 + loc.minute < WINDOW_MIN[1]):
             continue
         six = dt.datetime.combine(loc.date(), dt.time(6), ZoneInfo(c['tz'])).astimezone(dt.timezone.utc)
         out.append({'c': c, 'date': d, 'no': (loc.date() - NO1).days + 1,

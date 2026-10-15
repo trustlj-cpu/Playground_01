@@ -4,7 +4,7 @@
 
 소급: Actions → autoed-morning → Run workflow, `dates` 에 `2026-10-13,2026-10-14` 처럼. 판마다 바로 push된다.
 
-1. 나라마다 현지 시각이 03:00–11:59 이고 그 날짜 판이 `site/editions.json` 에 없으면 대상.
+1. 나라마다 현지 시각이 05:30–11:59 이고 그 날짜 판이 `site/editions.json` 에 없으면 대상.
 2. 자료(D1 또는 피드 Worker `/items.json`·`/quotes.json`·`/jev.json`)를 제목 중복을 합친 압축본으로 만들어, Anthropic API **1회 호출**로 본문 spec JSON만 받는다(`SPEC.md`). HTML 뼈대는 `render.py`가 그 나라 직전 판에서 가져온다.
 3. 검증(`check_spec.py` 구조·용어·금지문구 → A/G 파싱, data-id↔A·title, `<article>` 닫힘, 크기, `build.js`) 통과분만 등록. 실패하면 오류를 알려 주고 1회 재시도. `publish_at` = 현지 06:00(이미 지났으면 즉시 공개).
 4. commit·push 후 `site-deploy` 를 실행 → Worker가 06:00에 공개.
