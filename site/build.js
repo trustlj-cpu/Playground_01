@@ -24,6 +24,7 @@ const CBY = Object.fromEntries(COUNTRIES.map(c => [c.code, c]));
 const I18N = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n.json'), 'utf8'));
 // 홍콩판(zh-HK): 대만 번체 문구를 그대로 쓰고 언어 이름만 바꾼다
 if (!I18N['zh-HK']) I18N['zh-HK'] = { ...I18N['zh-TW'], langname: '繁體中文（香港）' };
+const TRANSLATE_LANGS = new Set(['ko', 'en', 'ja', 'es', 'fr', 'zh-TW']); // 번역판을 제공하는 언어(사장님 10/16). 이 밖의 번역 파일은 있어도 사이트에 붙이지 않는다.
 const LANGS = ['en', 'ko', 'ja', ...Object.keys(I18N).filter(l => !['en', 'ko', 'ja'].includes(l))]; // 언어 메뉴 순서
 const T = (l, k) => (I18N[l] && I18N[l][k] != null ? I18N[l][k] : I18N.en[k]);
 // 회원(로그인·마이페이지·북마크·방문 비콘·관리자 리포트) UI: account-ui.js, API: src/account.js
@@ -42,6 +43,7 @@ const LIVE = new Set(['KR', ...editions.map(e => e.region || 'KR')]);
 for (const e of editions) {
   const dir = path.dirname(e.file), base = path.basename(e.file, '.html'), own = CBY[e.region || 'KR'].langs[0]; const tr = { ...(e.translations || {}) };
   for (const l of LANGS) { if (tr[l] || l === own) continue; const f = path.join(dir, `${base}.${l}.html`); if (!fs.existsSync(f)) continue; const body = fs.readFileSync(f, 'utf8').replace(/\s*<\/body>\s*<\/html>\s*$/i, '').trim(); if (!body.endsWith('</script>')) { console.warn(`translation skipped (incomplete): ${path.relative(process.cwd(), f)}`); continue; } tr[l] = path.relative(path.dirname(spec), f); }
+  for (const l of Object.keys(tr)) if (!TRANSLATE_LANGS.has(l)) delete tr[l]; // 번역 서비스 언어 제한
   if (Object.keys(tr).length) e.translations = tr;
 }
 
