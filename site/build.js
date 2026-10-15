@@ -17,7 +17,9 @@ const KO_DAY = ['일', '월', '화', '수', '목', '금', '토'];
 const fmt = d => { const [y, m, dd] = d.split('-').map(Number); return `${y}년 ${m}월 ${dd}일 ${KO_DAY[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]}요일`; };
 
 // ── 국가판·언어 데이터: countries.json(30개국, 순서 = 목록 순서) · i18n.json(UI 20개 언어, 빠진 키는 en)
-const COUNTRIES = JSON.parse(fs.readFileSync(path.join(__dirname, 'countries.json'), 'utf8'));
+const COUNTRIES = JSON.parse(fs.readFileSync(path.join(__dirname, 'countries.json'), 'utf8')).filter(c => !c.hidden); // hidden:true = 비공개 나라(목록·페이지·사이트맵 어디에도 안 나옴, 판 원고는 editions.json에 그대로)
+const HIDDEN = new Set(JSON.parse(fs.readFileSync(path.join(__dirname, 'countries.json'), 'utf8')).filter(c => c.hidden).map(c => c.code));
+for (let i = editions.length - 1; i >= 0; i--) if (HIDDEN.has(editions[i].region || 'KR')) editions.splice(i, 1);
 const CBY = Object.fromEntries(COUNTRIES.map(c => [c.code, c]));
 const I18N = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n.json'), 'utf8'));
 // 홍콩판(zh-HK): 대만 번체 문구를 그대로 쓰고 언어 이름만 바꾼다

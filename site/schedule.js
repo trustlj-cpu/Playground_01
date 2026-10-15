@@ -6,8 +6,9 @@ const fs = require('fs'), path = require('path'), { execFileSync } = require('ch
 const SITE = __dirname, PUB = path.join(SITE, 'public');
 const eds = JSON.parse(fs.readFileSync(path.join(SITE, 'editions.json'), 'utf8'));
 const pre = Object.fromEntries(JSON.parse(fs.readFileSync(path.join(SITE, 'countries.json'), 'utf8')).map(c => [c.code, c.prefix]));
+const hid = new Set(JSON.parse(fs.readFileSync(path.join(SITE, 'countries.json'), 'utf8')).filter(c => c.hidden).map(c => c.code)); // 비공개 나라는 예약 발행도 안 함
 const now = Date.now();
-const sched = eds.filter(e => e.publish_at && Date.parse(e.publish_at) > now);
+const sched = eds.filter(e => e.publish_at && Date.parse(e.publish_at) > now && !hid.has(e.region || 'KR'));
 const out = [];
 if (sched.length) {
   const ALL = path.join(require('os').tmpdir(), 'dd_all');

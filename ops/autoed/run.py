@@ -326,7 +326,7 @@ def main():
     a = ap.parse_args()
     only = {x.strip().upper() for x in a.only.split(',') if x.strip()}
     now = dt.datetime.now(dt.timezone.utc)
-    countries = jload(os.path.join(SITE, 'countries.json'))
+    countries = [c for c in jload(os.path.join(SITE, 'countries.json')) if not c.get('hidden')]  # 비공개 나라는 쓰지 않는다
     editions = jload(os.path.join(SITE, 'editions.json'))
     dates = [x.strip() for x in a.dates.split(',') if x.strip()]
     jobs = (backfill(countries, editions, dates, only, now) if dates else due(countries, editions, now, only))[:a.max]
