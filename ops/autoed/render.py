@@ -149,7 +149,7 @@ def render(spec, tpl_path):
     tpl = open(tpl_path, encoding='utf-8').read()
     lb = labels(tpl)
     # 머리(스타일) = <header> 앞까지, 꼬리 = <div class="tip" 부터
-    i_head = tpl.index('<div class="sheet">')
+    i_head = re.search(r'<div class="sheet"[^>]*>', tpl).start()
     i_tail = tpl.index('<div class="tip"')
     head = tpl[:i_head]
     tail = tpl[i_tail:]
