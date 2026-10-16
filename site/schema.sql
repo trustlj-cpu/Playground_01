@@ -69,3 +69,6 @@ CREATE TABLE IF NOT EXISTS app_codes (
   challenge TEXT NOT NULL,               -- PKCE S256 code_challenge (base64url 43자)
   expires_at INTEGER NOT NULL            -- ms epoch, 발급 + 60초
 );
+
+-- 사이트 안 기계 번역 캐시(/api/mt): 글 조각 SHA-256(원문언어|목표언어|글) → 번역
+CREATE TABLE IF NOT EXISTS mt_cache (k TEXT PRIMARY KEY, v TEXT NOT NULL, ts INTEGER);

@@ -55,6 +55,31 @@ const handler = {
         // 사람 접속에 카드가 섞여 보이지 않도록 캐시하지 않고, UA별로 다른 응답임을 알린다
         return new Response(`<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${T}</title><meta name="description" content="${D}"><link rel="canonical" href="${U}"><meta property="og:type" content="article"><meta property="og:site_name" content="DailyDrop"><meta property="og:url" content="${U}"><meta property="og:title" content="${T}"><meta property="og:description" content="${D}"><meta property="og:image" content="https://dailydropnewspaper.com/og.png?v=5"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${T}"><meta name="twitter:description" content="${D}"><meta name="twitter:image" content="https://dailydropnewspaper.com/og.png?v=5"></head><body><a href="${U}">${T}</a></body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store', 'vary': 'User-Agent' } }); }
     }
+    // 사이트 안 기계 번역: 화면의 글 조각들을 Cloudflare Workers AI(m2m100)로 번역하고, 같은 조각은 D1(mt_cache)에 저장해 다시 번역하지 않는다.
+    if (url.pathname === '/api/mt' && request.method === 'POST') {
+      const ok = ['ko', 'ja', 'en', 'es', 'fr', 'zh-TW', 'it', 'de', 'pt', 'nl', 'id', 'th', 'tr', 'ar', 'he', 'vi', 'uk', 'pl', 'hi', 'ru', 'zh', 'ms', 'fil'];
+      const M2 = { 'zh-TW': 'zh', fil: 'tl' };
+      const j = (o, st = 200) => new Response(JSON.stringify(o), { status: st, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+      const org = request.headers.get('origin'); if (org && org !== url.origin) return j({ error: 'origin' }, 403);
+      let b; try { b = await request.json(); } catch (e) { return j({ error: 'json' }, 400); }
+      const sl = String(b.s || ''), tl = String(b.t || ''), xs = Array.isArray(b.x) ? b.x : [];
+      if (!ok.includes(sl) || !ok.includes(tl) || sl === tl || !xs.length || xs.length > 40) return j({ error: 'args' }, 400);
+      const texts = xs.map(x => String(x == null ? '' : x).slice(0, 600)); if (texts.reduce((n, x) => n + x.length, 0) > 12000) return j({ error: 'size' }, 413);
+      const hex = async str => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)))].map(c => c.toString(16).padStart(2, '0')).join('');
+      const keys = await Promise.all(texts.map(x => hex(sl + '|' + tl + '|' + x.trim())));
+      const got = {};
+      try { const q = await env.UDB.prepare(`SELECT k, v FROM mt_cache WHERE k IN (${keys.map(() => '?').join(',')})`).bind(...keys).all(); for (const r of q.results || []) got[r.k] = r.v; } catch (e) {}
+      const out = new Array(texts.length).fill(null), todo = [];
+      texts.forEach((x, i) => { if (!/\p{L}/u.test(x)) out[i] = x; else if (got[keys[i]] != null) out[i] = got[keys[i]]; else todo.push(i); });
+      const save = [];
+      for (let p = 0; p < todo.length; p += 6) {
+        await Promise.all(todo.slice(p, p + 6).map(async i => {
+          try { const r = await env.AI.run('@cf/meta/m2m100-1.2b', { text: texts[i].trim(), source_lang: M2[sl] || sl, target_lang: M2[tl] || tl }); const v = r && r.translated_text; if (v) { out[i] = v; save.push(env.UDB.prepare('INSERT OR REPLACE INTO mt_cache (k, v, ts) VALUES (?, ?, ?)').bind(keys[i], v, Date.now())); } } catch (e) {}
+        }));
+      }
+      if (save.length) { try { await env.UDB.batch(save); } catch (e) {} }
+      return j({ r: out });
+    }
     // 속보 한 건(1면 속보 팝업용): 피드 Worker /breaking/item.json 을 같은 도메인으로
     if (url.pathname === '/api/breaking/item.json') {
       const q = new URLSearchParams({ id: (url.searchParams.get('id') || '').slice(0, 12), lang: (url.searchParams.get('lang') || 'en').slice(0, 5) });
