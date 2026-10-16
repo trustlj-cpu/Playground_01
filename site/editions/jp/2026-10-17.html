@@ -1,0 +1,353 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>65,324.29</b>日経平均 · 10/16終値 · 前日比+1.39%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>為替・米株 · 完了した終値が確認できないため休み</div>
+    </div>
+    <div class="dateline"><span>No. 13 · 朝刊</span><b>2026年10月17日(土)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s0">
+      <div class="kick">社会 · 防災<span>✓ 報道多数 · 原因は調査中</span></div>
+      <h2 class="hl">緊急地震速報を初めて取り消し M9.9と過大推定、気象庁が謝罪</h2>
+      <p class="deck">北海道から東海地方まで広い範囲に出た警報を気象庁が取り消した。サイバー攻撃は否定され、原因は調べが続いている。</p>
+      <div class="body">
+        <p>16日夜までに、気象庁が出していた緊急地震速報の警報を取り消したことが相次いで報じられた。毎日新聞は「初の警報取り消し」と伝え、地震の規模をマグニチュード9.9と過大に推定していたと報じた。対象は北海道から東海地方にかけての広い範囲だったとされ、気象庁は謝罪している。</p>
+        <p>最大の焦点は原因である。気象庁は「サイバー攻撃」を否定したと複数の報道が伝える一方、なぜ桁外れの推定値が出たのかは調査中で、システムのどの段階に問題があったかは公表されていない。専門家の分析や、気象庁による最終的な説明を待つ必要がある。</p>
+        <p>Jev の集計では、この件を扱う記事は17件に上り、「サイバー攻撃なし」「北海道から東海地方の広範囲」といった切り口の見出しが並んだ。報道の量は多いが、新しい事実が加わっているわけではなく、中心は取り消しと謝罪、原因調査中という三点に尽きる。</p>
+        <p>緊急地震速報は、強い揺れが届く前に身を守る行動を促す仕組みだ。M9.9は観測史上に例のない規模で、現実に起きれば巨大津波も想定される数字になる。それだけに、誤った推定は人々の不安を招くだけでなく、次の本物の警報への信頼を損ねかねない。取り消しまでの間に利用者や交通機関、自治体がどう動いたかは、今回の材料では確認できていない。</p>
+        <p>読者が押さえておきたい点は三つある。第一に、取り消しは推定の誤りの訂正であり、今回の材料には実際に巨大地震が起きたという報道は含まれていない。第二に、原因が未解明のため再発防止策の中身はまだ見えない。第三に、サイバー攻撃説は気象庁が否定しており、根拠のない断定は避けたい。今後は調査結果の公表時期と、警報を受けた側の対応の検証が焦点になる。気象庁の説明が遅れるほど、憶測が広がりやすい点にも留意したい。公式の発表と、確認できていない情報とを分けて受け止める姿勢が、こうした場面ほど求められる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s1">
+      <div class="kick">社会 · 情報セキュリティ<span>✓ 各社2〜3媒体 · 数字は各社の発表ベース</span></div>
+      <h3 class="hl">個人情報の流出発表が相次ぐ ソースネクスト最大2252万件、ヤマト530万件</h3>
+      <div class="one">
+        <p>16日は大規模な流出の発表が重なった。ITmedia NEWSなどによると、ソースネクストは会員情報が最大2252万件流出し、パスワードも含まれるとされ、APIの不正利用が原因と伝えられた。ヤマト運輸は「クロネコ代金後払いサービス」利用者の約530万件(読売新聞)、日本経済新聞社は自社が開発に使うクラウドサービスへの不正アクセスで約183万件(日経)を、それぞれ公表した。 タイムズカーは約660万アカウント分の漏えいを受け、退会後も7年間保管していた免許証画像をすべて削除する方針だ(ITmedia NEWS)。一方、イズミは情報の流出はなかったとの報告を受けたとNHKが伝えた。数字はいずれも各社の発表に基づくもので、第三者の検証はなく、同じ人が複数の件数に含まれる可能性もある。パスワードを使い回している人は、念のため変更したい。特に会員パスワードを含むとされるソースネクストの件は、同じパスワードを他サービスで使っている人に二次被害が及ぶおそれがあり、利用者側の対応が欠かせない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>植田日銀総裁「今後も利上げ進める」 物価2%の安定を重視</b><em>NHKによると、16日に金融業界の会合へあいさつを寄せた。日銀の今後の利上げ姿勢を示す発言。</em><span>経済 · ✓ NHKほか2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>TSMC熊本第2工場、国内初の3ナノ半導体の生産計画を認定</b><em>経済産業省が認定したとNHKが伝えた。</em><span>経済 · ✓ NHK 1社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>米大統領報道官を解任と報道 経歴詐称疑惑、トランプ氏は示唆</b><em>毎日新聞と朝日新聞が速報。ホワイトハウスの正式な発表は今回の材料では確認できていない。</em><span>World · ✓ 2媒体(正式発表は未確認)</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>プロ野球クライマックスシリーズ、ソフトバンクが日本シリーズへ DeNAは王手</b><em>時事通信。日本ハムは3連敗で敗退(毎日新聞)。阪神はCS最多の27回連続無得点。</em><span>スポーツ · ✓ 時事・毎日</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>三重県議会、全国初の罰則付きカスハラ防止条例が成立</b><em>報道が多数あった。カスタマーハラスメントを対象にする。罰則の内容は今回の材料では未確認。</em><span>社会 · ✓ 報道多数</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s2">
+      <div class="kick">政治 · 国会<span>✓ NHK・日経ほか · 更迭の理由は未確認</span></div>
+      <h3 class="hl">農相交代後初の予算委 高市首相、任命責任を追及され更迭を陳謝</h3>
+      <div class="body">
+        <p>与党が少数の参議院で、農相交代後初の予算委員会が16日に開かれ、野党が高市首相の任命責任を追及した(NHK)。下野新聞は速報で、首相が更迭を陳謝したと伝えた。立憲民主党は、更迭された簗氏の参考人招致を要求している。なぜ更迭に至ったのかは、今回の材料では確認できていない。</p>
+        <p>武部農相は米国産生鮮ジャガイモの輸入解禁協議について、「日米双方が納得できる合意が見いだせない限り解禁されることはない」と述べた(日本経済新聞)。また毎日新聞は、消費減税に伴う外食産業支援として、首相がプレミアム商品券を検討していると報じたが、これは単独報道で、政府の正式な発表ではない。予算委員会の論戦は、少数与党の下で今後の法案審議にも影響しうる。更迭の経緯や首相の説明が十分かどうかは、野党の追及と世論の受け止め次第で、来週以降の国会運営の焦点になりそうだ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s3">
+      <div class="kick">法務 · 治安<span>✓ 2媒体 · 詳細な判決理由は未確認</span></div>
+      <h3 class="hl">警職法改正案を閣議決定 スマホ通信の「遠隔解析」でトクリュウ対策</h3>
+      <div class="body">
+        <p>政府は16日、スマートフォンの通信内容を把握する「遠隔解析」を導入する警察官職務執行法改正案を閣議決定した。匿名・流動型犯罪グループ(トクリュウ)による特殊詐欺や強盗の未然防止が狙いで、日本経済新聞は今国会での成立を目指すと報じている。日経は被害額を5000億円規模と伝えた。</p>
+        <p>通信内容に踏み込む権限のため、通信の秘密やプライバシーとの兼ね合いが今後の国会審議の論点になりうる。どの段階で、誰の許可を得て解析できるのかといった細部は、今回の材料からは読み取れない。なお、NHKによれば政府は経済安全保障の強化に向け、個人の機微データを守る法改正も検討している。政府は被害の深刻さを理由に挙げているが、捜査機関の権限拡大には慎重な議論を求める声が出ることも予想される。成立すれば、通信を扱う事業者や利用者にも影響が及ぶため、条文の細部が重要になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s4">
+      <div class="kick">社会 · 司法<span>✓ 日経ほか2媒体 · 控訴の有無は未確認</span></div>
+      <h3 class="hl">餃子の王将社長射殺事件、被告に無罪判決 京都地裁</h3>
+      <div class="body">
+        <p>2013年に「餃子の王将」を展開する王将フードサービスの当時の社長が射殺された事件で、殺人などの罪に問われた暴力団幹部の田中幸雄被告(59)に対し、京都地裁の西川篤志裁判長は16日の判決公判で無罪を言い渡した(日本経済新聞)。求刑は無期懲役だった。</p>
+        <p>事件から10年以上がたち、判決前の報道は「無期懲役か無罪か」と注目していた。判決理由の詳細や、検察側が控訴するかどうかは、今回の材料では確認できていない。一方、2013年の事件では、被害者側と企業にとって長い年月が経過しており、判決は関係者に大きな影響を与える。今後は検察側の判断と、真相解明の行方が注目される。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>Tesla、新型Roadsterを発表。2028年生産開始を目指し、国内でも予約受付中<span>ITmedia NEWS・Google ニュース</span></li>
+        <li>川上拓斗審判員が意識回復。4月にオスナ選手のバットが頭部に直撃し緊急手術<span>日刊スポーツ・Google ニュース</span></li>
+        <li>看護師が患者を撮影した動画がXで拡散。「setlog」の公開設定の抜け穴が議論に<span>Yahoo!ニュース・Google ニュース</span></li>
+        <li>財政制度等審議会、備蓄米に輸入米の一時的な活用を提案<span>NHK</span></li>
+        <li>ドコモメールに楽天カードの認証マーク付きフィッシングメールが届く報告が相次ぐ<span>ITmedia NEWS・Google ニュース</span></li>
+        <li>八代市庁舎汚職事件に絡む資金洗浄の公判で、被告が起訴内容を認める<span>朝日新聞</span></li>
+        <li>APEC控える中国・深圳、マイカー自粛やクラクションの24時間禁止を実施<span>毎日新聞</span></li>
+        <li>リーナス・トーバルズ氏がAIコーディング支援を使いLinuxカーネルの改善に取り組むと報道<span>はてなブックマーク・Google ニュース</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>緊急地震速報の取り消しは、サイバー攻撃を受けたからではないか</b> <span>気象庁は攻撃を否定した(Jev 集計の複数報道)。原因は調査中で、結論は出ていない。</span></div>
+        <div><b>ドコモメールに楽天カード公式を名乗るメールが届き、認証マークが付いていた</b> <span>ITmedia NEWSとGoogle ニュースが、X上の報告が相次いでいると伝えた。一部企業の認証設定の弱点が指摘されている。公式を名乗るメールのリンクは開かない方がよい。</span></div>
+        <div><b>トランプ氏は軍事法廷で死刑判決を受けた元米軍少佐の銃殺刑をライブ配信する</b> <span>Yahoo!ニュースとGoogle ニュースによれば、トランプ氏は配信は実施しないと表明した。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 土 10月17日</b><span>気象庁が地震速報の取り消しの原因をどこまで説明するか、流出を発表した各社の続報、ホワイトハウスの報道官人事の公式発表に注意したい。</span><b>今週</b><span>警職法改正案の国会審議の入り口と、参院予算委員会での農相更迭をめぐる論戦が続く見込み。</span><b>その先</b><span>日銀の利上げの時期、プロ野球の日本シリーズの組み合わせが焦点になる。</span><b>読者へ</b><span>サービスのパスワードを使い回していないか、この機会に確認を。公式を名乗るメールのリンクは開かず、公式アプリから確認しよう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s0":{"kick": "社会 · 防災 · ✓ 報道多数 · 原因は調査中", "title": "緊急地震速報を初めて取り消し M9.9と過大推定、気象庁が謝罪", "what": "気象庁が出していた緊急地震速報の警報が取り消された。毎日新聞は初の取り消しと報じ、地震の規模をM9.9と過大に推定していたと伝えた。対象は北海道から東海地方の広い範囲とされる。気象庁は謝罪し、サイバー攻撃は否定した。原因は調査中である。", "why": "防災情報への信頼に直結する出来事で、原因と再発防止策が今後の焦点になる。", "me": "警報を受けた際の行動を、普段から家族で確認しておく契機になる。", "a": "", "b": "", "say": "気象庁は誤った推定を認めて謝罪し、サイバー攻撃は否定したが、原因は調査中だ。", "src": "毎日新聞、Jev 集計(気象庁関連の報道多数)"},
+    "s1":{"kick": "社会 · 情報セキュリティ · ✓ 各社2〜3媒体 · 数字は各社の発表ベース", "title": "個人情報の流出発表が相次ぐ ソースネクスト最大2252万件、ヤマト530万件", "what": "ソースネクストは最大2252万件、ヤマト運輸は約530万件、日本経済新聞社は約183万件の流出を発表した。タイムズカーも約660万アカウント分の漏えいを受け、免許証画像を全削除する。イズミは流出なしの報告を受けたとされる。数字は各社の発表ベースである。", "why": "個人情報の流出が1日に集中して報じられ、利用者側の備えが問われている。", "me": "該当サービスの利用者は、パスワードの変更と不審なメールへの注意が必要だ。", "a": "", "b": "", "say": "各社が流出を発表したが、件数は各社発表のもので検証されていない。", "src": "ITmedia NEWS、読売新聞、日本経済新聞、NHK"},
+    "s2":{"kick": "政治 · 国会 · ✓ NHK・日経ほか · 更迭の理由は未確認", "title": "農相交代後初の予算委 高市首相、任命責任を追及され更迭を陳謝", "what": "農相交代後初の参院予算委員会で、野党が高市首相の任命責任を追及した。首相は更迭を陳謝したと下野新聞が速報した。立憲民主党は簗氏の参考人招致を要求した。武部農相は米国産ジャガイモについて、合意なく輸入解禁はないと述べた。", "why": "少数与党の参議院で、政権運営の行方を左右する論戦になっている。", "me": "食料品の輸入や消費減税に関わる政策の方向性を示す動きである。", "a": "", "b": "", "say": "首相は更迭を陳謝し、野党は簗氏の参考人招致を求めている。", "src": "NHK、下野新聞、日本経済新聞、毎日新聞"},
+    "s3":{"kick": "法務 · 治安 · ✓ 2媒体 · 詳細な判決理由は未確認", "title": "警職法改正案を閣議決定 スマホ通信の「遠隔解析」でトクリュウ対策", "what": "政府は警察官職務執行法の改正案を閣議決定した。スマホの通信内容を把握する遠隔解析を導入し、トクリュウによる特殊詐欺や強盗を未然に防ぐ狙いである。今国会での成立を目指す。日経は被害を5000億円規模と伝えた。", "why": "治安対策と通信の秘密の線引きが問われる法案である。", "me": "スマホ利用者全般に関わる制度のため、国会審議の行方に注意が必要だ。", "a": "", "b": "", "say": "政府はトクリュウ対策として遠隔解析を導入する改正案を閣議決定した。", "src": "日本経済新聞、はてなブックマーク、Jev 集計"},
+    "s4":{"kick": "社会 · 司法 · ✓ 日経ほか2媒体 · 控訴の有無は未確認", "title": "餃子の王将社長射殺事件、被告に無罪判決 京都地裁", "what": "2013年に王将フードサービスの当時の社長が射殺された事件で、京都地裁は暴力団幹部の被告に無罪を言い渡した。求刑は無期懲役だった。判決理由の詳細は今回の材料では確認できていない。", "why": "未解決のまま10年以上たった事件で、司法判断が大きく分かれうる局面だった。", "me": "裁判員や捜査の在り方を考える材料になる。控訴の有無に注目したい。", "a": "", "b": "", "say": "京都地裁は被告に無罪を言い渡した。求刑は無期懲役だった。", "src": "日本経済新聞、Jev 集計"},
+    "i1":{"kick": "経済 · ✓ NHKほか2媒体", "title": "植田日銀総裁「今後も利上げ進める」 物価2%の安定を重視", "what": "日銀の植田総裁は16日、金融業界の会合へのあいさつで今後も利上げを進める考えを示した。ペースは物価上昇率を2%程度で安定させる観点を重視して検討するという。英文の報道は、基調的なインフレが2%をさらに上回る状況は容認できないとの趣旨で伝えた。", "why": "金利の方向性は、株価や為替、ローン金利に影響する。", "me": "変動金利型の住宅ローンを持つ人は、金利動向を意識したい。", "a": "", "b": "", "say": "植田総裁は今後も利上げを進めるとし、2%の物価安定を重視する姿勢を示した。", "src": "NHK、英文報道(Jev 集計)"},
+    "i2":{"kick": "経済 · ✓ NHK 1社", "title": "TSMC熊本第2工場、国内初の3ナノ半導体の生産計画を認定", "what": "経産省は、台湾のTSMCが熊本県に建設中の第2工場で、国内初となる3ナノ世代の半導体を生産する計画を認定したと発表した。NHKの報道に基づく。", "why": "先端半導体の国内生産拠点づくりが一歩進む。", "me": "国内の半導体産業や雇用に関わる動きである。", "a": "", "b": "", "say": "経産省がTSMC熊本第2工場の3ナノ生産計画を認定した。", "src": "NHK"},
+    "i3":{"kick": "World · ✓ 2媒体(正式発表は未確認)", "title": "米大統領報道官を解任と報道 経歴詐称疑惑、トランプ氏は示唆", "what": "毎日新聞は米大統領報道官を経歴詐称疑惑で解任したと報じ、朝日新聞はトランプ氏が新報道官の解任を示唆し「既に解任」との報道もあると伝えた。ホワイトハウスの正式な発表は今回の材料では確認できていない。", "why": "政権の広報体制と信頼性に関わる。", "me": "日本の報道では速報段階の情報であり、続報を待ちたい。", "a": "", "b": "", "say": "解任は報じられたが、公式発表は未確認である。", "src": "毎日新聞、朝日新聞"},
+    "i4":{"kick": "スポーツ · ✓ 時事・毎日", "title": "プロ野球クライマックスシリーズ、ソフトバンクが日本シリーズへ DeNAは王手", "what": "時事通信によると、ソフトバンクが日本シリーズ進出を決め、DeNAは王手をかけた。毎日新聞は日本ハムが3連敗で敗退したと伝えた。阪神は27回連続無得点でCS最多記録となり、前川右京選手が左手小指を骨折した。", "why": "日本シリーズの顔ぶれが決まりつつある。", "me": "観戦の予定を立てる際の参考になる。", "a": "", "b": "", "say": "ソフトバンクが日本シリーズへ進み、DeNAは王手をかけた。", "src": "時事通信、毎日新聞"},
+    "i5":{"kick": "社会 · ✓ 報道多数", "title": "三重県議会、全国初の罰則付きカスハラ防止条例が成立", "what": "三重県議会で、全国で初めて罰則付きのカスタマーハラスメント防止条例が成立した。報道は多数あったが、罰則の具体的な内容は今回の材料では確認できていない。", "why": "接客現場の従業員を守る制度が、自治体レベルで広がるかが注目される。", "me": "接客業の働き方や利用者の振る舞いに関わる。", "a": "", "b": "", "say": "三重県議会は全国初の罰則付きカスハラ防止条例を成立させた。", "src": "Jev 集計(報道多数)"}
+  };
+  const G = {
+    "緊急地震速報":{"f": "防災", "d": "強い揺れが来る前に知らせる気象庁の仕組み。", "w": "今回、警報が初めて取り消された。"},
+    "気象庁":{"f": "行政", "d": "天気や地震、火山を観測し予報する国の機関。", "w": "速報の取り消しと謝罪を行った。"},
+    "マグニチュード":{"f": "地震", "d": "地震そのものの規模を表す数値。", "w": "M9.9と過大に推定された。"},
+    "サイバー攻撃":{"f": "情報セキュリティ", "d": "ネットを通じてシステムを壊したり情報を盗んだりする行為。", "w": "気象庁は速報取り消しとの関連を否定した。"},
+    "API":{"f": "IT", "d": "ソフト同士が機能やデータをやり取りする窓口。", "w": "ソースネクストの流出は、この不正利用が原因とされる。"},
+    "不正アクセス":{"f": "情報セキュリティ", "d": "権限なくシステムに侵入する行為。", "w": "日経のクラウドサービスが被害を受けた。"},
+    "個人情報":{"f": "法律", "d": "氏名や住所など、個人を特定できる情報。", "w": "各社で数十万〜数千万件の流出が発表された。"},
+    "予算委員会":{"f": "国会", "d": "予算案などを集中的に議論する委員会。", "w": "農相交代後初の開催で論戦になった。"},
+    "任命責任":{"f": "政治", "d": "大臣を任命した首相が負うとされる責任。", "w": "野党が高市首相を追及した。"},
+    "更迭":{"f": "政治", "d": "本人の意思によらず、職を外すこと。", "w": "簗氏の更迭を首相が陳謝した。"},
+    "参考人招致":{"f": "国会", "d": "委員会が関係者を呼んで意見を聞く手続き。", "w": "立憲民主党が簗氏の招致を要求した。"},
+    "消費減税":{"f": "経済", "d": "消費税の税率を下げること。", "w": "外食支援策が検討されている。"},
+    "プレミアム商品券":{"f": "経済", "d": "額面より安く買える商品券で、消費を促す。", "w": "首相が検討と毎日新聞が報じた。"},
+    "閣議決定":{"f": "行政", "d": "内閣が会議で方針や法案を正式に決めること。", "w": "警職法改正案が決まった。"},
+    "警察官職務執行法":{"f": "法律", "d": "警察官の職務の範囲と権限を定める法律。", "w": "遠隔解析の導入に向け改正される。"},
+    "トクリュウ":{"f": "治安", "d": "匿名・流動型犯罪グループの略称。", "w": "特殊詐欺や強盗を行うとされる。"},
+    "遠隔解析":{"f": "治安", "d": "スマホの通信内容を遠隔で把握する手法。", "w": "改正案の中心となる制度である。"},
+    "京都地裁":{"f": "司法", "d": "京都府にある第一審の裁判所。", "w": "王将事件の判決を言い渡した。"},
+    "求刑":{"f": "司法", "d": "検察官が裁判所に求める刑の重さ。", "w": "今回は無期懲役だった。"},
+    "日銀":{"f": "金融", "d": "日本銀行。金融政策を担う中央銀行。", "w": "植田総裁が利上げ継続を示した。"},
+    "利上げ":{"f": "金融", "d": "政策金利を引き上げること。", "w": "今後も進める考えが示された。"},
+    "TSMC":{"f": "半導体", "d": "台湾の半導体受託生産大手。", "w": "熊本第2工場で3ナノ生産が認定された。"},
+    "カスハラ":{"f": "労働", "d": "カスタマーハラスメント。客による理不尽な要求や暴言。", "w": "三重県が罰則付きの条例を成立させた。"},
+    "クライマックスシリーズ":{"f": "スポーツ", "d": "プロ野球の日本シリーズ出場をかけた短期決戦。", "w": "ソフトバンクが突破した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
