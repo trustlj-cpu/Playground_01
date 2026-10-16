@@ -43,7 +43,7 @@ const handler = {
       catch (e) { return new Response('{"items":[]}', { status: 502, headers: { 'content-type': 'application/json' } }); }
     }
     // 링크 미리보기 봇(X·페이스북·카톡 등)이 루트(/)를 읽으면 국가판 1면 대신 고정 제목·설명의 카드용 페이지(사람 방문은 그대로 국가판으로)
-    const BOTS = /Twitterbot|facebookexternalhit|Facebot|Slackbot|LinkedInBot|Discordbot|TelegramBot|kakaotalk|WhatsApp|Pinterest|redditbot|Applebot/i;
+    const BOTS = /Twitterbot|facebookexternalhit|Facebot|Slackbot|LinkedInBot|Discordbot|TelegramBot|kakaotalk-scrap|WhatsApp|Pinterest|redditbot|Applebot/i;
     const bq = (url.searchParams.get('b') || '').replace(/[^a-z0-9]/g, '').slice(0, 12);
     if (bq && BOTS.test(request.headers.get('user-agent') || '') && /^\/(?:[a-z]{2}\/)?$/.test(url.pathname)) {
       let it = null; try { const r = await fetch('https://dailydrop-feed.trustlj.workers.dev/breaking/item.json?id=' + bq + '&lang=en', { cf: { cacheTtl: 300, cacheEverything: true } }); if (r.ok) it = await r.json(); } catch (e) {}
@@ -58,7 +58,7 @@ const handler = {
     }
     // 예전 /live/ 페이지는 없앴다(사장님 10/12): 1면으로
     if (/^\/live(\/|$)/.test(url.pathname)) return Response.redirect(url.origin + '/', 301);
-    if (url.pathname === '/' && /Twitterbot|facebookexternalhit|Facebot|Slackbot|LinkedInBot|Discordbot|TelegramBot|kakaotalk|WhatsApp|Pinterest|redditbot|Applebot/i.test(request.headers.get('user-agent') || '')) {
+    if (url.pathname === '/' && /Twitterbot|facebookexternalhit|Facebot|Slackbot|LinkedInBot|Discordbot|TelegramBot|kakaotalk-scrap|WhatsApp|Pinterest|redditbot|Applebot/i.test(request.headers.get('user-agent') || '')) {
       const T = 'DailyDrop — the world\'s news, every morning', D = 'One page from 20 countries every morning at 06:00 local time, plus live news confirmed by three or more outlets. Read in your language.';
       return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${T}</title><meta name="description" content="${D}"><link rel="canonical" href="https://dailydropnewspaper.com/"><meta property="og:type" content="website"><meta property="og:site_name" content="DailyDrop"><meta property="og:url" content="https://dailydropnewspaper.com/"><meta property="og:title" content="${T}"><meta property="og:description" content="${D}"><meta property="og:image" content="https://dailydropnewspaper.com/og.png?v=5"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${T}"><meta name="twitter:description" content="${D}"><meta name="twitter:image" content="https://dailydropnewspaper.com/og.png?v=5"></head><body><a href="https://dailydropnewspaper.com/">DailyDrop</a></body></html>`, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
     }
