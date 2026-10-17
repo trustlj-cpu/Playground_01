@@ -128,6 +128,40 @@ dl.gloss div{border-left:2px solid var(--line);padding-left:.8rem;min-width:0}
 dl.gloss dt{font-family:var(--f-mono);font-weight:600;font-size:var(--s2)}
 dl.gloss dd{margin:.15rem 0 0;color:var(--muted);font-size:var(--s2)}
 
+/* repo deep dives */
+.dive{padding-block:var(--s5) var(--s6);border-top:1px solid var(--line)}
+.dive-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.5rem 1rem;margin-bottom:var(--s4)}
+.dive-head h2{font-size:clamp(1.5rem,3.2vw,2.1rem)}
+.dive-head p{margin:.3rem 0 0;color:var(--muted);font-size:var(--s2);max-width:60ch}
+.repos{display:grid;gap:var(--s3)}
+details.repo{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
+details.repo[open]{border-color:var(--accent)}
+details.repo summary{list-style:none;cursor:pointer;padding:var(--s4);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.3rem 1rem;align-items:start}
+details.repo summary::-webkit-details-marker{display:none}
+.rname{font-family:var(--f-mono);font-weight:600;font-size:var(--s4);overflow-wrap:anywhere}
+.rname .own{color:var(--muted);font-weight:400}
+.rone{grid-column:1/-1;color:var(--muted);font-size:var(--s2);margin:0}
+.rmeta{display:flex;flex-wrap:wrap;gap:.35rem;grid-column:1/-1}
+.rmeta span{font-family:var(--f-mono);font-size:.72rem;padding:.1rem .45rem;border-radius:4px;background:var(--sunk);color:var(--muted)}
+.rmeta span.hot{background:var(--accent-soft);color:var(--ink)}
+.toggle{font-family:var(--f-mono);font-size:.75rem;color:var(--accent);white-space:nowrap}
+details.repo[open] .toggle .c{display:none} details.repo:not([open]) .toggle .o{display:none}
+.rbody{padding:0 var(--s4) var(--s4);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s4) var(--s5);border-top:1px solid var(--line);padding-top:var(--s4)}
+@media (max-width:760px){.rbody{grid-template-columns:1fr}}
+.rbody section{min-width:0}
+.rbody h3{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:.45rem;font-weight:600}
+.rbody p,.rbody li{font-size:var(--s2)}
+.rbody p{margin:0}
+.rbody ul{margin:0;padding-left:1.1rem;display:grid;gap:.25rem}
+.rbody .wide{grid-column:1/-1}
+.steps{list-style:none;padding:0!important;margin:0;display:grid;gap:.45rem!important}
+.steps li{display:grid;gap:.25rem}
+.steps .lbl{color:var(--muted)}
+.steps .tip-cmd{margin-top:0}
+.made{list-style:none;padding:0!important;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,14rem),1fr));gap:.6rem!important}
+.made li{border-left:2px solid var(--accent);padding-left:.7rem}
+.made a{font-weight:700}
+.made span{display:block;color:var(--muted)}
 .noresult{color:var(--muted);font-size:var(--s2);padding-block:var(--s4)}
 footer{padding-block:var(--s5);border-top:1px solid var(--line);color:var(--muted);font-size:var(--s1);display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;justify-content:space-between}
 [data-hide="1"]{display:none!important}
@@ -186,6 +220,19 @@ footer{padding-block:var(--s5);border-top:1px solid var(--line);color:var(--mute
         <ul class="archive" id="archive"></ul>
       </div>
     </aside>
+  </section>
+
+  <section class="dive" id="dive" aria-labelledby="diveTitle">
+    <div class="dive-head">
+      <div>
+        <div class="eyebrow">Repo deep dive</div>
+        <h2 id="diveTitle">오늘의 저장소 탐구</h2>
+        <p>매일 공개된 저장소 몇 개를 골라 무엇인지, 어떤 기능이 있는지, 어디에 쓰면 좋은지, 어떻게 시작하는지, 이걸로 무엇이 만들어졌는지 풀어 설명합니다.</p>
+      </div>
+      <span class="stamp" id="diveStamp"></span>
+    </div>
+    <div class="repos" id="repos"></div>
+    <div class="empty" id="diveEmpty">이 날짜에는 저장소 탐구 기록이 없습니다. 매일 아침 새 저장소 설명이 여기에 올라옵니다.</div>
   </section>
 
   <main id="guide">
@@ -353,7 +400,7 @@ footer{padding-block:var(--s5);border-top:1px solid var(--line);color:var(--mute
   function show(doc){
     current = doc?.date || null;
     const items = $("#items"); items.innerHTML = "";
-    if (!doc) { $("#stamp").textContent = "기록 없음"; $("#empty").hidden = false; $("#tipPanel").hidden = true; return; }
+    if (!doc) { $("#stamp").textContent = "기록 없음"; $("#empty").hidden = false; $("#tipPanel").hidden = true; renderRepos(null); return; }
     $("#empty").hidden = true;
     $("#todayTitle").textContent = doc.date === todayKey ? "오늘의 커밋" : "그날의 커밋";
     $("#stamp").textContent = fmt(doc.date) + (doc.date === todayKey ? " · 오늘" : "");
@@ -375,7 +422,49 @@ footer{padding-block:var(--s5);border-top:1px solid var(--line);color:var(--mute
       $("#tipCmdBox").hidden = !t.command;
       $("#tipCmd").textContent = t.command || "";
     }
+    renderRepos(doc);
     renderArchive();
+  }
+  let cmdId = 0;
+  const list = a => (a || []).map(x => `<li>${esc(x)}</li>`).join("");
+  function renderRepos(doc){
+    const box = $("#repos"); box.innerHTML = "";
+    const repos = doc?.repos || [];
+    $("#diveEmpty").hidden = repos.length > 0;
+    $("#diveStamp").textContent = doc ? fmt(doc.date) : "";
+    repos.forEach((r, i) => {
+      const [own, name] = String(r.name || "").includes("/") ? r.name.split("/") : ["", r.name || ""];
+      const meta = [
+        r.starsToday ? `<span class="hot">오늘 ★ ${esc(r.starsToday)}</span>` : "",
+        r.stars ? `<span>★ ${esc(r.stars)}</span>` : "",
+        r.language ? `<span>${esc(r.language)}</span>` : "",
+        r.license ? `<span>${esc(r.license)}</span>` : "",
+        ...(r.audience || []).map(a => `<span>${esc(AUD[a] || a)}</span>`)
+      ].join("");
+      const steps = (r.start || []).map(s => {
+        const id = "cmd" + (++cmdId);
+        return `<li>${s.label ? `<span class="lbl">${esc(s.label)}</span>` : ""}${s.cmd ? `<div class="tip-cmd"><code id="${id}">${esc(s.cmd)}</code><button class="copy" data-copy="#${id}">복사</button></div>` : ""}</li>`;
+      }).join("");
+      const made = (r.madeWith || []).map(m =>
+        `<li>${m.url ? `<a href="${esc(safeUrl(m.url))}">${esc(m.name)}</a>` : `<b>${esc(m.name)}</b>`}${m.note ? `<span>${esc(m.note)}</span>` : ""}</li>`).join("");
+      const d = document.createElement("details");
+      d.className = "repo"; d.open = i === 0;
+      d.innerHTML = `<summary>
+          <div class="rname"><span class="own">${esc(own)}${own ? "/" : ""}</span>${esc(name)}</div>
+          <span class="toggle"><span class="c">펼치기 +</span><span class="o">접기 −</span></span>
+          <p class="rone">${esc(r.oneLiner || "")}</p>
+          <div class="rmeta">${meta}</div>
+        </summary>
+        <div class="rbody">
+          <section class="wide"><h3>무엇인가요</h3><p>${esc(r.what)}</p></section>
+          <section><h3>주요 기능</h3><ul>${list(r.features)}</ul></section>
+          <section><h3>이런 데 쓰면 좋아요</h3><ul>${list(r.goodFor)}</ul></section>
+          <section><h3>이렇게 활용하세요</h3><ul class="steps">${steps}</ul>${r.howTo ? `<p style="margin-top:.5rem;color:var(--muted)">${esc(r.howTo)}</p>` : ""}</section>
+          <section><h3>이걸로 만든 것들</h3>${made ? `<ul class="made">${made}</ul>` : `<p style="color:var(--muted)">아직 알려진 사례가 적습니다.</p>`}</section>
+          <section class="wide"><a href="${esc(safeUrl(r.url))}">저장소 열기 →</a></section>
+        </div>`;
+      box.appendChild(d);
+    });
   }
   function renderArchive(){
     const ul = $("#archive"); ul.innerHTML = "";
