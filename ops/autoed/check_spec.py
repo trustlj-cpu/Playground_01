@@ -20,7 +20,7 @@ def check(spec):
             if not p.get(k): err.append(f'popup {i}.{k} empty')
         # 팝업 분량 하한(what+why+me+say): 10/17 호에서 한 줄짜리 팝업이 나와 추가. 한·중·일은 글자 수가 적어 하한을 낮춘다.
         n = sum(len(p.get(k) or '') for k in ['what', 'why', 'me', 'say'])
-        floor = 320 if spec.get('region') in ('KR', 'JP', 'TW') else 520
+        floor = 450 if spec.get('region') in ('KR', 'JP', 'TW') else 900
         if n < floor: err.append(f'popup {i} too short {n} < {floor} (what 4-5문장, why·me·say 각 2문장)')
     for s in st:
         for k in ['id', 'cat', 'verify', 'hl', 'paras']:
