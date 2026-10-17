@@ -1,0 +1,450 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 종이 신문의 1면. 6단 그리드, 이중 괘선의 제호, 명조 제목, 사진 대신 잉크 도표. 기사를 누르면 펼쳐진다. */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif KR",Georgia,serif; --sans:"Noto Sans KR",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 제호 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* 그리드 */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:keep-all}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:keep-all}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:keep-all}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:keep-all;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:keep-all;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* 잉크 도표 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 색인·단신 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:keep-all}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:keep-all}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:keep-all}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* 팝업 */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:keep-all}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:keep-all}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 용어 사전 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:keep-all}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 여백 채움: 기사 칸 아래에 붙는 보조 블록 */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:keep-all}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>69,030.92엔</b>닛케이평균 · 10/9 마감 · 전일 대비 −0.02%(12일은 스포츠의 날로 휴장, 재개는 13일)</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 국내외 전 분야 · 매일 한 장</div></div>
+      <div class="ear r"><b>158.25엔</b>달러/엔 · 10/9 밤 · 전일 대비 +0.45엔, 엔저 방향</div>
+    </div>
+    <div class="dateline"><span>제 8 호 · 조간</span><b>2026년 10월 12일 월요일</b><span>기사를 누르면 펼쳐지고, <u style="text-decoration:dotted underline var(--red)">점선 단어</u>를 누르면 뜻이 뜹니다</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="riyadh">
+      <div class="kick">국제·중동<span>보도 대조 ✓ 매체 6곳 · 사상자 수는 사우디 민간항공 당국의 발표, 실행 주체는 미확정</span></div>
+      <h2 class="hl">리야드 국제공항 공격으로 12명 사망, 300명 넘게 부상. 후티 반군 관여 의심, 트럼프 씨는 반격 참여를 '검토'</h2>
+      <p class="deck">사망자에 미국인이 포함됐다고 전해져 미국은 강하게 반응했다. 주 초 원유 시장과 일본의 연료 가격에 미칠 파급이 초점이다.</p>
+      <div class="body">
+        <p>사우디아라비아 민간항공 당국은 10일 수도 리야드의 킹 할리드 국제공항이 공격을 받아 12명이 숨지고 309명이 다쳤다고 발표했다(AP통신, 로이터). 마이니치신문은 사망자에 미국인이 포함됐다고 전했다. AP통신과 아사히신문은 이란이 지원하는 예멘의 무장조직 후티 반군의 공격이 의심된다고 했고, 후티 반군은 사우디 공항에 대한 경고를 다시 냈다(로이터). 같은 공항은 지난주에도 탄도미사일의 표적이 되어 사우디 국적 3명이 숨졌다(알자지라). 후티 반군은 8일에도 새 공격을 주장했고, 사우디 주도 유지연합은 탄도미사일 2발을 요격했다고 발표했었다(AP통신). 이번에는 피해가 차원이 다르게 크고, 공항 폐쇄는 연장됐다(AP통신). 킹 할리드 국제공항은 사우디의 국내외 여객과 화물을 담당하는 주요 공항의 하나다. 후티 반군의 지배 지역에 있는 사나 공항도 공격을 받았다고 후티 반군 계열 TV가 전했다(로이터). 다만 실행 주체의 특정과 공격 수단의 상세는 아직 확인하지 못했다.</p>
+        <p>미국의 반응은 빨랐다. 루비오 국무장관은 공격을 비난하고 미국은 사우디와 함께한다고 말했다(로이터 등 4개 매체). 트럼프 대통령은 반격 참여를 '검토하겠다'고 말했다고 아사히신문과 마이니치신문이 전했고(NPR도 같은 보도), 참여할지는 정해지지 않았으며, 사우디 주도 유지연합은 보복을 다짐했다(가디언). 배경에는 미국과 이란의 대립이 있다. 미군은 이란의 해상 봉쇄를 뚫으려던 화물선을 항행 불능으로 만들었다고 로이터가 보도했다. 중동의 전쟁은 국제통화기금(IMF)과 세계은행의 연차 총회에서도 최대 의제가 될 전망이다(로이터). 시장에 미치는 영향은 먼저 원유에 나타난다. WTI 원유는 9일 91.85달러(+0.39%), S&amp;P500은 7,811.54(+0.59%), 금은 4,216.3달러(+1.43%)로 마감했지만, 모두 공격 이전의 수준이다. 도쿄 시장은 12일 스포츠의 날로 휴장하며, 재개는 13일이다. 일본은 원유의 대부분을 중동에서 수입하고 있어 공급과 해상 수송에 어떤 영향이 있을지가 초점이다. 사망자의 국적별 내역, 일본인 피해 여부, 일본 정부의 대응은 아직 확인하지 못했다.</p>
+      </div>
+      <div class="more">기사와 데일리드롭 생각 펼치기</div>
+      <div class="fill"><h5>오늘의 숫자</h5><div class="nums">
+        <div><b>12명</b><span>사망자 수. 부상은 309명(사우디 민간항공 당국, AP통신)</span></div>
+        <div><b>91.85달러</b><span>WTI 원유의 금요일(9일) 종가. 공격 이전의 수준이며, 전일 대비 0.39% 상승</span></div>
+        <div><b>13일</b><span>도쿄 시장의 재개일. 12일은 스포츠의 날로 휴장</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="icc">
+      <div class="kick">국제·국제법<span>보도 대조 ✓ 매체 6곳 · 제재의 구체적 범위와 유예 기간은 미국 정부 문서 미확인</span></div>
+      <h3 class="hl">ICC 제재, 일본 포함 21개국 의장단이 '즉각 철회' 요구. 모테기 외무상은 루비오 장관과 아카네 소장에게 전화</h3>
+      <div class="one">
+        <p>국제형사재판소(ICC) 당사국총회 의장단은 10일 일본을 포함한 21개국의 이름으로 미국의 제재를 즉각 철회하라고 요구하는 성명을 냈다(지지통신, 마이니치신문, NHK). 성명은 제재가 사법 기능을 방해한다고 호소했다. 미국은 ICC 본체를 제재 대상으로 지정했고, ICC의 아카네 도모코 소장은 '단호히 거부한다'는 성명을 냈다(마이니치신문). 모테기 도시미쓰 외무상은 루비오 미국 국무장관과 전화로 협의했고, 아카네 소장과도 이야기를 나눴다. 루비오 씨는 제재의 '필요성'을 전했다(NHK, 재팬타임스). 기하라 미노루 관방장관은 '깊이 우려한다'고 말하며 법의 지배를 강조했다(지지통신). 노벨 평화상의 필레이 씨는 '전례 없고 용납할 수 없다'고 비판했다(마이니치신문). ICC는 전쟁범죄 등의 개인 책임을 묻는 상설 국제재판소로, 네덜란드 헤이그에 있다. 마이니치신문은 ICC 해체에 대한 찬반이 미군과 얽힌 안보의 '후미에(踏み絵)'가 되고 있다고 지적한다. 재팬타임스는 다카이치 사나에 총리가 다시 끼인 처지가 됐다고 보도했다. 일본은 국내에 주일 미군을 두고 있으며, 제재의 구체적 범위와 유예 기간은 미국 정부 문서로 확인하지 못했다.</p>
+      </div>
+      <div class="more">펼치기</div>
+      <div class="fill word"><h5>오늘의 단어</h5><b>의장단<i>議長団</i></b><p>조약 가맹국이 모이는 회의를 이끄는 대표들. ICC의 경우 당사국총회의 의장과 부의장으로, 가맹국 전체의 목소리로 성명을 낼 수 있다.</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>짧게 보는 오늘</h4>
+      <div class="it story" tabindex="0" data-id="yana"><b>야나 농림수산상의 '도로 예산' 발언</b><em>이시바 전 총리가 비판했고, 총리는 경질을 부인했다. 주 초 예산위원회에서 거취가 초점이 된다.</em><span>국내 정치 · ✓ 매체 5곳</span></div>
+      <div class="it story" tabindex="0" data-id="nepal"><b>네팔에서 토석류, 5명 실종</b><em>토사가 강을 막아 생긴 호수가 터진 것으로 보인다. 군이 구조에 나섰다.</em><span>국제·재해 · ✓ 매체 4곳</span></div>
+      <div class="it story" tabindex="0" data-id="india"><b>인도에서 수천 명 구금</b><em>선관위를 비판하는 시위로 수도가 봉쇄됐다. '바퀴벌레 인민당' 창립자는 석방됐다.</em><span>국제 · ✓ 매체 5곳</span></div>
+      <div class="it story" tabindex="0" data-id="pope"><b>교황, 폐 수술을 이번 주 받는다</b><em>작은 종양 수술을 받겠다고 본인이 말했다. 자세한 병세는 확인하지 못했다.</em><span>국제 · ✓ 매체 2곳</span></div>
+      <div class="it story" tabindex="0" data-id="dc"><b>기타큐슈, 데이터센터 착공 보류</b><em>초등학교 옆이라는 입지에 반발이 있었다. AI 투자의 전력 부담도 곳곳에서 쟁점이 되고 있다.</em><span>사회·산업 · ✓ 매체 2곳</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="baseball">
+      <div class="kick">스포츠<span>보도 대조 ✓ 매체 7곳 · 파이널 스테이지의 일정과 상대는 NPB 일정표에 따른다</span></div>
+      <h3 class="hl">DeNA, 요미우리에 2연승으로 CS 파이널로. 오타니 쇼헤이는 12일부터 리그 챔피언십 시리즈, 무라카미 무네타카의 화이트삭스는 탈락</h3>
+      <div class="body">
+        <p>프로야구 클라이맥스 시리즈(CS) 센트럴리그는 요코하마 DeNA가 요미우리 자이언츠에 2연승을 거두고 파이널 스테이지에 올랐다(NHK, 마이니치신문, 아사히신문). 베테랑 도바시라 야스타카의 활약이 눈에 띄었다(마이니치신문, 아사히신문). NPB 일정표에 따르면 파이널은 14일 고시엔에서 한신과 맞붙을 예정이다. 요미우리의 하시가미 히데키 감독 대행은 경기 후 '라스트 미팅'을 열었고, 격동의 시즌이 끝났다(스포츠호치). 퍼시픽리그는 니혼햄이 세이부를 꺾어 1승 1패를 만들었고, 승부는 12일 3차전으로 넘어갔다(NHK, 마이니치신문).</p>
+        <p>미국 메이저리그에서는 다저스의 오타니 쇼헤이가 내셔널리그 챔피언십 시리즈 1차전을 앞두고 프리 배팅으로 컨디션을 조율했다(지지통신, NHK). 상대는 브루어스이며, 시리즈는 12일부터 시작된다(스포츠호치). 한편 화이트삭스는 디비전 시리즈에서 가디언스에 패해 탈락했고, 무라카미 무네타카는 마지막 경기에서 4타수 4삼진으로 끝났다(NHK, 지지통신).</p>
+      </div>
+      <div class="more">펼치기</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="okinawa">
+      <div class="kick">사회·안보<span>보도 대조 ✓ 매체 6곳 · 기소 판단과 피해자 유족의 의향은 미확인</span></div>
+      <h3 class="hl">오키나와 미군 병사 살인 사건, 모테기 외무상이 미국 측에 '유감' 전달. 미군은 합동 순찰 시작, 현지에서는 '효과 의문' 목소리</h3>
+      <div class="body">
+        <p>오키나와현 나하시의 호텔에서 여성이 숨지고 미 해병대 20세 병사가 강도살인 혐의로 체포된 사건과 관련해, 모테기 도시미쓰 외무상은 11일까지 미국 측에 '유감의 뜻'을 전했다(마이니치신문). 외무성은 글래스 주일 미국대사를 불러 우려를 표했고, 다카이치 사나에 총리는 '극히 흉악하다'고 말하며 미군에 기강 확립과 수사에 대한 전면 협력을 요구했다(알자지라). 병사는 혐의를 부인하고 있으며, 검찰의 기소 판단은 아직 나오지 않았다.</p>
+        <p>미군은 기지 주변에서 미일 합동 순찰을 시작했다. 다만 오키나와시 고자 지구에서는 효과를 의심하는 목소리가 나온다(마이니치신문). 마이니치신문은 재발 방지가 되풀이되어 온 가운데 정부의 진정성이 시험받는다고 썼다. 재팬타임스는 '모두가 화가 나 있다'며 주민의 불안과 분노를 전했다. 오키나와에서는 1972년 본토 복귀 이후 약 6,000명의 미군 관계자가 체포된 것으로 알려졌다(알자지라). 2024년은 80명으로 20년 사이 최다였다.</p>
+      </div>
+      <div class="more">펼치기</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="ukraine">
+      <div class="kick">국제·우크라이나<span>보도 대조 ✓ 매체 6곳 · '에너지 휴전'은 러시아 측 확인이 아직</span></div>
+      <h3 class="hl">트럼프 씨 '우크라이나에 새 대통령을'. 젤렌스키 씨는 정유 시설 공격 중단을 제안, 트럼프 씨는 '에너지 휴전' 합의 발표</h3>
+      <div class="body">
+        <p>트럼프 미국 대통령은 10일 우크라이나의 젤렌스키 대통령을 비판하며 '새로운 지도자가 필요하다'고 말했다(지지통신, NHK, 마이니치신문). 마이니치신문은 러시아 정유 시설에 대한 우크라이나의 공격에 미국이 불만을 품고 중단을 요구하고 있다고 전했다. 젤렌스키 씨는 러시아가 에너지 시설 공격을 멈춘다면 정유 시설 공격을 멈추겠다고 제안했다(로이터). 미국 ABC 방송 인터뷰에서는 러시아가 60일간의 휴전에 응한다면 선거를 실시하겠다고 말했다(로이터). 독일 정부는 젤렌스키 씨를 지지했다(로이터).</p>
+        <p>그 뒤 트럼프 씨는 자신의 SNS에 러시아와 우크라이나 사이에 '에너지 휴전'이 즉시 발효되며 양측이 합의했다고 올렸다(로이터). 젤렌스키 씨는 캐나다의 카니 총리를 비롯한 유럽 등의 정상과 이야기를 나눈 뒤 휴전을 지지한다고 말했다(NHK, 젤렌스키 씨의 SNS). 다만 러시아 측의 확인과 대상·기간의 상세는 아직 확인하지 못했다.</p>
+      </div>
+      <div class="more">펼치기</div>
+      <div class="fill"><h5>짧게 더</h5><ul class="briefs">
+        <li>미국의 금요일(9일) 종가는 S&amp;P500이 7,811.54(+0.59%), WTI 원유가 91.85달러(+0.39%), 금이 4,216.3달러(+1.43%)<span>거래소 종가 데이터</span></li>
+        <li>닛케이평균은 9일 6만 9,030.92엔(−0.02%). 12일은 스포츠의 날로 도쿄 시장이 휴장이며, 재개는 13일<span>도쿄증권거래소의 휴장 일정</span></li>
+        <li>지부티 앞바다에서 이민선이 뒤집혀 109명이 숨지고 116명 이상이 실종됐다. 어린이 15명을 포함한다<span>지지·로이터</span></li>
+        <li>폴란드 경찰, 투스크 총리 등에 대한 공격 계획 가능성을 경고<span>AP·로이터</span></li>
+        <li>미 법무부, 대통령 취재 일시 중단을 둘러싸고 방송사를 독점금지법 위반 혐의로 조사<span>마이니치·로이터</span></li>
+        <li>아이치현 도요타시에서 50대 남성이 현관 앞에서 곰에게 습격당해 중상<span>NHK·아사히</span></li>
+        <li>육상의 킵초게, 2023년 이후 처음인 마라톤에서 우승<span>재팬타임스</span></li>
+        <li>팔레스타인 의회 선거, 2027년 9월로 재연기. 자치정부 수반 선거와 같은 날<span>아사히·지지·마이니치</span></li>
+      </ul><div class="house">매일 아침 7분, 1면 한 장</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>소문의 온도 — 확인 안 된 것</h4>
+        <div><b>'트럼프 씨는 사우디를 지키기 위해 미군의 반격 참여를 결정했다.'</b> <span>아사히신문과 마이니치신문은 트럼프 씨가 '검토하겠다'고 말했다고 전했다. 결정은 확인하지 못했다.</span></div>
+        <div><b>'러시아도 에너지 휴전에 동의했다.'</b> <span>트럼프 씨는 양측이 합의했다고 올렸고, 우크라이나는 지지를 표명했다. 러시아 측의 확인은 아직 받지 못했다.</span></div>
+        <div><b>'야나 농림수산상은 곧 사임한다.'</b> <span>총리는 경질을 부인했고 야나 씨도 사임을 부인하고 있다. 자민당 내에 사임을 요구하는 목소리는 있다(지지통신). 주 초 예산위원회에서의 설명이 초점이다.</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>오늘 볼 것</h4>
+        <div><b>10/12 월</b><span>사우디 공항 공격의 실행 주체 특정과, 트럼프 씨가 반격 참여를 결정할지 · 주 초 원유(WTI)와 금의 움직임 · 러시아와 우크라이나 에너지 휴전의 내용 확인 · 야나 농림수산상의 거취와 예산위원회의 시작 · ICC 제재를 둘러싼 미일 협의 · 메이저리그 NLCS 개막과, 프로야구 퍼시픽리그 CS 3차전 · 도쿄 시장은 휴장(스포츠의 날).</span><b>이번 주</b><span>13일 도쿄 시장 재개 · 14일 CS 센트럴리그 파이널 스테이지 개막(고시엔, NPB 일정표) · 이번 주 교황 레오 14세의 폐 수술(로이터) · 18일 시가현 구사쓰 시장 선거 투개표 · 11월 9일 COP31 개막(지지통신).</span><b>독자에게</b><span>중동에 갈 예정인 사람은 외무성의 해외 안전 정보와 항공사의 운항 정보를 확인한다. 휘발유나 등유 가격은 가까운 가게의 표시로 확인한다.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">용어 사전 · 점선 단어 — 정치·시장·법·국제 정세 용어를 기사 맥락과 함께 설명합니다. 매일 쌓입니다.</div>
+  <footer class="colophon">
+    <span>데일리드롭 · 원자료 ✓ = 발표 기관 원문 확인, 보도 대조 ✓ = 서로 다른 매체 두 곳 이상 일치 · '생각'은 데일리드롭의 의견</span>
+    <span>기사 본문을 옮기지 않습니다. 요약과 출처만. · © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="닫기">닫기 <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    riyadh:{kick:"국제·중동 · 보도 대조 ✓ 매체 6곳 · 사상자 수는 사우디 민간항공 당국의 발표, 실행 주체는 미확정",title:"리야드 국제공항 공격으로 12명 사망, 300명 넘게 부상. 후티 반군 관여 의심, 트럼프 씨는 반격 참여를 '검토'",
+      what:"사우디아라비아 민간항공 당국은 10월 10일(토) 리야드의 킹 할리드 국제공항이 공격을 받아 12명이 숨지고 309명이 다쳤다고 발표했다(AP통신, 로이터). 마이니치신문은 사망자에 미국인이 포함됐다고 전했다. AP통신과 아사히신문은 이란이 지원하는 예멘의 무장조직 후티 반군의 공격이 의심된다고 보도했다. 로이터에 따르면 후티 반군은 사우디 공항을 둘러싼 경고를 다시 냈다. 사우디는 공항 폐쇄를 연장했다(AP통신). 같은 공항은 지난주에도 공격을 받아 사우디 국적 3명이 숨졌다(알자지라). 루비오 미 국무장관은 공격을 비난하며 미국은 사우디 편에 서겠다고 말했다. 아사히신문과 마이니치신문은 트럼프 대통령이 반격 참여를 '검토하겠다'고 말했다고 전했다.",
+      why:"공항이라는 민간 시설에서 사상자가 300명을 넘었다. 공격이 이어지면 사우디의 하늘 관문이 멈춰 걸프의 항공과 물류에 영향을 준다. 미국이 반격에 가담하면 이란과의 대립이 지역 전쟁으로 번질 우려가 있다. 원유 공급과 항로의 안전은 세계 물가와 직결된다.",
+      me:"일본은 원유의 대부분을 중동에 의존한다. 휘발유나 등유의 가게 앞 가격은 원유 시세가 늦게 반영되므로 바로 움직이지는 않지만, 월요일 이후의 시세에 따라 몇 주 뒤 가격에 미칠 수 있다. 중동 출장이나 여행을 예정한 사람은 외무성의 해외 안전 정보와 항공사의 운항 정보를 확인하고 싶다.",
+      a:"민간인이 다수 죽거나 다친 이상, 동맹국 사우디를 지키는 행동은 필요하다. 반격 태세를 보이는 것이 다음 공격을 억제한다.",b:"반격에 참여하면 미국은 전쟁에 더 끌려 들어간다. 실행 주체가 확정되지 않은 단계의 군사 행동은 오판과 확전의 위험이 크다.",
+      say:"오늘의 숫자는 '309명'. 공격의 규모를 보여 주는 한편, 실행 주체와 수단은 아직 확정되지 않았다. 지켜볼 것은 세 가지다. 트럼프 씨가 '검토'에서 결정으로 나아가는지, 후티 반군이 다음 공항 공격을 예고하는지, 그리고 주 초 원유가 어떻게 반응하는지. 도쿄 시장은 휴장이므로 일본 투자자는 13일 재개까지 해외의 가격 움직임을 보게 된다.",
+      src:"AP통신 · 로이터 · NPR · 가디언 · 아사히신문 · 마이니치신문 · 지지통신 · 알자지라(10/9~11. 사상자 수는 AP통신과 로이터, 미국인 사망자는 마이니치신문, 반격 검토는 아사히신문과 마이니치신문)"},
+    icc:{kick:"국제·국제법 · 보도 대조 ✓ 매체 6곳 · 제재의 구체적 범위와 유예 기간은 미국 정부 문서 미확인",title:"ICC 제재, 일본 포함 21개국 의장단이 '즉각 철회' 요구. 모테기 외무상은 루비오 장관과 아카네 소장에게 전화",
+      what:"ICC 당사국총회 의장단은 10월 10일 일본을 포함한 21개국의 이름으로 미국의 제재를 즉각 철회하라고 요구하는 성명을 냈다(지지통신, 마이니치신문, NHK). 미국은 ICC 본체를 제재 대상으로 지정했고, 아카네 도모코 소장은 성명에서 '단호히 거부한다'고 말했다(마이니치신문). 모테기 도시미쓰 외무상은 루비오 국무장관과 전화로 협의했고, 루비오 씨는 제재의 '필요성'을 전했다. 모테기 씨는 아카네 소장과도 전화로 이야기를 나눴다(NHK, 아사히신문, 마이니치신문). 기하라 미노루 관방장관은 '깊이 우려한다'고 말했다(지지통신). 노벨 평화상의 필레이 씨는 '전례 없고 용납할 수 없다'고 비판했다(마이니치신문). 재팬타임스는 다카이치 총리가 다시 끼인 처지가 됐다고 보도했다.",
+      why:"ICC 소장은 일본인이며, 일본은 재판소의 최대급 재정 지원국이기도 하다. 한편 일본은 안보를 미국에 의지하고 국내에는 많은 미군이 주둔한다. 재판소를 지키는 입장과 동맹국과의 관계를 양립시키는 일이 일본 외교의 힘을 시험하고 있다.",
+      me:"생활에 직접적인 영향은 없다. 다만 ICC 운영이 멈추면 전쟁범죄 수사가 어려워진다. 일본이 국제법 지지와 미국과의 관계를 어떻게 양립시킬지는 앞으로의 외교와 방위 논의로도 이어진다.",
+      a:"법의 지배를 지키기 위해 동맹국이라도 계속 반대해야 한다. 21개국의 성명에는 주요 민주주의 국가가 연대를 보였다는 의의가 있다.",b:"미국은 ICC가 정치적으로 움직이고 있다고 주장한다. 안보를 미국에 의지하는 일본이 강하게 반대를 계속하면 다른 분야의 관계에 영향이 간다는 우려도 있다.",
+      say:"오늘의 숫자는 '21개국'. 일본이 이름을 올린 것은 작지 않다. 지켜볼 것은 제재의 구체적 범위와 유예 기간, ICC가 은행 거래와 급여를 어떻게 이어 가는지, 그리고 일본이 성명 뒤에 자금이나 법적 뒷받침이라는 형태의 행동을 보일지. 말로 끝날지 뒷받침으로 이어질지에 따라 이번 반대의 무게가 정해진다.",
+      src:"지지통신 · 마이니치신문 · NHK · 아사히신문 · 재팬타임스(10/10~11. 성명은 지지통신과 마이니치신문과 NHK, 외무상의 전화는 NHK와 아사히신문과 마이니치신문)"},
+    baseball:{kick:"스포츠 · 보도 대조 ✓ 매체 7곳 · 파이널 스테이지의 일정과 상대는 NPB 일정표에 따른다",title:"DeNA, 요미우리에 2연승으로 CS 파이널로. 오타니 쇼헤이는 12일부터 리그 챔피언십 시리즈, 무라카미 무네타카의 화이트삭스는 탈락",
+      what:"프로야구 CS 센트럴리그 퍼스트 스테이지에서 DeNA는 요미우리에 2연승을 거두고 파이널 스테이지 진출을 확정했다(NHK, 마이니치신문, 아사히신문). 1차전은 와타라이 류키의 한 방으로 먼저 이겼고, 2차전은 도바시라 야스타카 등 베테랑이 빛났다. 요미우리의 하시가미 히데키 감독 대행은 경기 후 라스트 미팅을 열었다(스포츠호치). 퍼시픽리그는 니혼햄이 세이부를 꺾고 1승 1패가 됐다. 메이저리그에서는 다저스의 오타니 쇼헤이가 브루어스와의 NLCS 1차전 전날 프리 배팅에서 시원한 타구음을 울렸다(지지통신). 화이트삭스는 디비전 시리즈에서 탈락했고, 무라카미 무네타카는 4타수 4삼진이었다(NHK, 지지통신).",
+      why:"일본 프로야구는 단기 결전이 한창이고, 일본인 선수는 미국의 플레이오프에서도 결과를 좌우한다. 국내외 경기가 동시에 진행되어 보는 쪽의 관심이 나뉜다.",
+      me:"NLCS의 경기 시간과 방송·중계 일정, CS 일정을 확인하고 싶다.",
+      a:"",b:"",
+      say:"오늘의 숫자는 '2연승'. 단기 결전에서는 베테랑의 한 방이 흐름을 바꾸는 일이 많다. 지켜볼 것은 니혼햄 대 세이부 3차전의 결과, 파이널의 선발 라인업, 그리고 오타니의 회복이 숫자로 나타나는지.",
+      src:"NHK · 마이니치신문 · 아사히신문 · 지지통신 · 스포츠호치 · 재팬타임스(10/10~11. DeNA의 진출은 NHK와 마이니치신문과 아사히신문, 일정은 NPB)"},
+    okinawa:{kick:"사회·안보 · 보도 대조 ✓ 매체 6곳 · 기소 판단과 피해자 유족의 의향은 미확인",title:"오키나와 미군 병사 살인 사건, 모테기 외무상이 미국 측에 '유감' 전달. 미군은 합동 순찰 시작, 현지에서는 '효과 의문' 목소리",
+      what:"오키나와현 나하시의 호텔에서 39세 여성이 숨진 채 발견되었고, 미 해병대 20세 병사가 강도살인 혐의(아사히신문)로 체포됐다(알자지라). 오키나와현의회는 9일 미국 측에 대한 항의 결의를 가결했다(NHK, 지지통신). 병사는 혐의를 부인하고 있다. 외무성은 글래스 주일 미국대사를 불러 우려를 전했고, 다카이치 사나에 총리는 '극히 흉악하다'고 말하며 미군에 기강 확립과 수사에 대한 전면 협력을 요구했다. 모테기 도시미쓰 외무상은 11일까지 미국 측에 '유감의 뜻'을 전했다(마이니치신문). 미군은 미일 합동 순찰을 시작했지만 오키나와시 고자 지구에서는 효과를 의심하는 목소리가 나온다(마이니치신문). 재팬타임스는 주민의 불안과 분노를 전하고 있다.",
+      why:"오키나와에는 주일 미군 전용 시설의 상당수가 모여 있고, 미군에 의한 사건이 되풀이되어 왔다. 미일 지위협정이 수사와 신병 처리에서 일본 측의 손발을 묶는다며 재검토를 요구하는 목소리가 뿌리 깊다. 재발 방지 약속이 지켜져 왔는지가 새삼 도마에 올랐다.",
+      me:"오키나와에 사는 사람이나 관광으로 찾는 사람에게 야간 외출과 기지 주변의 안전은 신경 쓰이는 점이다. 현과 경찰의 발표를 확인하고 싶다.",
+      a:"미일 동맹의 안정에는 미군의 존재가 빠질 수 없다. 합동 순찰 등으로 재발 방지를 꾀하는 것이 현실적이다.",b:"사건이 되풀이되고 있어 작은 대책으로는 부족하다. 미일 지위협정의 재검토와 기지 부담의 경감이 필요하다.",
+      say:"오늘의 숫자는 '80명'. 2024년 미군 관계자의 체포는 20년 사이 최다였다. 지켜볼 것은 검찰의 기소 판단, 미일의 재발 방지책에 실효성이 있는지, 그리고 오키나와현이 지위협정의 재검토를 공식 요구할지.",
+      src:"마이니치신문 · 아사히신문 · NHK · 지지통신 · 재팬타임스 · 알자지라(10/5~11. 외무상의 전달과 합동 순찰은 마이니치신문, 현의회의 결의는 NHK와 지지통신, 사건 개요는 알자지라와 아사히신문)"},
+    ukraine:{kick:"국제·우크라이나 · 보도 대조 ✓ 매체 6곳 · '에너지 휴전'은 러시아 측 확인이 아직",title:"트럼프 씨 '우크라이나에 새 대통령을'. 젤렌스키 씨는 정유 시설 공격 중단을 제안, 트럼프 씨는 '에너지 휴전' 합의 발표",
+      what:"트럼프 미국 대통령은 10월 10일 젤렌스키 대통령을 비판하며 우크라이나에 '새로운 지도자가 필요하다'고 말했다(지지통신, NHK, 마이니치신문). 마이니치신문은 러시아 정유 시설에 대한 공격을 둘러싼 미국의 불만이 배경에 있다고 전했다. 젤렌스키 씨는 러시아가 에너지 시설 공격을 멈추면 정유 시설 공격을 멈추겠다고 제안했고(로이터), 러시아가 60일간의 휴전에 응한다면 선거를 실시하겠다고 미국 ABC 방송에 말했다. 독일 정부는 젤렌스키 씨를 지지했다. 그 뒤 트럼프 씨는 자신의 SNS에 러시아와 우크라이나 사이에 '에너지 휴전'이 즉시 발효되며 양측이 합의했다고 올렸다(로이터). 젤렌스키 씨는 유럽 등의 정상과 이야기를 나눈 뒤 휴전을 지지한다고 말했다(NHK). 러시아 측의 확인은 받지 못했다.",
+      why:"미국 대통령이 다른 나라 지도자의 교체를 언급하는 것은 이례적이어서 우크라이나 지원의 향방에 영향을 준다. 에너지 시설에 대한 공격이 멈추면 원유와 경유의 공급과 가격에도 영향이 간다.",
+      me:"일본은 유럽과 함께 우크라이나를 지원해 왔다. 에너지 시설의 휴전이 진전되면 국제 원유와 경유 시세가 내릴 가능성이 있다. 다만 합의의 내용은 확인이 필요하다.",
+      a:"전쟁을 끝내려면 미국이 당사자들에게 압력을 가해 휴전의 형태를 만들어야 한다. 에너지 시설 공격을 멈추는 합의는 우선 현실적인 첫걸음이다.",b:"다른 나라 지도자의 교체를 공개적으로 요구하는 것은 내정 간섭이다. 우크라이나가 불리한 형태로 휴전을 강요받을 우려가 있다.",
+      say:"오늘의 숫자는 '60일'. 젤렌스키 씨가 선거의 조건으로 든 휴전 기간이다. 지켜볼 것은 에너지 휴전에 러시아가 같은 내용으로 응하는지, 기한은 언제인지, 그리고 미국이 우크라이나에 대한 압력을 강화하는지.",
+      src:"로이터 · 지지통신 · NHK · 마이니치신문 · 재팬타임스(10/10~11. 발언은 지지통신과 NHK와 마이니치신문, 휴전 발표와 제안은 로이터)"},
+    yana:{kick:"국내 정치 · 보도 대조 ✓ 매체 5곳 · 예산위원회 일정과 총리의 최종 판단은 미확인",title:"야나 농림수산상의 '도로 예산' 발언, 이시바 전 총리가 비판. 총리는 경질을 부인, 주 초 예산위가 초점",
+      what:"야나 가즈오 농림수산상은 5월 도치기현 당 지부의 간친회에서, 중의원 선거에서 대립 후보를 지원한 단체장이 있는 시와 정에 대해 '도로 예산을 대폭 삭감했다'고 말한 것으로 알려졌다(홋카이도신문, 구마모토니치니치신문). 야나 씨는 5일 발언을 철회하고 사과했지만 사임은 부인하고 있다. 다카이치 사나에 총리는 '옷깃을 여미고 직책을 다해 달라'고 말하며 경질을 부인했다. 이시바 시게루 전 총리는 '전 국민의 대표라는 인식이 없다', '정치에 종사하는 사람으로서 의심스럽다'고 비판했고(NHK, 아사히신문), 교토부 지사도 예산 배분의 공정성에 의문을 나타냈다(마이니치신문). 지지통신은 자민당 내에 사임은 불가피하다는 목소리가 있다고 전하며, 거취가 주 초 예산위원회의 초점이 된다고 했다.",
+      why:"예산 배분이 정치적 보복에 쓰였다고 받아들여지면 행정의 공정성에 대한 신뢰가 흔들린다. 총리의 임명 책임도 거론된다.",
+      me:"도로와 방재 예산은 지역의 삶과 직결된다. 국회 예산위원회에서의 설명과 예산 결정 과정이 밝혀지는지를 지켜보고 싶다.",
+      a:"발언은 철회와 사과로 끝났다. 일로 보답하겠다는 총리의 판단도 하나의 생각이다.",b:"예산 배분이 선거 대립과 결부되었다는 의심은 무겁다. 설명이 다 이루어질 때까지 거취 논의는 끝나지 않는다.",
+      say:"오늘의 숫자는 '한 달 반'. 발언 전에 예산 배분은 정해져 있었다는 지적이 있어 사실관계가 초점이 된다. 지켜볼 것은 예산위에서의 야나 씨의 설명, 야당의 문책 결의안 취급, 총리의 대응이 바뀌는지.",
+      src:"홋카이도신문 · 구마모토니치니치신문 · NHK · 아사히신문 · 마이니치신문 · 지지통신(10/5~11. 발언과 철회는 홋카이도신문과 구마모토니치니치신문, 이시바 씨의 비판은 NHK와 아사히신문)"},
+    nepal:{kick:"국제·재해 · 보도 대조 ✓ 매체 4곳 · 실종자 수는 5명으로 보도되나 확정은 미확인",title:"네팔에서 다시 토석류, 적어도 5명 실종. 군이 구조, 토사로 강이 막혀 생긴 호수의 붕괴가 원인인가",
+      what:"네팔에서 토석류가 다시 일어나 적어도 5명이 행방불명 상태다. 마이니치신문은 가옥 30채가량이 휩쓸렸을 가능성이 있다고 전했다. NHK는 토사가 강을 막았고 군이 구조 활동을 하고 있다고 보도했다. 지지통신은 막혀 있던 호수가 터진 것이 원인으로 보인다고 전했다. 로이터는 홍수 우려로 마을 사람들에게 대피를 호소했다고 보도했다.",
+      why:"산간 지대의 사면 붕괴와 비로 강이 막히고, 터지면 하류에 피해가 미친다. 복구 뒤에도 같은 재해가 되풀이되는 지역이 많다.",
+      me:"네팔 방문이나 등산을 예정한 사람은 외무성의 해외 안전 정보를 확인하고 싶다.",
+      a:"",b:"",
+      say:"오늘의 숫자는 '5명'. 실종자 수는 앞으로 바뀔 수 있다. 확인하고 싶은 점은 터진 호수의 규모와 하류의 대피 상황.",
+      src:"NHK · 마이니치신문 · 지지통신 · 로이터(10/11)"},
+    india:{kick:"국제·인도 · 보도 대조 ✓ 매체 5곳 · 구금자 수는 6천~7천 명으로 보도에 편차",title:"인도에서 수천 명 구금. '바퀴벌레 인민당' 창립자는 석방, 선관위 비판 시위 계속",
+      what:"인도에서 유권자를 명부에서 뺀 의혹이 있다며 선거관리위원회를 비판하는 시위가 잇따랐다. 당국은 수도 델리를 봉쇄하고 수천 명을 구금했다. 구금자 수는 마이니치신문이 약 6,000명, 아사히신문이 7,000명으로 보도에 편차가 있다. 시위를 호소한 '바퀴벌레 인민당'의 창립자도 구금되었으나 나중에 석방되었다(로이터, 재팬타임스, 지지통신). 운동 측은 추가 항의를 호소하고 있다.",
+      why:"세계 최대의 민주주의 국가에서 선거의 공정성을 둘러싼 불신이 퍼지고 있다. 대규모 구금은 집회의 자유에 대한 우려도 부른다.",
+      me:"인도는 일본 기업의 진출처로 중요하다. 정치의 혼란이 이어질지를 지켜보고 싶다.",
+      a:"",b:"",
+      say:"오늘의 숫자는 '수천 명'. 인원수는 보도에서 엇갈린다. 확인하고 싶은 점은 구금자의 최종 숫자와, 선관위가 의혹에 어떻게 답하는지.",
+      src:"마이니치신문 · 아사히신문 · 지지통신 · 로이터 · 재팬타임스(10/10~11)"},
+    pope:{kick:"국제·종교 · 보도 대조 ✓ 매체 2곳 · 수술 일시와 병세의 상세는 미확인",title:"교황 레오 14세, 폐의 작은 종양 수술을 이번 주 받는다고 발표",
+      what:"로마 교황 레오 14세는 폐에 생긴 작은 종양의 수술을 이번 주 받는다고 말했다(로이터, 재팬타임스). 수술 일시와 종양이 양성인지 악성인지는 기사 표제 단계에서는 확인하지 못했다.",
+      why:"교황의 건강은 세계 약 14억 명의 가톨릭 신자와 관련된다. 일정과 행사가 바뀔 수 있다.",
+      me:"직접적인 영향은 없다. 바티칸의 발표를 기다리고 싶다.",
+      a:"",b:"",
+      say:"오늘의 숫자는 '이번 주'. 확인하고 싶은 점은 수술 일시, 회복 전망, 행사에 대한 영향.",
+      src:"로이터 · 재팬타임스(10/11. 상세는 미확인)"},
+    dc:{kick:"사회·산업 · 보도 대조 ✓ 매체 2곳",title:"초등학교 옆 대규모 데이터센터, 기타큐슈는 연내 착공 보류. AI 투자의 전력 부담이 쟁점으로",
+      what:"기타큐슈시에서 초등학교에 인접해 계획된 대규모 데이터센터의 연내 착공이 보류됐다(마이니치신문). 지역에는 반발이 있다. 아사히신문은 미국에서 데이터센터가 쟁점이 되고 있으며 발전소에 대한 거액 투자와도 일본은 이어져 있다고 전했다.",
+      why:"AI 보급으로 데이터센터가 급증하면서 전력과 토지, 소음에 미치는 영향이 곳곳에서 문제가 되고 있다.",
+      me:"자기 동네에 계획이 나온 경우 주민 설명회나 지자체 절차를 통해 소음과 전력의 영향을 확인할 수 있다.",
+      a:"",b:"",
+      say:"오늘의 숫자는 '연내'. 착공 보류가 계획 중단으로 이어질지가 초점.",
+      src:"마이니치신문 · 아사히신문(10/11)"}
+  };
+
+  const G = {
+    "당사국총회":{f:"국제법",d:"ICC를 만든 조약(로마 규정)의 가맹국이 모이는 최고 의사결정 기관. 예산과 재판관 선출 등을 정한다. 그 의장과 부의장으로 이루어진 '의장단'이 가맹국 전체의 목소리로 성명을 내는 일이 있다.",w:"일본을 포함한 21개국의 의장단이 미국의 제재를 즉각 철회하라고 요구하는 성명을 냈다."},
+    "COP31":{f:"기후변화",d:"유엔 기후변화협약의 제31차 당사국총회. 세계 각국이 온실가스 감축과 개발도상국 지원을 논의하는 연 1회의 회의로, 올해는 11월에 열린다.",w:"지지통신이 11월 9일에 개막한다고 전했다."},
+    "화이트삭스":{f:"야구",d:"미국 메이저리그 아메리칸리그의 시카고 구단. 일본의 무라카미 무네타카가 소속돼 있다.",w:"디비전 시리즈에서 가디언스에 패해 이번 시즌을 마쳤다."},
+    "바퀴벌레 인민당":{f:"국제",d:"인도에서 퍼지는 항의 운동의 명칭으로, 운동 측은 '바퀴벌레'를 자칭하고 있다. 창립자는 아비지트 디프케 씨라고 로이터가 보도했다. 선거관리위원회를 비판하는 시위를 호소했다.",w:"창립자는 구금된 뒤 석방되었다."},
+    "내셔널리그 챔피언십 시리즈":{f:"야구",d:"미국 메이저리그 내셔널리그에서 우승 팀을 가리는 7전제 시리즈. 약칭 NLCS. 이기면 월드시리즈에 진출한다.",w:"다저스는 12일부터 브루어스와 맞붙는다."},
+    "NLCS":{f:"야구",d:"내셔널리그 챔피언십 시리즈의 약칭. 미국 메이저리그에서 내셔널리그 우승 팀을 가리는 7전제 시리즈.",w:"오타니 쇼헤이는 브루어스와의 NLCS 1차전 전날 프리 배팅으로 컨디션을 조율했다."},
+    "디비전 시리즈":{f:"야구",d:"미국 메이저리그 플레이오프의 한 단계. 와일드카드 시리즈 뒤, 리그 챔피언십 시리즈 전에 열린다.",w:"화이트삭스는 디비전 시리즈에서 탈락했다."},
+    "에너지 휴전":{f:"국제",d:"전쟁 중인 양측이 발전소나 정유 시설 등 전력과 연료에 관련된 시설에 대한 공격을 멈추는 합의. 전면 휴전과는 별개이며, 대상과 기간이 초점이 된다.",w:"트럼프 씨가 러시아와 우크라이나 사이에 즉시 발효된다고 올렸다."},
+    "브루어스":{f:"야구",d:"밀워키 브루어스. 미국 메이저리그 내셔널리그 구단으로, NLCS에서 다저스와 맞붙는다.",w:"12일부터 시작되는 시리즈에서 오타니 쇼헤이의 다저스의 상대가 된다."},
+    "국제형사재판소":{f:"국제법",d:"ICC. 전쟁범죄와 인도에 반하는 죄 등을 국가가 아니라 개인의 책임으로 재판하는 상설 국제재판소. 네덜란드 헤이그에 있다.",w:"미국이 ICC 본체를 제재 대상으로 지정했다."},
+    "루비오 국무장관":{f:"외교",d:"마르코 루비오 씨. 미국의 외교를 담당하는 각료. 국무장관은 일본의 외무대신에 해당한다.",w:"사우디 공항 공격을 비난하고, 모테기 외무상에게는 ICC 제재의 필요성을 전했다."},
+    "의장단":{f:"국제법",d:"조약 가맹국이 모이는 회의를 이끄는 대표들. ICC의 경우 당사국총회의 의장과 부의장으로, 가맹국 전체의 목소리로 성명을 낼 수 있다.",w:"일본을 포함한 21개국의 의장단이 제재 철회를 요구했다."},
+    "후미에":{f:"말",d:"에도 시대에 기독교 신자인지 조사하기 위해 그림을 밟게 한 데서, 사람의 입장이나 충성을 시험하는 행위를 가리키게 된 말.",w:"ICC를 둘러싼 찬반이 미군과 얽힌 안보의 '후미에'가 되고 있다고 마이니치신문이 지적했다."},
+    "후티 반군":{f:"중동",d:"예멘 북부를 거점으로 하는 이슬람 시아파 계열 무장조직. 이란의 지원을 받는 것으로 알려졌으며, 사우디아라비아 등에 대한 미사일과 드론 공격을 주장해 왔다.",w:"AP통신과 아사히신문은 공항 공격에 이 조직의 관여가 의심된다고 전했다."},
+    "아카네 도모코":{f:"국제법",d:"일본인 법률가. ICC 판사를 거쳐 소장을 맡고 있다.",w:"미국의 제재에 '단호히 거부한다'는 성명을 냈다."},
+    "ABC":{f:"미디어",d:"미국 3대 텔레비전 네트워크의 하나.",w:"젤렌스키 씨는 ABC 인터뷰에서 60일간의 휴전에 응한다면 선거를 실시하겠다고 말했다."},
+    "지부티":{f:"지리",d:"아프리카 북동부의 작은 나라. 홍해의 출입구에 있으며, 바다를 사이에 두고 예멘의 맞은편에 있다.",w:"지부티 앞바다에서 이민선이 뒤집혀 109명이 숨졌다."},
+    "필레이":{f:"국제법",d:"나비 필레이 씨. 남아프리카공화국 출신 법률가로, 전 유엔 인권최고대표이자 전 ICC 판사. 2026년 노벨 평화상을 받았다.",w:"미국의 제재를 '전례 없고 용납할 수 없다'고 비판했다."},
+    "투스크":{f:"국제",d:"도널드 투스크 씨. 폴란드 총리이며 전 유럽이사회 의장.",w:"폴란드 경찰이 투스크 총리 등에 대한 공격 계획 가능성을 경고했다."},
+    "가디언스":{f:"야구",d:"클리블랜드 가디언스. 미국 메이저리그 아메리칸리그 구단.",w:"디비전 시리즈에서 화이트삭스를 꺾고 올라갔다."},
+    "WTI 원유":{f:"에너지",d:"미국산 경질 원유의 선물 가격. 뉴욕에서 거래되며 세계 원유의 대표적인 지표.",w:"9일은 91.85달러로 마감했다."},
+    "글래스":{f:"외교",d:"조지 글래스 씨. 주일 미국대사.",w:"외무성은 글래스 대사를 불러 우려를 전했다."},
+    "기강 확립":{f:"말",d:"관리나 조직의 규율이 흐트러진 것을 바로잡아 엄격히 다잡는 일.",w:"다카이치 총리는 미군에 기강 확립과 수사에 대한 전면 협력을 요구했다."},
+    "킵초게":{f:"스포츠",d:"엘리우드 킵초게 씨. 케냐의 마라톤 선수로 올림픽을 2연패했다. 2019년에는 공식 기록으로 인정되지 않는 형태로 2시간 벽을 깼다.",w:"2023년 이후 처음인 마라톤에서 우승했다."},
+    "와타라이 류키":{f:"야구",d:"요코하마 DeNA의 외야수.",w:"1차전 결승타가 팀의 선승으로 이어졌다."},
+    "미일 지위협정":{f:"외교·안보",d:"주일 미군의 지위와 기지 사용 방식, 미군 관계자의 재판 취급 등을 정한 협정. 1960년에 체결되었다. 사건이 있을 때마다 신병 처리 등의 재검토를 요구하는 목소리가 나온다.",w:"수사와 신병 처리에서 일본 측의 손발을 묶는다며 재검토를 요구하는 목소리가 뿌리 깊다."},
+    "라스트 미팅":{f:"야구",d:"시즌 마지막에 감독과 코치가 선수에게 감사와 마음을 전하는 모임.",w:"요미우리의 하시가미 히데키 감독 대행이 경기 후 열었다."},
+    "문책 결의안":{f:"국회",d:"참의원에서 장관 등의 책임을 묻고 사임을 요구하는 결의안. 법적 구속력은 없지만 야당이 정권에 압력을 가하는 수단이 된다.",w:"야당이 야나 농림수산상에 대한 문책 결의안을 포함해 협의하고 있다."},
+    "프리 배팅":{f:"야구",d:"경기 전 등에 투수가 던지는 공을 자유롭게 치는 연습.",w:"오타니 쇼헤이가 NLCS 전날 프리 배팅으로 컨디션을 조율했다."},
+    "유지연합":{f:"안보",d:"공통의 목적을 위해 여러 나라가 자발적으로 모여 짜는 군사적 틀. 여기서는 예멘의 후티 반군에 맞서 사우디아라비아가 주도해 온 연합을 가리킨다.",w:"사우디 주도 유지연합은 보복을 다짐했다."},
+    "국제통화기금":{f:"금융",d:"IMF. 가맹국의 경제와 환율을 지켜보고, 경제 위기에 빠진 나라에 자금을 빌려주는 국제기구.",w:"중동의 전쟁이 세계은행과의 연차 총회에서 최대 의제가 될 전망이다."},
+    "독점금지법":{f:"법률",d:"기업이 담합이나 부당한 거래로 경쟁을 왜곡하는 것을 금지하는 법률.",w:"미 법무부가 방송사의 대응이 위반에 해당하는지 조사하고 있다."},
+    "S&P500":{f:"금융",d:"미국 대형 500개 사의 주가를 바탕으로 한 지수. 미국 주식 전체의 움직임을 보여 주는 대표적인 지표.",w:"9일은 7,811.54(+0.59%)로 마감했다."},
+    "퍼스트 스테이지":{f:"야구",d:"클라이맥스 시리즈의 첫 단계. 리그 2위와 3위가 3경기를 치러 먼저 2승을 거둔 쪽이 파이널 스테이지에 진출한다.",w:"DeNA는 요미우리에 2연승을 거두고 올라갔다."},
+    "본토 복귀":{f:"오키나와",d:"1972년 5월 15일 미국 통치하에 있던 오키나와가 일본에 반환된 일.",w:"복귀 후 약 6,000명의 미군 관계자가 체포되었다고 알자지라는 전했다."},
+    "자치정부":{f:"중동",d:"팔레스타인 자치정부. 요르단강 서안 일부를 다스린다. 수반은 자치정부의 대표.",w:"의회 선거는 2027년 9월의 수반 선거와 같은 날로 연기되었다."},
+    "하시가미 히데키":{f:"야구",d:"전 프로야구 선수. 각 구단 코치를 거쳐 요미우리의 감독 대행을 맡았다.",w:"경기 후 '라스트 미팅'을 열고 이번 시즌을 마쳤다."},
+    "임명 책임":{f:"정치",d:"장관 등을 고른 총리나 상사가 그 인물의 불상사에 지는 책임.",w:"야나 농림수산상 문제에서 다카이치 총리의 임명 책임도 거론된다."},
+    "민간항공 당국":{f:"중동",d:"민간 비행기의 운항과 공항을 감독하는 정부 기관. 사우디아라비아에서는 민간항공총국이 이에 해당한다.",w:"12명 사망과 309명 부상을 발표했다."},
+    "해상 봉쇄":{f:"안보",d:"적대하는 나라의 항구나 해로를 군함 등으로 막아 배의 출입을 멈추게 하는 일.",w:"미군은 이란의 해상 봉쇄를 뚫으려던 화물선을 항행 불능으로 만들었다."},
+    "클라이맥스 시리즈":{f:"야구",d:"일본 프로야구에서 센트럴·퍼시픽 각 리그의 우승 팀을 가리는 단기 결전. 정규 시즌 상위 3개 팀이 출전하고 승자가 일본시리즈에 진출한다. 약칭 CS.",w:"DeNA는 CS 센트럴리그를 이겨 올라갔다."},
+    "파이널 스테이지":{f:"야구",d:"CS의 2단계. 퍼스트 스테이지의 승자와 리그 1위 팀이 맞붙어 승자가 일본시리즈에 진출한다. 1위 팀에는 1승의 어드밴티지가 있다.",w:"DeNA는 14일부터 고시엔에서 한신과 맞붙을 예정이다."},
+    "예멘":{f:"중동",d:"아라비아반도 남쪽에 있는 나라. 2014년께부터 내전이 이어지고 있으며 북부는 후티 반군이 지배하고 있다.",w:"후티 반군은 예멘의 무장조직이다."},
+    "킹 할리드 국제공항":{f:"중동",d:"사우디아라비아의 수도 리야드에 있는, 국내외 여객과 화물을 담당하는 주요 공항.",w:"12명이 숨지고 309명이 다치는 공격을 받았다."},
+    "니혼햄":{f:"야구",d:"홋카이도 닛폰햄 파이터스. 퍼시픽리그 구단.",w:"세이부를 꺾고 CS 퍼스트 스테이지를 1승 1패로 만들었다."},
+    "고자 지구":{f:"오키나와",d:"오키나와시 중심부의 지명. 미군 가데나 기지 근처에 있으며 기지촌으로 번성해 왔다.",w:"고자 지구에서는 합동 순찰의 효과를 의심하는 목소리가 나온다."},
+    "도바시라 야스타카":{f:"야구",d:"요코하마 DeNA의 포수로 베테랑.",w:"단기 결전에서 승부처의 활약이 눈에 띄었다."},
+    "데이터센터":{f:"IT",d:"인터넷과 AI의 계산을 하는 서버를 대량으로 두는 시설. 대량의 전력을 쓰고 냉각 설비도 필요하다.",w:"기타큐슈에서는 초등학교 옆에 계획된 시설의 착공이 보류되었다."},
+    "연차 총회":{f:"금융",d:"국제통화기금(IMF)과 세계은행이 매년 10월께 여는 총회. 각국의 재무장관과 중앙은행 총재가 모인다.",w:"중동의 전쟁이 최대 의제가 될 전망이다."},
+    "법의 지배":{f:"정치",d:"권력을 가진 사람도 법에 따라야 한다는 원칙.",w:"기하라 관방장관은 ICC 제재에 대한 우려와 함께 강조했다."},
+    "경질":{f:"정치",d:"장관 등을 본인의 의사와 상관없이 임명한 쪽이 그만두게 하는 일. 스스로 그만두는 '사임'과는 다르다.",w:"총리는 야나 농림수산상의 경질을 부인했다."},
+    "세계은행":{f:"금융",d:"개발도상국의 개발과 빈곤 대책을 위해 자금을 빌려주거나 기술을 지원하는 국제기구.",w:"IMF와 함께 연차 총회를 연다."},
+    "해외 안전 정보":{f:"외교",d:"외무성이 나라와 지역별로 위험도를 나타내 여행자에게 주의를 당부하는 정보. 위험도는 4단계로 나뉜다.",w:"중동에 가기 전에 확인하고 싶다."},
+    "NPB":{f:"야구",d:"일본야구기구. 일본 프로야구를 운영하는 조직.",w:"NPB 일정표에 따르면 파이널은 14일에 시작된다."},
+    "야나 가즈오":{f:"정치",d:"자민당 중의원 의원(도치기)으로 농림수산상. 도로 예산을 둘러싼 발언이 문제가 되고 있다.",w:"발언을 철회하고 사과했지만 사임은 부인하고 있다."},
+    "기하라 미노루":{f:"정치",d:"정부의 창구 역할로 회견을 하는 관방장관.",w:"ICC 제재에 '깊이 우려한다'고 말했다."},
+    "법무부":{f:"미국",d:"미국의 부처. 검찰과 수사(FBI)를 담당하며 수장은 법무장관.",w:"대통령 취재 일시 중단을 둘러싸고 방송사를 조사하고 있다."}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>이 기사에서는</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // 팝업(모달) 안이면 그 위에 띄운다
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 용어 카드만 닫고 그 클릭은 소비 — 기사 팝업은 그대로
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">무슨 일</div><p>${a.what}</p>
+      <div class="lab">왜 중요한가</div><p>${a.why}</p>
+      <div class="lab">나에게는</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">두 가지 시선</div><div class="vw"><p><b>이렇게 보는 쪽</b>${a.a||''}</p><p><b>저렇게 보는 쪽</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">데일리드롭 생각</div><div class="say">${a.say}</div>`:''}
+      <div class="src">출처 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="닫기">닫기</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

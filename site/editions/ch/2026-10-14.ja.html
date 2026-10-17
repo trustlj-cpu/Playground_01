@@ -1,0 +1,654 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* Paper front page. Six-column grid, double-rule masthead, serif headlines, ink charts instead of photos. Click a story to unfold it. */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 제호 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* 그리드 */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+/* 잉크 차트 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 색인·단신 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* 팝업 */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 용어 사전 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 빈 공간 채움: 기사 칸 바닥에 붙는 보조 블록 */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet" lang="ja">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>SMI · 火曜の終値は未確認</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · スイス版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>—</b>USD/CHF · 火曜の終値は未確認</div>
+    </div>
+    <div class="dateline"><span>第10号 · 朝刊</span><b>2026年10月14日（水）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="hypo">
+      <div class="kick">経済 · 不動産<span>報道照合 ✓ 7社 · 数字は24 heuresと20 Minutenによる</span></div>
+      <h2 class="hl">固定金利住宅ローン、2025年3月以来の高さ　スイス国立銀行は政策金利をゼロに据え置いたまま</h2>
+      <p class="deck">10年物の固定金利住宅ローンの参考金利は、20 Minutenによれば2025年3月以来の高さにある。24 heuresは2%超と伝える。買い手はあまり動じない。契約の43%が、期間10年以上だ。</p>
+      <div class="body">
+        <p>10年物の固定金利住宅ローンの参考金利は、2025年3月以来の高さにある（20 Minuten）。スイス国立銀行が政策金利を0%に据え置いているにもかかわらず、だ（20 Minuten）。ブリックは、人気の固定金利ローンは今年これほど高かったことがないと書く。Watson、Rhône FM、blue News、La Libertéは、第3四半期の住宅ローン金利の上昇を伝える。24 heuresによれば、10年物の金利は2%を超える。統一された数字はない。銀行や比較サイトがそれぞれ参考金利を公表しているためで、報道が示すのは目安であり、拘束力のある価格ではない。</p>
+        <p>買い手はこれにほとんどひるまない、と24 heuresは書く。契約の43%が、期間10年以上だ。同紙はさらに、交渉すれば3万5000フラン超を節約できると試算する。どの融資額と期間についての話かは、こちらの情報源には書かれていない。長期の住宅ローン金利は、通常は政策金利ではなく資本市場の利回りに連動する。今回の上昇の引き金が何だったかは、報道は語っていない。CashとFinanz und Wirtschaftは、スイスでは持ち家がさらに高くなっていると同時に伝える。銀行が今後数日、金利をさらに引き上げるかを見ていく。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2%超</b><span>10年物の固定金利住宅ローンの金利（24 heures）</span></div>
+        <div><b>43%</b><span>締結された契約のうち、期間10年以上のものの割合（24 heures）</span></div>
+        <div><b>0%</b><span>スイス国立銀行の政策金利（20 Minuten）</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="papst">
+      <div class="kick">バチカン · 健康<span>報道照合 ✓ 12社 · バチカンと担当医の発表による</span></div>
+      <h3 class="hl">教皇レオ14世は肺がん　火曜に摘出された肺結節は悪性だった</h3>
+      <div class="one">
+        <p>教皇レオ14世は火曜、ローマのジェメッリ病院で肺の手術を受けた。バチカンは夜、手術は順調に終わり、教皇は病室に戻ったと発表した（RTS、SRF）。のちに、摘出された結節が悪性だったことが明らかになった（SRF、Tages-Anzeiger、ル・タン、24 heures、swissinfo、AP、Politico）。SRFによれば、右肺の下葉が切除された。担当医はTages-Anzeigerによれば、経過は良好だが所見は気がかりだと述べた。ル・タンは肺腺がんと伝え、さらなる検査が予定されていると書く。回復には24 heuresによれば3カ月かかりうる。所見が日程や外遊にどう影響するかは、報じられていない。バチカンが今後の治療について報告を出すかを見ていく。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>肺葉<i>医学</i></b><p>肺はいくつかの部分に分かれ、右肺は3つの葉からなる。一つの葉を丸ごと切除しても、残りの肺は機能を保つ。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="bundesgericht"><b>連邦最高裁判所：シェ長官は再選候補に推されず</b><em>背景には、2人の裁判官の恋愛関係への対応がある。後任にはトーマス・ミュラー氏（国民党）が見込まれている。</em><span>スイス · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="mercosur"><b>メルコスール協定：左派と団体がレファレンダムを開始</b><em>熱帯雨林と農業の保護が足りないとみる。署名集めが始まる。</em><span>スイス · ✓ 7社</span></div>
+      <div class="it story" tabindex="0" data-id="pkcyber"><b>年金基金：ソフトウェア会社へのハッカー攻撃、連邦、郵便、ミグロ、チューリヒに波及</b><em>連邦の年金基金でデータが流出した。影響を受けうる範囲が広がっている。</em><span>スイス · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="swisscom"><b>光ファイバー争い：裁判所、スイスコムへの1800万フランの制裁金を取り消し</b><em>連邦行政裁判所は市場支配的地位を認めず、競争委員会の決定を覆した。</em><span>経済 · ✓ 8社</span></div>
+      <div class="it story" tabindex="0" data-id="nati"><b>女子代表、イスラエルに2対0で勝ち、W杯プレーオフでオーストリアと対戦</b><em>第1戦の7対3に続き、スイスは次のラウンドへ。シオンのスタジアム前では約20人がデモをした。</em><span>スポーツ · ✓ 6社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="huthi">
+      <div class="kick">中東 · エネルギー<span>報道照合 ✓ 9社 · 交戦当事者の発表は独立して確認されていない</span></div>
+      <h3 class="hl">フーシ派がアラムコ本社を攻撃、サウジ主導の連合はサヌア近郊の石油施設を空爆</h3>
+      <div class="body">
+        <p>イエメンのフーシ派の民兵組織は火曜、ブルームバーグによれば、ミサイル攻撃で石油大手サウジ・アラムコのダーランの本社を直撃し、敷地の一部で火災が起きた。サウジの国営通信は、負傷者のない限定的な火災と伝える（FinancialJuice経由）。ロイターは先に、近くで大きな爆発音がしたと報じていた。リヤドでは、swissinfoとLeman bleuによれば、迎撃されたミサイルの破片で4人が負傷した。その前に、サウジアラビア主導の連合は民間人にサヌア近郊の石油施設から退避するよう求め、そのうえで攻撃した（ロイター、ガーディアン、BBC、20 Minuten）。ガーディアンはこれを、フーシ派のエネルギー施設に対するこれまでで最大の攻撃とする。フーシ派は、BBCによれば、リヤドとダンマームへの攻撃を予告し、SRFによればリヤドの空港とサウジの石油施設への攻撃も予告している。</p>
+        <p>ドナルド・トランプ米大統領は、フーシ派は「非常に悪い」振る舞いをしており、米国の中間選挙の前に原油価格を押し上げようとしている、おそらくイランの指示だと述べた（ロイター、Yahoo、Jerusalem Post、Middle East Eye）。サウジアラビアへの攻撃は「決して忘れない」と述べた（Watson、Kurdistan24）。SRFは、トランプ氏はサウジアラビアを見捨てていると書く。中間選挙を前にガソリン価格は高く、弾薬庫は空で、新たな戦線は避けたいのだという。SRFはさらに、サウジアラビアが、少なくとも18人が死亡し300人超が負傷したリヤド空港への先の攻撃の前に、警報システムを止めていたと伝える。原油価格は、ロイターによれば水曜未明に上昇した。トレーダーがサウジアラビアからの供給リスクを見積もっているためだ。フーシ派がリヤドとダンマームへの脅しを実行に移すかを見ていく。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="kiew">
+      <div class="kick">ウクライナ戦争 · 安全保障<span>報道照合 ✓ 9社 · ゼレンスキー氏の発表、独立して確認されていない</span></div>
+      <h3 class="hl">キーウにミサイル、発電所が被弾　ウクライナはパートナー国から事前の警告を受けなかった</h3>
+      <div class="body">
+        <p>ウクライナのウォロディミル・ゼレンスキー大統領は火曜、ウクライナはロシアの弾道ミサイルによるキーウ攻撃について、パートナー国から警告を受けなかったと述べた。5発のミサイルが民間インフラに命中したという（ガーディアン、UNITED24、Kyiv Post、CNN）。水曜未明には、別の攻撃が市の重要な発電所を直撃した。やはり事前の警告はなく、2夜連続だ（BBC、Watson、Antiwar.com）。ロイターは2人の死亡を伝えるが、こちらには第2の裏付けがない。ガーディアンは、米国が以前、インテリジェンス情報の共有を止めると脅していたことを指摘する。フィナンシャル・タイムズは、ゼレンスキー氏は警告がなかったことをそれと明確には結びつけなかった、と書く。</p>
+        <p>トランプ氏は火曜、米国は引き続きウクライナにインテリジェンス情報を渡している、ロシアはディーゼルを米国向けでなく世界市場向けに解禁する、と述べた（SRF）。米国が情報を止めたのかどうかは不明だ、とブリックは指摘する。さらに、ゼレンスキー氏とキーウのヴィタリ・クリチコ市長が、市の冬への備えをめぐって争った。ゼレンスキー氏はSRFによれば、キーウの誰もが、市は準備ができていないと分かっていると述べ、シュピーゲルも同様に報じる。ゼレンスキー氏はさらに、モスクワはトランプ氏が発表したエネルギー停戦をすでに破ったと述べた（Jerusalem Post、Breakingthenews）。米国やほかのパートナー国が、なぜ警告がなかったのかを説明するか、さらに発電所が狙われるかを見ていく。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="umfrage">
+      <div class="kick">スイス · 政治<span>報道照合 ✓ 7社 · 20 Minutenの世論調査1件</span></div>
+      <h3 class="hl">11月29日の国民投票：最初の世論調査は、AHV第13年金のための付加価値税の引き上げに反対、花火の禁止に賛成</h3>
+      <div class="body">
+        <p>11月29日、スイスは4つの案件について投票する（La Liberté）。20 Minutenが最初の世論調査を公表した。花火イニシアチブは明確な賛成に向かい、AHV第13年金のための付加価値税の引き上げは、はっきりした反対に向かう。24 heuresによれば、いま投票すれば回答者の60%が増税に反対する。付加価値税は0.4ポイント引き上げられる予定だ（20 Minuten）。La Libertéは、4つの案件のうち3つが否決されそうだと見出しに掲げる。何人に聞いたのか、誤差範囲がどれほどかは、こちらの情報源には書かれていない。この調査は、投票日の約6週間前の一時点の姿だ。</p>
+        <p>火曜、各陣営が運動を始めた。中央党と左派は付加価値税の引き上げを訴える（ブリック、20 Minuten、SRF）。労働組合の幹部は、20 Minutenによれば、反対なら退職年齢が引き上げられると警告する。花火イニシアチブの委員会は、動物、騒音、事故を前面に出す（SRF、20 Minuten、RTS）。連邦参事会は、文言が行き過ぎだとみる（24 heures）。カリン・ケラー＝ズッター財務相は、中央党の「フェアネス・イニシアチブ」に反対する連邦参事会の運動の口火を切った。未婚者を不利にし、税を複雑にし、連邦財政に穴を開けるという（Tages-Anzeiger、NZZ）。戦争物資法については、こちらの情報源は数字を挙げていない。20 Minutenはこの件で、見出しに「サスペンス」と掲げる。運動が本格化するなかで数字がどう動くかを見ていく。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>IMFは2026年の世界経済の成長率見通しをわずかに引き上げて3.1%とし、ユーロ圏は1.1%を見込む<span>24 heures · Euronews · Watson · SRF</span></li>
+        <li>チャンピオンズリーグ：ヤン・ゾマーのいるブルッヘがインテル・ミラノを敵地で4対3で破る。バイエルンはヴァイキング・スタヴァンゲル戦で0対2から追いつき、3対3にとどまる<span>NZZ · SRF · Blick · rts.ch</span></li>
+        <li>ジボダンは第3四半期、オーガニック成長が予想を上回った。スルザーは、予想を上回る受注を報告<span>Boursorama · Investir · Watson · La Liberté · agefi</span></li>
+        <li>スイス・リーは、8月末のひょうによる保険対象の損害を17億フラン超と見積もる<span>finews · Watson</span></li>
+        <li>ハンガリー議会は、オルバン政権時代の反LGBT法を廃止。ブダペストは同時に、ウクライナのEU加盟手続きへの拒否権も取り下げる<span>Blick · Tages-Anzeiger · RTS · Reuters</span></li>
+        <li>トランプ氏、ギリシャ駐在の米国大使キンバリー・ギルフォイル氏に、汚職疑惑を理由に辞任を要求。本人は疑惑を否定<span>BBC · Reuters · Tages-Anzeiger · 20 Minuten</span></li>
+        <li>連邦当局者が、民主党のイルハン・オマル下院議員の自宅を捜索。本人は威嚇だと述べる<span>Tages-Anzeiger · NPR · RTS</span></li>
+        <li>NASAの探査車「パーシビアランス」が火星で、宇宙のほかのどの車両よりも長い距離を走破<span>Tages-Anzeiger · Spiegel · 20 Minuten · blue News</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「米国はウクライナへのインテリジェンス情報を止めている。」</b> <span>裏付けなし。ゼレンスキー氏は事前の警告がなかったと嘆き、ブリックは米国が何かを止めたのかどうか不明だとし、トランプ氏は引き続き共有していると述べている。</span></div>
+        <div><b>「FIFAのインファンティーノ会長は2024年、開示されなかった約170万ドルを受け取った。」</b> <span>裏付けなし。この疑惑は「ザ・タイムズ」の報道に由来し、FIFAは、Watsonとル・マタンによれば、これを否定している。</span></div>
+        <div><b>「ロシアのトロール工場は、ウクライナによるヤンデックスのデータセンター攻撃以来、沈黙している。」</b> <span>裏付けなし。BBCは、専門家はそれを示す根拠を見ていないと書く。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/14 水</b><span>チャンピオンズリーグ：パリ・サンジェルマン対マンチェスター・シティ（La Télé） · アラムコ本社への攻撃を受けたフーシ派とサウジアラビアの反応 · 事前の警告がなかったとするゼレンスキー氏の非難へのパートナー国の返答 · 銀行が住宅ローンの参考金利をさらに引き上げるか。</span><b>今週</b><span>木曜：チューリヒでのFIFAの会合。インファンティーノ氏の報酬が話題になりそうだ（ル・タン） · 年金基金のデータ流出がどこまで及ぶか。</span><b>その後</b><span>11月29日の国民投票 · メルコスール協定に反対する署名集めが続く。</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip" lang="ja"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle" lang="ja">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  const A = {
+    "hypo": {
+      "kick": "経済 · 不動産 · 報道照合 ✓ 7社 · 数字は24 heuresと20 Minutenによる",
+      "title": "固定金利住宅ローン、2025年3月以来の高さ　スイス国立銀行は政策金利をゼロに据え置いたまま",
+      "what": "10年物の固定金利住宅ローンの参考金利は、スイス国立銀行が政策金利を0%に据え置いているにもかかわらず、2025年3月以来の高さにある（20 Minuten）。ブリックは、人気の固定金利ローンは今年これほど高かったことがないと書く。Watson、Rhône FM、blue News、La Libertéは、第3四半期の住宅ローン金利の上昇を伝える。24 heuresは、10年物の金利を2%超とし、契約の43%が期間10年以上だと書く。交渉すれば3万5000フラン超を節約できるというが、この試算の根拠は、こちらの要約には書かれていない。CashとFinanz und Wirtschaftは、スイスでは持ち家がさらに高くなっていると同時に伝える。",
+      "why": "住宅ローンは、多くの世帯にとって最大の支出だ。スイス国立銀行が動かないのに長期金利が上がれば、中央銀行が何も決めないまま、資本市場での金利の転換が買い手や所有者に及ぶ。同時に、持ち家そのものも値上がりする。負担は二方向から増す。",
+      "me": "今後数カ月のうちに固定金利ローンの更新や新規契約が必要な人は、複数の見積もりを取るとよい。24 heuresは3万5000フラン超の節約余地を挙げるが、条件は説明していない。賃借人には、この報道は直接は関わらない。住宅ローン金利の上昇が家賃にどう響くかは、報道には書かれていない。",
+      "a": "10年以上の契約への需要は、多くの買い手が低い金利よりも計画の確実さを重くみて、いま固定していることを示す。",
+      "b": "1年の最高値で長く縛られる人は、金利がもう下がらないことに賭けている。その賭けが当たるかどうかは、報道からは判断できない。",
+      "say": "裏付けがあるのは、参考金利が2025年3月以来の高さに上がったことで、スイス国立銀行の決定ではない。二つの点を見ていく。銀行が今後数日、金利をさらに引き上げるか、そして新規契約で長期の割合が高いままか。43%の背後にある正確な測り方は分からないので、出典つきでのみ挙げる。",
+      "src": "20 Minuten · ブリック · Watson · Rhône FM · blue News · La Liberté · 24 heures · Tribune de Genève · Cash · Finanz und Wirtschaft（10月12・13日）"
+    },
+    "papst": {
+      "kick": "バチカン · 健康 · 報道照合 ✓ 12社 · バチカンと担当医の発表による",
+      "title": "教皇レオ14世は肺がん　火曜に摘出された肺結節は悪性だった",
+      "what": "教皇レオ14世は火曜、ローマのジェメッリ病院で、肺結節のために手術を受けた（SRF、NZZ、ロイター）。バチカンは夜、手術は順調に終わり、教皇は病室に戻ったと発表した（RTS、ブリック）。その後、結節が悪性だったことが明らかになった（SRF、Tages-Anzeiger、ル・タン、24 heures、swissinfo、AP、Politico）。SRFによれば、右肺の下葉が切除された。担当医はTages-Anzeigerによれば、手術は順調だったが所見は気がかりだと述べた。ル・タンは肺腺がんと伝え、さらなる検査が予定されているという。回復には24 heuresによれば3カ月かかりうる。教皇は米国籍だ（24 heures）。",
+      "why": "教皇は、世界に10億人超の信徒を抱えるカトリック教会を率いる。がんの所見は、体力や日程への疑問を呼ぶが、バチカンはこれまで答えていない。手術と診断を公表したことを、ル・タンが引く声は、バチカンの広報における革命と評価する。",
+      "me": "スイスへの直接の影響は報じられていない。カトリックの信徒にとって、教皇の健康は教会を悩ませそうな問題だ。スイスの司教たちの反応は、こちらにはない。",
+      "a": "バチカンは所見に率直に向き合っている。手術を事前に告げ、のちに診断を明らかにした。",
+      "b": "情報はこれまで、バチカンと教皇の担当医から出たものだ。独立した医学的な位置づけはなく、予後については情報源は語っていない。",
+      "say": "裏付けがあるのは、手術が成功したあとの悪性の所見で、それ以上ではない。予後、日程、外遊は、情報源は挙げていない。バチカンが今後の治療について報告を出すか、今後数週間の謁見や日程を取りやめるかを見ていく。",
+      "src": "SRF · NZZ · Tages-Anzeiger · ブリック · RTS · ル・タン · 24 heures · swissinfo · 20 Minuten · ロイター · AP · Politico（10月13日）"
+    },
+    "huthi": {
+      "kick": "中東 · エネルギー · 報道照合 ✓ 9社 · 交戦当事者の発表は独立して確認されていない",
+      "title": "フーシ派がアラムコ本社を攻撃、サウジ主導の連合はサヌア近郊の石油施設を空爆",
+      "what": "フーシ派の民兵組織は火曜、ブルームバーグによれば、ミサイル攻撃で石油大手サウジ・アラムコのダーランの本社を直撃し、敷地の一部が燃えた。サウジの国営通信は、負傷者のない限定的な火災と伝える（FinancialJuice経由）。リヤドでは、迎撃されたミサイルの破片で4人が負傷した（swissinfo、Leman bleu）。サウジアラビア主導の連合は、民間人にサヌア近郊の石油施設から退避するよう求め、その後に攻撃した（ロイター、ガーディアン、BBC、20 Minuten）。フーシ派は、リヤドとダンマームへの攻撃（BBC）、そしてリヤドの空港とサウジの石油施設への攻撃（SRF）を予告している。トランプ氏は、フーシ派は米国の中間選挙の前に原油価格を押し上げようとしていると述べた（ロイター、Yahoo）。",
+      "why": "サウジアラビアは、最大級の石油輸出国の一つだ。ミサイルが同国の石油大手の本社に当たれば、供給と価格のリスクが高まる。原油価格は、ロイターによれば、トレーダーが供給リスクを見積もったため、水曜未明に上昇した。同時に、米国が王国を守るのかという問いも強まっている。",
+      "me": "原油高は、時間差でスイスのガソリン、ディーゼル、灯油に響く。どれほど、どれほど速くかは、報道からは読み取れない。サウジアラビアへの渡航者は、スイス連邦外務省（EDA）の注意情報を読むべきだ。米国は、FinancialJuiceによれば渡航警告を出した。",
+      "a": "トランプ氏によれば、フーシ派はイランの指示で動き、価格を押し上げようとしている。そう考える人は、攻撃を米国の選挙を前にした政治的な手段とみる。",
+      "b": "SRFは、トランプ氏はサウジアラビアを見捨てていると書く。ガソリン価格が高く、弾薬庫が空の選挙前に、新たな戦線は魅力に乏しいからだという。そう考える人は、米国の抑制を国内事情によるものとみる。",
+      "say": "裏付けがあるのは、アラムコ本社への攻撃、サヌア近郊での連合の攻撃、フーシ派の脅しだ。ダーランの被害は、サウジの発表とブルームバーグからしか分からない。フーシ派が実際にリヤドとダンマームを攻撃するか、米国がどう反応するか、そして水曜に原油価格がさらに上がるかを見ていく。",
+      "src": "ブルームバーグ · ロイター · ガーディアン · BBC · SRF · 20 Minuten · swissinfo · Leman bleu · Watson · Yahoo · Jerusalem Post · FinancialJuice（10月13・14日）"
+    },
+    "kiew": {
+      "kick": "ウクライナ戦争 · 安全保障 · 報道照合 ✓ 9社 · ゼレンスキー氏の発表、独立して確認されていない",
+      "title": "キーウにミサイル、発電所が被弾　ウクライナはパートナー国から事前の警告を受けなかった",
+      "what": "ウクライナのウォロディミル・ゼレンスキー大統領は火曜、ウクライナはロシアの弾道ミサイルによるキーウ攻撃について、パートナー国から警告を受けなかったと述べた。5発のミサイルが民間インフラに命中したという（ガーディアン、UNITED24、Kyiv Post、CNN）。水曜未明には、別の攻撃が市の重要な発電所を直撃した。やはり事前の警告はなかった（BBC、Watson、Antiwar.com）。ロイターは2人の死亡を伝えるが、こちらには第2の裏付けがない。ガーディアンは、米国が以前、インテリジェンス情報の共有を止めると脅していたことを指摘する。フィナンシャル・タイムズによれば、ゼレンスキー氏は警告がなかったことをそれと明確には結びつけなかった。トランプ氏は、米国は引き続きウクライナにインテリジェンス情報を渡していると述べた（SRF）。",
+      "why": "弾道ミサイルは数分で目標に届く。事前の警告がなければ、民間人は避難する時間がほとんどなく、防空も準備しにくい。発電所への攻撃は、さらに冬の状況を悪化させる。その備えについて、ゼレンスキー氏とクリチコ市長は争っている。",
+      "me": "スイスへの直接の影響はない。ウクライナに家族がいる人や支援事業を支える人は、冬に電力が不足しうることを知っておくべきだ。ロイターによれば、トレーダーはロシアのディーゼルの流れも見積もっており、その原油価格は、間接的にスイスのガソリンスタンドに響く。",
+      "a": "ウクライナはパートナー国に、信頼できる警告を求めている。そうでなければ、民間人と施設を守りにくいからだ。",
+      "b": "パートナー国が何かを伏せたのかどうかは、そもそも分からない。ブリックは、米国が情報を止めたのかは不明だと指摘し、トランプ氏は、米国は引き続き情報を渡していると述べる。",
+      "say": "裏付けがあるのは、キーウが2夜、事前の警告を受けず、発電所が被弾したことだ。なぜかは、そして米国が関係しているかは、分からない。パートナー国の説明、発電所へのさらなる攻撃、そしてモスクワがトランプ氏の発表したエネルギー停戦に応じるかを見ていく。",
+      "src": "ガーディアン · BBC · ロイター · CNN · フィナンシャル・タイムズ · Kyiv Post · UNITED24 · Watson · ブリック · SRF · シュピーゲル · Jerusalem Post（10月13・14日）"
+    },
+    "umfrage": {
+      "kick": "スイス · 政治 · 報道照合 ✓ 7社 · 20 Minutenの世論調査1件",
+      "title": "11月29日の国民投票：最初の世論調査は、AHV第13年金のための付加価値税の引き上げに反対、花火の禁止に賛成",
+      "what": "20 Minutenの最初の国民投票の世論調査は、花火イニシアチブへの明確な賛成と、AHV第13年金のための付加価値税の引き上げへのはっきりした反対を示す。24 heuresは、増税への反対を60%とする。La Libertéは、4つの案件のうち3つが否決されそうだと見出しに掲げる。付加価値税は0.4ポイント引き上げられる予定だ（20 Minuten）。火曜には、付加価値税に賛成する陣営、花火イニシアチブの委員会、そして中央党の税イニシアチブに反対する運動を始めた連邦参事会が、それぞれ運動を始めた（ブリック、SRF、20 Minuten、Tages-Anzeiger、NZZ）。回答者の数と誤差範囲については、こちらの情報源は触れていない。",
+      "why": "AHV第13年金は決まったが、その財源は決まっていない。国民が付加価値税にノーと言えば、政治は別の道を探さなければならない。たとえば別の収入源か、労働組合の幹部が警告するように、退職年齢の引き上げだ（20 Minuten）。同時にこの調査は、国民投票の結果が6週間でまだ大きく変わりうることを示している。",
+      "me": "有権者は11月29日に、4つの案件について決める。各陣営の主張は、連邦の投票説明書で読める。付加価値税が上がれば、年金生活者を含め、全員に及ぶ。",
+      "a": "賛成派は、付加価値税を上げなければ退職年齢の引き上げが迫る、第13年金には財源が必要だ、と主張する。",
+      "b": "反対派は、増税には耐えられないとみる。調査は、回答者の60%がこれに同調することを示唆する。",
+      "say": "投票の6週間前の調査は、雰囲気を映すもので、予測ではない。大事なのは欠けているものだ。標本も誤差範囲も分からず、戦争物資法についての数字もない。次の調査と、運動が数字を動かすかを見ていく。",
+      "src": "20 Minuten · 24 heures · La Liberté · ブリック · SRF · RTS · Tages-Anzeiger · NZZ（10月13・14日）"
+    },
+    "bundesgericht": {
+      "kick": "スイス · 司法 · 報道照合 ✓ 5社 · 背景はSRFとNZZによる",
+      "title": "連邦最高裁判所：シェ長官は再選候補に推されず",
+      "what": "連邦最高裁判所長官のフランソワ・シェ氏（FDP）は、再選の候補に指名されなくなった（SRF、NZZ、20 Minuten）。2年を経て、トーマス・ミュラー氏（国民党）に代わるとされる（Tages-Anzeiger、Weltwoche）。背景には、SRFによれば、裁判所の2人の構成員の恋愛関係への対応が批判されたことがある。Tages-Anzeigerはドンザラ事件と呼ぶ。NZZは、裁判官らが新しい執行部を求めていると書き、この決定に政治へのシグナルもみる。誰が提案したのか、選挙がいつあるのかは、こちらの要約には書かれていない。",
+      "why": "連邦最高裁判所は、この国の最上位の司法機関だ。その裁判官らが自らの長官を降ろすのは異例だ。事件への対応がこの裁判所の信頼をどれほど損なったかを示している。",
+      "me": "市民にとっては、当面何も変わらない。判決は有効なままだ。長官の選出は連邦議会の仕事で、提案に従うかは未定だ。",
+      "a": "裁判官らはNZZによれば新しい執行部を求めている。この交代は、事件のあとの新たな出発となる。",
+      "b": "国民党員が長官に就くことは、政治的に読まれそうだ。各党の反応は、こちらにはない。",
+      "say": "裏付けがあるのは、指名されなかったことと、批判された対応という背景で、それ以上ではない。連邦議会での選挙の日程と、シェ氏自身の発言を見ていく。",
+      "src": "SRF · NZZ · Tages-Anzeiger · 20 Minuten · Weltwoche（10月13日）"
+    },
+    "mercosur": {
+      "kick": "スイス · 貿易 · 報道照合 ✓ 7社 · レファレンダム開始",
+      "title": "メルコスール協定：左派と団体がレファレンダムを開始",
+      "what": "左派と約30の市民社会団体は火曜、メルコスールとの自由貿易協定に反対するレファレンダムを始めた（ル・タン、RTS、NZZ、swissinfo）。メルコスールは、アルゼンチン、ブラジル、パラグアイ、ウルグアイからなる（RTS）。反対派は、社会面と環境面の歯止めが足りないこと（ル・タン）、熱帯雨林の保護が足りないこと（NZZ）を批判する。より厳しい規則がなければ、スイスは迂回の拠点になるという（NZZ）。RSIは、森林破壊、強制労働、地域社会の立ち退きを批判点に挙げる。農民連盟は、協定について独自の評価を公表した。",
+      "why": "自由貿易協定は市場を開くためのものだが、反対派は農業と環境目標が圧迫されるとみる。レファレンダムが成立すれば、国民が決める。",
+      "me": "レファレンダムを支持したい人は署名できる。レファレンダムには、100日以内に5万の有効署名が要る。",
+      "a": "自由貿易の支持者は、輸出企業にとってのチャンスと、より安い価格をみる。",
+      "b": "反対派は、熱帯雨林、農民、基準へのリスクをみる。",
+      "say": "レファレンダムは始まったが、まだ成立していない。署名の数と、農民連盟の姿勢を見ていく。",
+      "src": "ル・タン · RTS · NZZ · swissinfo · Leman bleu · RSI · Le Nouvelliste（10月13日）"
+    },
+    "pkcyber": {
+      "kick": "スイス · サイバーセキュリティ · 報道照合 ✓ 5社 · 範囲は不明",
+      "title": "年金基金：ソフトウェア会社へのハッカー攻撃、連邦、郵便、ミグロ、チューリヒに波及",
+      "what": "ソフトウェア会社PK Softechへのハッカー攻撃を受け、影響を受ける年金基金の範囲が広がっている（Tages-Anzeiger）。連邦の年金基金であるPublicaでは、データが流出した（NZZ、RTS）。郵便、ミグロ、チューリヒ市も影響を受けうる。チューリヒの市警察官や市参事も含まれる（Tages-Anzeiger）。チューリヒ市の年金基金は、同じソフトウェア供給会社と協力している（NZZ）。Watsonは、郵便とミグロの反応は意外だと書き、blue Newsは貯蓄が脅かされているのかと問う。",
+      "why": "年金基金は、数百万人の老後の資産を管理している。加入者のデータ、たとえば氏名、給与、資産は機微な情報だ。一つの供給会社が、多くの基金を同時に脆弱にしうる。",
+      "me": "影響を受けた基金の加入者は、基金からの通知に気を配り、不審な電話やメッセージに注意するべきだ。資産が危うくなっているかどうかは、こちらの情報源は伝えておらず、blue Newsは問いを立てているだけだ。",
+      "a": "",
+      "b": "",
+      "say": "裏付けがあるのは、Publicaでのデータ流出と、影響を受けうる人の範囲の広がりだ。データの数と種類についての情報と、監督当局の見解を見ていく。",
+      "src": "Tages-Anzeiger · NZZ · RTS · Watson · blue News（10月13日）"
+    },
+    "swisscom": {
+      "kick": "経済 · 通信 · 報道照合 ✓ 8社 · 連邦行政裁判所の判断",
+      "title": "光ファイバー争い：裁判所、スイスコムへの1800万フランの制裁金を取り消し",
+      "what": "連邦行政裁判所は、競争委員会に対するスイスコムの訴えを認め、1800万フランの制裁を取り消した（SRF、NZZ、RTS、Tages-Anzeiger、24 heures）。競争委員会は、スイスコムの光ファイバー整備のやり方を問題にしていた。裁判所は、スイスコムは調べられた市場に市場支配的地位を持たない（NZZ）、関係する地域でも持たない（24 heures）と結論づけた。カルテル法には違反していない（SRF）。競争委員会が判決を不服として上訴するかは、報じられていない。",
+      "why": "この判断は、競争当局が通信網の整備に対してどう動けるかを限定する。スイスコムとほかの事業者の競争にも関わる。",
+      "me": "利用者は、当面何も気づかない。光ファイバーの整備は続く。",
+      "a": "",
+      "b": "",
+      "say": "裁判所は、市場支配的地位を認めなかったため、制裁金を取り消した。競争委員会が連邦最高裁判所に持ち込むかを見ていく。",
+      "src": "SRF · NZZ · Tages-Anzeiger · Watson · RTS · 24 heures · swissinfo · La Liberté（10月13日）"
+    },
+    "nati": {
+      "kick": "スポーツ · サッカー · 報道照合 ✓ 6社",
+      "title": "女子代表、イスラエルに2対0で勝ち、W杯プレーオフでオーストリアと対戦",
+      "what": "スイス女子代表は火曜、シオンでのW杯プレーオフの第2戦でイスラエルに2対0で勝ち、次のラウンドに進む（SRF、20 Minuten、ル・タン、RTS）。第1戦は7対3で勝っていた（Watson）。イマン・ベニーがヘディングで1点目を決めた（ル・タン、La Télé）。次のラウンドの相手はオーストリアだ（SRF）。ラフェル・ナバロ監督のもとで、無失点の試合はまだ2試合目だった（SRF）。スタジアムの前では約20人が、イスラエルのガザとヨルダン川西岸での行動に平和的に抗議した（RTS）。Watsonは、禁止にもかかわらず大きなパレスチナの旗が掲げられたと伝える。",
+      "why": "2027年のW杯はブラジルで開かれる。次の壁のオーストリアは、ル・タンによれば、はるかに難しい相手とされる。試合は政治色を帯びた。スタジアム前の抗議（RTS）と禁じられた旗（Watson）が報じられている。",
+      "me": "オーストリアとの試合が次の一歩だ。日程は、こちらの情報源は挙げていない。",
+      "a": "",
+      "b": "",
+      "say": "第1戦の7対3の後で、結果は予想どおりだった。面白くなるのは次の壁、オーストリアだ。日程とメンバーを見ていく。",
+      "src": "SRF · 20 Minuten · ル・タン · RTS · Watson · La Télé（10月13日）"
+    }
+  };
+
+  // ───── 用語集: 本文とポップアップの点線の語。タップで意味を表示
+  const G = {
+    "固定金利住宅ローン": {
+      "f": "経済",
+      "d": "一定の期間、金利が固定される住宅ローン。スイスでは2〜10年が多い。契約が満期になるまで金利は変わらない。",
+      "w": "10年物の固定金利住宅ローンの参考金利は、20 Minutenによれば2025年3月以来の高さにある。"
+    },
+    "政策金利": {
+      "f": "経済",
+      "d": "中央銀行が国内の借り入れコストを誘導するための金利。銀行は短期の資金を貸し借りするとき、これを目安にする。",
+      "w": "スイス国立銀行は政策金利を0%に据え置いているが、長期の住宅ローン金利は上がっている。"
+    },
+    "スイス国立銀行": {
+      "f": "機関",
+      "d": "スイス国立銀行（SNB）は、この国の中央銀行。物価の安定を図り、政策金利を決める。",
+      "w": "20 Minutenによれば、政策金利を変えていない。"
+    },
+    "参考金利": {
+      "f": "経済",
+      "d": "銀行や比較サイトが目安として公表する金利。契約の実際の金利は異なりうる。",
+      "w": "どの事業者も独自の参考金利を持つため、報道が挙げるのは目安だ。"
+    },
+    "資本市場": {
+      "f": "経済",
+      "d": "国や企業が、債券などで長期の資金を調達する市場。そこでの利回りが、長期の貸出金利に影響する。",
+      "w": "長期の住宅ローン金利は、通常は政策金利ではなく資本市場の利回りに連動する。"
+    },
+    "ジェメッリ病院": {
+      "f": "場所",
+      "d": "ローマの大学病院で、歴代の教皇も治療を受けた。SRFは「教皇の病院」と呼ぶ。",
+      "w": "教皇レオ14世は火曜、そこで肺の手術を受けた。"
+    },
+    "肺結節": {
+      "f": "医学",
+      "d": "肺の組織にできる、小さな丸い塊。良性のことも悪性のこともあり、組織検査か摘出ではじめて分かる。",
+      "w": "教皇から摘出された結節は悪性だった。"
+    },
+    "肺腺がん": {
+      "f": "医学",
+      "d": "肺がんの一般的なタイプで、肺の腺細胞から生じる。手術のあとは、たいてい経過観察の検査が続く。",
+      "w": "ル・タンは、教皇についてこの所見を伝える。さらなる検査が予定されているという。"
+    },
+    "バチカン": {
+      "f": "機関",
+      "d": "ローマにある都市国家で、カトリック教会の中心。教皇の健康に関する発表を出す。",
+      "w": "火曜の夜、手術は順調に終わったと発表した。"
+    },
+    "フーシ派": {
+      "f": "安全保障",
+      "d": "イエメンの武装組織で、イランが支援し、首都サヌアを含む国土の広い部分を支配している。",
+      "w": "民兵組織は、ミサイルでサウジアラビアの標的を攻撃している。火曜はエネルギー大手アラムコの本社だった。"
+    },
+    "アラムコ": {
+      "f": "経済",
+      "d": "サウジ・アラムコは、サウジアラビアの国営石油会社で、世界最大級のエネルギー企業の一つ。",
+      "w": "ブルームバーグによれば、そのダーランの本社が火曜に攻撃された。"
+    },
+    "ダーラン": {
+      "f": "場所",
+      "d": "サウジアラビア東部の都市で、サウジ・アラムコの本社がある。",
+      "w": "ミサイル攻撃のあと、そこで限定的な火災が起きた。"
+    },
+    "サヌア": {
+      "f": "場所",
+      "d": "イエメンの首都。フーシ派が支配している。",
+      "w": "サウジの連合は、民間人に退避を求めたうえで、サヌア近郊の石油施設を攻撃した。"
+    },
+    "中間選挙": {
+      "f": "政治",
+      "d": "米国では、大統領の4年の任期の中間に、有権者が下院と上院の一部を改選する。この選挙は英語で「Midterms」と呼ばれる。",
+      "w": "トランプ氏は、フーシ派はこの選挙の前に原油価格を押し上げようとしていると述べている。"
+    },
+    "弾道ミサイル": {
+      "f": "安全保障",
+      "d": "まず推進力で上昇し、そのあと弧を描いて目標に落下するミサイル。非常に速く、警告の時間がほとんどない。",
+      "w": "ゼレンスキー氏によれば、ウクライナはキーウへの攻撃の前に事前の警告を受けなかった。"
+    },
+    "インテリジェンス情報": {
+      "f": "安全保障",
+      "d": "情報機関がつかむ、ミサイルの発射や部隊の動きなどについての知見。国同士が互いに共有する。",
+      "w": "トランプ氏は、米国はそうした情報をウクライナに渡し続けていると述べる。"
+    },
+    "エネルギー停戦": {
+      "f": "政治",
+      "d": "戦争全体は止めずに、発電所や送電網への攻撃を止める取り決め。",
+      "w": "トランプ氏が発表した。ゼレンスキー氏は、モスクワはすでに破ったと述べる。"
+    },
+    "ヴィタリ・クリチコ": {
+      "f": "人物",
+      "d": "元ボクシング世界王者で、キーウ市長。",
+      "w": "ゼレンスキー氏とクリチコ氏は、市の冬への備えをめぐって争っている。"
+    },
+    "AHV第13年金": {
+      "f": "法律",
+      "d": "国の老齢年金である老齢・遺族保険（AHV）の、追加の月額年金。国民が決めたもので、いまはその財源をめぐって投票が行われる。",
+      "w": "そのために、付加価値税が0.4ポイント引き上げられる予定だ。"
+    },
+    "付加価値税": {
+      "f": "経済",
+      "d": "商品とサービスにかかり、価格に含まれる税。すべての消費者に及ぶ。",
+      "w": "20 Minutenの世論調査は、付加価値税の引き上げにはっきりした反対をみる。"
+    },
+    "花火イニシアチブ": {
+      "f": "政治",
+      "d": "騒音の大きい花火を個人に対して禁じようとする国民発議。発議者は、動物、騒音、事故を理由に挙げる。",
+      "w": "20 Minutenの世論調査は、明確な賛成をみる。"
+    },
+    "フェアネス・イニシアチブ": {
+      "f": "政治",
+      "d": "夫婦が未婚の人より多くの税を払うことがある「結婚ペナルティ」に反対する、中央党の税に関する国民発議。",
+      "w": "連邦参事会は火曜、これに反対する運動を始めた。"
+    },
+    "戦争物資法": {
+      "f": "法律",
+      "d": "スイス企業が軍需品をどの国に供給してよいかを定める法律。",
+      "w": "緩和の是非を、スイスは11月29日に投票で決める。世論調査の数値については、こちらの情報源は触れていない。"
+    },
+    "誤差範囲": {
+      "f": "統計",
+      "d": "調査の本当の結果が高い確率で収まる幅。回答者が少ないほど、広くなる。",
+      "w": "20 Minutenの世論調査の幅は、こちらには分からない。"
+    },
+    "カリン・ケラー＝ズッター": {
+      "f": "人物",
+      "d": "スイスの財務相で、連邦参事会のメンバー（FDP）。",
+      "w": "中央党の税イニシアチブに対する反対運動の口火を切った。"
+    },
+    "メルコスール": {
+      "f": "経済",
+      "d": "南米諸国の経済ブロック。アルゼンチン、ブラジル、パラグアイ、ウルグアイが加わる。",
+      "w": "スイスはこれらの国と自由貿易協定を結ぼうとしており、これに反対するレファレンダムが始まった。"
+    },
+    "連邦最高裁判所": {
+      "f": "法律",
+      "d": "スイスの最高裁判所で、所在地はローザンヌ。その判決はたいてい最終的だ。",
+      "w": "長官のフランソワ・シェ氏は、再選候補に推されない。"
+    },
+    "年金基金": {
+      "f": "経済",
+      "d": "職域年金の機関で、従業員の老後の資金を運用する。働く人は年金基金に掛け金を払う。",
+      "w": "共通のソフトウェア供給会社への攻撃は、連邦のものを含め、複数の基金に及ぶ。"
+    },
+    "競争委員会": {
+      "f": "機関",
+      "d": "スイスで競争を監視し、カルテルや市場支配力の濫用を追及する官庁。略称はWEKO、フランス語ではComco。",
+      "w": "スイスコムに1800万フランの制裁金を科していた。"
+    },
+    "連邦行政裁判所": {
+      "f": "法律",
+      "d": "連邦官庁の決定に対する不服申立てを審理する、ザンクト・ガレンの裁判所。",
+      "w": "スイスコムへの制裁金を取り消した。"
+    },
+    "市場支配的地位": {
+      "f": "法律",
+      "d": "企業が、競合や顧客からおおむね独立して市場で行動できるとき、その企業は市場を支配しているという。その地位を濫用してはじめて、カルテル法に違反しうる。",
+      "w": "裁判所は、調べられた光ファイバー市場で、スイスコムにその地位はないとみた。"
+    },
+    "W杯プレーオフ": {
+      "f": "スポーツ",
+      "d": "代表チームが、ワールドカップの最後の出場枠をかけて争う予選。",
+      "w": "スイスの女子代表はイスラエルを下し、次はオーストリアと対戦する。"
+    },
+    "IMF": {
+      "f": "機関",
+      "d": "国際通貨基金は、ワシントンに本部を置き、世界経済を観察して見通しを公表する組織。",
+      "w": "2026年の世界の成長率を3.1%と見込む。"
+    },
+    "オーガニック成長": {
+      "f": "経済",
+      "d": "買収や為替の影響を除いた、自力での成長を、オーガニックな成長という。",
+      "w": "ジボダンは報道によれば、第3四半期のオーガニック成長が予想を上回った。"
+    },
+    "スイス・リー": {
+      "f": "経済",
+      "d": "チューリヒに本社を置くスイスの再保険会社。保険会社の大きな損害に備える保険を引き受け、自然現象のコストを見積もる。",
+      "w": "スイス・リーは、8月末のひょうによる保険対象の損害を17億フラン超と見積もる。"
+    },
+    "オルバン": {
+      "f": "人物",
+      "d": "ヴィクトル・オルバンは、政権交代までハンガリーの首相だった。その政権は、未成年者に対する同性愛やトランスジェンダーの人々の描写を禁じる法律を定めた。",
+      "w": "ハンガリー議会は、いまこれらの法律を廃止する。"
+    },
+    "イルハン・オマル": {
+      "f": "人物",
+      "d": "ミネソタ州選出の米下院の民主党議員で、トランプ大統領をたびたび批判している。",
+      "w": "連邦当局者が自宅を捜索した。本人は威嚇だと述べる。"
+    },
+    "パーシビアランス": {
+      "f": "科学",
+      "d": "2021年から火星を走るNASAの探査車で、岩石の試料を集めている。",
+      "w": "別の天体を走ったどの車両よりも、いま長い距離を走った。"
+    },
+    "FIFA": {
+      "f": "機関",
+      "d": "チューリヒに本部を置く、サッカーの世界統括団体。会長はスイス人のジャンニ・インファンティーノ。",
+      "w": "FIFAは、支払いを隠したとの疑惑を否定している。"
+    },
+    "インファンティーノ": {
+      "f": "人物",
+      "d": "ジャンニ・インファンティーノは、ヴァレー州の出身で、2016年からFIFAの会長を務める。",
+      "w": "「ザ・タイムズ」は、2024年に追加で約170万ドルを受け取ったと書く。裏付けはない。"
+    },
+    "ヤンデックス": {
+      "f": "経済",
+      "d": "ロシア最大のインターネット企業で、「ロシアのグーグル」とも呼ばれる。検索エンジンとデータセンターを運営する。",
+      "w": "ウクライナは、大統領によれば、ヤンデックスのデータセンターを攻撃した。"
+    },
+    "トロール工場": {
+      "f": "安全保障",
+      "d": "偽のアカウントでソーシャルネットワーク上の意見を誘導する、組織的な集団。ボットネットとも呼ばれる。",
+      "w": "攻撃のあとに沈黙したという話を、BBCによれば誰も裏付けていない。"
+    },
+    "フィナンシャル・タイムズ": {
+      "f": "メディア",
+      "d": "英国の経済紙。",
+      "w": "ゼレンスキー氏は警告がなかったことを米国の脅しと明確には結びつけなかった、と書く。"
+    },
+    "ザ・タイムズ": {
+      "f": "メディア",
+      "d": "英国の日刊紙「ザ・タイムズ」。",
+      "w": "インファンティーノ氏への追加の支払いについての報道は同紙によるもの。FIFAは否定している。"
+    }
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

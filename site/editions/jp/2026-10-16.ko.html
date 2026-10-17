@@ -1,0 +1,454 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 종이 신문의 1면. 6단 그리드, 이중 괘선의 제호, 명조 제목, 사진 대신 잉크 도표. 기사를 누르면 펼쳐진다. */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif KR",Georgia,serif; --sans:"Noto Sans KR",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 제호 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* 그리드 */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:keep-all}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:keep-all}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:keep-all}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:keep-all;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:keep-all;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* 잉크 도표 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 색인·단신 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:keep-all}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:keep-all}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:keep-all}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* 팝업 */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:keep-all}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:keep-all}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 용어 사전 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:keep-all}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 여백 채움: 기사 칸 아래에 붙는 보조 블록 */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:keep-all}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>64,425.95엔</b>닛케이평균 · 10/15 마감 · 전일 대비 −4.9%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 국내외 전 분야 · 매일 한 장</div></div>
+      <div class="ear r"><b>158.09엔</b>달러/엔 · 16일 오전 2시께 · 전일 대비 −0.20엔</div>
+    </div>
+    <div class="dateline"><span>제 12 호 · 조간</span><b>2026년 10월 16일 금요일</b><span>기사를 누르면 펼쳐지고, <u style="text-decoration:dotted underline var(--red)">점선 단어</u>를 누르면 뜻이 뜹니다</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="nikkei">
+      <div class="kick">시장·경제<span>보도 대조 ✓ 매체 6곳 · 종가는 시장 데이터, 하락 요인의 비중은 미확인</span></div>
+      <h2 class="hl">닛케이평균 5% 가까이 급락해 6만 4천 엔대. 미국 물가 상회로 금리 인상 관측 재연, AI·반도체주 매도</h2>
+      <p class="deck">장중 하락폭은 한때 3,000엔에 달했다. 미국 나스닥이 511포인트 내린 흐름이 도쿄에도 번졌고, 일본은행의 심의위원은 금리 인상에 '지나치게 신중할 필요는 없다'고 말했다.</p>
+      <div class="body">
+        <p>15일 도쿄 주식시장에서 닛케이평균의 종가는 6만 4,425.95엔, 하락률은 4.9%였다(시장 데이터). 재팬타임스는 '5% 하락'이라고 전했고, 마이니치신문은 한 달 만에 6만 4천 엔대까지 내렸으며 하락폭은 역대 3번째라고 보도했다. 장중 낙폭은 시간이 지나며 커져, TV아사히 계열은 한때 2,000엔 넘게, 아사히신문은 한때 2,700엔 넘게, 마이니치신문은 한때 3,000엔 하락했다고 전했다. 계기는 미국 물가다. 미국 소비자물가지수가 예상을 웃돌아(TV아사히 계열) 금리 인상 관측이 다시 강해졌다(아사히신문). 뉴욕 증시는 하락세를 이어갔고 나스닥은 511포인트 내려 기술주가 팔렸다(NHK 등). 로이터는 미국의 9월 생산자물가가 4년 반 만에 가장 크게 올랐다고 전했다.</p>
+        <p>매도의 중심은 AI 관련이었다. 로이터는 AI용 데이터센터를 운영하는 코어위브의 주식과 채권이 내려 AI 관련 부채에 대한 우려가 커지고 있다고 보도했다. 대만 TSMC는 7~9월 순이익이 전년보다 68.7% 늘어 사상 최고를 경신했지만(지지통신), 영어 기사는 AI 거품에 대한 불안을 누그러뜨리지 못했다고 전했다. 일본은행의 고에다 심의위원은 15일 강연에서 금리 인상에 '지나치게 신중할 필요는 없다'고 말했다(NHK, 아사히신문, 마이니치신문). NHK는 이 발언 등을 계기로 엔 시세가 올랐다고 전했다. 달러/엔은 16일 새벽 시점에 158.09엔 안팎이다(시장 데이터). 15일 미국 시장의 결과는 본지 발행 뒤에 나온다. 하락의 주된 원인이 물가인지 AI 관련 불안인지는 아직 가려지지 않았다.</p>
+      </div>
+      <div class="more">기사와 데일리드롭 생각 펼치기</div>
+      <div class="fill"><h5>오늘의 숫자</h5><div class="nums">
+        <div><b>4.9%</b><span>닛케이평균의 15일 하락률. 종가는 6만 4,425.95엔(시장 데이터)</span></div>
+        <div><b>511포인트</b><span>미국 나스닥의 하락폭. 14일 미국 시장(NHK 등)</span></div>
+        <div><b>68.7%</b><span>TSMC의 7~9월 순이익 증가율. 사상 최고(지지통신)</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="yana">
+      <div class="kick">국내 정치<span>보도 대조 ✓ 매체 6곳 · 사임 경위에 대한 평가는 보도마다 다르다</span></div>
+      <h3 class="hl">야나 농림수산상 사표, 사실상 경질. 후임에 각료 경험 없는 다케베 아라타. 내각 지지율은 42.4%로 하락</h3>
+      <div class="one">
+        <p>야나 가즈오 농림수산상이 15일 사표를 제출했고, 다카이치 총리는 후임에 다케베 아라타 씨를 기용했다(아사히신문, 마이니치신문, 지지통신). 마이니치신문은 '스스로 결단'한 형식이지만 사실상 경질이라고 해설했고, 아사히신문도 사실상 경질이라고 전했다. 다케베 씨는 각료 경험이 없으며, 농림수산 부대신으로서의 경험이 평가받았다(아사히신문, 마이니치신문). 총리는 '즉시 전력감'이라고 말했다(지지통신). 야당은 임명 책임을 추궁하고 있다(마이니치신문). 지지통신의 10월 여론조사에서 내각 지지율은 전달보다 1.7포인트 낮은 42.4%였고, 야나 씨의 유임 판단을 약 80%가 문제로 봤다(지지통신). 지역구인 도치기에서는 의원직 사퇴를 요구하는 목소리도 나온다(마이니치신문). 대학 교수가 야나 씨에 대한 고발장을 냈다고 지지통신이 전했지만, 다른 매체의 확인은 얻지 못했다.</p>
+      </div>
+      <div class="more">펼치기</div>
+      <div class="fill word"><h5>오늘의 단어</h5><b>임명 책임<i>任命責任</i></b><p>대신 등을 고른 쪽이 그 사람의 불상사나 실패에 대해 지는 책임. 총리가 각료를 임명하기 때문에 각료가 사임할 때마다 거론된다.</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>짧게 보는 오늘</h4>
+      <div class="it story" tabindex="0" data-id="toshiba"><b>도시바 패소 확정, 전 경영진의 책임은 인정되지 않아</b><em>부정 회계를 둘러싼 재판에서 최고재판소가 회사 측의 패소를 확정했다. 전 경영진의 배상 책임은 인정하지 않았다.</em><span>사회·법 · ✓ 매체 3곳</span></div>
+      <div class="it story" tabindex="0" data-id="recall"><b>파나소닉, 드럼식 세탁건조기 64만 대 리콜</b><em>발화 우려가 있다. 일본과 대만을 합쳐 64만 대에 이른다.</em><span>사회·소비 · ✓ 매체 3곳</span></div>
+      <div class="it story" tabindex="0" data-id="oda"><b>요코하마고 오다 쇼키, 미국 메이저리그 도전 표명</b><em>최고 시속 157킬로미터의 우완. 드래프트를 앞두고 프로야구를 거치지 않고 고교에서 바로 바다를 건넌다.</em><span>스포츠 · ✓ 매체 4곳</span></div>
+      <div class="it story" tabindex="0" data-id="typhoon"><b>태풍 30호 발생, '매우 강한' 세력으로 발달할 전망</b><em>연간 30개 발생은 2013년 이후 처음이다. 일본에 영향을 줄 가능성도 있다.</em><span>날씨·방재 · ✓ 매체 2곳</span></div>
+      <div class="it story" tabindex="0" data-id="dodgers"><b>다저스 3연패, 오타니는 1안타</b><em>브루어스가 막판 홈런으로 밀어붙여, 다저스는 내셔널리그 챔피언십 시리즈에서 벼랑 끝에 섰다.</em><span>스포츠 · ✓ 매체 2곳</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="nkmissile">
+      <div class="kick">국제·안보<span>보도 대조 ✓ 매체 4곳 · 발사 일시와 효과는 북한 측 설명뿐</span></div>
+      <h3 class="hl">북한, 잠수함 발사형 순항미사일 2종 시험발사라고 국영 매체. 중국과 북한을 잇는 신압록강대교는 개통</h3>
+      <div class="body">
+        <p>북한의 국영 매체 조선중앙통신은 잠수함에서 발사하는 2종의 순항미사일 발사 시험을 했다고 전했다(NHK, 마이니치신문, 재팬타임스, 로이터). 마이니치신문은 북한이 '해군 능력 향상'을 내세웠다고 보도했다. 발사 일시와 장소, 비행 거리, 일본 방위성의 평가는 본지가 모은 범위에서는 확인하지 못했다. 순항미사일은 탄도미사일과 달리 날개를 이용해 낮은 고도로 난다.</p>
+        <p>같은 15일, 중국과 북한을 잇는 신압록강대교가 개통했다(아사히신문, 마이니치신문, 지지통신, 재팬타임스). 완공된 지 10년 넘게 열리지 않았던 다리다. 지지통신은 무역과 왕래가 늘고 관계 개선이 진행될 것이라고 전했다. 두 사건의 관련성은 보도에서 제시되지 않았다.</p>
+      </div>
+      <div class="more">펼치기</div>
+
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="spy">
+      <div class="kick">국내 정치·외교<span>보도 대조 ✓ 매체 4곳 · 구속 경위와 혐의 내용은 미확인</span></div>
+      <h3 class="hl">총리 '러시아에서 스파이 활동 사실 없다'. 구속된 홋카이도신문 기자, 정부는 접촉 못 해. 러시아 대사는 일본 측 요구 거부</h3>
+      <div class="body">
+        <p>다카이치 총리는 15일 러시아에서 홋카이도신문 기자가 구속된 문제와 관련해 '러시아에서 스파이 활동을 한 사실은 없다'고 말했고, 정부의 지시도 부인했다(아사히신문, 마이니치신문, 지지통신, 재팬타임스). 지지통신은 정부가 구속된 기자와 접촉하지 못하고 있다고 전했다. 같은 지지통신에 따르면 주일 러시아 대사는 일본 측 요구를 거부하며 러시아 법에 따라 수사하고 있다고 말했다.</p>
+        <p>아사히신문은 미국의 언론인 보호 단체가 러시아에 즉각 석방을 요구했다고 보도했고, 마이니치신문은 전문가들이 항의 성명을 내 '침묵은 나약함으로 비친다'고 호소했다고 전했다. 구속 일시, 혐의 내용, 기자의 건강 상태는 본지가 모은 범위에서는 확인하지 못했다.</p>
+      </div>
+      <div class="more">펼치기</div>
+
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="leak">
+      <div class="kick">사회·IT<span>보도 대조 ✓ 매체 4곳 · 건수는 보도마다 다르다</span></div>
+      <h3 class="hl">소스넥스트에서 고객 정보 약 2,251만 건 유출 가능성. 버거킹은 약 1,118만 건, 부정 접속 잇따라</h3>
+      <div class="body">
+        <p>소스넥스트는 고객 정보가 약 2,251만 건 샜을 가능성이 있다고 밝혔다(NHK). 니혼게이자이신문은 2,252만 건이라고 전해, 보도마다 건수가 1건 차이 난다. 비밀번호 등이 포함됐다는 보도도 있다. 버거킹은 앱 회원 정보 약 1,118만 건이 샜다고 발표했다(NHK, 아사히신문). 로손 사장은 부정 접속에 따른 개인정보 유출을 사과했다(NHK). 산부인과 등이 쓰는 시스템에도 부정 접속이 있었고, 최대 800개 기관에 영향을 줄 가능성이 있다(아사히신문). NHK는 환자 정보가 샜을 우려가 있다고 전했다.</p>
+        <p>NHK는 별도로, 잇따른 부정 접속에 'AI 에이전트'가 쓰인 증거가 발견됐다고 보도했지만 자세한 수법은 확인되지 않았다. JR규슈는 부정 접속에 따른 개인정보 유출은 확인되지 않았다고 발표했다(NHK). 교토은행은 면허증 이미지 유출을 계기로 앱 계좌 개설의 확인 방법을 바꿨다(아사히신문).</p>
+      </div>
+      <div class="more">펼치기</div>
+      <div class="fill"><h5>짧게 더</h5><ul class="briefs">
+        <li>최고재판소는 검사가 조사 중 피의자에게 '꼬맹이'라고 말한 문제에서 국가에 110만 엔 배상을 명령한 판결을 확정했다. 묵비권 침해는 인정하지 않았다<span>마이니치신문·아사히신문·지지통신</span></li>
+        <li>공명당이 소비세 감세의 대안으로 '1인당 약 8만 엔' 지급을 제언<span>NHK·지지통신</span></li>
+        <li>이바라키현 히타치오미야시에서 원전 '핵 쓰레기' 처분지 선정을 위한 문헌조사가 시작됐다. 전국 5번째<span>NHK·아사히신문</span></li>
+        <li>회계검사원은 신종 코로나 관련 기금이 13개 현에서 약 49억~50억 엔 쓰이지 않았다고 지적<span>아사히신문·마이니치신문</span></li>
+        <li>국제선 유류할증료가 11월 발권분부터 인상<span>NHK</span></li>
+        <li>주니치의 새 감독에 구도 기미야스 씨. 15일 취임 회견을 열었고 등번호는 81<span>NHK·아사히신문·지지통신</span></li>
+        <li>경찰청이 스토커 가해자에게 GPS를 부착하는 방안을 검토할 전문가 회의를 설치. 다음 주부터 논의<span>NHK·마이니치신문·아사히신문·지지통신</span></li>
+      </ul><div class="house">매일 아침 7분, 1면 한 장</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>소문의 온도 — 확인 안 된 것</h4>
+        <div><b>'일본 정부가 지시해서 기자에게 러시아에서 스파이 활동을 시켰다.'</b> <span>다카이치 총리는 15일 '그런 사실은 없다'고 말하며 정부의 지시를 부인했다(아사히신문, 마이니치신문, 지지통신). 구속 이유와 혐의 내용은 아직 확인하지 못했다.</span></div>
+        <div><b>'JR규슈에서도 개인정보가 샜다.'</b> <span>JR규슈는 부정 접속에 따른 개인정보 유출은 확인되지 않았다고 발표했다(NHK). 조사 속보는 확인하지 못했으며, 앞으로의 발표를 기다린다.</span></div>
+        <div><b>'미국이 이란에 “모든 폭탄의 어머니”를 쓴다.'</b> <span>헤드라인으로 나돌았지만 본지가 모은 범위에서는 미국 정부의 발표나 자세한 복수 매체의 보도를 확인하지 못했다.</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>오늘 볼 것</h4>
+        <div><b>10/16 금</b><span>도쿄 시장의 움직임(15일 큰 폭 하락 뒤 닛케이평균이 하락을 멈출지) · 15일 미국 시장의 종가(본지 발행 뒤에 나온다) · 다케베 신임 농림수산상의 첫 업무와 야당의 임명 책임 추궁 · 홋카이도신문 기자 구속을 둘러싼 정부와 러시아의 움직임 · 태풍 30호의 진로 · 소스넥스트 등 정보 유출의 속보 · 다저스의 NLCS 다음 경기 일정과 결과.</span><b>이번 주</b><span>다음 주부터 경찰청 전문가 회의에서 스토커 가해자에 대한 GPS 부착을 논의(NHK, 마이니치신문, 아사히신문, 지지통신). 중의원 정수 감축을 둘러싼 여야 협의는 평행선인 채(아사히신문, NHK).</span><b>그다음</b><span>11월 발권분부터 국제선 유류할증료가 인상(NHK). 11월에 세이부 이케부쿠로 본점 7~8층이 개점(아사히신문).</span><b>독자에게</b><span>16일 아침에는 도쿄 시장의 개장과 환율을 확인한다. 투자하는 사람은 15일 미국 시장이 마감된 뒤에 판단하고 싶다. 소스넥스트나 버거킹의 서비스를 쓰는 사람은 공식 공지를 보고 비밀번호를 바꾼다.</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <div class="glos">용어 사전 · 점선 단어 — 정치·시장·법·국제 정세 용어를 기사 맥락과 함께 설명합니다. 매일 쌓입니다.</div>
+  <footer class="colophon">
+    <span>데일리드롭 · 원자료 ✓ = 발표 기관 원문 확인, 보도 대조 ✓ = 서로 다른 매체 두 곳 이상 일치 · '생각'은 데일리드롭의 의견</span>
+    <span>기사 본문을 옮기지 않습니다. 요약과 출처만. · © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="닫기">닫기 <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    nikkei:{kick:"시장·경제 · 보도 대조 ✓ 매체 6곳 · 종가는 시장 데이터, 하락 요인의 비중은 미확인",
+       title:"닛케이평균 5% 가까이 급락해 6만 4천 엔대. 미국 물가 상회로 금리 인상 관측 재연, AI·반도체주 매도",
+       what:"15일 도쿄 주식시장에서 닛케이평균의 종가는 6만 4,425.95엔, 하락률은 4.9%였다(시장 데이터). 재팬타임스는 '5% 하락'이라고 전했고, 마이니치신문은 한 달 만에 6만 4천 엔대까지 내렸으며 하락폭은 역대 3번째라고 보도했다. 장중 낙폭은 커져, TV아사히 계열은 한때 2,000엔 넘게, 아사히신문은 한때 2,700엔 넘게, 마이니치신문은 한때 3,000엔 하락했다고 전했다. 미국 소비자물가지수가 예상을 웃돌아(TV아사히 계열) 금리 인상 관측이 다시 강해졌다(아사히신문). 뉴욕 증시는 하락세를 이어갔고 나스닥은 511포인트 내려 기술주가 팔렸다(NHK 등). 로이터는 미국의 9월 생산자물가가 4년 반 만에 가장 크게 올랐다고 전했다. 매도의 중심은 AI 관련이었다. 로이터는 AI용 데이터센터를 운영하는 코어위브의 주식과 채권이 내려 AI 관련 부채에 대한 우려가 커지고 있다고 보도했다. 대만 TSMC는 7~9월 순이익이 68.7% 늘어 사상 최고를 경신했지만(지지통신), 영어 기사는 AI 거품에 대한 불안을 누그러뜨리지 못했다고 전했다. 일본은행의 고에다 심의위원은 15일 강연에서 금리 인상에 '지나치게 신중할 필요는 없다'고 말했다(NHK, 아사히신문, 마이니치신문). NHK는 이 발언 등을 계기로 엔 시세가 올랐다고 전했다.",
+       why:"물가가 내려가지 않으면 미국의 금리는 높은 채로 이어지고, AI 관련의 높은 주가를 떠받치기 어려워진다. 도쿄 시장은 반도체 관련의 비중이 커서 미국의 매도가 그대로 영향을 미쳤다. 일본은행의 심의위원이 금리 인상에 긍정적인 발언을 한 것도 금리 전망을 움직이는 재료가 됐다. 다만 하락의 주된 원인이 물가인지 AI 관련 불안인지는 아직 가려지지 않았다.",
+       me:"투자신탁이나 주식을 가진 사람에게는 평가액이 크게 움직인 날이다. 서둘러 사고팔기를 정하기 전에 15일 미국 시장의 종가와 16일 도쿄 시장의 개장을 확인하고 싶다. 신NISA 등으로 적립하는 사람은 적립 금액이나 날짜를 서둘러 바꿀 필요는 없다. 주택담보대출 금리는 일본은행의 금리 인상 전망과 이어진다.",
+       a:"급락은 AI 관련 주가가 앞서 너무 올랐던 데 대한 조정이다. 물가와 금리 전망이 바뀌면 주가가 되돌아오기 어려운 국면도 있고, 팔리는 이유는 이치에 맞다.",
+       b:"하루 낙폭만으로 시장 전체를 비관하기는 이르다. TSMC의 이익은 사상 최고이고, 기업의 수익력이 갑자기 떨어진 것은 아니다. 크게 내린 뒤에는 등락이 거칠어지기 쉽다.",
+       say:"오늘의 숫자는 '4.9%'. 하루 하락률이다. 지켜볼 것은 세 가지다. 16일 도쿄 시장이 하락을 멈출지, 15일 미국 시장이 어떻게 마감할지, 그리고 일본은행의 금리 인상 전망에 어떤 말이 나올지다. 장중 낙폭이 보도마다 다른 것은 시간대가 다르기 때문이며, 종가로 확인하는 것이 확실하다.",
+       src:"TV아사히 계열 · NHK · 아사히신문 · 마이니치신문 · 지지통신 · 재팬타임스 · 로이터(10/15. 종가와 하락률은 시장 데이터, 역대 3번째 낙폭은 마이니치신문만, 511포인트 하락은 NHK 등, 고에다 심의위원의 발언은 NHK와 아사히신문과 마이니치신문)"},
+    yana:{kick:"국내 정치 · 보도 대조 ✓ 매체 6곳 · 사임 경위에 대한 평가는 보도마다 다르다",
+       title:"야나 농림수산상 사표, 사실상 경질. 후임에 각료 경험 없는 다케베 아라타. 내각 지지율은 42.4%로 하락",
+       what:"야나 가즈오 농림수산상은 15일 사표를 제출했고, 다카이치 총리는 후임에 다케베 아라타 씨를 기용했다(아사히신문, 마이니치신문, 지지통신). 마이니치신문은 '스스로 결단'한 형식이지만 사실상 경질이라고 해설했고, 아사히신문도 사실상 경질이라고 전했다. 다케베 씨는 각료 경험이 없으며, 농림수산 부대신으로서의 경험이 평가받았다(아사히신문, 마이니치신문). 총리는 '즉시 전력감'이라고 말하며 '농림수산 행정을 지체 없이 진행해 달라'고 전했다(지지통신, 마이니치신문). 야당은 임명 책임을 추궁하고 있다(마이니치신문). 지지통신의 10월 여론조사에서 내각 지지율은 전달보다 1.7포인트 낮은 42.4%였고, 야나 씨의 유임 판단을 약 80%가 문제로 봤다(지지통신). 재팬타임스도 지지율이 새로운 저수준이 됐다고 보도했다. 지역구인 도치기에서는 의원직 사퇴를 요구하는 목소리가 나온다(마이니치신문). 대학 교수가 야나 씨에 대한 고발장을 냈다고 지지통신이 전했지만, 다른 매체의 확인은 얻지 못했다.",
+       why:"총리가 경질을 보류했던 각료가 지지율 하락과 여론의 따가운 시선 속에서 교체됐다. 임명한 총리의 책임과 앞으로의 국회 운영이 초점이 된다. 재팬타임스는 사임으로 위기는 멈췄지만 정권에 대한 의문은 남는다고 지적했다.",
+       me:"농림수산상은 쌀과 농업 정책을 맡는다. 새 대신 아래에서 농정 방침이 바뀌는지를 보고 싶다. 야나 씨 발언의 발단이 된 도로 예산이 정해지는 방식은 지역 지자체에는 가까운 문제다.",
+       a:"사임으로 매듭이 지어졌고 정권은 재정비에 나설 수 있다. 부대신 경험이 있는 다케베 씨의 기용은 실무를 중시한 인사다.",
+       b:"각료 경험이 없는 인물에게 과제가 많은 농정을 맡길 수 있을까. 사임만으로는 예산을 둘러싼 의혹의 설명이 되지 않는다는 지적도 있다.",
+       say:"오늘의 숫자는 '42.4%'. 지지통신 조사의 내각 지지율로, 1.7포인트 내렸다. 지켜볼 것은 다케베 씨가 국회에서 농정을 어디까지 구체적으로 말할 수 있는지, 야당이 임명 책임을 어디까지 따지는지, 야나 씨 본인이 지역구에서 설명에 응하는지다.",
+       src:"아사히신문 · 마이니치신문 · 지지통신 · 재팬타임스(10/15. 사표와 후임은 아사히신문과 마이니치신문과 지지통신, 지지율과 유임 판단에 대한 평가는 지지통신, 고발장은 지지통신만)"},
+    nkmissile:{kick:"국제·안보 · 보도 대조 ✓ 매체 4곳 · 발사 일시와 효과는 북한 측 설명뿐",
+       title:"북한, 잠수함 발사형 순항미사일 2종 시험발사라고 국영 매체. 중국과 북한을 잇는 신압록강대교는 개통",
+       what:"북한의 국영 매체 조선중앙통신은 잠수함에서 발사하는 2종의 순항미사일 발사 시험을 했다고 전했다(NHK, 마이니치신문, 재팬타임스, 로이터). 마이니치신문은 북한이 '해군 능력 향상'을 내세웠다고 보도했다. 발사 일시와 장소, 비행 거리, 일본 방위성의 평가는 본지가 모은 범위에서는 확인하지 못했다. 순항미사일은 탄도미사일과 달리 날개를 이용해 낮은 고도로 난다. 같은 15일, 중국과 북한을 잇는 신압록강대교가 개통했다(아사히신문, 마이니치신문, 지지통신, 재팬타임스). 완공된 지 10년 넘게 열리지 않았던 다리다. 지지통신은 무역과 왕래가 늘고 관계 개선이 진행될 것이라고 전했다. 두 사건의 관련성은 보도에서 제시되지 않았다.",
+       why:"잠수함에서 쏠 수 있는 미사일은 지상의 발사장을 노리는 공격으로는 포착하기 어려워 일본 주변의 경계를 어렵게 한다. 북한이 해군의 힘을 과시한 셈이다. 한편 중국과 북한을 잇는 다리의 개통은 북한이 중국과의 경제 관계를 강화하려는 움직임으로 보인다.",
+       me:"당장 생활이 바뀌는 이야기는 아니다. 방위성의 발표나 정부 경보가 나왔을 때의 정보는 확인할 수 있게 해 두고 싶다.",
+       a:"잠수함에서의 발사는 기술의 진전을 보여 준다. 한미일이 정보를 공유하며 경계를 이어 가야 한다.",
+       b:"국영 매체의 주장만으로는 실제 성능을 알 수 없다. 과시의 측면이 크다는 시각도 있다.",
+       say:"오늘의 숫자는 '2종'. 북한 측 설명이며 제3자의 확인은 없다. 지켜볼 것은 방위성과 한국군이 분석을 공개할지, 추가 발사가 있을지, 그리고 다리 개통이 중국과 북한의 무역을 얼마나 움직일지다.",
+       src:"NHK · 마이니치신문 · 아사히신문 · 지지통신 · 재팬타임스 · 로이터(10/15. 시험발사는 국영 매체의 설명, 다리 개통은 아사히신문과 마이니치신문과 지지통신과 재팬타임스)"},
+    spy:{kick:"국내 정치·외교 · 보도 대조 ✓ 매체 4곳 · 구속 경위와 혐의 내용은 미확인",
+       title:"총리 '러시아에서 스파이 활동 사실 없다'. 구속된 홋카이도신문 기자, 정부는 접촉 못 해. 러시아 대사는 일본 측 요구 거부",
+       what:"다카이치 총리는 15일 러시아에서 홋카이도신문 기자가 구속된 문제와 관련해 '러시아에서 스파이 활동을 한 사실은 없다'고 말했고, 정부의 지시도 부인했다(아사히신문, 마이니치신문, 지지통신, 재팬타임스). 지지통신은 정부가 구속된 기자와 접촉하지 못하고 있다고 전했다. 같은 지지통신에 따르면 주일 러시아 대사는 일본 측 요구를 거부하며 러시아 법에 따라 수사하고 있다고 말했다. 아사히신문은 미국의 언론인 보호 단체가 러시아에 즉각 석방을 요구했다고 보도했고, 마이니치신문은 전문가들이 항의 성명을 내 '침묵은 나약함으로 비친다'고 호소했다고 전했다. 구속 일시, 혐의 내용, 기자의 건강 상태는 본지가 모은 범위에서는 확인하지 못했다.",
+       why:"보도의 자유와 외국 취재의 안전에 관한 문제다. 일본 정부가 기자와 접촉하지 못하는 상태가 이어지면 본인의 상황도 알 수 없다. 러시아 측이 스파이 혐의를 주장하면 외교 문제로 무거워진다.",
+       me:"해외에서 취재하는 기자나 러시아로 출장 가는 사람에게는 여행 정보 확인이 빠뜨릴 수 없다. 외무성의 해외 안전 정보를 확인하고 싶다.",
+       a:"정부는 사실관계를 부인하고 있으며, 기자의 조기 석방을 외교의 장에서 강하게 요구해야 한다.",
+       b:"구속 이유가 제시되지 않는 가운데 정부가 먼저 부인하는 것만으로는 부족하다. 영사 면회의 실현 등 구체적인 행동을 요구하는 목소리도 있다.",
+       say:"오늘의 숫자는 '0회'. 정부가 구속된 기자와 접촉할 수 있었던 횟수다. 지지통신 보도에 따른다. 지켜볼 것은 영사 면회가 허용될지, 러시아 측이 혐의를 구체적으로 제시할지, 그리고 일본 정부가 다음에 어떤 외교 수단을 취할지다.",
+       src:"아사히신문 · 마이니치신문 · 지지통신 · 재팬타임스(10/15. 총리의 부인은 아사히신문과 마이니치신문과 지지통신, 대사의 발언과 접촉하지 못하고 있다는 점은 지지통신만)"},
+    leak:{kick:"사회·IT · 보도 대조 ✓ 매체 4곳 · 건수는 보도마다 다르다",
+       title:"소스넥스트에서 고객 정보 약 2,251만 건 유출 가능성. 버거킹은 약 1,118만 건, 부정 접속 잇따라",
+       what:"소스넥스트는 고객 정보가 약 2,251만 건 샜을 가능성이 있다고 밝혔다(NHK). 니혼게이자이신문은 2,252만 건이라고 전해, 보도마다 건수가 1건 차이 난다. 비밀번호 등이 포함됐다는 보도도 있다. 버거킹은 앱 회원 정보 약 1,118만 건이 샜다고 발표했다(NHK, 아사히신문). 로손 사장은 부정 접속에 따른 개인정보 유출을 사과했다(NHK). 산부인과 등이 쓰는 시스템에도 부정 접속이 있었고, 최대 800개 기관에 영향을 줄 가능성이 있다(아사히신문). NHK는 환자 정보가 샜을 우려가 있다고 전했다. NHK는 별도로, 잇따른 부정 접속에 'AI 에이전트'가 쓰인 증거가 발견됐다고 보도했지만 자세한 수법은 확인되지 않았다. JR규슈는 부정 접속에 따른 개인정보 유출은 확인되지 않았다고 발표했다(NHK). 교토은행은 면허증 이미지 유출을 계기로 앱 계좌 개설의 확인 방법을 바꿨다(아사히신문).",
+       why:"샌 정보는 사칭이나 사기에 쓰일 우려가 있다. 같은 비밀번호를 여러 서비스에서 쓰고 있으면 피해가 커진다. 기업마다 대응에 차이가 있어 통지를 기다리기만 하면 늦을 수 있다.",
+       me:"해당 서비스를 쓰는 사람은 각 사의 공식 공지로 자신의 정보가 포함됐는지 확인하고 싶다. 비밀번호는 바꾸고, 돌려쓰기를 그만둔다. 모르는 상대의 전화나 메일에는 기억에 없는 청구를 포함해 주의한다.",
+       a:"기업은 피해 규모와 원인을 서둘러 공표하고 본인에게 통지할 책임이 있다.",
+       b:"짧은 기간에 사건이 겹치는 것은 공격 수법이 고도화된 면도 있다. 개별 기업만이 아니라 업계 전체가 방어를 단단히 할 필요가 있다.",
+       say:"오늘의 숫자는 '2,251만 건'. 소스넥스트에서 샜을 가능성이 있는 고객 정보의 건수다. 지켜볼 것은 유출된 정보의 내용과 원인이 공표될지, 피해가 실제로 나올지, 그리고 'AI 에이전트'를 쓴 수법의 내용이 밝혀질지다.",
+       src:"NHK · 아사히신문 · 니혼게이자이신문 · 마이니치신문(10/15. 소스넥스트의 건수는 NHK와 니혼게이자이신문이 1건 차이, 버거킹은 NHK와 아사히신문, AI 에이전트는 NHK만)"},
+    toshiba:{kick:"사회·법 · 보도 대조 ✓ 매체 3곳 · 판결 이유의 상세는 미확인",
+       title:"도시바 패소 확정, 부정 회계 둘러싸고 전 경영진의 책임 인정 안 해",
+       what:"최고재판소는 15일 도시바의 부정 회계 문제를 둘러싼 재판에서 회사 측의 패소를 확정했다(NHK, 아사히신문, 지지통신). 아사히신문과 지지통신은 전 경영진의 책임은 인정되지 않았다고 전했다. 지지통신은 역전 패소라고 보도했다. 판결 이유의 자세한 내용은 본지가 모은 범위에서는 확인하지 못했다.",
+       why:"기업의 부정 회계에서 회사와 전 경영진 중 어느 쪽이 배상 책임을 지는지를 최고재판소가 보여 준 셈이다. 경영진 책임의 범위를 생각하는 재료가 된다.",
+       me:"주주로서 기업에 투자하는 사람에게는 부정이 일어났을 때 책임을 지는 방식을 아는 단서가 된다.",
+       a:"",
+       b:"",
+       say:"오늘의 숫자는 '최고재판소'. 지켜볼 것은 판결 이유에서 경영진의 책임을 어디까지 한정했는지다.",
+       src:"NHK · 아사히신문 · 지지통신(10/15)"},
+    recall:{kick:"사회·소비 · 보도 대조 ✓ 매체 3곳 · 대상 모델 번호는 공식 발표에서 확인",
+       title:"파나소닉, 드럼식 세탁건조기 64만 대 리콜",
+       what:"파나소닉은 드럼식 세탁건조기에 발화 우려가 있다며 일본과 대만에서 합계 64만 대를 리콜한다(NHK, 아사히신문, 지지통신). 대상 모델 번호나 무상 대응의 내용은 본지가 모은 범위에서는 확인하지 못했다.",
+       why:"의류 건조기에서 발화가 일어나면 화재로 이어질 우려가 있다. 리콜은 피해를 막기 위한 이른 대응이다.",
+       me:"대상 기종을 쓰는 사람은 파나소닉의 공식 공지에서 모델 번호를 확인하고, 안내에 따라 사용을 자제하고 싶다.",
+       a:"",
+       b:"",
+       say:"오늘의 숫자는 '64만 대'. 지켜볼 것은 대상 모델 번호와 대응 방법의 공표다.",
+       src:"NHK · 아사히신문 · 지지통신(10/15)"},
+    oda:{kick:"스포츠 · 보도 대조 ✓ 매체 4곳 · 계약 내용은 미확인",
+       title:"요코하마고 오다 쇼키, 프로야구 거치지 않고 미국 메이저리그 도전 표명",
+       what:"요코하마고교의 오다 쇼키 투수가 15일 미국 메이저리그 도전을 표명했다(NHK, 아사히신문, 마이니치신문, 지지통신). 최고 시속 157킬로미터의 우완으로, 드래프트 1순위 후보로 꼽혔다(마이니치신문). 드래프트 전의 표명이어서 이례적이다(마이니치신문). 오다 투수는 '세계 최고의 투수가 되겠다'고 말했다(지지통신). 계약처나 계약 내용은 본지가 모은 범위에서는 확인하지 못했다.",
+       why:"유망한 고교생이 국내 프로야구를 거치지 않고 해외로 향하는 흐름이 이어지면 일본 야구계에는 인재 유출에 대한 위기감이 생긴다(아사히신문).",
+       me:"야구를 보는 사람에게는 드래프트 회의의 주목 선수가 한 명 줄어드는 셈이다.",
+       a:"",
+       b:"",
+       say:"오늘의 숫자는 '157킬로'. 지켜볼 것은 계약처의 발표와 국내 구단의 대응이다.",
+       src:"NHK · 아사히신문 · 마이니치신문 · 지지통신(10/15)"},
+    typhoon:{kick:"날씨·방재 · 보도 대조 ✓ 매체 2곳 · 진로는 기상청의 최신 정보로 확인",
+       title:"태풍 30호 발생, 앞으로 '매우 강한' 세력으로 발달",
+       what:"태풍 30호가 발생했다(NHK, tenki.jp). 연간 발생 수가 30개에 이르는 것은 2013년 이후 처음이다(NHK). tenki.jp는 앞으로 '매우 강한' 세력으로 발달해 일본에 영향을 줄 가능성이 있다고 전했다. 진로 예보는 바뀔 수 있어 본지가 모은 범위에서는 상세를 확인하지 못했다.",
+       why:"가을 태풍은 큰비나 높은 파도로 피해를 낼 수 있다. 이른 단계의 정보가 대비할 시간을 만든다.",
+       me:"여행이나 출장 일정이 있는 사람은 기상청의 최신 진로 예보를 확인하고 싶다.",
+       a:"",
+       b:"",
+       say:"오늘의 숫자는 '30개'. 지켜볼 것은 진로 예보와 일본 접근 시기다.",
+       src:"NHK · tenki.jp(10/15)"},
+    dodgers:{kick:"스포츠 · 보도 대조 ✓ 매체 2곳 · 경기의 자세한 내용은 미확인",
+       title:"다저스 3연패, 오타니 쇼헤이는 1안타 NLCS",
+       what:"미국 메이저리그 내셔널리그 챔피언십 시리즈(NLCS)에서 다저스가 3연패했다(지지통신). 오타니 쇼헤이 선수는 1안타였다(지지통신). 재팬타임스는 브루어스가 막판 홈런으로 다저스를 몰아붙였다고 전했다. 다음 경기의 일정과 선발은 본지가 모은 범위에서는 확인하지 못했다.",
+       why:"시리즈는 먼저 4승을 거둔 팀이 올라간다. 3연패로 다저스는 한 번도 질 수 없는 상황에 놓였다.",
+       me:"경기는 일본 시간으로 아침이나 낮이 된다. 결과는 구단 발표나 뉴스로 확인하고 싶다.",
+       a:"",
+       b:"",
+       say:"오늘의 숫자는 '3연패'. 지켜볼 것은 다음 경기의 선발과 오타니의 타격이다.",
+       src:"지지통신 · 재팬타임스(10/15)"}
+  };
+  const G = {
+    "닛케이평균":{f:"시장",d:"도쿄증권거래소에 상장된 대표적인 225개 종목의 주가 평균. 일본 주가의 기준.",w:"15일은 6만 4,425.95엔에 마감해 4.9% 내렸다."},
+    "소비자물가지수":{f:"경제",d:"소비자가 사는 물건과 서비스의 가격 변화를 나타내는 지표. 물가 움직임을 보는 기본 수치.",w:"미국 지수가 예상을 웃돌았다."},
+    "금리 인상 관측":{f:"시장",d:"중앙은행이 정책금리를 올리지 않을까 하는 시장의 시각. 강해지면 주식이 팔리기 쉽다.",w:"미국 물가 상회로 재연됐다."},
+    "나스닥":{f:"시장",d:"미국의 신흥 기업과 IT 기업이 많이 상장된 주식 시장. 그 종합지수.",w:"14일에 511포인트 내렸다."},
+    "생산자물가":{f:"경제",d:"기업끼리 거래하는 물건의 가격 변화. 소비자물가의 선행 지표로 여겨진다.",w:"로이터가 4년 반 만의 큰 폭 상승이라고 전했다."},
+    "코어위브":{f:"산업",d:"AI용 컴퓨팅 설비와 데이터센터를 빌려주는 미국 기업. 차입이 많다는 지적이 있다.",w:"주식과 채권이 내렸다."},
+    "데이터센터":{f:"IT",d:"대량의 컴퓨터를 두고 인터넷이나 AI 서비스를 떠받치는 시설.",w:"AI용 설비에 자금이 모이고 있었다."},
+    "TSMC":{f:"산업",d:"Taiwan Semiconductor Manufacturing Company. 세계 최대의 반도체 위탁 생산 회사. AI용 첨단 반도체를 만든다.",w:"7~9월 순이익이 사상 최고였다."},
+    "심의위원":{f:"금융",d:"일본은행 정책위원회의 위원. 금융정책을 정하는 회의에서 표결한다.",w:"고에다 위원이 강연에서 금리 인상을 언급했다."},
+    "엔 시세":{f:"시장",d:"엔과 다른 통화의 교환 비율. 엔고는 엔의 가치가 오르는 것.",w:"고에다 위원의 발언 등을 계기로 올랐다."},
+    "야나 가즈오":{f:"정치",d:"농림수산상이었던 자민당 중의원 의원. 도치기현 출신.",w:"15일 사표를 제출했다."},
+    "경질":{f:"정치",d:"대신 등을 본인의 의사와 상관없이 그만두게 하는 일. 스스로 그만두는 것은 '사임'.",w:"마이니치신문과 아사히신문이 사실상 경질이라고 전했다."},
+    "임명 책임":{f:"정치",d:"사람을 직책에 고른 쪽이 그 사람의 실패나 불상사에 대해 지는 책임.",w:"야당이 다카이치 총리에게 추궁하고 있다."},
+    "다케베 아라타":{f:"정치",d:"자민당 중의원 의원. 농림수산상에 기용됐다. 각료는 처음.",w:"야나 씨의 후임이 된다."},
+    "농림수산 부대신":{f:"정치",d:"농림수산성에서 대신을 돕는 부대신. 보도에서는 '부농상'으로 줄여 부른다.",w:"다케베 씨의 경험이 평가받았다."},
+    "내각 지지율":{f:"정치",d:"여론조사에서 내각을 지지한다고 답한 사람의 비율.",w:"지지통신 조사에서 42.4%였다."},
+    "고발장":{f:"법률",d:"범죄 혐의가 있다며 수사 기관에 처벌을 요구하는 서면.",w:"대학 교수가 냈다고 지지통신이 전했다."},
+    "조선중앙통신":{f:"미디어",d:"북한의 국영 통신사. 발사 시험 등을 북한의 입장에서 전한다.",w:"잠수함 발사형 순항미사일의 시험발사를 전했다."},
+    "순항미사일":{f:"안보",d:"날개로 날며 낮은 고도로 나아가는 미사일. 탄도미사일처럼 높이 올라갔다 떨어지는 것과는 다르다.",w:"잠수함에서 발사하는 2종을 시험발사했다고 한다."},
+    "신압록강대교":{f:"교통",d:"중국 단둥과 북한 신의주를 잇는 다리. 완공 뒤 10년 넘게 열리지 않았다.",w:"15일 개통했다."},
+    "스파이":{f:"국제",d:"다른 나라의 비밀 정보를 몰래 모으는 사람. 죄를 묻는 경우가 많다.",w:"총리는 활동 사실이 없다고 말했다."},
+    "주일 러시아 대사":{f:"외교",d:"일본에 파견된 외국 대사. 그 나라를 대표해 일본 정부와 교섭한다.",w:"러시아 대사가 일본 측 요구를 거부했다."},
+    "언론인 보호 단체":{f:"국제",d:"언론 종사자의 신변 안전과 자유를 지키기 위해 활동하는 단체.",w:"미국 단체가 러시아에 석방을 요구했다."},
+    "소스넥스트":{f:"산업",d:"소프트웨어 판매와 번역기 등을 다루는 일본 회사.",w:"고객 정보가 약 2,251만 건 샜을 가능성이 있다."},
+    "부정 접속":{f:"IT",d:"타인의 ID나 비밀번호 등을 이용해 권한 없이 컴퓨터에 들어가는 일. 법률로 금지돼 있다.",w:"기업에서 잇따랐다."},
+    "AI 에이전트":{f:"IT",d:"사람의 지시를 받아 스스로 순서를 생각하고 여러 작업을 진행하는 AI의 구조.",w:"부정 접속에 쓰인 증거가 발견됐다고 NHK가 전했다."},
+    "비밀번호":{f:"IT",d:"본인임을 확인하기 위한 암호. 돌려쓰면 피해가 커진다.",w:"유출된 정보에 포함됐다는 보도가 있다."},
+    "최고재판소":{f:"법률",d:"일본 재판소의 최상위. 판결이 확정되면 더는 다툴 수 없다.",w:"검사의 발언과 도시바 재판에서 판단을 내놓았다."},
+    "묵비권":{f:"법률",d:"조사 등에서 말하고 싶지 않은 것은 말하지 않아도 되는 권리. 헌법이 보장한다.",w:"최고재판소는 침해를 인정하지 않았다."},
+    "문헌조사":{f:"에너지",d:"'핵 쓰레기' 처분지 선정의 첫 단계. 자료로 땅의 특징을 조사하며, 파는 조사는 하지 않는다.",w:"히타치오미야시에서 시작됐다."},
+    "핵 쓰레기":{f:"에너지",d:"원전을 쓴 뒤에 나오는, 강한 방사능을 가진 폐기물. 땅속 깊이 묻는 계획이 있다.",w:"처분지 선정 조사가 시작됐다."},
+    "회계검사원":{f:"정치",d:"국가 돈의 쓰임새를 조사하는 독립 기관. 낭비가 있으면 돌려놓으라고 요구한다.",w:"코로나 기금의 쓰이지 않은 돈을 지적했다."},
+    "유류할증료":{f:"경제",d:"항공사가 연료비 상승분을 운임에 얹는 요금.",w:"11월 발권분부터 인상된다."},
+    "전문가 회의":{f:"정치",d:"전문가를 모아 정책의 방향을 논의하는 회의.",w:"경찰청이 설치했다."},
+    "내셔널리그 챔피언십 시리즈":{f:"야구",d:"미국 메이저리그 내셔널리그에서 우승 팀을 가리는 7전제 시리즈. NLCS로 줄여 부른다.",w:"다저스가 3연패했다."},
+    "드래프트":{f:"야구",d:"프로야구가 신인 선수를 구단에 배분하는 회의.",w:"오다 투수는 드래프트 전에 미국 도전을 표명했다."},
+    "리콜":{f:"소비",d:"제품에 문제가 발견됐을 때 제조사가 무상으로 수리나 교환, 회수를 하는 일.",w:"파나소닉이 세탁건조기에서 실시한다."},
+    "태풍":{f:"날씨",d:"북서태평양에서 발생해 최대 풍속이 약 17미터 이상이 된 열대저기압.",w:"30호가 발생했다."},
+    "재팬타임스":{f:"미디어",d:"일본의 영자 신문.",w:"닛케이평균은 '5% 하락'이라고 전했다."},
+    "로이터":{f:"미디어",d:"영국에 본사를 둔 국제 통신사.",w:"미국 물가와 북한의 발사 시험을 전했다."}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>이 기사에서는</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // 팝업(모달) 안이면 그 위에 띄운다
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 용어 카드만 닫고 그 클릭은 소비 — 기사 팝업은 그대로
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">무슨 일</div><p>${a.what}</p>
+      <div class="lab">왜 중요한가</div><p>${a.why}</p>
+      <div class="lab">나에게는</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">두 가지 시선</div><div class="vw"><p><b>이렇게 보는 쪽</b>${a.a||''}</p><p><b>저렇게 보는 쪽</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">데일리드롭 생각</div><div class="say">${a.say}</div>`:''}
+      <div class="src">출처 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="닫기">닫기</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

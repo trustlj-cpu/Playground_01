@@ -1,0 +1,58 @@
+# DailyDrop — 세션 인수인계 (-01 → -02)
+
+## 규칙
+- 작업 브랜치: `paycheck-page` 만. `main`에 push 금지. PR은 요청 시에만.
+- 사장님께는 한국어, 국가는 "한글 풀네임(약어)"로 표기 (사이트 표기는 그대로).
+- API 키는 쓰지 않음 (비용 사유). Claude 세션 운영. run.py는 키 없으면 조용히 skip.
+- 큰 도구 출력(list_triggers, actions_list 등)은 컨텍스트를 키우므로 피한다.
+
+## 공개 20개국 / 비공개 23개국
+- 공개: KR US JP GB DE FR IN AU CA TW BR IT ES NL CH ID VN UA SA IL
+- 비공개(`site/countries.json` `hidden:true`): ZA AT BE IE NZ PT MY PK PE CO PL KE HK EG CL AR AE SG PH MX TH TR NG
+- 비공개국은 빌드·schedule.js·IndexNow·run.py 대상에서 제외, editions.json 기록은 보존.
+
+## 파이프라인 (JSON 방식, 판당 약 12만 토큰)
+`ops/autoed/`: prep.py(압축 SQL) → SPEC.md → check_spec.py → render.py(직전판을 템플릿으로 HTML 생성) → finish.py(검증·등록·빌드·커밋·push).
+finish.py 실행 시 `DD_META_DIR` 환경변수를 현재 세션 경로로 지정(기본값은 옛 scratchpad).
+
+## 번역
+- 번역 데스크 세션: session_01VqETePG6o1uBNtmku4NWm5 (모델 Sonnet 5.5). push 후 `JOB: site/editions/<prefix>/DATE.html -> ko, en, ja`(원문 언어 제외) 전송.
+- 범위: 현재 ko·en·ja. es fr zh-TW it de pt 추가는 사장님 확인 시에만.
+- 사이트 내 번역: `/api/mt` (Workers AI m2m100 + D1 mt_cache). 배포 후 실서버 검증 필요(US 페이지에서 KOR).
+
+## 남은 일
+- 10/16판 미작성: US, CA, BR (발행시각 BR ~09:00Z, US 10:00Z, CA 10:00Z).
+- 번역 범위 결정 대기, 6c12c0d 배포·Workers AI 동작 확인.
+- 24시간 후 주간 한도 사용률로 실제 소모 페이스 확인.
+
+## Cloudflare
+- site Worker: `site/`, feed D1 `dailydrop-feed` 0f239386-f7cf-42ed-838d-46eb896bea87, users D1 `dailydrop-users` f3291f00-21f6-4f8a-b1bc-0e25b6ab1767
+- 현황 대시보드 아티팩트: https://claude.ai/artifact/9pbanJUeWnpqNQeGu6ZymL
+
+## 토큰 절감 방안
+### 적용 완료
+1. 공개 43→20개국 (판 수 약 53% 감소; 일정·IndexNow·자동작성 제외)
+2. JSON 파이프라인(prep/spec/render) 도입 — 오늘 아침 대비 약 81% 절감 예상
+3. 번역 언어 축소(ko·en·ja 우선), 번역 데스크 Sonnet 5.5
+4. 사이트 내 번역을 Workers AI로 이전 (토큰 0)
+5. API 키 미사용(비용), Claude 세션 운영 유지
+6. 새 세션(-02)로 이전 — 컨텍스트 축소
+7. 매시 점검 24→8회/일, 이상 없으면 무보고
+### 하면 좋은 것
+- 지역 트리거를 묶어 중복 컨텍스트 로딩 줄이기
+- 번역은 기사 단위 변경분만, es/fr/zh-TW/it/de/pt는 접속 데이터 보고 결정
+- 접속 낮은 공개국은 격일/요약판 검토
+- 본문 분량(리드 단어수) 소폭 축소
+- 대용량 도구 출력 금지, 필요한 필드만 조회
+- 주간 한도 % 매일 확인해 페이스 조절
+
+## 팝업 분량 (2026-10-17 사장님 지적)
+- 10/16(12호) 미국·캐나다·브라질과 10/17(13호) 전 나라 팝업이 한 줄짜리로 얇게 나온 적이 있다(팝업 하나 what+why+me+say 평균 150~360자, 예전 판은 600~1,300자). 지시문의 "1~2문장"을 한 문장 이하로 해석한 에이전트 편차가 원인이고 check_spec 이 길이를 보지 않았다.
+- 이제 check_spec.py 가 팝업당 합계 하한(라틴 520자 / 한중일 320자)을 막는다. SPEC.md 에도 "what 4~5문장, why·me·say 각 2문장, 구호·상투문 금지"를 명시했다. 에이전트 지시문에 "aim for SPEC length targets" 만 쓰지 말고 popup 분량(라틴 약 800자, 한중일 약 450자)을 같이 적을 것.
+- 팝업을 고쳐 다시 올릴 때: spec 의 popups 만 고치고 finish.py 를 다시 돌리면 되지만, 번역본(.ko/.en/.ja)의 팝업이 옛 길이로 남으므로 번역 데스크에 JOB 을 다시 보내야 한다.
+
+## 시세 종가 기준 (2026-10-17 사장님 결정)
+피드(D1 quotes)에서 state=CLOSED 이고 ts 가 장 마감 이후인 종가는 단일 출처여도 ears·markets 에 쓴다(기사 2곳 확인 규칙은 기사에만 적용). 해당 지표 행이 피드에 없을 때만 "—".
+
+## 보고 규칙 (2026-10-17 사장님)
+사장님이 "관리자 화면"·트래픽·회원 현황을 달라고 하면 사이트 관리자 화면(/api/admin/stats)과 같은 건수 통계를 **아티팩트로** 보고한다(이메일 등 개인 식별 정보는 넣지 않는다). 기존 아티팩트 "데일리드롭 트래픽 현황"(https://claude.ai/artifact/61rJtVhbTyc8naCPK1oG8U)을 갱신해서 쓴다.

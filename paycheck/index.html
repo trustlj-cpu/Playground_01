@@ -1,0 +1,404 @@
+<title>월급 실수령 계산기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 급여명세서 한 장 — 왼쪽 입력, 오른쪽 명세표. 폰에서는 세로로 쌓임. */
+:root{
+  --bg:#f6f4ee; --paper:#fffdf8; --fg:#1f2a2e; --muted:#6b7478; --line:#d9d4c7;
+  --accent:#1f6f5b; --accent-ink:#ffffff; --deduct:#a24a2a; --soft:#eef3ef;
+  --sans:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171b1c; --paper:#1f2426; --fg:#ece8df; --muted:#9aa3a6; --line:#343b3e;
+  --accent:#5fbf9f; --accent-ink:#0f1a16; --deduct:#e08a68; --soft:#243029; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171b1c; --paper:#1f2426; --fg:#ece8df; --muted:#9aa3a6; --line:#343b3e;
+  --accent:#5fbf9f; --accent-ink:#0f1a16; --deduct:#e08a68; --soft:#243029; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;padding-block:28px;padding-inline:16px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:22px}
+header h1{font-size:clamp(24px,4vw,34px);margin:0 0 6px;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:62ch}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:transparent;color:var(--fg);padding:8px 14px;border-radius:999px;font:inherit;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px;min-width:0}
+.panel h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:600}
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field label{font-size:13px;color:var(--muted)}
+.field input,.field select{font:inherit;font-family:var(--mono);font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);width:100%}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+details{border-top:1px dashed var(--line);padding-top:12px;margin-top:6px}
+summary{cursor:pointer;color:var(--muted);font-size:13px}
+.rates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.rates .field{margin:0}
+.net{display:grid;gap:4px;padding:18px;border-radius:10px;background:var(--soft);margin-bottom:16px}
+.net .k{font-size:13px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.net .v{font-family:var(--mono);font-size:clamp(28px,5vw,40px);font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent)}
+.net .s{font-size:13px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:9px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+td:last-child,th:last-child{text-align:right;font-family:var(--mono);white-space:nowrap}
+tr.sum td{font-weight:600;border-bottom:2px solid var(--fg)}
+td .sub{display:block;font-size:12px;color:var(--muted)}
+.deduct td:last-child{color:var(--deduct)}
+.note{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.5}
+.btn{font:inherit;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar .ok{font-size:13px;color:var(--accent)}
+pre.tpl{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px;overflow:auto;font-family:var(--mono);font-size:13px;line-height:1.5;max-height:70vh;white-space:pre-wrap;margin:0}
+.steps{margin:0 0 14px;padding-left:18px;color:var(--muted)}
+.steps li{margin-bottom:4px}
+footer{color:var(--muted);font-size:12.5px}
+@media (prefers-reduced-motion:no-preference){.tab,.btn{transition:background .15s,color .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>월급 실수령 계산기</h1>
+    <p>연봉이나 월급을 넣으면 4대보험·소득세를 빼고 통장에 들어오는 금액을 바로 보여줍니다. 요율은 2026년 기준 추정값이며 직접 고칠 수 있습니다.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-calc" aria-selected="true" aria-controls="view-calc">실수령 계산기</button>
+    <button class="tab" role="tab" id="tab-tpl" aria-selected="false" aria-controls="view-tpl">노션 가계부 템플릿</button>
+    <button class="tab" role="tab" id="tab-fl" aria-selected="false" aria-controls="view-fl">프리랜서 의뢰·견적 템플릿</button>
+    <button class="tab" role="tab" id="tab-shop" aria-selected="false" aria-controls="view-shop">판매 등록 문구</button>
+  </div>
+
+  <section id="view-calc" role="tabpanel" aria-labelledby="tab-calc">
+    <div class="grid">
+      <div class="panel">
+        <h2>입력</h2>
+        <div class="field">
+          <label for="mode">입력 기준</label>
+          <select id="mode">
+            <option value="year">연봉 (세전)</option>
+            <option value="month">월급 (세전)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pay" id="payLabel">연봉 (원)</label>
+          <input id="pay" type="text" inputmode="numeric" value="42,000,000">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="nontax">비과세 (월, 원) <span class="sub">식대 등</span></label>
+            <input id="nontax" type="text" inputmode="numeric" value="200,000">
+          </div>
+          <div class="field">
+            <label for="deps">부양가족 수 (본인 포함)</label>
+            <input id="deps" type="number" min="1" max="11" value="1">
+          </div>
+        </div>
+        <details>
+          <summary>요율 직접 수정 (2026년 추정값)</summary>
+          <div class="rates">
+            <div class="field"><label for="rPension">국민연금 %</label><input id="rPension" type="number" step="0.01" value="4.75"></div>
+            <div class="field"><label for="rHealth">건강보험 %</label><input id="rHealth" type="number" step="0.001" value="3.595"></div>
+            <div class="field"><label for="rCare">장기요양 (건보료의 %)</label><input id="rCare" type="number" step="0.01" value="13.14"></div>
+            <div class="field"><label for="rEmp">고용보험 %</label><input id="rEmp" type="number" step="0.01" value="0.9"></div>
+            <div class="field"><label for="capPension">국민연금 상한 (월소득, 원)</label><input id="capPension" type="text" inputmode="numeric" value="6,590,000"></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="panel">
+        <h2>급여명세 (월 기준)</h2>
+        <div class="net">
+          <span class="k">실수령액</span>
+          <span class="v" id="net">—</span>
+          <span class="s" id="netSub"></span>
+        </div>
+        <table>
+          <tbody id="rows"></tbody>
+        </table>
+        <p class="note">소득세는 연간 근로소득공제·기본공제·표준세액공제·근로소득세액공제를 적용해 산출한 뒤 12로 나눈 근사치입니다. 회사의 간이세액표 적용 방식, 자녀·연금저축 등 추가 공제에 따라 실제와 월 1~3만원 정도 차이가 날 수 있습니다. 연말정산에서 정산됩니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-tpl" role="tabpanel" aria-labelledby="tab-tpl" hidden>
+    <div class="panel">
+      <h2>노션 가계부 템플릿 — 붙여넣기용</h2>
+      <ol class="steps">
+        <li>아래 「복사」를 누릅니다.</li>
+        <li>노션에서 새 페이지를 만들고 빈 곳에 붙여넣기(Ctrl/⌘+V)합니다. 제목·표·체크박스가 그대로 블록으로 들어옵니다.</li>
+        <li>표의 「예산」 칸만 본인 숫자로 바꾸면 끝. 매달 페이지를 복제해서 씁니다.</li>
+      </ol>
+      <div class="toolbar">
+        <button class="btn primary" id="copyTpl">템플릿 복사</button>
+        <span class="ok" id="copyMsg"></span>
+      </div>
+      <pre class="tpl" id="tplText"># 📒 월간 가계부 — 2026년 10월
+
+> 이번 달 한 줄 목표: 식비 45만원 안으로.
+
+## 1. 이번 달 요약
+| 항목 | 금액 |
+|---|---|
+| 실수령액 | 3,000,000 |
+| 고정지출 합계 | 1,350,000 |
+| 변동지출 예산 | 1,000,000 |
+| 저축·투자 목표 | 650,000 |
+| 남는 돈 (실수령 − 고정 − 변동 − 저축) | 0 |
+
+## 2. 고정지출 (매달 똑같이 나가는 돈)
+| 항목 | 예산 | 실제 | 결제일 | 완료 |
+|---|---|---|---|---|
+| 월세 / 관리비 | 650,000 | | 25일 | ☐ |
+| 통신비 | 55,000 | | 10일 | ☐ |
+| 교통 (정기권) | 62,000 | | 1일 | ☐ |
+| 구독 (OTT·음악·클라우드) | 33,000 | | 15일 | ☐ |
+| 보험료 | 120,000 | | 5일 | ☐ |
+| 학자금·대출 상환 | 300,000 | | 20일 | ☐ |
+| 부모님·용돈 | 130,000 | | 말일 | ☐ |
+
+## 3. 변동지출 (예산 안에서 쓰는 돈)
+| 분류 | 예산 | 1주 | 2주 | 3주 | 4주 | 합계 | 남은 예산 |
+|---|---|---|---|---|---|---|---|
+| 식비·장보기 | 450,000 | | | | | | |
+| 외식·카페 | 150,000 | | | | | | |
+| 생활용품 | 80,000 | | | | | | |
+| 의류·미용 | 100,000 | | | | | | |
+| 문화·여가 | 100,000 | | | | | | |
+| 의료·건강 | 50,000 | | | | | | |
+| 경조사·선물 | 70,000 | | | | | | |
+
+## 4. 저축·투자
+| 항목 | 목표 | 실제 | 이체일 | 완료 |
+|---|---|---|---|---|
+| 비상금 (목표: 실수령 3개월치) | 300,000 | | 월급날 | ☐ |
+| 적금 | 200,000 | | 월급날 | ☐ |
+| 연금저축 / IRP | 150,000 | | 월급날 | ☐ |
+
+## 5. 지출 기록 (매일 1분)
+| 날짜 | 내용 | 분류 | 금액 | 결제수단 | 메모 |
+|---|---|---|---|---|---|
+| 10/1 | 점심 김치찌개 | 식비 | 9,000 | 체크카드 | |
+| 10/1 | 지하철 | 교통 | 1,550 | 교통카드 | 정기권 외 |
+| | | | | | |
+
+## 6. 월말 점검
+- [ ] 변동지출 중 예산 넘긴 분류: ______ (넘긴 금액: ______)
+- [ ] 다음 달 줄일 것 1개: ______
+- [ ] 저축 목표 달성 여부: ☐ 달성 / ☐ 미달 (차액: ______)
+- [ ] 비상금 잔액: ______ / 목표 ______
+- [ ] 이번 달 가장 잘한 소비: ______
+
+---
+사용법: 매달 1일에 이 페이지를 「복제」 → 제목의 월만 바꾸기 → 2번 표 예산은 그대로, 3번 표 예산만 지난달 실제를 보고 조정.
+</pre>
+    </div>
+  </section>
+
+  <section id="view-fl" role="tabpanel" aria-labelledby="tab-fl" hidden>
+    <div class="panel">
+      <h2>프리랜서 의뢰 접수·견적·납기 관리 템플릿 — 붙여넣기용</h2>
+      <ol class="steps">
+        <li>「복사」 후 노션 새 페이지에 붙여넣기. 의뢰 1건당 페이지 하나를 복제해서 씁니다.</li>
+        <li>견적표의 단가만 본인 기준으로 바꾸면 합계는 노션 표 「계산」 열(Sum)로 자동.</li>
+        <li>「범위 확인 답장」은 고객 채팅에 그대로 복붙. 추가 요청이 왔을 때 분쟁을 막아줍니다.</li>
+      </ol>
+      <div class="toolbar">
+        <button class="btn primary" id="copyFl">템플릿 복사</button>
+        <span class="ok" id="copyFlMsg"></span>
+      </div>
+      <pre class="tpl" id="flText"># 📂 의뢰 #2026-10-001 — (고객명) (작업명)
+
+**상태:** 🟡 접수 → ☐ 범위 확인 → ☐ 작업 중 → ☐ 검수 → ☐ 완료 → ☐ 입금 확인
+**접수일:** 2026-10-06  **희망 납기:** 2026-10-13  **확정 납기:** ______
+
+## 1. 의뢰서 (고객에게 받을 것)
+| 항목 | 내용 |
+|---|---|
+| 고객명 / 연락처 | |
+| 작업 종류 | (예: 상세페이지 디자인 / 블로그 글 / 엑셀 자동화 / 번역) |
+| 결과물 수량·형식 | (예: PNG 3장, 1080×1350 / 2,000자 글 2편 / xlsx 1개) |
+| 희망 납기 | |
+| 제공 자료 | (로고, 원고, 참고 링크 — 받은 날짜 적기) |
+| 수정 범위 | 기본 2회, 추가 1회당 ______원 |
+| 사용 범위 | (예: 온라인 광고만 / 인쇄 포함 / 2차 가공 가능 여부) |
+| 특이사항 | |
+
+## 2. 견적표
+| 항목 | 수량 | 단가 | 금액 |
+|---|---|---|---|
+| 기본 작업 | 1 | 150,000 | 150,000 |
+| 추가 컷/편 | 2 | 50,000 | 100,000 |
+| 긴급 납기 (3일 이내) | 0 | 50,000 | 0 |
+| 원본 파일 제공 | 1 | 30,000 | 30,000 |
+| **합계 (VAT 별도)** | | | **280,000** |
+
+- 계약금 50% 입금 후 착수, 잔금은 최종본 전달 전 입금
+- 견적 유효기간: 발행일로부터 7일
+
+## 3. 진행 상태표
+| 단계 | 예정일 | 완료일 | 메모 |
+|---|---|---|---|
+| 접수 | 10/06 | | |
+| 범위 확인·계약금 | 10/07 | | |
+| 1차 시안 | 10/10 | | |
+| 수정 1회 | 10/11 | | |
+| 수정 2회 | 10/12 | | |
+| 최종 납품 | 10/13 | | |
+| 잔금 확인 | 10/13 | | |
+
+## 4. 고객 답장 문구 (복붙용)
+**범위 확인**
+> 요청하신 [작업명]은 결과물 [수량·형식], 납기 [날짜], 수정 [2회] 기준으로 진행합니다. 견적은 [금액]원(VAT 별도)이며, 계약금 50% 입금 확인 후 착수합니다. 위 범위를 벗어나는 추가 요청은 비용과 일정을 먼저 협의한 뒤 진행하겠습니다. 확인해 주시면 바로 시작하겠습니다.
+
+**추가 요청 대응**
+> 말씀하신 [추가 내용]은 처음 확정한 범위([원래 범위])에 포함되지 않은 작업이라, 추가 비용 [금액]원과 납기 [N]일 연장이 필요합니다. 진행 여부 알려 주시면 반영하겠습니다.
+
+**납품**
+> [작업명] 최종본 전달드립니다. 파일: [링크/첨부]. 잔금 [금액]원은 [계좌]로 부탁드립니다. 납품 후 7일 이내 발견되는 단순 오탈자·오류는 무상으로 수정해 드립니다. 감사합니다.
+
+## 5. 마감 체크
+- [ ] 최종 파일 백업 (클라우드 + 로컬)
+- [ ] 세금계산서 / 현금영수증 발행
+- [ ] 포트폴리오 사용 동의 받음
+- [ ] 리뷰 요청 메시지 발송
+</pre>
+    </div>
+  </section>
+
+  <section id="view-shop" role="tabpanel" aria-labelledby="tab-shop" hidden>
+    <div class="panel">
+      <h2>크몽 · 스마트스토어 등록 문구 초안</h2>
+      <div class="toolbar">
+        <button class="btn primary" id="copyShop">문구 복사</button>
+        <span class="ok" id="copyShopMsg"></span>
+      </div>
+      <pre class="tpl" id="shopText">■ 상품명 (3안, 30자 이내)
+1) 월급 실수령 계산기 + 노션 가계부 세트
+2) 사회초년생 월급관리 패키지 (계산기+가계부)
+3) 프리랜서 의뢰·견적·가계부 노션 템플릿 3종
+
+■ 한 줄 소개
+연봉 넣으면 실수령액이 바로 나오는 계산기와, 붙여넣기만 하면 완성되는 노션 가계부·의뢰 관리 템플릿을 한 번에.
+
+■ 상세 설명 (약 300자)
+첫 월급을 받고 "왜 이것밖에 안 들어왔지?"라고 생각해 본 적 있다면 이 세트가 맞습니다. ① 실수령 계산기: 연봉이나 월급을 넣으면 국민연금·건강보험·고용보험·소득세를 항목별로 보여주고, 요율이 바뀌어도 직접 고쳐 쓸 수 있습니다. ② 노션 가계부: 고정지출·변동지출·저축을 한 페이지에서 관리, 매달 복제해서 씁니다. ③ 프리랜서 의뢰 관리 템플릿: 의뢰서·견적표·진행표·고객 답장 문구까지 포함해 부업 수입 관리도 한 번에. 구매 즉시 링크와 파일을 드리며, 노션 무료 플랜에서 바로 작동합니다.
+
+■ 가격 제안
+· 세트 9,900원 (근거: 크몽 노션 템플릿 평균 5천~1.5만원대, 3종 묶음이라 1만원 아래 심리가격)
+· 가계부 단품 4,900원 / 프리랜서 템플릿 단품 6,900원
+· 첫 2주 런칭가 6,900원 → 리뷰 10개 모이면 정가
+
+■ 검색 태그 (10개)
+노션템플릿, 가계부, 월급계산기, 실수령액, 사회초년생, 자취생, 프리랜서, 견적서, 재테크, 돈관리
+
+■ 구매자에게 전달할 것
+1. 이 웹페이지 링크 (공개 전환 후)
+2. 템플릿 3종 텍스트 파일 (.md) — 페이지 각 탭의 「복사」 내용과 동일
+3. 사용법 한 장: 각 탭 상단의 1·2·3 단계를 그대로 캡처
+</pre>
+    </div>
+  </section>
+
+  <footer>요율 출처: 국민연금·건강보험·고용보험 2026년 고시 기준 추정. 세법 개정 시 「요율 직접 수정」에서 바꿔 쓰세요. 이 페이지는 참고용이며 법적 효력이 없습니다.</footer>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const won=n=>Math.round(n).toLocaleString('ko-KR')+'원';
+  const num=s=>Number(String(s).replace(/[^\d.-]/g,''))||0;
+
+  // 숫자 입력칸: 콤마 자동
+  ['pay','nontax','capPension'].forEach(id=>{
+    const el=$(id);
+    el.addEventListener('input',()=>{const v=num(el.value);el.value=v?v.toLocaleString('ko-KR'):'';calc();});
+  });
+  ['mode','deps','rPension','rHealth','rCare','rEmp'].forEach(id=>$(id).addEventListener('input',calc));
+  $('mode').addEventListener('change',()=>{ $('payLabel').textContent=$('mode').value==='year'?'연봉 (원)':'월급 (원)'; calc(); });
+
+  // 근로소득공제 (연, 원)
+  function earnedIncomeDeduction(g){
+    if(g<=5e6) return g*0.7;
+    if(g<=15e6) return 3.5e6+(g-5e6)*0.4;
+    if(g<=45e6) return 7.5e6+(g-15e6)*0.15;
+    if(g<=100e6) return 12e6+(g-45e6)*0.05;
+    return Math.min(14.75e6+(g-100e6)*0.02, 20e6);
+  }
+  // 종합소득세 기본세율 (2026)
+  function incomeTax(base){
+    const br=[[14e6,.06,0],[50e6,.15,1.26e6],[88e6,.24,5.76e6],[150e6,.35,15.44e6],[300e6,.38,19.94e6],[500e6,.40,25.94e6],[1000e6,.42,35.94e6],[Infinity,.45,65.94e6]];
+    for(const [lim,r,d] of br){ if(base<=lim) return Math.max(0,base*r-d); }
+    return 0;
+  }
+  // 근로소득세액공제
+  function earnedIncomeTaxCredit(tax,gross){
+    let c = tax<=1.3e6 ? tax*0.55 : 715000+(tax-1.3e6)*0.3;
+    let cap = gross<=33e6 ? 740000 : gross<=70e6 ? Math.max(660000, 740000-(gross-33e6)*0.008) : gross<=120e6 ? Math.max(500000, 660000-(gross-70e6)/2) : Math.max(200000, 500000-(gross-120e6)/2);
+    return Math.min(c,cap);
+  }
+
+  function calc(){
+    const mode=$('mode').value;
+    const pay=num($('pay').value);
+    const nontaxM=num($('nontax').value);
+    const deps=Math.max(1,Math.min(11,num($('deps').value)||1));
+    const grossM = mode==='year'? pay/12 : pay;           // 월 총급여(비과세 포함)
+    const taxableM = Math.max(0, grossM - nontaxM);         // 월 과세 급여
+    const rP=num($('rPension').value)/100, rH=num($('rHealth').value)/100, rC=num($('rCare').value)/100, rE=num($('rEmp').value)/100;
+    const cap=num($('capPension').value);
+    const pensionBase=Math.min(taxableM, cap||Infinity);
+    const pension=Math.floor(pensionBase*rP/10)*10;
+    const health=Math.floor(taxableM*rH/10)*10;
+    const care=Math.floor(health*rC/10)*10;
+    const emp=Math.floor(taxableM*rE/10)*10;
+    const insM=pension+health+care+emp;
+
+    // 소득세: 연 환산 근사
+    const grossY=taxableM*12;
+    const base=Math.max(0, grossY - earnedIncomeDeduction(grossY) - deps*1.5e6 - insM*12);
+    let tax=incomeTax(base);
+    tax=Math.max(0, tax - earnedIncomeTaxCredit(tax,grossY) - 130000);
+    const incomeM=Math.floor(tax/12/10)*10;
+    const localM=Math.floor(incomeM*0.1/10)*10;
+    const dedM=insM+incomeM+localM;
+    const net=grossM-dedM;
+
+    $('net').textContent=won(net);
+    $('netSub').textContent=`세전 ${won(grossM)} · 공제 합계 ${won(dedM)} (${grossM?Math.round(dedM/grossM*1000)/10:0}%) · 연 실수령 약 ${won(net*12)}`;
+    const rows=[
+      ['세전 월급', grossM, `비과세 ${won(nontaxM)} 포함`],
+      ['국민연금', -pension, `과세급여 × ${(rP*100).toFixed(2)}%${pensionBase<taxableM?' (상한 적용)':''}`,'d'],
+      ['건강보험', -health, `과세급여 × ${(rH*100).toFixed(3)}%`,'d'],
+      ['장기요양보험', -care, `건강보험료 × ${(rC*100).toFixed(2)}%`,'d'],
+      ['고용보험', -emp, `과세급여 × ${(rE*100).toFixed(2)}%`,'d'],
+      ['소득세', -incomeM, `연 과세표준 ${won(base)} 기준 근사`,'d'],
+      ['지방소득세', -localM, `소득세 × 10%`,'d'],
+    ];
+    $('rows').innerHTML = rows.map(([k,v,s,d])=>`<tr class="${d?'deduct':''}"><td>${k}<span class="sub">${s}</span></td><td>${v<0?'− ':''}${won(Math.abs(v))}</td></tr>`).join('')
+      + `<tr class="sum"><td>실수령액</td><td>${won(net)}</td></tr>`;
+  }
+
+  // 탭
+  const tabs=[['tab-calc','view-calc'],['tab-tpl','view-tpl'],['tab-fl','view-fl'],['tab-shop','view-shop']];
+  tabs.forEach(([t,v])=>$(t).addEventListener('click',()=>{
+    tabs.forEach(([t2,v2])=>{ $(t2).setAttribute('aria-selected',t2===t); $(v2).hidden=(v2!==v); });
+    try{localStorage.setItem('tab',t)}catch(e){}
+  }));
+  try{ const t=localStorage.getItem('tab'); if(t&&t!=='tab-calc'&&$(t)) $(t).click(); }catch(e){}
+
+  // 템플릿 복사 (버튼, 원본, 메시지)
+  [['copyTpl','tplText','copyMsg'],['copyFl','flText','copyFlMsg'],['copyShop','shopText','copyShopMsg']].forEach(([b,src,msg])=>{
+    $(b).addEventListener('click',()=>{
+      const txt=$(src).textContent;
+      const done=()=>{$(msg).textContent='복사됨 — 노션/상품 등록창에 붙여넣으세요.'; setTimeout(()=>$(msg).textContent='',4000);};
+      const fallback=()=>{ const r=document.createRange(); r.selectNodeContents($(src)); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $(msg).textContent='텍스트를 선택했어요. Ctrl/⌘+C로 복사하세요.'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,fallback); } else fallback();
+    });
+  });
+
+  calc();
+})();
+</script>

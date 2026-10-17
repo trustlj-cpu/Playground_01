@@ -1,0 +1,7 @@
+import { tokenList, clusterItems } from '/home/user/Playground_01/feed/worker/src/cluster.js';
+const P=[["L’exécution en direct annoncée aux États-Unis de l’auteur d’une tuerie sur une base militaire serait une forme de «torture», dénonce l’ONU","États-Unis : SpaceX poursuit sa route vers la création d'un réseau de téléphonie mobile, les opérateurs histor - Boursorama","fr","fr"],
+["L'ouragan «Isaias» se renforce et menace le sud des États-Unis - Journal de Québec","États-Unis : SpaceX poursuit sa route vers la création d'un réseau de téléphonie mobile, les opérateurs histor - Boursorama","fr","fr"],
+["16GB रैम के साथ लॉन्च होगा iQOO Neo 12? गीकबेंच पर हुआ लिस्ट - India TV Hindi","Oppo Find X10 Pro Max ग्लोबल लॉन्च 21 अक्टूबर के लिए कंफर्म, 200MP तीन कैमरा, 8,000mAh बैटरी! - Gadgets 360 Hindi","hi","hi"],
+["Simon es huracán de categoría 1; causa inundaciones en Acapulco","Huracán Isaías alcanza categoría 2; autoridades evacúan zonas costeras en Florida","es","es"],
+["Depuis le début du mouvement lycéen, 6 877 personnes ont été placées en garde à vue","Arabie saoudite : trois personnes tuées, dont un pilote, dans des frappes contre l’aéroport de Riyad","fr","fr"]];
+for(const [a,b,l1,l2] of P){const A=tokenList(a,l1),B=new Set(tokenList(b,l2));const cl=clusterItems([{title:a,link:'x1',source:'s1',lang:l1},{title:b,link:'x2',source:'s2',lang:l2}]);console.log(cl.length===1?'MERGED':'split',JSON.stringify(A.filter(x=>B.has(x))),a.slice(0,25))}
