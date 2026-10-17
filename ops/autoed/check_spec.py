@@ -22,6 +22,16 @@ def check(spec):
         n = sum(len(p.get(k) or '') for k in ['what', 'why', 'me', 'say'])
         floor = 450 if spec.get('region') in ('KR', 'JP', 'TW') else 900
         if n < floor: err.append(f'popup {i} too short {n} < {floor} (what 4-5문장, why·me·say 각 2문장)')
+    # 짧게 보는 오늘: 10/17 호에서 헤드라인이 조각나고 em 이 한 구절이 됐고 tag 가 영어 그대로였다.
+    reg = spec.get('region')
+    cjk = reg in ('KR', 'JP', 'TW')
+    rtl = reg in ('IL', 'SA')
+    en = reg in ('US', 'GB', 'AU', 'CA', 'IN')
+    em_min, hl_min = (40, 15) if cjk else (45, 40) if rtl else (80, 50)
+    for it in spec.get('index', []):
+        if len(it.get('em', '')) < em_min: err.append(f'index {it.get("id")} em too short {len(it.get("em", ""))} < {em_min} (구체적 사실 2문장)')
+        if len(it.get('hl', '')) < hl_min: err.append(f'index {it.get("id")} hl too short {len(it.get("hl", ""))} < {hl_min} (완결된 헤드라인 한 문장)')
+        if not en and 'outlets' in it.get('tag', ''): err.append(f'index {it.get("id")} tag 를 그 나라 말로')
     for s in st:
         for k in ['id', 'cat', 'verify', 'hl', 'paras']:
             if not s.get(k): err.append(f'story {s.get("id")} missing {k}')
