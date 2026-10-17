@@ -24,9 +24,9 @@ const CBY = Object.fromEntries(COUNTRIES.map(c => [c.code, c]));
 const I18N = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n.json'), 'utf8'));
 // 홍콩판(zh-HK): 대만 번체 문구를 그대로 쓰고 언어 이름만 바꾼다
 if (!I18N['zh-HK']) I18N['zh-HK'] = { ...I18N['zh-TW'], langname: '繁體中文（香港）' };
-const TRANSLATE_LANGS = new Set(['ko', 'en', 'ja']); // 번역판을 제공하는 언어(사장님 10/16: 한·영·일만, 나머지는 추후 업데이트). 이 밖의 번역 파일은 있어도 사이트에 붙이지 않는다.
+const TRANSLATE_LANGS = new Set(['ko', 'en', 'ja', 'es']); // 번역판을 제공하는 언어(사장님 10/16: 한·영·일, 10/17: 스페인어 추가. 나머지는 추후 업데이트). 이 밖의 번역 파일은 있어도 사이트에 붙이지 않는다.
 const SERVICE_LANGS = new Set([...TRANSLATE_LANGS, ...COUNTRIES.map(c => c.langs[0])]); // 서비스하는 언어 = 번역 언어 + 공개 나라 판의 원문 언어
-const LANGS = ['en', 'ko', 'ja', ...Object.keys(I18N).filter(l => !['en', 'ko', 'ja'].includes(l))].filter(l => TRANSLATE_LANGS.has(l)); // 언어 메뉴 순서(번역 세션이 올린 ko·en·ja 판만)
+const LANGS = ['en', 'ko', 'ja', 'es', ...Object.keys(I18N).filter(l => !['en', 'ko', 'ja', 'es'].includes(l))].filter(l => TRANSLATE_LANGS.has(l)); // 언어 메뉴 순서(번역 세션이 올린 ko·en·ja 판만)
 const T = (l, k) => (I18N[l] && I18N[l][k] != null ? I18N[l][k] : I18N.en[k]);
 // 회원(로그인·마이페이지·북마크·방문 비콘·관리자 리포트) UI: account-ui.js, API: src/account.js
 const ACC = require('./account-ui.js');
