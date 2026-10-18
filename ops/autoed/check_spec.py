@@ -5,6 +5,28 @@ import json, re, sys
 BAN = re.compile(r'written with Claude|help of Claude|se redacta con ayuda|Anthropic.{0,30}(model|modelo)|AI[- ]written|geschrieben mit|rédigé avec', re.I)
 
 
+def _toks(t):
+    w = set(x.lower() for x in re.findall(r'[A-Za-zÀ-ÿĀ-ž\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF]{4,}|\d[\d.,]*\d|\d{2,}', t))
+    c = re.sub(r'[^\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7af]', '', t)
+    return w | set(c[i:i + 2] for i in range(len(c) - 1))
+
+
+def dup_items(spec, th=0.5):
+    # 사장님 2026-10-19: 같은 판 안 중복 기사 절대 금지 — 본문 기사·짧게 보는 오늘(index)·짧게 더(briefs)가 같은 소식을 다시 다루면 안 된다.
+    it = []
+    for s in spec.get('stories', []):
+        it.append(('story ' + s['id'], _toks(s['hl'] + ' ' + s.get('deck', ''))))
+        for b in s.get('briefs', []): it.append(('brief ' + b['t'][:20], _toks(b['t'] + ' ' + b['s'])))
+    for i in spec.get('index', []): it.append(('index ' + str(i.get('id')), _toks(i['hl'] + ' ' + i.get('em', ''))))
+    out = []
+    for x in range(len(it)):
+        for y in range(x + 1, len(it)):
+            (a, ta), (b, tb) = it[x], it[y]
+            if a.startswith('story') and b.startswith('story') or not ta or not tb: continue
+            if len(ta & tb) / min(len(ta), len(tb)) >= th: out.append(f'{a}~{b}')
+    return out
+
+
 def check(spec):
     err = []
     st = spec.get('stories', [])
@@ -65,6 +87,8 @@ def check(spec):
     if not spec.get('blurb') or len(spec.get('pool', [])) < 8: err.append('blurb/pool')
     for k, v in spec.get('markets', {}).items():
         if not isinstance(v, dict) or v.get('v') is None: err.append(f'market {k}')
+    d = dup_items(spec)
+    if d: err.append('duplicate items in edition: ' + ', '.join(d[:6]))
     return err
 
 
