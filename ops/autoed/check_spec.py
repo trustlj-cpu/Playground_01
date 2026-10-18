@@ -19,9 +19,9 @@ def check(spec):
         for k in ['what', 'why', 'me', 'say', 'src']:
             if not p.get(k): err.append(f'popup {i}.{k} empty')
         # 팝업 분량 하한(what+why+me+say): 10/17 호에서 한 줄짜리 팝업이 나와 추가. 한·중·일은 글자 수가 적어 하한을 낮춘다.
-        n = sum(len(p.get(k) or '') for k in ['what', 'why', 'me', 'say'])
-        floor = 450 if spec.get('region') in ('KR', 'JP', 'TW') else 900
-        if n < floor: err.append(f'popup {i} too short {n} < {floor} (what 4-5문장, why·me·say 각 2문장)')
+        n = sum(len(p.get(k) or '') for k in ['what', 'why', 'me', 'a', 'b', 'say'])
+        floor = {'KR': 600, 'JP': 480, 'TW': 380}.get(spec.get('region'), 900)
+        if n < floor: err.append(f'popup {i} too short {n} < {floor} (what 5~8문장, why·me 각 2~3문장, a·b·say 포함)')
     # 짧게 보는 오늘: 10/17 호에서 헤드라인이 조각나고 em 이 한 구절이 됐고 tag 가 영어 그대로였다.
     reg = spec.get('region')
     cjk = reg in ('KR', 'JP', 'TW')
@@ -32,6 +32,19 @@ def check(spec):
         if len(it.get('em', '')) < em_min: err.append(f'index {it.get("id")} em too short {len(it.get("em", ""))} < {em_min} (구체적 사실 2문장)')
         if len(it.get('hl', '')) < hl_min: err.append(f'index {it.get("id")} hl too short {len(it.get("hl", ""))} < {hl_min} (완결된 헤드라인 한 문장)')
         if not en and 'outlets' in it.get('tag', ''): err.append(f'index {it.get("id")} tag 를 그 나라 말로')
+
+    # 초반 호 방식(사장님 2026-10-18): 리드 본문 정확히 2문단, 나머지 1~2문단, a·b(두 가지 시선) 채움, 본문에 자료·편집 메타 문장 금지
+    if st:
+        if len(st[0].get('paras', [])) != 2: err.append(f'lead paras {len(st[0].get("paras", []))} != 2 (리드 본문은 정확히 2문단)')
+        for s_ in st[1:]:
+            if not 1 <= len(s_.get('paras', [])) <= 2: err.append(f'story {s_.get("id")} paras must be 1-2')
+    empty_ab = [i for i in ids if not ((spec.get('popups', {}).get(i) or {}).get('a') and (spec.get('popups', {}).get(i) or {}).get('b'))]
+    if len(empty_ab) > 2: err.append(f'a·b(두 가지 시선) 비어 있는 팝업이 {len(empty_ab)}개 > 2: {empty_ab}')
+    import re as _re
+    meta = _re.compile(r'Jev|jev|수집된|수집분|이번 호는|독자가 기억|독자에게 필요|편이 안전|편이 정확|추측성|収集した|本号は|今号は|collected (stories|reports|articles)|this edition|in this edition|the feed\b|were gathered|our sources|not in the (collected|sources)', _re.I)
+    body_text = ' '.join(' '.join(s_.get('paras', [])) + ' ' + s_.get('deck', '') for s_ in st) + ' ' + ' '.join((b.get('t', '') + ' ' + b.get('s', '')) for s_ in st for b in s_.get('briefs', []) or [])
+    mm = sorted(set(m.group(0) for m in meta.finditer(body_text)))
+    if mm: err.append(f'본문에 자료·편집 메타 표현 금지: {mm}')
     for s in st:
         for k in ['id', 'cat', 'verify', 'hl', 'paras']:
             if not s.get(k): err.append(f'story {s.get("id")} missing {k}')
