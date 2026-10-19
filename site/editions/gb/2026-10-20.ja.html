@@ -1,0 +1,370 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開する。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>10,764.69</b>FTSE100 · 10月19日（月）の終値、-1.08%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,690.73</b>S&amp;P 500 · 10月19日（月）の終値、+0.41%</div>
+    </div>
+    <div class="dateline"><span>第16号 · 朝刊</span><b>2026年10月20日（火）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · 若者<span>報道照合 ✓ 4社 · ミルバーン氏の検証が何を勧告するかはまだ公表されていない</span></div>
+      <h2 class="hl">バーナム首相、ニート危機を「道徳上の失敗」と断じ　給付は「出発点ではなく最後の受け皿」になると表明</h2>
+      <p class="deck">パーソネル・トゥデイ、BBCニュース、イブニング・スタンダード、ガーディアンは、教育・雇用・職業訓練のいずれにも就いていない約98万1000人の若者に向けて、首相が福祉の「大きな変化」を約束したと報じている。</p>
+      <div class="body">
+        <p>アンディ・バーナム首相は、教育・雇用・職業訓練のいずれにも就いていない若者、いわゆるニートの数を「経済的な破局であり、道徳上の失敗」と表現したと、パーソネル・トゥデイは報じている。BBCニュースは、首相が若者の雇用・訓練の危機を「道徳上の失敗」と呼んだと見出しで伝え、イブニング・スタンダードは、首相が取り組みを誓ったと報じた。パーソネル・トゥデイによると、この言葉は10月19日（月）のタイムズ紙のコラムに載ったもので、首相は、政府は若者の成功に投資することも、給付制度を通じて失敗の代償を払うこともできるとして、投資を選ぶと書いた。同誌は首相の言葉として「給付は、出発点ではなく最後の受け皿になる」と引用している。同誌は、英国国家統計局の数字を引き、4〜6月の16〜24歳のニートを推計98万1000人、この年齢層の約8人に1人としている。ガーディアンの政治ライブブログは、首相が危機に取り組むため、福祉制度の仕組みに「大きな変化」を約束したと報じている。</p>
+        <p>パーソネル・トゥデイによると、バーナム氏は、評価をして、給付を出し、あとは「さようなら」という仕組みを批判した。支援も、技能を学ぶ機会も、仕事に就く機会も示されないことが多すぎるという。首相は、2年間のコロナ禍のロックダウン、ソーシャルメディア、「大学進学の道」を押しつける教育制度、機会の乏しい労働市場を挙げ、改革には「若者が提供された機会を活かすことへの期待」が伴わなければならないと述べた。また、同誌が引用する言葉では、国は安全網を提供すべきだが、「政府と社会が若者を支える方法の根本的な転換」が必要だと主張した。同誌によると、政府のニート危機の検証を率いるアラン・ミルバーン氏は、報告書がおそらく給付支出の削減を勧告し、その資金を人々が仕事に戻るための支援に回すことになると、ガーディアンに語った。この検証はまだ勧告を公表しておらず、変更の時期や費用も報じられていない。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">消費者 · 駐車場<span>報道照合 ✓ 4社 · 規範がいつ施行されるかは示されていない</span></div>
+      <h3 class="hl">バーナム首相、民間駐車場の新ルールを発表　駐車の判断に5分、出庫に10分の猶予</h3>
+      <div class="one">
+        <p>アンディ・バーナム首相は、民間駐車場の新ルールを示し、「ぼったくり」の料金をなくすものだと述べたと、ガーディアン、ミラー、BBCニュースが報じている。ガーディアンによると、運転者には、駐車するかどうかを決めるのに5分、利用時間が終わってから出庫するのに10分が与えられる。ミラーは、イングランド、スコットランド、ウェールズのドライバーは、10分以内ならペナルティを科されずに出庫できるとしている。ミラーとBBCニュースによると、道順の確認で短時間止まった場合、救急の事態、故障、券売機の故障といった善意のミスは、異議申し立てがあれば請求が取り下げられ、登録番号の入力ミスのような小さなミスは、異議申し立て後の請求が最高20ポンドとなる。報道は、RACの話として、民間業者が前会計年度に出した駐車違反切符は1690万件で、前年より17%増えたと引用している。AAのジャック・カズンズ氏は、最悪の民間業者に対するより良い保護になりうるものがようやくできたと述べた。英国駐車場協会は変更を歓迎したが、原則の多くはすでに自主的な行動規範に反映されていると主張した。GOV.UKの発表の見出しは「首相、ぼったくり駐車料金と自動車詐欺にブレーキ」。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>高等法院の判事、ロンドンのブラックキャブ運転手のウーバーに対する3億4000万ポンドの訴えは提起が遅すぎたと判断</b><em>フィナンシャル・タイムズは、判事が運転手らの訴えは遅すぎたと判断したと報じ、BBCニュースは、3億4000万ポンドの訴訟が10月19日に退けられたと伝えている。</em><span>ビジネス · ✓ 6社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>バーナム首相、1966年に児童116人が亡くなった惨事の60周年を前にアバーファンを訪問</b><em>BBCニュースによると、1966年10月21日、炭鉱のボタ山が崩れ、子ども116人と大人28人が亡くなった。ミラーは、「最も恐ろしい悲劇」の一つとする首相の言葉を引いている。</em><span>英国 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>サウスポート事件の殺人犯アクセル・ルダクバナ、刑務所職員への襲撃疑惑で裁判へ　BBCニュースが報道</b><em>BBCニュースによると、本人はブロードムーア病院からビデオリンクで出廷した。ミラーは「ベルマーシュの看守への砂糖水の襲撃」を報じ、スタンダードは熱湯を挙げている。</em><span>犯罪 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>左派ニュースサイトのカナリー、「私たちへの悪質なキャンペーン」の末に閉鎖を発表</b><em>ガーディアンは10月19日の発表と報じている。プレス・ガゼットによると、同サイトは2つ目の銀行口座が止められたあと、9月4日に運営を停止していた。</em><span>メディア · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>CNNの国際部門チーフアンカー、クリスティアン・アマンプール氏、43年を経て同局を去る</b><em>BBCニュースによると、同氏はルワンダ、アフガニスタン、ウクライナ、イランなどの戦争を取材してきた。ロイターは、この退社をCNNでのエリソン時代の始まりと結びつけている。</em><span>メディア · ✓ 3社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">サッカー · ポルトガル<span>報道照合 ✓ 5社 · 30日間がいつ始まるかは報道で食い違っている</span></div>
+      <h3 class="hl">クリスティアーノ・ロナウド、代表合宿の離脱でポルトガルサッカー連盟から30日間の資格停止と255ユーロの罰金</h3>
+      <div class="body">
+        <p>ポルトガルサッカー連盟の規律委員会は、クリスティアーノ・ロナウドに30日間の資格停止と255ユーロ（約215ポンド）の罰金を科した。ポルトガル代表の合宿からの離脱をめぐる処分で、BBC、ガーディアン、ロイターが報じている。ガーディアンによると、委員会は41歳の同選手に対する告発を認めた。ロイターは、ジョルジェ・ジェズス監督との不和のあとに合宿を離れたことを処分と結びつけ、スカイスポーツはジェズス氏との激しい口論を伝えている。アルジャジーラによると、同選手は、ノルウェー戦で出番のない控えに終わったあと、監督が自分の役割について二度約束を破ったと非難し、デンマークとのネーションズリーグの試合の少し前にコペンハーゲンの合宿地を離れた。</p>
+        <p>ロナウドは離脱のあと、すでに暫定的に資格停止になっていた。ガーディアンによると、連盟会長のペドロ・プロエンサ氏は復帰の余地を残している。報道では、問題が解決すれば連盟の全員がロナウドの復帰を望んでいたという。ロナウドは、ノルウェー戦のあとサポーターに応えなかったことと、チームメートを置いて去ったことを謝罪し、いかなる処分も受け入れると述べた。資格停止がいつ始まるかは報道で食い違っている。暫定処分の時点にさかのぼるなら、11月14日のデンマークとのポルトガルの次の試合に出られるとする報道がある一方、スカイスポーツを引いた別の報道は、9月30日の離脱時点にさかのぼって適用されるとしている。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">政治 · 国防<span>報道照合 ✓ 3社 · ヘグセス氏がどこで、いつ発言したかは示されていない</span></div>
+      <h3 class="hl">ダウニング街、米国以外のNATO軍の大半はアフガニスタンで戦わなかったとするヘグセス米国防長官の主張は誤りと指摘</h3>
+      <div class="body">
+        <p>ダウニング街の報道官は、アフガニスタンにいた米国以外のNATO軍の大半は戦わなかったとするピート・ヘグセス米国防長官の主張は誤りだと述べたと、ガーディアン、ミラー、ザ・ニュース・インターナショナルが報じている。ガーディアンによると、報道官はロビー・ブリーフィングで問われてこう答え、英軍の犠牲を強調し、ウクライナへの「揺るぎない」支持を改めて表明した。ミラーとザ・ニュース・インターナショナルは、ヘグセス氏の発言を次のように伝えている。アフガニスタンで大尉だったとき、カブールの司令部には約50本の旗が掲げられていたが、貢献した国は少数で、終盤に戦闘作戦に当たっていたのは1、2か国だけだった。両紙は、ISAFは「I Saw Americans Fighting（米国人が戦うのを見た）」の略だと冗談を言ったとも伝えている。</p>
+        <p>ザ・ニュース・インターナショナルによると、この紛争では450人を超える英国の要員が亡くなり、ほかの30を超える国の部隊も犠牲になった。ダウニング街は、その役割を軽んじるのは誤りだと述べた。同紙は、この批判は、同盟国は前線から退いていたというドナルド・トランプ氏の今年初めの同様の発言に続くものだとも伝えている。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">ビジネス · エネルギー<span>報道照合 ✓ 4社 · 操業停止やパイプラインの停止は確認されていない</span></div>
+      <h3 class="hl">ユナイト、10月21日（水）のアパッチの洋上ストで、フォーティーズのパイプライン経由の英国の燃料供給が混乱しうると警告</h3>
+      <div class="body">
+        <p>ユナイトによると、アパッチの洋上労働者160人超が、賃金と遡及支払いをめぐる争議で、10月21日（水）の午前6時から24時間のストに入る。ガーディアン、STVニュース、エナジー・ライブ・ニュースが報じている。対象はフォーティーズとベリルの両油田にまたがる7か所の施設で、フォーティーズ・チャーリー・プラットフォームを含む。ユナイトは、チャーリーが止まれば圧力が下がり、フォーティーズ・パイプライン・システムが止まりかねないと主張しており、同システムは英国の石油の約29%、ガスの約30%を運ぶという。組合によると、労働者は賃金凍結からインフレ率を下回る賃上げまでの幅の提示を拒んだ。エナジー・ライブ・ニュースは、「アパッチのスト、ガソリン価格が危機的水準に達するなか燃料供給を脅かす」の見出しで伝えている。</p>
+        <p>ベアード・マリタイムによると、アパッチは、経験豊富な請負業者を使って生産を続けるとし、フォーティーズのパイプラインにある自社の5基のプラットフォームが稼働できなくなっても、同パイプラインを使う他の生産者に影響が及ぶとは見ていない。パイプラインシステムを所有するイネオスは、影響についての推測を控えた。報道によると、ストの前にAcasの協議が予定されており、争議が解決しなければ11月4日に2回目の24時間ストが計画されている。アパッチは最終提示は公正だと述べている。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>ハックニーのクラプトン・コモンで、ユダヤ人女性3人が襲われたと通報され、うち1人はベビーカーを押していた。男が拘束された。<span>BBC News</span></li>
+        <li>クリスタル・パレスは、ピエール・サージュ監督にもっと時間を与える見通し。ただしガーディアンは、ブライトンに5対0で敗れたあと、監督は厳しい視線にさらされていると伝えている。<span>Guardian, BBC Sport</span></li>
+        <li>レスター・シティはFAカップ1回戦で、ナショナルリーグ・ノースのオックスフォード・シティと対戦する。<span>BBC Sport, Oxford Mail</span></li>
+        <li>元BBCキャスターのヒュー・エドワーズ氏が、マーティン・クルーンズ主演のチャンネル5のドラマは自身の失脚を誤解を招く不公正な形で描いたと申し立て、Ofcomが調査している。<span>Guardian</span></li>
+        <li>児童コミッショナーのレイチェル・デ・ソウザ氏は、イングランドの一部の地域では青少年向けサービスが非常事態にあると述べ、ミドルズブラとハウンズローを、育つのが最も厳しい場所に挙げた。<span>Guardian</span></li>
+        <li>ライムは、自社の自転車は馬上槍試合用ではないと表明。ロンドン東部で数百人が集まり、自転車の決闘を見物する動画が出回ったため。<span>BBC News, Evening Standard</span></li>
+        <li>ヴィンテッドは、週末以降にフランスで略奪された品に関わる出品を特定して削除するため、直ちに措置を取ったと表明。<span>BBC News, Telegraph</span></li>
+        <li>UEFAは、FIFAのジャンニ・インファンティーノ会長に対し、ワールドカップの売却計画に関する文書の公開について2週間の期限を設けた。<span>BBC Sport, Guardian</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>バーナム氏の新ルールは、民間駐車場の罰金をすべて20ポンドに制限する。</b> <span>違う。ミラーとBBCニュースによると、善意のミスなら異議申し立てで請求は取り下げられ、20ポンドは、登録番号の入力ミスのような小さなミスに対する異議申し立て時の上限だ。</span></div>
+        <div><b>ロナウドは、ポルトガル代表でのプレーを永久に禁じられた。</b> <span>違う。ガーディアン、BBC、ロイターは、30日間の資格停止と255ユーロの罰金だと報じており、ガーディアンは、連盟会長のペドロ・プロエンサ氏が復帰の余地を残していると伝えている。</span></div>
+        <div><b>アパッチのストで、水曜にフォーティーズのパイプラインが止まる。</b> <span>確認されていない。ユナイトは、チャーリー・プラットフォームが止まればシステムが停止しうると警告しているが、アパッチはベアード・マリタイムに、他の生産者に影響が出るとは見ていないと述べており、停止は報じられていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/20 火</b><span>水曜のアパッチのスト前のAcasの協議の行方、ロナウドの30日間がいつ始まるかについての連盟の声明、政府からのニート改革のさらなる詳細に注目。</span><b>今週</b><span>アバーファンは10月21日（水）に60年の節目を迎え、同じ日にアパッチのストが予定され、ジョン・ヒーリー財務相の初の予算案は10月28日に控えている。</span><b>その先</b><span>ポルトガルは11月14日にデンマークと対戦し、争議が解決しなければ、2回目のアパッチのストが11月4日に計画されている。</span><b>読者へ</b><span>民間駐車場の料金に異議を申し立てるなら、支払いの証拠と標識の文言を保管し、支払う前に異議申し立ての手続きを使うこと。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "政治 · 若者 · 報道照合 ✓ 4社 · ミルバーン氏の検証が何を勧告するかはまだ公表されていない", "title": "バーナム首相、ニート危機を「道徳上の失敗」と断じ　給付は「出発点ではなく最後の受け皿」になると表明", "what": "パーソネル・トゥデイによると、アンディ・バーナム首相は、教育・雇用・職業訓練のいずれにも就いていない若者の数を「経済的な破局であり、道徳上の失敗」と呼んだ。この言葉は10月19日（月）のタイムズ紙のコラムに載ったと、同誌は伝えている。BBCニュースは、首相が若者の雇用・訓練の危機を「道徳上の失敗」と呼んだと見出しで報じ、イブニング・スタンダードは、首相が取り組みを誓ったと報じた。パーソネル・トゥデイは、英国国家統計局の数字を引き、4〜6月の16〜24歳のニートを推計98万1000人、この年齢層の約8人に1人としている。ガーディアンの政治ライブブログは、バーナム氏が福祉制度の仕組みに「大きな変化」を約束したと報じている。パーソネル・トゥデイによると、政府の検証を率いるアラン・ミルバーン氏は、報告書がおそらく給付支出の削減を勧告し、就労への支援に資金を回すことになると、ガーディアンに語った。", "why": "給付を出発点ではなく最後の受け皿と位置づけると、福祉制度が最初に行うことが変わる。支給の前に、期待を伴った支援と技能の機会を示す形になるからだ。98万1000人という数字は規模を示しており、通常は教育か仕事のなかにいる年齢層の8人に1人近くにあたる。支給からサービスへの資金の付け替えにはトレードオフもある。費用が先に発生し、節約は後からしか生じないからだ。", "me": "16〜24歳の人や、その年齢の子どもがいる人にとっては、この変更はいずれ、利用できる訓練、技能、給付の中身を左右する。詳細はまだ発表されていないので、今できることは、ミルバーン氏の検証と、条件や支援についての政府の発表を追うことだ。", "a": "バーナム氏の主張は、パーソネル・トゥデイの報道では、国は安全網を提供すべきだが、社会は若者の支え方を変えなければならず、給付は「出発点ではなく最後の受け皿」になり、若者には提供された機会を活かすことが期待される、というものだ。", "b": "ガーディアンのライブブログとパーソネル・トゥデイは財源の面を強調している。ミルバーン氏は、新たな資金を探すのではなく、給付支出を削って、その資金を人々が仕事に戻るための支援に振り向けるよう検証が勧告する可能性が高いとみている。", "say": "確認できる点は、バーナム氏の言葉、英国国家統計局の推計98万1000人、ミルバーン氏が検証を率いていること。確認できない点は、どの給付が変わるか、変更にいくらかかるか、検証がいつ報告するか。検証の報告と、支給に付く条件についての詳細に注目。", "src": "BBC News, Evening Standard, Guardian, Personnel Today, 10月19日"},
+    "s2":{"kick": "消費者 · 駐車場 · 報道照合 ✓ 4社 · 規範がいつ施行されるかは示されていない", "title": "バーナム首相、民間駐車場の新ルールを発表　駐車の判断に5分、出庫に10分の猶予", "what": "アンディ・バーナム首相は10月19日（月）、民間駐車場の新ルールを示したと、ガーディアン、ミラー、BBCニュースは報じている。ガーディアンによると、運転者には、駐車するかどうかを決めるのに5分、利用時間の終了後に出庫するのに10分が与えられる。ミラーは、イングランド、スコットランド、ウェールズのドライバーは、10分以内ならペナルティを科されずに出庫できるとしている。ミラーとBBCニュースによると、道順の確認で短時間止まった場合、救急の事態、故障、券売機の故障といった善意のミスは、異議申し立てがあれば請求が取り下げられる。登録番号の入力ミスのような小さなミスは、異議申し立て後の請求が最高20ポンドとなる。報道は、RACの話として、民間業者が前会計年度に出した駐車違反切符は1690万件で、17%増だったと引用している。GOV.UKの発表の見出しは「首相、ぼったくり駐車料金と自動車詐欺にブレーキ」。", "why": "民間駐車場の料金は自治体ではなく企業が徴収するため、重要になるのは行動規範と異議申し立ての手続きだ。猶予時間や異議申し立ての結果を明確なルールにすれば、運転者は罰金に異議を唱えるとき基準を示せる。報じられた17%の増加は、この問題が議題に残り続けてきた理由を示している。", "me": "民間駐車場を使うなら、覚えておきたい数字は猶予時間と、異議申し立て時の20ポンドの上限だ。標識を確認し、切符や支払いの証拠を残し、納得できない請求は、支払う前に異議申し立ての手続きを使うこと。", "a": "ガーディアンとミラーの報道では、バーナム氏の主張は、運転者に判断と出庫の時間を与え、善意のミスは異議申し立てで請求を取り下げることで、ルールが「ぼったくり」をなくすというものだ。AAのジャック・カズンズ氏は、最悪の業者に対するより良い保護になりうるものがようやくできたと述べた。", "b": "英国駐車場協会は変更を歓迎したが、報道によると、原則の多くはすでに自主的な行動規範に反映されていると主張した。実際の変化は発表が示すほど大きくないかもしれないことを示唆している。", "say": "確認できる点は、5分と10分の猶予時間、小さなミスへの20ポンドの異議申し立て時の上限、報じられたRACの切符の数字。確認できない点は、規範がいつ施行されるか、どう執行されるか。規範が議会に提出されるかと、駐車場運営業者の反応に注目。", "src": "Guardian, Mirror, BBC News, GOV.UK, 10月19日"},
+    "s3":{"kick": "サッカー · ポルトガル · 報道照合 ✓ 5社 · 30日間がいつ始まるかは報道で食い違っている", "title": "クリスティアーノ・ロナウド、代表合宿の離脱でポルトガルサッカー連盟から30日間の資格停止と255ユーロの罰金", "what": "ポルトガルサッカー連盟の規律委員会は10月19日（月）、クリスティアーノ・ロナウドに30日間の資格停止と、約215ポンドにあたる255ユーロの罰金を科したと、BBC、ガーディアン、ロイターは報じている。ガーディアンによると、委員会は41歳の同選手に対する告発を認めた。ロイターは、ジョルジェ・ジェズス監督との不和のあとにポルトガル代表の合宿を離れたことを処分と結びつけ、スカイスポーツは激しい口論と伝える。アルジャジーラによると、同選手は、監督が自分の役割について二度約束を破ったと非難したうえで、デンマークとのネーションズリーグの試合の前にコペンハーゲンの合宿地を離れた。ロナウドはすでに暫定的に資格停止になっていた。ガーディアンによると、連盟会長のペドロ・プロエンサ氏は復帰の余地を残している。30日間の起点については、9月30日とする報道と、11月14日のデンマーク戦での復帰を示す報道がある。", "why": "この水準の30日間の出場停止は、11月の出場可否を決めてしまわないほど短いので、起点がどの試合を欠場するかを左右する。この問題は権限の問題でもある。処分は、主将の監督に対する振る舞いについての連盟の裁定であり、選手と監督が私的に決着をつける話ではないからだ。", "me": "ポルトガルやロナウドを追っているなら、見るべき数字は11月14日のデンマーク戦だ。その頃までに出場停止が明けているかどうかで報道が分かれている。連盟が公表するまで、起点は確定していないものとして扱いたい。", "a": "ガーディアンの報道では、連盟の立場は、告発を認め、復帰の余地を残しておくというものだ。プロエンサ氏は、問題が解決すれば全員がロナウドの復帰を望んでいたと述べた。", "b": "報道が描くロナウド側の主張は、サポーターに応えなかったことやチームメートを置いて去ったことを謝罪し、いかなる処分も受け入れるというものだ。監督が自分の役割について二度約束を破ったという不満は、アルジャジーラが報じた経緯の一部である。", "say": "確認できる点は、30日間の資格停止、255ユーロの罰金、告発が認められたこと。確認できない点は、30日間がいつ始まったか、11月14日に出場できるか。連盟自身が起点について声明を出すかと、ジェズス氏のメンバー選考に注目。", "src": "BBC News, Guardian, Reuters, Sky Sports, Al Jazeera, 10月19日"},
+    "s4":{"kick": "政治 · 国防 · 報道照合 ✓ 3社 · ヘグセス氏がどこで、いつ発言したかは示されていない", "title": "ダウニング街、米国以外のNATO軍の大半はアフガニスタンで戦わなかったとするヘグセス米国防長官の主張は誤りと指摘", "what": "ダウニング街の報道官は、アフガニスタンにいた米国以外のNATO軍の大半は戦わなかったとするピート・ヘグセス米国防長官の主張は誤りだと述べたと、ガーディアン、ミラー、ザ・ニュース・インターナショナルは10月19日（月）に報じている。ガーディアンによると、答えはロビー・ブリーフィングで問われて出され、ダウニング街は英軍の犠牲を強調した。ミラーとザ・ニュース・インターナショナルは、ヘグセス氏の発言を次のように伝えている。アフガニスタンで大尉だったとき、カブールの司令部で約50本の旗を見たが、貢献した国は少数で、終盤に戦闘作戦に当たっていたのは1、2か国だった。両紙は、ISAFは「I Saw Americans Fighting」の意味だと冗談を言ったとも伝えている。ザ・ニュース・インターナショナルによると、この紛争では450人を超える英国の要員が亡くなり、ほかの30を超える国の部隊も犠牲になった。", "why": "450人を超える英国の死者は英国では記録に残る事実であり、同盟国は戦わなかったという主張は、その犠牲がどう記憶されるかへの挑戦として響く。米国とその同盟国がNATOの負担分担をめぐって議論するなかで出された発言でもあり、ダウニング街が公に答えた理由はそこにある。", "me": "防衛や大西洋をまたぐ関係に関心があるなら、これはロンドンとワシントンの間の空気を示す目印であり、政策変更ではない。報道のどこにも、英国の軍事的な責務を変える内容はない。", "a": "ガーディアンの報道では、ダウニング街の見方は、英国とNATOの役割を軽んじるのは誤りであり、ウクライナへの支持は「揺るぎない」ままだというものだ。", "b": "ミラーとザ・ニュース・インターナショナルが引くヘグセス氏の発言は、アフガニスタンで大尉だった自分自身の経験の説明であり、カブールの司令部に掲げられた多くの旗のうち、戦闘任務の国のものは少なかったというものだ。ザ・ニュース・インターナショナルは、これがトランプ氏の今年初めの同様の発言に続くものだと指摘している。", "say": "確認できる点は、ダウニング街が主張を誤りと呼んだことと、報じられた450人を超える英国の死者。確認できない点は、ヘグセス氏がどこで、いつ発言したか、ワシントンが反応するか。米国防総省やNATOの同盟国からの返答に注目。", "src": "Guardian, Mirror, The News International, 10月19日"},
+    "s5":{"kick": "ビジネス · エネルギー · 報道照合 ✓ 4社 · 操業停止やパイプラインの停止は確認されていない", "title": "ユナイト、10月21日（水）のアパッチの洋上ストで、フォーティーズのパイプライン経由の英国の燃料供給が混乱しうると警告", "what": "ユナイトによると、アパッチの洋上労働者160人超が、賃金と遡及支払いをめぐる争議で、10月21日（水）の午前6時から24時間のストに入ると、ガーディアン、STVニュース、エナジー・ライブ・ニュースは報じている。対象はフォーティーズとベリルの両油田にまたがる7か所の施設で、フォーティーズ・チャーリー・プラットフォームを含む。ユナイトは、チャーリーが止まれば圧力が下がり、フォーティーズ・パイプライン・システムが止まりかねないとしており、同システムは英国の石油の約29%、ガスの約30%を運ぶという。労働者は、ユナイトによれば賃金凍結からインフレ率を下回る賃上げまでの幅の提示を拒んだ。ベアード・マリタイムによると、アパッチは経験豊富な請負業者を使い、他の生産者に影響が及ぶとは見ていない。パイプラインシステムを所有するイネオスは、推測を控えた。報道によると、11月4日に2回目の24時間ストが計画されている。", "why": "フォーティーズのシステムは多くの生産者が接続するハブなので、組合の主張は、1つのプラットフォームの停止が1社にとどまらない影響を持ちうるというものだ。アパッチの返答は、同社の緊急時対応が他の利用者を守るというものだ。どちらの主張もスト開始まで検証されないため、焦点は確認された停止ではなくリスクにある。", "me": "車を運転する人や燃料に頼る事業を営む人にとって、不足は報じられておらず、エナジー・ライブ・ニュースのガソリン価格の見出しは、停止ではなく、より広い価格の圧力を映している。見るべき日付は10月21日（水）。", "a": "ガーディアンとSTVニュースの報道では、ユナイトの見方は、停止がフォーティーズのパイプライン経由の英国の燃料供給を深刻に混乱させかねず、労働者には賃金凍結かインフレ率を下回る賃上げが提示されたというものだ。", "b": "ベアード・マリタイムの報道では、アパッチの見方は、請負業者が生産を続け、他の生産者は影響を受けないというもので、会社は最終提示は公正だと述べている。", "say": "確認できる点は、10月21日（水）に予告された24時間スト、7か所の施設、双方の相反する主張。確認できない点は、Acasの協議のあとでストが実行されるか、パイプラインへの影響。火曜の協議の結果と、イネオスの声明に注目。", "src": "Guardian, STV News, Energy Live News, Baird Maritime, 10月19日"},
+    "i1":{"kick": "ビジネス · ✓ 6社", "title": "高等法院の判事、ロンドンのブラックキャブ運転手のウーバーに対する3億4000万ポンドの訴えは提起が遅すぎたと判断", "what": "高等法院は10月19日（月）、ロンドンのブラックキャブ運転手らがウーバーを相手取った訴えは提起が遅すぎたと判断したと、BBCニュース、スカイニュース、シティAM、ロイター、フィナンシャル・タイムズは報じている。フィナンシャル・タイムズは、判事が配車アプリを相手取った訴えは遅すぎたと判断したと伝えている。シティAMとBBCは請求額を3億4000万ポンドとしている。レジスターによると、原告は運転手約1万3000人と、元ハイヤー会社のカビー（Kabbee）とアイライド（Iride）の2社で、運転手側は2億ポンド近く、会社側は約1億4000万ポンドを求めていた。レジスターは、ウーバーの報道官が、裁判所はこれらの請求を最も早い段階で全面的に退けたと述べたと引用し、原告側の弁護士は非常に失望しており、選択肢を検討していると伝えている。", "why": "出訴期限の判断は、申し立ての中身を審理せずに決着をつけるため、裁判所は、ウーバーがロンドン交通局に誤った説明をしたかどうかには触れなかった。この判断は、大きな訴訟でも期限がいかに厳格に適用されるかを示している。", "me": "ロンドンのタクシーや配車アプリを使う人にとって、この判断で運賃や免許は変わらない。主に、訴えを追う運転手や弁護士に関わる話だ。", "a": "レジスターが引くウーバーの見方は、請求は最も早い段階で全面的に退けられたというものだ。", "b": "レジスターによると、原告側の弁護士は非常に失望していて選択肢を検討していると述べており、控訴の可能性は排除されていない。", "say": "確認できる点は、請求は遅すぎたという判断と、3億4000万ポンドという額。確認できない点は、控訴があるかどうか。原告側の弁護士の発表に注目。", "src": "BBC News, Sky News, City AM, Reuters, Financial Times, The Register, 10月19日"},
+    "i2":{"kick": "英国 · ✓ 3社", "title": "バーナム首相、1966年に児童116人が亡くなった惨事の60周年を前にアバーファンを訪問", "what": "アンディ・バーナム首相は10月19日（月）、惨事の60周年を前にアバーファンを訪れたと、BBCニュース、ミラー、LBCは報じている。BBCニュースによると、1966年10月21日、炭鉱のボタ山が崩れ、子ども116人と大人28人が亡くなった。ミラーは、英国がこれまで経験した最も恐ろしい悲劇の一つだとするバーナム氏の言葉を引いている。LBCは、アバーファンは適切に扱われなかったと首相が語ったと伝えている。周年は10月21日（水）にあたる。", "why": "ボタ山の崩落は、ウェールズの炭鉱の村で144人の命を奪い、その多くはパントグラス・ジュニア・スクール（Pantglas Junior School）の子どもたちだった。災害と公的な対応がどう判断されるかの基準点であり続けている。周年を前にした首相の訪問は、追悼と遺族への政府の関心を示している。", "me": "報道に新たな政策は示されておらず、訪問は日々の暮らしに響く変更ではなく、追悼だ。", "a": "ミラーとLBCの報道では、バーナム氏の見方は、この惨事が最も恐ろしい悲劇の一つで、当時適切に扱われなかったというものだ。", "b": "BBCニュースは、村の人々を軸に訪問を捉え、亡くなった子どもと大人の数と60周年が近いことを伝えている。", "say": "確認できる点は、訪問、子ども116人と大人28人の死、1966年10月21日という日付。確認できない点は、政府の新たな発表。10月21日（水）の追悼行事に注目。", "src": "BBC News, Mirror, LBC, 10月19日"},
+    "i3":{"kick": "犯罪 · ✓ 3社", "title": "サウスポート事件の殺人犯アクセル・ルダクバナ、刑務所職員への襲撃疑惑で裁判へ　BBCニュースが報道", "what": "サウスポートでの殺人事件で有罪となったアクセル・ルダクバナは10月19日（月）の審理にブロードムーア病院からビデオリンクで出廷し、刑務所職員への襲撃疑惑で裁判を受けると、BBCニュースは報じている。ミラーは「ベルマーシュの看守への砂糖水の襲撃」を報じている。イブニング・スタンダードは、ロンドンの刑務官に熱湯を使った襲撃があったとされると伝えている。疑惑は法廷で検証されていない。以前の審理では、ウェストミンスター治安判事裁判所で、重傷害未遂と緊急対応要員への暴行などの罪に問われていると説明され、オールド・ベイリーに出廷するよう勾留された。", "why": "拘禁中の行為に対する罪は元の刑とは別で、裁判は独自の証拠に基づいて進む。ベルマーシュから高度保安の精神科病院であるブロードムーアに移ったことは、本人のケアと拘禁が刑務所だけでなく精神医療の仕組みでも扱われていることを示している。", "me": "ここから公共の安全対策が変わることはない。サウスポートの事件、刑務所職員の安全、リスクの高い受刑者の収容方法を追う読者に関わる話だ。", "a": "ミラーとイブニング・スタンダードの報道では、検察側の主張は、砂糖を混ぜた熱湯で刑務官を襲ったというものだ。", "b": "報道は、疑惑が法廷で検証されていないこと、以前の審理では氏名と生年月日を確認するときだけ話したことを伝えており、弁護側の主張は示されていない。", "say": "確認できる点は、月曜にブロードムーアからビデオリンクで審理があったことと、刑務所職員への襲撃疑惑で裁判を受けること。確認できない点は、公判の日程や罪状認否。オールド・ベイリーでの次回審理に注目。", "src": "BBC News, Mirror, Evening Standard, 10月19日"},
+    "i4":{"kick": "メディア · ✓ 2社", "title": "左派ニュースサイトのカナリー、「私たちへの悪質なキャンペーン」の末に閉鎖を発表", "what": "左派のニュースサイト、カナリーは10月19日（月）に閉鎖を発表したと、ガーディアンは報じている。ガーディアンは、同サイトが「私たちへの悪質なキャンペーン」を理由に挙げたと引いている。プレス・ガゼットは、2つ目の銀行口座が止められたあと、同サイトが9月4日に運営を停止すると述べたと報じた。プレス・ガゼットはまた、同サイトが6月にロイズに口座を閉じられたと述べ、7月には平日の紙の新聞を休止したと報じた。プレス・ガゼットによると、どちらの銀行も理由を示していない。スタッフはガーディアンに、200万ポンドの投資のうち残っているのは約40万ポンドだけだと語った。", "why": "ネットのニュースサイトは決済、広告、銀行口座に依存しているため、銀行を使えなくなれば小さな出版社はすぐ終わりかねない。原因がキャンペーンなのか資金なのかは、同サイトとその批判者の間で争われている。", "me": "独立系や党派色のあるニュースサイトを読んでいるなら、この閉鎖は資金の脆さを示している。自分が頼っている媒体と、その運営資金の出どころを確かめておきたい。", "a": "ガーディアンの報道では、カナリーの見方は、「私たちへの悪質なキャンペーン」が閉鎖に追い込んだというものだ。", "b": "プレス・ガゼットの報道は財務に目を向ける。2つの銀行口座を失い、紙の版が終わり、投資の残高が減っているという。", "say": "確認できる点は、閉鎖の発表と9月4日の運営停止。確認できない点は、疑われるキャンペーンの背後にいたのが誰か。銀行やスタッフからの声明に注目。", "src": "Guardian, Press Gazette, 10月19日"},
+    "i5":{"kick": "メディア · ✓ 3社", "title": "CNNの国際部門チーフアンカー、クリスティアン・アマンプール氏、43年を経て同局を去る", "what": "CNNの国際部門チーフアンカー、クリスティアン・アマンプール氏が43年を経て同局を去ると、BBCニュース、ロイター、APは10月19日（月）に報じている。BBCニュースによると、同氏はルワンダ、アフガニスタン、ウクライナ、イランなどの戦争を取材してきた。ロイターは、この退社を、CNNでエリソン時代が始まるなかでのものだと見出しで伝えている。APは、43年にわたる輝かしい経歴の終わりと呼んでいる。同氏が次に何をするかは、報道では示されていない。", "why": "アマンプール氏は米国のテレビで最も知られた海外特派員の一人で、ロイターによると、その退社は、所有者が変わるCNNの変化を示す。", "me": "CNNインターナショナルを見ているなら、いずれ番組表に変更があるだろう。最後の番組の日付は、報道では示されていない。", "a": "ロイターは、退社をCNNでのエリソン時代の始まりと結びつけており、同局の広い変化の一部として捉えている。", "b": "APとBBCニュースは、戦争報道で知られた43年のキャリアの幕引きとして捉えている。", "say": "確認できる点は、43年を経て去ること。確認できない点は、最終日と今後の予定。CNNの番組編成の発表に注目。", "src": "BBC News, Reuters, AP, 10月19日"}
+  };
+
+  const G = {
+    "ニート":{"f": "社会政策", "d": "教育・雇用・職業訓練のいずれにも就いていないこと。", "w": "バーナム氏の約束が対象とする若者たち。"},
+    "英国国家統計局":{"f": "統計", "d": "英国の国の統計機関。", "w": "98万1000人という推計の出どころ。"},
+    "アラン・ミルバーン":{"f": "政治", "d": "政府の検証を率いると報じられている元労働党の閣僚。", "w": "ニート危機の検証を率いる。"},
+    "パーソネル・トゥデイ":{"f": "メディア", "d": "英国の人事分野の業界誌。", "w": "バーナム氏のコラムを報じた。"},
+    "最後の受け皿":{"f": "一般", "d": "ほかの支えが尽きたときに頼る安全網。", "w": "バーナム氏が給付を指して使った言葉。"},
+    "タイムズ紙":{"f": "メディア", "d": "英国の全国紙。", "w": "バーナム氏のコラムを掲載した。"},
+    "イブニング・スタンダード":{"f": "メディア", "d": "ロンドンの日刊紙。", "w": "バーナム氏の誓いを報じた。"},
+    "福祉制度":{"f": "社会政策", "d": "職のない人のための国の給付と支援。", "w": "「大きな変化」の対象。"},
+    "RAC":{"f": "自動車", "d": "英国の自動車団体。", "w": "切符の数字の出どころ。"},
+    "AA":{"f": "自動車", "d": "英国の自動車団体（Automobile Association）。", "w": "ジャック・カズンズ氏がルールを歓迎した。"},
+    "英国駐車場協会":{"f": "業界", "d": "英国の駐車場運営業者の業界団体。", "w": "変更を歓迎した。"},
+    "行動規範":{"f": "規制", "d": "事業者が守ることが求められる規則の集まり。", "w": "英国駐車場協会は、自主的な規範が原則をすでに網羅していると主張する。"},
+    "GOV.UK":{"f": "政府", "d": "英国政府のウェブサイト。", "w": "駐車に関する発表を掲載した。"},
+    "登録番号":{"f": "自動車", "d": "車両のナンバープレートの情報。", "w": "誤って入力すると、異議申し立てで20ポンドになる。"},
+    "ポルトガルサッカー連盟":{"f": "サッカー", "d": "ポルトガルのサッカーの統括団体。", "w": "同連盟の委員会がロナウドを資格停止にした。"},
+    "規律委員会":{"f": "サッカー", "d": "連盟の規則違反について裁定を下す機関。", "w": "告発を認めた。"},
+    "ジョルジェ・ジェズス":{"f": "サッカー", "d": "ポルトガル代表の監督（報道による）。", "w": "口論の当事者。"},
+    "ペドロ・プロエンサ":{"f": "サッカー", "d": "ポルトガルサッカー連盟の会長。", "w": "復帰の余地を残した。"},
+    "ネーションズリーグ":{"f": "サッカー", "d": "欧州の代表チームによる大会。", "w": "デンマークとの試合。"},
+    "ロイター":{"f": "メディア", "d": "国際通信社。", "w": "処分を不和と結びつけた。"},
+    "スカイスポーツ":{"f": "メディア", "d": "英国のスポーツ放送局。", "w": "口論を伝えた。"},
+    "アルジャジーラ":{"f": "メディア", "d": "カタールに拠点を置くニュースネットワーク。", "w": "コペンハーゲンでの離脱を伝えた。"},
+    "ピート・ヘグセス":{"f": "政治", "d": "米国の国防長官。", "w": "その発言が誤りと指摘された。"},
+    "NATO":{"f": "防衛", "d": "北大西洋条約機構（North Atlantic Treaty Organization）。", "w": "アフガニスタンでの同盟国。"},
+    "ISAF":{"f": "防衛", "d": "国際治安支援部隊（International Security Assistance Force）。アフガニスタンでのNATO主導の任務。", "w": "ヘグセス氏の冗談。"},
+    "ダウニング街":{"f": "政治", "d": "英国の首相官邸。", "w": "主張を退けた。"},
+    "ロビー・ブリーフィング":{"f": "政治", "d": "首相の報道官が政治記者に行うブリーフィング。", "w": "答えが出された場。"},
+    "カブール":{"f": "地名", "d": "アフガニスタンの首都。", "w": "司令部の所在地。"},
+    "ユナイト":{"f": "ビジネス", "d": "英国の労働組合。", "w": "アパッチのストを呼びかけた。"},
+    "アパッチ":{"f": "エネルギー", "d": "北海の石油・ガス事業者。", "w": "争議の雇用主。"},
+    "フォーティーズ・パイプライン・システム":{"f": "エネルギー", "d": "北海の原油を本土へ運ぶパイプライン。", "w": "影響を受けうる。"},
+    "チャーリー・プラットフォーム":{"f": "エネルギー", "d": "フォーティーズ・チャーリー。アパッチが運営するプラットフォーム。", "w": "止まれば圧力が下がりうると組合は主張している。"},
+    "イネオス":{"f": "エネルギー", "d": "フォーティーズのパイプラインを所有する化学グループ。", "w": "推測を控えた。"},
+    "Acas":{"f": "雇用", "d": "助言・調停・仲裁サービス（Advisory, Conciliation and Arbitration Service）。", "w": "協議が予定されている。"},
+    "ベリル":{"f": "エネルギー", "d": "北海の油田。", "w": "影響を受ける施設がある。"},
+    "エナジー・ライブ・ニュース":{"f": "メディア", "d": "英国のエネルギー業界メディア。", "w": "ガソリン価格の見出しをつけた。"},
+    "ベアード・マリタイム":{"f": "メディア", "d": "海事・洋上産業のニュース媒体。", "w": "アパッチの対応を伝えた。"},
+    "高等法院":{"f": "法律", "d": "イングランド・ウェールズの上位裁判所。", "w": "ウーバーに対する訴えを判断した。"},
+    "フィナンシャル・タイムズ":{"f": "メディア", "d": "英国の経済紙。", "w": "判断を報じた。"},
+    "アバーファン":{"f": "歴史", "d": "1966年にボタ山が崩れたウェールズの村。", "w": "60周年。"},
+    "ボタ山":{"f": "歴史", "d": "炭鉱から出た廃石の山。", "w": "アバーファンで崩れた。"},
+    "ブロードムーア病院":{"f": "医療", "d": "バークシャーにある高度保安の精神科病院。", "w": "ビデオリンクで出廷した場所。"},
+    "ベルマーシュ":{"f": "司法", "d": "ロンドン南東部の高度保安刑務所。", "w": "襲撃があったとされる。"},
+    "プレス・ガゼット":{"f": "メディア", "d": "英国のジャーナリズム業界誌。", "w": "運営停止を報じた。"},
+    "エリソン":{"f": "ビジネス", "d": "エリソン家。ロイターが報じるCNNの件での新たな所有者。", "w": "ロイターは退社をこれと結びつけている。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
