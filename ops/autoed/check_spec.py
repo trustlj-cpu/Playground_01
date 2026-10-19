@@ -118,7 +118,25 @@ def check(spec):
     return err
 
 
+def prev_dups(spec, path, th=0.5):
+    # 사장님 2026-10-19 일관성: 어제 판과 같은 사건을 그대로 다시 싣지 않는다(새 전개가 있으면 제목에 그 전개를 쓴다).
+    import os, datetime as dt
+    try:
+        d = dt.date.fromisoformat(spec.get('date') or os.path.basename(path).split('_')[1])
+    except Exception:
+        return []
+    y = d - dt.timedelta(days=1)
+    pp = os.path.join(os.path.dirname(os.path.dirname(path)), y.strftime('%m%d'), f"{spec.get('region')}_{y}_spec.json")
+    if not os.path.exists(pp): return []
+    old = json.load(open(pp, encoding='utf-8'))
+    it = lambda s: [(('story ' + x['id']), _toks(x['hl'] + ' ' + x.get('deck', ''))) for x in s.get('stories', [])] + [(('index ' + str(x['id'])), _toks(x['hl'])) for x in s.get('index', [])]
+    return [f'{a}~어제 {b}' for a, ta in it(spec) for b, tb in it(old) if ta and tb and len(ta & tb) / min(len(ta), len(tb)) >= th]
+
+
 if __name__ == '__main__':
-    err = check(json.load(open(sys.argv[1], encoding='utf-8')))
+    spec = json.load(open(sys.argv[1], encoding='utf-8'))
+    err = check(spec)
+    pd = prev_dups(spec, sys.argv[1])
+    if pd: err.append('어제 판과 같은 사건(새 전개면 제목을 새 전개로, 아니면 교체): ' + ', '.join(pd[:6]))
     print('ok' if not err else 'ERR ' + '; '.join(err))
     sys.exit(1 if err else 0)
