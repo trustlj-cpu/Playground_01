@@ -316,7 +316,7 @@ def commit(msg, force=False):
     if os.environ.get("DD_COMMIT") != "1" and not force:
         return
     g = lambda *a: subprocess.run(['git', *a], cwd=ROOT, capture_output=True, text=True)
-    g('add', 'site/editions', 'site/editions.json', 'site/markets.json', 'site/pool.json')
+    g('add', 'site/editions', 'site/editions.json', 'site/markets.json', 'site/pool.json', 'site/extras')
     if g('diff', '--cached', '--quiet').returncode == 0:
         return
     g('commit', '-m', msg)

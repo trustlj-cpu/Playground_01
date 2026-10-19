@@ -61,7 +61,30 @@ def check(spec):
         for s_ in st[1:]:
             if not 1 <= len(s_.get('paras', [])) <= 2: err.append(f'story {s_.get("id")} paras must be 1-2')
     empty_ab = [i for i in ids if not ((spec.get('popups', {}).get(i) or {}).get('a') and (spec.get('popups', {}).get(i) or {}).get('b'))]
-    if len(empty_ab) > 2: err.append(f'a·b(두 가지 시선) 비어 있는 팝업이 {len(empty_ab)}개 > 2: {empty_ab}')
+    # 사장님 2026-10-19 일관성 검수: 10/16~18 호에서 a·b 가 통째로 비어 발행됨 → 빈 칸 0개.
+    if empty_ab: err.append(f'a·b(두 가지 시선) 비어 있는 팝업 {empty_ab} — 10개 전부 채운다')
+    # 출처: 6~9호처럼 '매체(무엇, 날짜)'. Google News 는 매체가 아니다.
+    DATE = re.compile(r'\d{1,2}[/.]\d{1,2}|\d{1,2}\s*(月|월|日)|\b\d{1,2}\s+[A-Za-zÀ-ÿ]{3,}|[A-Za-z]{3,}\.?\s+\d{1,2}\b|\d{1,2}\s*[\u0590-\u06FF]')
+    for i in ids:
+        src = (spec.get('popups', {}).get(i) or {}).get('src', '')
+        if re.search(r'google\s*news|news\.google', src, re.I): err.append(f'popup {i}.src 에 Google News — 실제 매체 이름으로')
+        if not DATE.search(src): err.append(f'popup {i}.src 에 날짜 없음 — "매체(무엇, 날짜)" 형식')
+        if len(re.split(r'\s*[·,;、،]\s*', src.strip())) < 2 and len(src) < 25: err.append(f'popup {i}.src 너무 짧음')
+    # extras: 원문 링크 + 인플루언서 발언(10/14~ 빠졌던 것). finish.py 가 site/extras 로 쓴다.
+    ex = spec.get('extras') or {}
+    infl = ex.get('infl') or []
+    if not 4 <= len(infl) <= 6: err.append(f'extras.infl {len(infl)}개 (4~6: 자국 2~3 + 세계 2~3)')
+    for k, x in enumerate(infl):
+        if not all(x.get(f) for f in ['who', 'where', 'date', 'u', 't']): err.append(f'infl[{k}] who/where/date/u/t 누락')
+        elif not re.match(r'https?://', x['u']): err.append(f'infl[{k}].u URL 아님')
+        elif not all(x['t'].get(l) for l in ['en', 'ko', 'ja']): err.append(f'infl[{k}].t en·ko·ja 필요')
+    srcl = ex.get('src') or {}
+    for i in ids:
+        L = srcl.get(i) or []
+        ptxt = (spec.get('popups', {}).get(i) or {}).get('src', '')
+        if not L: err.append(f'extras.src[{i}] 원문 링크 없음(1개 이상)')
+        for l in L:
+            if not re.match(r'https?://', l.get('u', '')) or not l.get('n') or l['n'] not in ptxt: err.append(f'extras.src[{i}] n 이 src 글자에 없거나 u 가 URL 아님: {l.get("n")}')
     import re as _re
     meta = _re.compile(r'Jev|jev|수집된|수집분|이번 호는|독자가 기억|독자에게 필요|편이 안전|편이 정확|추측성|収集した|本号は|今号は|collected (stories|reports|articles)|this edition|in this edition|the feed\b|were gathered|our sources|not in the (collected|sources)', _re.I)
     body_text = ' '.join(' '.join(s_.get('paras', [])) + ' ' + s_.get('deck', '') for s_ in st) + ' ' + ' '.join((b.get('t', '') + ' ' + b.get('s', '')) for s_ in st for b in s_.get('briefs', []) or [])
@@ -72,14 +95,14 @@ def check(spec):
             if not s.get(k): err.append(f'story {s.get("id")} missing {k}')
         if '<br' in s.get('hl', ''): err.append('br in headline')
     if not st or not st[0].get('deck'): err.append('lead needs deck')
-    if not st or not st[4].get('briefs') or len(st[4]['briefs']) < 5: err.append('story[4] needs briefs (5+)')
+    if not st or not st[4].get('briefs') or len(st[4]['briefs']) < 8: err.append('story[4] needs briefs (8: 6~9호 수준)')
     text = ' '.join(' '.join(s['paras']) + ' ' + s['hl'] + ' ' + s.get('deck', '') for s in st)
     text += ' ' + ' '.join(i['hl'] + ' ' + i['em'] for i in spec.get('index', []))
     text += ' ' + ' '.join(r['claim'] + ' ' + r['resp'] for r in spec.get('rumor', []))
     text += ' ' + ' '.join(r['text'] for r in spec.get('next', []))
     text += ' ' + ' '.join(' '.join(p.values()) for p in spec.get('popups', {}).values())
     g = spec.get('glossary', {})
-    if not 12 <= len(g) <= 40: err.append(f'glossary {len(g)} (want 18-25)')
+    if not 30 <= len(g) <= 60: err.append(f'glossary {len(g)} (30~60: 6~9호 수준)')
     body = ' '.join(' '.join(s['paras']) + ' ' + s['hl'] + ' ' + s.get('deck', '') for s in st) + ' ' + ' '.join(i['hl'] + ' ' + i['em'] for i in spec.get('index', []))
     miss = [k for k in g if k not in body]
     if miss: err.append(f'glossary keys not in visible text: {miss[:6]}')

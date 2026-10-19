@@ -16,6 +16,10 @@ for a in sys.argv[1:]:
         r = subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'render.py'), sp, '--meta', f'{META}/{code}_{date}_meta.json'], capture_output=True, text=True)
         if r.returncode:
             print('RENDER FAIL', a, (r.stderr or r.stdout)[-300:]); continue
+        ex = json.load(open(sp, encoding='utf-8')).get('extras')
+        if ex:  # 원문 링크·인플루언서 → site/extras (build.js 가 붙인다)
+            ef = os.path.join(run.SITE, 'extras', c['prefix'] + date + '.json'); os.makedirs(os.path.dirname(ef), exist_ok=True)
+            open(ef, 'w', encoding='utf-8').write(json.dumps({'src': ex.get('src', {}), 'infl': ex.get('infl', [])}, ensure_ascii=False, indent=1) + '\n')
     try:
         info = run.validate(path, 30000)
         meta = json.load(open(f'{META}/{code}_{date}_meta.json'))

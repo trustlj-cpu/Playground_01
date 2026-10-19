@@ -30,6 +30,8 @@ Queries (Cloudflare MCP D1, database_id 0f239386-f7cf-42ed-838d-46eb896bea87; ru
 1) Region items (titles merged across outlets; n = number of outlets):
 {prep.sql_region(a.code, f(since), f(until))}
 2) Jev ranking: {prep.sql_jev(a.code, f(since)[:13], f(until)[:13])}
+4) Influencer statements (extras.infl; rules in /home/user/Playground_01/ops/ed/EXTRAS.md 'infl'): SELECT source,title,link,region,published_at FROM items WHERE field='인플루언서' AND region IN ('{a.code}','GLB') AND {prep._win(f(since), f(until))} ORDER BY tier, published_at DESC LIMIT 80
+5) Source links (extras.src, after choosing stories): SELECT source,title,link FROM items WHERE region IN ('{a.code}','GLB') AND {prep._win(f(since), f(until))} AND (title LIKE '%<kw>%' OR …) LIMIT 60 — URLs only from items.link, never invented.
 3) Tape quotes (use only completed closes with ts inside the window, else "—"): SELECT k,v,chg,ts FROM quotes WHERE k IN ({keys})
 
 Output: write {out} then run `python3 /home/user/Playground_01/ops/autoed/check_spec.py {out}` until it prints ok. Do not render, commit or edit any other file.
