@@ -126,6 +126,7 @@ def prev_dups(spec, path, th=0.5):
     except Exception:
         return []
     y = d - dt.timedelta(days=1)
+    path = os.path.abspath(path)
     pp = os.path.join(os.path.dirname(os.path.dirname(path)), y.strftime('%m%d'), f"{spec.get('region')}_{y}_spec.json")
     if not os.path.exists(pp): return []
     old = json.load(open(pp, encoding='utf-8'))
