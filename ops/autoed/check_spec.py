@@ -107,6 +107,9 @@ def check(spec):
     miss = [k for k in g if k not in body]
     if miss: err.append(f'glossary keys not in visible text: {miss[:6]}')
     if BAN.search(json.dumps(spec, ensure_ascii=False)): err.append('forbidden production wording')
+    # Google News 는 매체가 아니다(사장님 2026-10-19 검수) — 본문·팝업·단신 어디에도 금지. extras 의 URL 은 예외.
+    vis = json.dumps({k: v for k, v in spec.items() if k != 'extras'}, ensure_ascii=False)
+    if re.search(r'google\s*news', vis, re.I): err.append('Google News 를 매체로 쓰지 마라(본문·팝업·단신 전부) — 실제 매체 이름으로')
     if not spec.get('blurb') or len(spec.get('pool', [])) < 8: err.append('blurb/pool')
     for k, v in spec.get('markets', {}).items():
         if not isinstance(v, dict) or v.get('v') is None: err.append(f'market {k}')
