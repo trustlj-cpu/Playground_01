@@ -95,7 +95,9 @@ def check(spec):
             if not s.get(k): err.append(f'story {s.get("id")} missing {k}')
         if '<br' in s.get('hl', ''): err.append('br in headline')
     if not st or not st[0].get('deck'): err.append('lead needs deck')
-    if not st or not st[4].get('briefs') or len(st[4]['briefs']) < 8: err.append('story[4] needs briefs (8: 6~9호 수준)')
+    # 사장님 2026-10-20: 단신 칸은 '짧게 보는 오늘' 하나로 합친다 — '짧게 더'(briefs) 폐지. 5번 기사는 본문 2문단 + nums 또는 word 로 채운다.
+    if any(s_.get('briefs') for s_ in st): err.append("briefs('짧게 더') 폐지됨 — 단신은 index(짧게 보는 오늘)에만")
+    if st and len(st) == 5 and (len(st[4].get('paras', [])) != 2 or not (st[4].get('nums') or st[4].get('word'))): err.append('story[4]: 본문 2문단 + nums 또는 word 필요(짧게 더 대신)')
     text = ' '.join(' '.join(s['paras']) + ' ' + s['hl'] + ' ' + s.get('deck', '') for s in st)
     text += ' ' + ' '.join(i['hl'] + ' ' + i['em'] for i in spec.get('index', []))
     text += ' ' + ' '.join(r['claim'] + ' ' + r['resp'] for r in spec.get('rumor', []))
