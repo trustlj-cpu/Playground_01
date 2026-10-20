@@ -75,6 +75,8 @@ def story_html(s, lay, lb):
     if s.get('briefs'):
         lis = ''.join(f'\n        <li>{esc(b["t"])}<span>{esc(b["s"])}</span></li>' for b in s['briefs'])
         parts.append(f'      <div class="fill"><h5>{esc(lb["briefs_h5"])}</h5><ul class="briefs">{lis}\n      </ul><div class="house">{esc(lb["house"])}</div></div>')
+    if not s.get("briefs") and s.get("_last") and lb.get("house"):
+        parts.append(f'      <div class="house">{esc(lb["house"])}</div>')
     parts.append('    </article>')
     return '\n'.join(parts)
 
@@ -109,7 +111,7 @@ def build_main(spec, tpl, lb):
   <hr class="rule-h">
 
   <section class="strip">
-    {story_html(st[4], lay[4], lb)}
+    {story_html({**st[4], "_last": True}, lay[4], lb)}
     <div class="col c2 vr">
       <div class="rumor">
         <h4>{esc(lb["rumor_h4"])}</h4>{rumor}
@@ -148,6 +150,13 @@ def dump_obj(name, obj):
 def render(spec, tpl_path):
     tpl = open(tpl_path, encoding='utf-8').read()
     lb = labels(tpl)
+    # 직전 호에 없던 칸(숫자·단어·하우스 줄)의 제목은 같은 나라 예전 호에서 찾는다(빈 <h5> 방지, 10/20)
+    d = os.path.dirname(tpl_path)
+    for f in sorted(os.listdir(d), reverse=True):
+        if not re.match(r'\d{4}-\d\d-\d\d\.html$', f) or all(lb[k] for k in ('nums_h5', 'word_h5', 'house')): continue
+        old = labels(open(os.path.join(d, f), encoding='utf-8').read())
+        for k in ('nums_h5', 'word_h5', 'house'):
+            if not lb[k] and old[k]: lb[k] = old[k]
     # 머리(스타일) = <header> 앞까지, 꼬리 = <div class="tip" 부터
     i_head = re.search(r'<div class="sheet"[^>]*>', tpl).start()
     i_tail = tpl.index('<div class="tip"')
