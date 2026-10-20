@@ -120,7 +120,7 @@ const handler = {
       }
     }
     // 기사별 페이지(/<prefix><date>/a/<id>/): 그 호의 a.json(예약 발행 규칙을 그대로 따르도록 이 Worker를 다시 거쳐 가져옴)과 나라별 틀(/_art/<나라>.html)로 조립
-    const am = request.method === 'GET' && url.pathname.match(/^\/((?:[a-z]{2}\/)?\d{4}-\d\d-\d\d\/)a\/([\w-]+)(\/?)$/);
+    const am = request.method === 'GET' && url.pathname.match(/^\/((?:[a-z]{2}\/)?\d{4}-\d\d-\d\d\/)a\/([\w]+(?:-(?!-)[\w]+)*)(?:--[^/]*)?(\/?)$/);
     if (am) {
       if (!am[3]) return Response.redirect(url.origin + url.pathname + '/' + url.search, 301);
       // 같은 기사는 한 번 조립한 것을 5분간 재사용(엣지 캐시). 200만 저장하므로 공개 전 기사는 저장되지 않는다.

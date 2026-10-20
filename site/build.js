@@ -278,10 +278,15 @@ const SEO_HEAD = (page, extra) => page.replace('</head>', extra + '</head>');
 // 나라 1면(최신 호 사본)에는 날짜 페이지용 hreflang 을 남기지 않는다(대표 주소가 다르므로)
 const NOALT = h => h.replace(/<link rel="alternate" hreflang="[^"]*" href="[^"]*">/g, '');
 // 기사 본문을 검색엔진이 읽게: 각 기사(.story) 안에 팝업과 같은 본문을 숨김(hidden) 블록으로 함께 싣는다. 화면은 그대로, 누르면 여는 팝업 내용과 동일(아코디언과 같은 방식).
+// 기사 주소에 헤드라인 낱말을 붙인다(/a/<id>--<낱말>/, 2026-10-21 호부터. 사장님 10/20: 화면·기능 구조는 그대로, 검색어에만 걸리게). 예전 주소(/a/<id>/)도 Worker가 그대로 연다.
+const ASLUG = (id, title, base) => { const d = (String(base).match(/\d{4}-\d\d-\d\d/) || [''])[0]; if (d < '2026-10-21') return id;
+  const t = String(title || '').normalize('NFKC').toLowerCase().replace(/['’"“”«»「」『』]/g, ''); const w = t.match(/[\p{L}\p{N}]+/gu) || []; const MAX = /[\uac00-\ud7af\u3040-\u9fff]/.test(t) ? 30 : 60; let out = '';
+  for (const x of w) { const y = /[\u3040-\u30ff\u4e00-\u9fff]/.test(x) ? x.slice(0, 24) : x; if ((out + '-' + y).length > MAX) break; out += (out ? '-' : '') + y; }
+  return out ? `${id}--${encodeURIComponent(out)}` : id; };
 const FULLTEXT = (h, base) => { const m = h.match(/const A = (\{[\s\S]*?\n  \});\n/); if (!m) return h; let A; try { A = new Function('return ' + m[1])(); } catch (e) { return h; }
   const plain = x => String(x || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
   for (const [id, a] of Object.entries(A)) { if (!a || typeof a !== 'object') continue; const body = [a.what, a.why, a.me, a.a, a.b, a.say].map(plain).filter(Boolean); if (!body.length) continue;
-    const blk = `<div class="dd-full" hidden>${body.map(t => `<p>${esc(t)}</p>`).join('')}${a.src ? `<p>${esc(plain(a.src))}</p>` : ''}${base && a.title ? `<a href="${base}a/${id.replace(/[^\w-]/g, '')}/">${esc(plain(a.title))}</a>` : ''}</div>`;
+    const blk = `<div class="dd-full" hidden>${body.map(t => `<p>${esc(t)}</p>`).join('')}${a.src ? `<p>${esc(plain(a.src))}</p>` : ''}${base && a.title ? `<a href="${base}a/${ASLUG(id.replace(/[^\w-]/g, ''), plain(a.title), base)}/">${esc(plain(a.title))}</a>` : ''}</div>`;
     const re = new RegExp(`(<[a-z]+[^>]*\\bdata-id="${id.replace(/[^\w-]/g, '')}"[^>]*>)`); if (re.test(h)) h = h.replace(re, `$1${blk}`); }
   return h; };
 const BLURB_DESC = (e, base) => e.blurb ? (e.blurb + ' — ' + base).slice(0, 300) : base;
@@ -351,7 +356,7 @@ const ARTS = (h, e, l, base, edUrl, X) => { const m = h.match(/const A = (\{[\s\
   const plain = x => String(x || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); const r = e.region || 'KR'; const R = REGIONS[r]; const own = R.lang === l;
   const edT = own ? R.title(e.no, e.date) : TTITLE(l, r, e.no, e.date); const read = PG(l, 'aboutPage').read; const when = e.publish_at || (e.date + 'T06:00:00Z'); const AJ = { r, items: {} }; ARTTPL(r, l);
   for (const [id0, a] of Object.entries(A)) { if (!a || typeof a !== 'object' || !a.title) continue; const id = id0.replace(/[^\w-]/g, ''); const t = plain(a.title); const desc = plain(a.what).slice(0, 160);
-    const url = `${base}a/${id}/`; const paras = [a.what, a.why, a.me, a.a, a.b, a.say].map(plain).filter(Boolean);
+    const url = `${base}a/${ASLUG(id, t, base)}/`; const paras = [a.what, a.why, a.me, a.a, a.b, a.say].map(plain).filter(Boolean);
     const links = ((X && X.src && X.src[id0]) || []).filter(s => s && /^https?:\/\//.test(s.u || '')).map(s => `<li><a href="${esc(s.u)}" rel="noopener nofollow" target="_blank">${esc(s.n || s.u)}</a></li>`).join('');
     const ld = '<script type="application/ld+json">' + JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: t.slice(0, 110), description: desc, url: SITE + url, mainEntityOfPage: SITE + url, inLanguage: l, datePublished: when, dateModified: when, image: [SITE + '/og.png?v=5'], isAccessibleForFree: true, isPartOf: { '@type': 'CreativeWork', name: edT, url: SITE + edUrl }, author: { '@type': 'Organization', name: 'DailyDrop', url: SITE + '/about/' }, publisher: { '@type': 'NewsMediaOrganization', name: 'DailyDrop', url: SITE + '/', logo: { '@type': 'ImageObject', url: SITE + '/brand/icon-512.png', width: 512, height: 512 } } }).replace(/</g, '\\u003c') + '</script>';
     const css = `<style>main{max-width:680px}.ak{font:600 12px/1.4 var(--sans,system-ui);letter-spacing:.04em;color:var(--mute);margin:18px 0 6px}.at{font-size:clamp(24px,5.4vw,34px);line-height:1.25;margin:0 0 14px;text-wrap:balance}.at:lang(ko){word-break:keep-all}main p{text-align:justify;hyphens:auto;line-height:1.75}.ae{color:var(--mute);font-size:13px;margin-top:22px}.as{font-size:13px;padding-left:18px}.as a{color:inherit}</style>`;
