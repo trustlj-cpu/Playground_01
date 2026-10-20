@@ -229,12 +229,17 @@ def make(job, editions, rows, world, jev, quotes, system):
     ql = quote_lines(quotes, [t[1] for t in c.get('tape', [])], hi)
     user = build_user(job, rows, world, jl, ql, style_ref(tpl_html))
     last, usage_all = None, []
-    for attempt in range(2):
+    for attempt in range(3):
         txt, usage = call(system, user + (f'\n\nYour previous answer failed these checks — fix them and answer again with the full JSON: {last}' if last else ''))
         usage_all.append(usage)
         try:
             spec = parse_spec(txt)
             spec['region'], spec['date'] = c['code'], job['date']
+            # 본문에 없는 용어 키는 기계적으로 뺀다(남은 용어가 하한 이상일 때만) — 재시도 한 번을 아끼는 정리
+            g = spec.get('glossary') or {}; st_ = spec.get('stories') or []
+            vis = ' '.join(' '.join(x.get('paras', [])) + ' ' + x.get('hl', '') + ' ' + x.get('deck', '') for x in st_) + ' ' + ' '.join(i.get('hl', '') + ' ' + i.get('em', '') for i in spec.get('index', []))
+            keep = {k: v for k, v in g.items() if k in vis}
+            if len(keep) >= 30: spec['glossary'] = keep
             errs = check_spec.check(spec)
             if errs:
                 raise ValueError('; '.join(errs)[:500])
