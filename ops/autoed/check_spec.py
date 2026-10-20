@@ -115,6 +115,20 @@ def check(spec):
     if not spec.get('blurb') or len(spec.get('pool', [])) < 8: err.append('blurb/pool')
     for k, v in spec.get('markets', {}).items():
         if not isinstance(v, dict) or v.get('v') is None: err.append(f'market {k}')
+    # 사장님 2026-10-21 승인: ① kick/tag 의 '✓ N' = 팝업 src 의 매체 수(· 로 나눈 항목 수) ② 헤드라인 숫자는 본문(또는 팝업 what)에 그대로 있어야
+    pops = spec.get('popups', {})
+    def nsrc(i):
+        return len([x for x in re.split(r'\s*[·•]\s*', (pops.get(i) or {}).get('src', '')) if x.strip()])
+    def num_tokens(t):
+        return {x.replace(',', '').replace(' ', '') for x in re.findall(r'\d[\d,.]*\d%?|\d+%?', t) if len(x.replace(',', '')) >= 2}
+    for x in st + spec.get('index', []):
+        i = x.get('id'); lab = x.get('verify') or x.get('tag') or ''
+        m = re.search(r'✓\s*(\d+)', lab)
+        if m and i in pops and int(m.group(1)) != nsrc(i): err.append(f'{i}: 표기 ✓{m.group(1)} ≠ 출처 {nsrc(i)}곳(매체 수를 src 목록과 맞춰라)')
+        body = ' '.join(x.get('paras', [])) + ' ' + x.get('deck', '') + ' ' + x.get('em', '') + ' ' + (pops.get(i) or {}).get('what', '')
+        bn = {y.replace(',', '').replace(' ', '') for y in re.findall(r'\d[\d,.]*\d%?|\d+%?', body)}
+        miss = [n for n in num_tokens(x.get('hl', '')) if n not in bn and n.rstrip('%') not in {b.rstrip('%') for b in bn}]
+        if miss: err.append(f'{i}: 헤드라인 숫자 {miss} 가 본문·팝업에 없음(숫자 일치)')
     d = dup_items(spec)
     if d: err.append('duplicate items in edition: ' + ', '.join(d[:6]))
     return err
