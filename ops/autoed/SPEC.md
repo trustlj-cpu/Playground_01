@@ -54,3 +54,6 @@ story = `{"id","cat":"분야 · 세부","verify":"✓ N매체 · 무엇이 미�
 1. Jev: `SELECT title,n,front,conf FROM jev WHERE region='{CODE}' AND hour >= '{SINCEH}' AND hour <= '{UNTILH}' ORDER BY front DESC, conf DESC LIMIT 8`
 2. 나라 기사: 작업 파일에 적힌 SQL 한 번(제목 중복이 이미 합쳐져 있음). 이 두 조회로 **어떤 사건을 쓸지만 고른다.** 사건마다 WebSearch/WebFetch 로 서로 다른 매체 2곳 이상의 실제 기사를 읽고 내용을 확인한 뒤 쓴다(기사당 검색 2~3회면 충분). 피드의 110자 요약만으로 본문을 쓰지 마라.
 Cloudflare MCP: ToolSearch "select:mcp__Cloudflare_Developer_Platform__d1_database_query", database_id 0f239386-f7cf-42ed-838d-46eb896bea87.
+
+## 석간(evening edition) 작성 시
+작업 파일에 EVENING EDITION 이 적혀 있으면: spec 에 `"slot":"pm"` 추가, 날짜줄은 `No. N · Evening`(그 나라 말로), 호수는 그날 조간과 같다. 같은 날 조간 spec 과 같은 사건을 다시 쓰지 말고(새 전개일 때만, 제목에 그 전개를 쓴다) 나머지 규칙은 조간과 같다.

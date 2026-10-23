@@ -125,22 +125,22 @@ const cname = (l, k) => { const o = (I18N[l] && I18N[l].country || {})[k]; if (o
 const write = (f, o) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(o)); };
 const iso = t => { const n = typeof t === 'number' ? t : Date.parse(t); return isFinite(n) ? new Date(n).toISOString() : null; };
 
-// 호별 파일들(appDir/<REGION>/<date>.<lang>.json)을 모아 index·용어사전을 만든다. keep(region, date)로 거른다(예약 사본용).
+// 호별 파일들(appDir/<REGION>/<date>.<lang>.json, 석간은 <date>-pm.<lang>.json)을 모아 index·용어사전을 만든다. keep(region, date, slot)로 거른다(예약 사본용; 조간 slot='').
 function aggregate(appDir, keep = () => true, generated = new Date().toISOString()) {
   const eds = [];
   for (const c of COUNTRIES) {
     const d = path.join(appDir, c.code); let fl = []; try { fl = fs.readdirSync(d); } catch (e) { continue; }
-    for (const f of fl) { const m = f.match(/^(\d{4}-\d{2}-\d{2})\.([A-Za-z-]+)\.json$/); if (!m || !keep(c.code, m[1])) continue; try { eds.push({ region: c.code, file: path.join(d, f), j: JSON.parse(fs.readFileSync(path.join(d, f), 'utf8')) }); } catch (e) { } }
+    for (const f of fl) { const m = f.match(/^(\d{4}-\d{2}-\d{2})(-pm)?\.([A-Za-z-]+)\.json$/); if (!m || !keep(c.code, m[1], m[2] ? 'pm' : '')) continue; try { eds.push({ region: c.code, file: path.join(d, f), j: JSON.parse(fs.readFileSync(path.join(d, f), 'utf8')) }); } catch (e) { } }
   }
   const regions = [];
   for (const c of COUNTRIES) {
     const mine = eds.filter(x => x.region === c.code); if (!mine.length) continue;
     const own = c.langs[0]; const byDate = new Map();
-    for (const x of mine) { const k = x.j.date; if (!byDate.has(k)) byDate.set(k, { date: k, no: x.j.no, langs: [] }); byDate.get(k).langs.push(x.j.lang); if (x.j.card) byDate.get(k).card = x.j.card; }
+    for (const x of mine) { const k = x.j.date + (x.j.slot ? '-' + x.j.slot : ''); if (!byDate.has(k)) byDate.set(k, { date: x.j.date, ...(x.j.slot ? { slot: x.j.slot, id: k } : {}), no: x.j.no, langs: [] }); byDate.get(k).langs.push(x.j.lang); if (x.j.card) byDate.get(k).card = x.j.card; }
     const order = l => (l === own ? -1 : LANGS.indexOf(l) < 0 ? 999 : LANGS.indexOf(l));
-    const list = [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date)); list.forEach(e => e.langs.sort((a, b) => order(a) - order(b)));
+    const list = [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date) || (b.slot ? 1 : 0) - (a.slot ? 1 : 0)); list.forEach(e => e.langs.sort((a, b) => order(a) - order(b)));
     const langs = [...new Set(list.flatMap(e => e.langs))].sort((a, b) => order(a) - order(b));
-    regions.push({ code: c.code, name: Object.fromEntries(LANGS.map(l => [l, cname(l, c.code)])), prefix: c.prefix, langs, tz: c.tz, latest: { date: list[0].date, no: list[0].no }, editions: list });
+    regions.push({ code: c.code, name: Object.fromEntries(LANGS.map(l => [l, cname(l, c.code)])), prefix: c.prefix, langs, tz: c.tz, latest: { date: list[0].date, ...(list[0].slot ? { slot: list[0].slot } : {}), no: list[0].no }, editions: list });
   }
   const glossary = {};
   const ri = r => COUNTRIES.findIndex(c => c.code === r);
@@ -164,25 +164,25 @@ function build(ctx) {
   for (const e of editions) {
     const region = e.region || 'KR', c = CBY[region]; if (!c) continue; const own = c.langs[0];
     let X = null; try { X = h.EXTRA(e); } catch (err) { }
-    const variants = [[own, e.file, `${SITE}/${c.prefix}${e.date}/`], ...Object.entries(e.translations || {}).map(([l, f]) => [l, path.resolve(SPECDIR, f), `${SITE}/${c.prefix}${e.date}/${l}/`])];
+    const dkey = e.dkey || e.date; const variants = [[own, e.file, `${SITE}/${c.prefix}${dkey}/`], ...Object.entries(e.translations || {}).map(([l, f]) => [l, path.resolve(SPECDIR, f), `${SITE}/${c.prefix}${dkey}/${l}/`])];
     for (const [lang, file, url] of variants) {
       try {
         const html = fs.readFileSync(file, 'utf8'); const x = extract(html);
-        const z = h.TZ(region, e.date, lang), am = h.isAM(e.date);
+        const z = h.TZ(region, e.date, lang), am = h.isAM(e.date) && !e.slot;
         const time = lang === 'en' ? `${am ? '6:00 a.m.' : '6:00 p.m.'} ${z}` : `${am ? '06:00' : '18:00'} ${z}`;
         const glossary = {}; for (const [k, v] of Object.entries(x.G)) if (v && typeof v === 'object') glossary[k] = { f: plain(v.f), d: plain(v.d), w: plain(v.w) };
         const influencers = ((X && X.infl) || []).filter(i => i && i.who && h.okUrl(i.u)).slice(0, 6).map(i => { const t = i.t || {}; return { who: String(i.who), where: String(i.where || ''), date: String(i.date || ''), u: i.u, t: String(t[lang] || t[String(lang).split('-')[0]] || t.en || t[own] || '') }; });
         const sources = []; for (const [id, v] of Object.entries((X && X.src) || {})) for (const o of (Array.isArray(v) ? v : [])) if (o && o.n && h.okUrl(o.u) && !o.search) sources.push({ id, n: String(o.n), u: o.u, alt: (o.alt || []).map(String) });
         // 제호 아래 시세표(웹 .tape와 같은 값·같은 문구): 종목명·값·▲▼·등락, 아래 안내 문구
-        let tape = null; try { const t = first(parse(h.TAPE ? h.TAPE(e.date, region, lang) : ''), n => has(n, 'tape')); if (t) tape = { note: t.attrs['data-note'] || '', q: els(t).filter(q => has(q, 'q')).map(q => { const f = tg => els(q).find(c => c.tag === tg); const i = f('i'); const u = i && els(i).find(c => c.tag === 'u'); const sp = i && els(i).find(c => c.tag === 'span'); return { k: q.attrs['data-k'] || '', name: text(f('b')), v: text(f('em')), dir: has(q, 'dn') ? 'dn' : has(q, 'upp') ? 'up' : '', tri: text(u), chg: text(sp), asof: text(f('small')) }; }) }; } catch (err) { tape = null; }
+        let tape = null; try { const t = first(parse(h.TAPE ? h.TAPE(dkey, region, lang) : ''), n => has(n, 'tape')); if (t) tape = { note: t.attrs['data-note'] || '', q: els(t).filter(q => has(q, 'q')).map(q => { const f = tg => els(q).find(c => c.tag === tg); const i = f('i'); const u = i && els(i).find(c => c.tag === 'u'); const sp = i && els(i).find(c => c.tag === 'span'); return { k: q.attrs['data-k'] || '', name: text(f('b')), v: text(f('em')), dir: has(q, 'dn') ? 'dn' : has(q, 'upp') ? 'up' : '', tri: text(u), chg: text(sp), asof: text(f('small')) }; }) }; } catch (err) { tape = null; }
         const doc = {
-          v: 1, region, lang, date: e.date, no: e.no, publishAt: iso(h.PUBAT(e)), url,
-          mast: { label: h.EDTXT(lang, region, e.no, e.date).num, dateline: `${h.COUNTRY(lang, region)}, ${h.dateIn(lang)(e.date)}`, time, house: x.mast.house, ears: x.mast.ears, ...(tape && tape.q.length ? { tape } : {}) },
+          v: 1, region, lang, date: e.date, ...(e.slot ? { slot: e.slot } : {}), no: e.no, publishAt: iso(h.PUBAT(e)), url,
+          mast: { label: h.EDTXT(lang, region, e.no, dkey).num, dateline: `${h.COUNTRY(lang, region)}, ${h.dateIn(lang)(e.date)}`, time, house: x.mast.house, ears: x.mast.ears, ...(tape && tape.q.length ? { tape } : {}) },
           stories: x.stories, blocks: x.blocks, glossary, influencers, sources,
           breaking: `/api/breaking.json?region=${region}&lang=${lang}`,
         };
         if (lang === own && h.CARD) { try { doc.card = h.CARD(region, e); } catch (err) { } }
-        write(path.join(appDir, region, `${e.date}.${lang}.json`), doc); n++;
+        write(path.join(appDir, region, `${dkey}.${lang}.json`), doc); n++;
       } catch (err) { fail++; console.warn(`app api: ${region} ${e.date} ${lang} skipped: ${err.message}`); }
     }
   }

@@ -77,3 +77,15 @@ finish.py 실행 시 `DD_META_DIR` 환경변수를 현재 세션 경로로 지�
 2. 검토는 3개국(KR·US·JP)을 한 에이전트가 한 번에 읽고 고친다(판별 검토 금지). 단, 판 사이 사건 중복 확인도 같은 호출에서 한다.
 3. 번역 재사용: 원문을 고쳐 재번역할 때는 바뀐 문단만 다시 번역하도록 번역 데스크에 변경 문단 목록(diff)을 JOB에 붙인다. 전체 재번역은 구조가 바뀐 때만.
 - 팝업 분량·발행 횟수·Haiku 사용은 품질 때문에 건드리지 않는다.
+
+## 석간 운영 (evening edition, 사장님 요구)
+- 개념: 각국은 같은 날짜에 현지 18:00 석간(`slot:"pm"`)을 완전한 두 번째 판으로 낼 수 있다. 조간과 호수(no)가 같다(제19호 조간 → 제19호 석간). 석간이 공개되면 1면·최신호가 석간이 되고 조간은 보관함의 지난 호가 된다. 표기: KR `… 석간`, JP `… 夕刊`, US `… · Evening`.
+- 주소·파일: 조간 `/<prefix><date>/` · `site/editions/<prefix><date>.html` (변경 없음). 석간 `/<prefix><date>-pm/` · `site/editions/<prefix><date>.pm.html`, 번역 `/<prefix><date>-pm/<lang>/` · `<prefix><date>.pm.<lang>.html`(자동 감지, editions.json translations 로 지정도 가능). markets.json·pool.json·extras 키는 `<date>-pm`(US 등은 `US:<date>-pm`, extras `site/extras/<prefix><date>-pm.json`).
+- editions.json: 석간 항목 = `{date, no(=조간과 같음), file:"editions/<prefix><date>.pm.html", blurb, region, slot:"pm", publish_at:"<현지 18:00의 UTC>"}`. 호의 식별 = (region, date, slot); 빌드는 중복·호수 불일치를 오류로 막는다.
+- 만드는 법(조간과 같은 JSON 방식):
+  1. `python3 ops/autoed/mktask.py CODE DATE --slot pm --dir <작업폴더>` → `CODE_DATE_pm_task.md` (자료 창은 현지 17:00까지, spec 은 `CODE_DATE_pm_spec.json`, spec 에 `"slot":"pm"`; 같은 폴더의 `CODE_DATE_spec.json`(조간)과 사건이 겹치면 check_spec.py 가 막는다).
+  2. 작성 에이전트 → `python3 ops/autoed/check_spec.py CODE_DATE_pm_spec.json` ok → (검토 에이전트) → render.py 가 같은 날 조간 HTML(없으면 직전 판)을 템플릿으로 `<prefix><date>.pm.html` 생성.
+  3. `DD_META_DIR=<작업폴더> python3 ops/autoed/finish.py CODE:DATE:pm` → 검증·등록(publish_at = 현지 18:00, 이미 지났으면 즉시)·빌드·push. 여러 개: `finish.py KR:2026-10-23:pm US:2026-10-23:pm`.
+  4. 예약: publish_at 이 미래면 schedule.js 가 `_sched/<나라>-<date>-pm` 사본을 만들어 Worker 가 현지 18:00에 내보낸다(조간 예약과 같음).
+- 번역 JOB(push 후, 원문 언어 제외): `JOB: site/editions/<prefix><date>.pm.html -> ko, en, ja` → 결과 파일은 `site/editions/<prefix><date>.pm.<lang>.html`.
+- 주의: 석간은 TTS 읽어주기·앵커 원고 대상이 아니다(한국판 조간 전용). run.py 폴백 자동 작성은 조간만 만든다(석간은 세션이 올린다). 앱 API(`/app/v1`)에는 석간이 `<date>-pm.<lang>.json` + index 항목 `slot:"pm", id:"<date>-pm"` 으로 추가된다(앱 쪽 표시는 별도 확인 필요). 푸시 알림은 `edition:"<date>-pm"` 으로 조간과 따로 한 번 나간다(feed Worker 배포 필요).

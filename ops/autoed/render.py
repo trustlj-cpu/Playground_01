@@ -3,6 +3,7 @@
 
 사용: render.py SPEC.json [--tpl 직전판.html] [--out 출력.html]
 - 스펙 형식은 SPEC.md. 직전 판은 site/editions.json 에서 그 나라의 가장 최근 판을 자동으로 찾는다.
+- 석간: 스펙에 "slot":"pm" → 출력 <prefix><date>.pm.html, 템플릿은 같은 날 조간(없으면 그 전 가장 최근 판).
 - 출력은 build.js 가 기대하는 모양(`  const A = {` … `  };`, `  const G = {` … `  };`)을 지킨다.
 """
 import argparse, html, json, os, re, sys
@@ -15,9 +16,14 @@ def esc(s):
     return html.escape(str(s), quote=False)
 
 
-def find_template(region, date):
+def find_template(region, date, slot=''):
+    """직전 판(뼈대·라벨 출처). 조간: 그 날짜 전의 가장 최근 조간. 석간(slot 'pm'): 같은 날 조간, 없으면 그 전의 가장 최근 판."""
     ed = json.load(open(os.path.join(SITE, 'editions.json'), encoding='utf-8'))
-    rows = sorted((e for e in ed if (e.get('region') or 'KR') == region and e['date'] < date), key=lambda e: e['date'])
+    if slot:
+        rows = sorted((e for e in ed if (e.get('region') or 'KR') == region and (e['date'] < date or (e['date'] == date and not e.get('slot')))),
+                      key=lambda e: (e['date'], 1 if e.get('slot') else 0))
+    else:
+        rows = sorted((e for e in ed if (e.get('region') or 'KR') == region and e['date'] < date and not e.get('slot')), key=lambda e: e['date'])
     for e in reversed(rows):
         p = os.path.join(SITE, e['file'])
         if os.path.exists(p):
@@ -210,8 +216,11 @@ def main():
     check_ids(spec)
     countries = {c['code']: c for c in json.load(open(os.path.join(SITE, 'countries.json'), encoding='utf-8'))}
     reg = spec['region']
-    tpl = a.tpl or find_template(reg, spec['date'])
-    out = a.out or os.path.join(SITE, 'editions', countries[reg]['prefix'] + spec['date'] + '.html')
+    slot = spec.get('slot') or ''
+    if slot not in ('', 'pm'):
+        raise SystemExit(f'unknown slot {slot!r} (only "pm")')
+    tpl = a.tpl or find_template(reg, spec['date'], slot)
+    out = a.out or os.path.join(SITE, 'editions', countries[reg]['prefix'] + spec['date'] + ('.' + slot if slot else '') + '.html')
     os.makedirs(os.path.dirname(out), exist_ok=True)
     open(out, 'w', encoding='utf-8').write(render(spec, tpl))
     if a.meta:

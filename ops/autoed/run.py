@@ -56,7 +56,7 @@ def jsave(p, obj, indent=1):
 
 
 def due(countries, editions, now, only):
-    have = {(e['date'], e.get('region') or 'KR') for e in editions}
+    have = {(e['date'], e.get('region') or 'KR') for e in editions if not e.get('slot')}  # 폴백은 조간만 채운다(석간은 세션이 올린다)
     out = []
     for c in countries:
         code = c['code']
@@ -75,7 +75,7 @@ def due(countries, editions, now, only):
 
 def backfill(countries, editions, dates, only, now):
     """지난 날짜 소급(사장님 10/16 '3번'): 그 날짜 판이 없는 나라를 즉시 공개(publish_at 없음)로 만든다."""
-    have = {(e['date'], e.get('region') or 'KR') for e in editions}
+    have = {(e['date'], e.get('region') or 'KR') for e in editions if not e.get('slot')}
     out = []
     for d in dates:
         day = dt.date.fromisoformat(d)
@@ -127,8 +127,14 @@ def region_rows(job, now, recent):
     return r, w
 
 
-def prev_edition(editions, code, before):
-    rows = sorted((e for e in editions if (e.get('region') or 'KR') == code and e['date'] < before), key=lambda e: e['date'])
+def prev_edition(editions, code, before, slot=''):
+    """템플릿으로 쓸 직전 판. 조간(slot '')은 예전과 같다: 그 날짜 전의 가장 최근 조간(석간 항목은 건너뜀).
+    석간(slot 'pm')은 같은 날 조간이 있으면 그것, 없으면 그 전의 가장 최근 판(조간·석간 무관)."""
+    if slot:
+        rows = sorted((e for e in editions if (e.get('region') or 'KR') == code and (e['date'] < before or (e['date'] == before and not e.get('slot')))),
+                      key=lambda e: (e['date'], 1 if e.get('slot') else 0))
+    else:
+        rows = sorted((e for e in editions if (e.get('region') or 'KR') == code and e['date'] < before and not e.get('slot')), key=lambda e: e['date'])
     for e in reversed(rows):
         p = os.path.join(SITE, e['file'])
         if os.path.exists(p):
@@ -286,12 +292,14 @@ def validate(path, tpl_len):
 
 def register(job, meta):
     code, d = job['c']['code'], job['date']
+    slot = job.get('slot') or ''  # '' = 조간, 'pm' = 석간(주소·파일·시장/풀 키는 <date>-pm / <date>.pm)
+    dk = d + ('-' + slot if slot else '')
     m = jload(os.path.join(SITE, 'markets.json'))
     mk = {k: v for k, v in (meta.get('markets') or {}).items() if isinstance(v, dict) and v.get('v') is not None}
     if code == 'KR':
-        m[d] = mk
+        m[dk] = mk
     else:
-        m.setdefault(code, {})[d] = mk
+        m.setdefault(code, {})[dk] = mk
     jsave(os.path.join(SITE, 'markets.json'), m)
     if meta.get('pool'):
         p = jload(os.path.join(SITE, 'pool.json'))
@@ -300,18 +308,20 @@ def register(job, meta):
                 return x
             mm = re.match(r'^(.*?)\s*\(([^()]{1,40})\)\s*$', str(x))
             return {'t': mm.group(1).strip(), 's': mm.group(2).strip()} if mm else {'t': str(x).strip()}
-        p[d if code == 'KR' else f'{code}:{d}'] = [cv(x) for x in meta['pool']]
+        p[dk if code == 'KR' else f'{code}:{dk}'] = [cv(x) for x in meta['pool']]
         jsave(os.path.join(SITE, 'pool.json'), p)
     ef = os.path.join(SITE, 'editions.json')
-    e = [x for x in jload(ef) if not (x['date'] == d and (x.get('region') or 'KR') == code)]
-    x = {'date': d, 'no': job['no'], 'file': f"editions/{job['c']['prefix']}{d}.html", 'blurb': str(meta.get('blurb', ''))}
+    e = [x for x in jload(ef) if not (x['date'] == d and (x.get('region') or 'KR') == code and (x.get('slot') or '') == slot)]
+    x = {'date': d, 'no': job['no'], 'file': f"editions/{job['c']['prefix']}{d}{'.' + slot if slot else ''}.html", 'blurb': str(meta.get('blurb', ''))}
+    if slot:
+        x['slot'] = slot
     if code != 'KR':
         x['region'] = code
     if job['publish_at']:
         x['publish_at'] = job['publish_at']
     e.append(x)
     order = ['KR', 'US', 'JP']
-    e.sort(key=lambda x: (x['date'], order.index(x.get('region') or 'KR') if (x.get('region') or 'KR') in order else 9, x.get('region') or ''))
+    e.sort(key=lambda x: (x['date'], 1 if x.get('slot') else 0, order.index(x.get('region') or 'KR') if (x.get('region') or 'KR') in order else 9, x.get('region') or ''))
     with open(ef, 'w', encoding='utf-8') as f:
         f.write(json.dumps(e, ensure_ascii=False, indent=2) + '\n')
 
