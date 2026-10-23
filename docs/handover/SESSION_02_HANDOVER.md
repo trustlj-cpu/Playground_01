@@ -67,3 +67,7 @@ finish.py 실행 시 `DD_META_DIR` 환경변수를 현재 세션 경로로 지�
 
 ## 토큰 기록 (사장님 요청 10/23)
 - 작성·검토 에이전트가 끝날 때마다 완료 알림의 subagent_tokens 를 세션 스크래치패드 tokens.tsv 에 한 줄(date, job, tokens)씩 추가한다. 08:00 현황 보고가 이 파일로 일별 합계·추이를 보고한다.
+
+## 모델 규칙 (사장님 10/23, 이전 "KR·JP·US는 Opus" 규칙 대체)
+- 모든 에이전트(작성·검토·수정·시험 원고)는 Agent 호출에 model: "sonnet", effort: "medium" 을 준다. Opus 는 쓰지 않는다.
+- API 대체 작성기(ops/autoed/run.py)는 이미 claude-sonnet-5-5 / medium 이 기본값.
