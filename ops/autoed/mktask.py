@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""새 방식 작업 지시서 생성: python mktask.py CODE DATE [--slot pm] [--until ISO] [--world 파일] [--dir 폴더]
+--slot pm = 석간(현지 18:00, 호수는 그날 조간과 같음). 자료 창은 현지 17:00까지, 파일명은 CODE_DATE_pm_*.
+지시서는 짧다(SPEC.md 를 읽게 하고 SQL 만 준다). 에이전트는 spec JSON 을 쓰고 check_spec.py 를 통과시킨다."""
+import argparse, datetime as dt, json, os, sys
+from zoneinfo import ZoneInfo
+sys.path.insert(0, os.path.dirname(__file__))
+import prep, run
+
+ap = argparse.ArgumentParser()
+ap.add_argument('code'); ap.add_argument('date')
+ap.add_argument('--until'); ap.add_argument('--world'); ap.add_argument('--dir', required=True)
+ap.add_argument('--slot', choices=['pm'], help='석간(evening edition)')
+a = ap.parse_args()
+C = {c['code']: c for c in json.load(open(os.path.join(run.SITE, 'countries.json'), encoding='utf-8'))}
+c = C[a.code]
+day = dt.date.fromisoformat(a.date)
+pm = a.slot == 'pm'
+five = dt.datetime.combine(day, dt.time(17 if pm else 5), ZoneInfo(c['tz'])).astimezone(dt.timezone.utc)  # 자료 마감: 조간 05:00, 석간 17:00(현지)
+now = dt.datetime.now(dt.timezone.utc)
+until = dt.datetime.fromisoformat(a.until.replace('Z', '+00:00')) if a.until else min(five, now)
+since = until - dt.timedelta(hours=30)
+f = lambda t: t.strftime('%Y-%m-%dT%H:%M:%S')
+keys = ','.join("'%s'" % t[1] for t in c['tape'])
+no = (day - run.NO1).days + 1
+tag = '_pm' if pm else ''
+out = os.path.join(a.dir, f'{a.code}_{a.date}{tag}_spec.json')
+morning = os.path.join(a.dir, f'{a.code}_{a.date}_spec.json')
+world = f'\nWorld stories to reuse (adapt, do not re-research): {a.world}\n' if a.world else ''
+pmnote = f"""
+EVENING EDITION (slot "pm"): a complete second edition of the same date, same No. {no}, published 18:00 local; it becomes the front page and the morning edition becomes an earlier edition. Put "slot":"pm" in the spec (next to "region" and "date"), write the dateline as "No. {no} · Evening" in the edition language. Cover what is new since the morning edition; do NOT re-run its stories unless there is a materially new development (then say so in the headline). Morning spec for comparison: {morning} (check_spec.py compares against it).
+""" if pm else ''
+txt = f"""# {a.code} No. {no}{' Evening (석간)' if pm else ''} ({a.date}) — {run.LANG[a.code]}
+
+Read /home/user/Playground_01/ops/autoed/SPEC.md and follow it exactly. Do not read any template or edition HTML.
+Edition: region {a.code}, date {a.date}, No. {no}, language {run.LANG[a.code]}, time zone {c['tz']}. Window: {f(since)}Z to {f(until)}Z (≈{'17:00' if pm else '05:00'} local). Nothing later except "what to watch {'tomorrow' if pm else 'today'}".{pmnote}{world}
+Queries (Cloudflare MCP D1, database_id 0f239386-f7cf-42ed-838d-46eb896bea87; run exactly these, nothing else):
+1) Region items (titles merged across outlets; n = number of outlets):
+{prep.sql_region(a.code, f(since), f(until))}
+2) Jev ranking: {prep.sql_jev(a.code, f(since)[:13], f(until)[:13])}
+4) Influencer statements (extras.infl; rules in /home/user/Playground_01/ops/ed/EXTRAS.md 'infl'): SELECT source,title,link,region,published_at FROM items WHERE field='인플루언서' AND region IN ('{a.code}','GLB') AND {prep._win(f(since), f(until))} ORDER BY tier, published_at DESC LIMIT 80
+5) Source links (extras.src, after choosing stories): SELECT source,title,link FROM items WHERE region IN ('{a.code}','GLB') AND {prep._win(f(since), f(until))} AND (title LIKE '%<kw>%' OR …) LIMIT 60 — URLs only from items.link, never invented.
+3) Tape quotes (use only completed closes with ts inside the window, else "—"): SELECT k,v,chg,ts FROM quotes WHERE k IN ({keys})
+
+Output: write {out} then run `python3 /home/user/Playground_01/ops/autoed/check_spec.py {out}` until it prints ok. Do not render, commit or edit any other file.
+Final report: 2 lines (lead headline + ears), nothing else.
+"""
+os.makedirs(a.dir, exist_ok=True)
+p = os.path.join(a.dir, f'{a.code}_{a.date}{tag}_task.md')
+open(p, 'w', encoding='utf-8').write(txt)
+print(p)

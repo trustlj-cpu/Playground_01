@@ -1,0 +1,361 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>KOSPI · 10/21 終値 · 紙面締め切り前に確定値なし</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ウォン/ドル相場 · 10/21 · 紙面締め切り前に確定値なし</div>
+    </div>
+    <div class="dateline"><span>第18号 · 朝刊</span><b>2026年10月22日 木曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="kospi">
+      <div class="kick">経済・株式市場<span>報道照合 ✓ 4社 · 外国人の純買い越しの最終金額は未確認</span></div>
+      <h2 class="hl">KOSPIが3.29%上げて5,735.66で引け…取引時間中は4%台の急騰、2か月ぶりに買いサイドカー</h2>
+      <p class="deck">前日の3.73%急落から1日で、反対方向に3%台動いた</p>
+      <div class="body">
+        <p>聯合ニュースは、21日のKOSPIが前営業日より182.92ポイント(3.29%)高い5,735.66で通常取引を終えたと伝えた。指数は113.60ポイント(2.05%)高い5,666.34で始まり、午前中に上げ幅を4%台に広げた。東亜日報は、午前10時52分ごろ、KOSPI200先物が前営業日より5%以上高い状態が1分を超えて続き、買いサイドカーが発動されたと報じ、発動時の先物価格は5.22%高の904.84だったと伝えた。東亜日報は、買いサイドカーが発動されると、5分間、プログラム売買の買い注文の効力が停止されると説明した。聯合ニュースは、買いサイドカーの発動は2か月ぶりだと伝え、電子新聞は、今年のKOSPIの買いサイドカーは25回目で、売り27回を合わせた発動は計52回になったと集計した。東亜日報と京郷新聞は、指数が取引時間中に5,800台を回復したと伝えた。KOSDAQ指数も1.4%上げたと聯合ニュースとSBSが報じた。聯合ニュースは、AI投資心理が回復し、いわゆる「サムジョンニクス」と呼ばれるサムスン電子とSKハイニックスが5%上昇し、取引時間中に外国人の純買い越しが続いたと伝えた。</p>
+        <p>前日の流れは正反対だった。SBSは、20日のKOSPIが3.73%急落の5,552.74で取引を終えたと伝えた。聯合ニュースは、KOSPIが1日に3～4%ずつ上げ下げするジェットコースターのような相場を見せており、反発後も不安が続くと報じた。聯合ニュースとSBSは、株式市場の待機資金である投資家預託金が90兆ウォンに再び減り、借金をして投資する信用残高の「借金投資」も30兆ウォンに減ったと伝えた。朝鮮日報は、反発の前日までKOSPIが6か月ぶりの最低水準に落ち込んだと報じた。朝鮮日報は、iM証券が、ウォン高にもかかわらず外国人の200兆ウォンの純売り越しが指数の重荷だと分析したと伝えた。ウォンは強含みを続けた。聯合ニュースとSBSは、21日のウォン/ドル相場が、半導体輸出の好調で4取引日連続で年初来安値を更新し、1,320ウォン台前半にとどまったと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="nk">
+      <div class="kick">北朝鮮・国境地帯<span>報道照合 ✓ 4社 · 拡声器の稼働日と場所は未確認</span></div>
+      <h3 class="hl">キム・ヨジョン「10月中に対南拡声器を全国境線で稼働」…パク・チョンチョンと南部国境の要塞化現場を視察</h3>
+      <div class="one">
+        <p>朝鮮中央通信は21日、パク・チョンチョン国防省顧問が前日、リ・イルファン朝鮮労働党書記、キム・ヨジョン朝鮮労働党総務部長、人民軍総参謀部の主要指揮官らとともに、南部国境の要塞化工事現場の主要地点を視察したと報じたと、聯合ニュース・京郷新聞・SBSが伝えた。聯合ニュースは、北朝鮮がこの場で「敵の挑発時には即時反撃する」と明らかにしたと報じた。東亜日報は、キム・ヨジョンが「国家首班は領土主権を行使するうえで一寸の譲歩もあってはならず、敵対国家との国境線を最も永久的な線にするよう命じた」と語ったと伝えた。朝鮮日報は、キム・ヨジョンが「南部国境永久化の歴史的工程は絶対に覆せない」と述べたと報じ、韓国軍が先月21日の非武装地帯(DMZ)での地雷爆発以降、要塞化作業の中断を求めてきたと付け加えた。キム・ヨジョンは同じ日の夜、談話も出した。東亜日報と京郷新聞によると、キム・ヨジョンは「われわれの戦術的な狩猟組は新たな陣地を占めている」とし、「10月中に対韓国心理戦拡声器が全国境線で稼働状態に入ることになる」と明らかにした。聯合ニュースも同じ内容を速報で伝えた。京郷新聞は、キム・ヨジョンが韓国軍に向けて「きょう2か所で警告挑発放送と警告射撃」を行ったと主張したと報じた。拡声器が実際にいつどの地点で稼働するかは未確認である。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="pys"><b>「大庄洞の金品」パク・ヨンス元特別検察官、2審で懲役6年…1審より1年短縮</b><em>ソウル高裁刑事15-2部は21日、懲役6年と罰金2億ウォン、追徴金2億ウォンを言い渡した。1審が認定した3億ウォンのうち、2億ウォンの収受だけが立証され、「50億約定」は無罪が維持された。</em><span>司法 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="hynix"><b>SKハイニックス、40兆ウォン規模の自社株買いを予定より1か月早く終了</b><em>SKハイニックスが21日、40兆ウォン規模の自社株買いを終えた。サムスン電子も先に15兆ウォン規模の自社株取得を終えており、大型半導体株を支えてきた買い需要がなくなった。</em><span>企業 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="lh"><b>LH、2030年までにモジュラー住宅1万6000戸を発注…今年は2100戸に拡大</b><em>LHは今年の発注量を当初目標の2000戸より多い2100戸に増やし、2027～2030年に1万4000戸をさらに発注する。今月は高陽チャンルンA3ブロックの668戸と南楊州ワンスク2のA10ブロックの555戸が対象である。</em><span>不動産 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="wage"><b>正規職405万ウォン・非正規職211万ウォン…月給格差がまた広がり、非正規職は過去最多</b><em>聯合ニュースは、今年の非正規雇用の労働者数が60歳以上の高齢者を中心に増え、また過去最多を記録したと伝えた。正規職の月平均賃金は405万ウォン、非正規職は211万ウォンだった。</em><span>労働 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="haitai"><b>金融委、会計処理基準に違反したヘテ製菓と関係者らに13億ウォンの課徴金</b><em>金融委員会は21日、会計処理基準に違反して財務諸表を作成・公示したヘテ製菓食品と会社関係者らに、約13億ウォンの課徴金を科した。聯合ニュースとSBSが同じ内容を伝えた。</em><span>金融 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="psj">
+      <div class="kick">司法・内乱裁判<span>報道照合 ✓ 4社 · 特別検察の上告の有無は未確認</span></div>
+      <h3 class="hl">「内乱加担」パク・ソンジェ前法務長官、2審で懲役25年→9年に大幅減刑</h3>
+      <div class="body">
+        <p>東亜日報と聯合ニュースは、ソウル高裁刑事1部(裁判長ユン・ソンシク)が21日、内乱重要任務従事などの容疑で起訴されたパク・ソンジェ前法務部長官に懲役25年を言い渡した1審判決を破棄し、懲役9年を言い渡したと伝えた。東亜日報によると、1審は7つの容疑を有罪と見て、非常戒厳当時の国務委員のうち、キム・ヨンヒョン前国防部長官を除いて最も重い刑を科したが、2審は2つの容疑だけを有罪と判断し、刑期が16年短くなった。東亜日報は、裁判部が、パク前長官が非常戒厳は要件を満たさない違憲なものだという事情をよく知っていたと判断したと伝えた。京郷新聞は、「合同捜査本部への検事派遣」など一部の容疑が無罪に変わったと報じ、パク前長官がキム・ゴンヒ夫人関連の捜査の依頼を聞き入れた容疑でも起訴されたと伝えた。京郷新聞の週刊誌は、内乱特検が9月29日の結審公判で、2審でも懲役25年を求刑したと報じていた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="museum">
+      <div class="kick">文化・人事<span>報道照合 ✓ 4社 · 後任館長の人選日程は未確認</span></div>
+      <h3 class="hl">「所蔵品を自ら出品」ユ・ホンジュン国立中央博物館長が辞任…李大統領、当日に辞職案を裁可</h3>
+      <div class="body">
+        <p>東亜日報は、国立中央博物館が21日、「ユ・ホンジュン館長が、個人所蔵の遺墨『一般時局は』の展示出品に関するすべての論争に責任を痛感し、辞意を表明した」と明らかにしたと伝えた。東亜日報によると、博物館は特別展「私たちの食卓」でこの遺墨を愛国志士パク・ウォングンの書として展示したが、親日反民族行為者パク・チュンヤンの書と確認されて論争が起き、その後、作品がユ館長の所蔵品であることが明らかになった。ユ館長は声明で「これまでのすべての批判は、ひとえに私の責任」とし、「失墜した博物館の名誉を立て直すには、私が館長職から退くのが正しい」と述べた(東亜日報・京郷新聞)。朝鮮日報と東亜日報は、李在明大統領が同じ日に辞職案を裁可したと、カン・ユジョン青瓦台首席報道官が明らかにしたと伝えた。朝鮮日報は、不適切な振る舞いで論争を招いた国家人工知能戦略委員会の民間委員に対する委嘱解除案も、あわせて裁可されたと報じた。東亜日報は、ユ館長が任期を始めて約1年3か月で退いたと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="export">
+      <div class="kick">経済・輸出<span>報道照合 ✓ 4社 · 月末の半導体単価の流れは未確認</span></div>
+      <h3 class="hl">10月1～20日の輸出616億ドル、105.4%増で過去最大…半導体は222.5%の急増</h3>
+      <div class="body">
+        <p>関税庁が21日に発表した10月1～20日の輸出入状況(暫定値)によると、この期間の輸出は1年前より105.4%(316億1000万ドル)増の616億ドルと集計されたと朝鮮日報が伝えた。東亜日報は、正確な輸出額は616億1200万ドルで、操業日数を考慮した1日平均の輸出額も47億4000万ドルと65.9%増えたと報じた。東亜日報によると、輸出額も1日平均の輸出額も、10月1～20日の基準で過去最大である。輸出を押し上げたのは半導体だ。朝鮮日報と東亜日報は、この期間の半導体輸出が222.5%増え、前年同期の3倍を超えたと伝えた。</p>
+        <p>聯合ニュースは、今月中旬の輸出が昨年の2倍に跳ね上がり、高い水準が続いていると伝えた。輸出の好調は外国為替市場にも反映された。聯合ニュースは、半導体輸出の好調でウォン高(ドル安)への期待が続いていると報じた。同じ日、聯合ニュースは、中堅企業の第2四半期の輸出が358億ドルで12%増え、過去最高を更新したという韓国中堅企業連合会の調査も伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>616億ドル</b><span>10月1～20日の輸出(関税庁の暫定値)</span></div>
+        <div><b>105.4%</b><span>1年前の同じ期間と比べた増加率</span></div>
+        <div><b>222.5%</b><span>半導体輸出の増加率</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>KOSPIが21日、1日で5%以上上がった</b> <span>5%以上上がったのはKOSPI200先物(5.22%)で、KOSPIの終値の上昇率は3.29%である(東亜日報・聯合ニュース)。</span></div>
+        <div><b>パク・ソンジェ前長官が2審で無罪を得た</b> <span>2審は懲役9年を言い渡した。1審で有罪とされた7つの容疑のうち、2つが有罪として残った(東亜日報)。</span></div>
+        <div><b>北朝鮮が21日、すでに対南拡声器を稼働させた</b> <span>キム・ヨジョンの談話は、「10月中」に稼働状態に入るという予告であり、実際の稼働時期は未確認である(東亜日報・京郷新聞)。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 木 10月22日</b><span>韓国銀行の金融通貨委員会が基準金利を決定し、総裁の記者会見が開かれる。KOSPIが反発を続けるか、北朝鮮が拡声器に関する追加の行動に出るかが注目される。</span><b>今週</b><span>23日にオ・セフン・ソウル市長の政治資金法の控訴審判決がある。パク・ソンジェ前長官の事件の上告の有無が決まる。</span><b>その後</b><span>サムスン電子・SKハイニックスの第3四半期決算発表と、11月1日の10月の輸出入動向の発表が続く。</span><b>読者へ</b><span>国境地域を訪れる予定があるなら、自治体と軍の立ち入り統制の告知を確認できる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "kospi":{"kick": "経済・株式市場 · 報道照合 ✓ 4社 · 外国人の純買い越しの最終金額は未確認", "title": "KOSPIが3.29%上げて5,735.66で引け…取引時間中は4%台の急騰、2か月ぶりに買いサイドカー", "what": "聯合ニュースは、21日のKOSPIが182.92ポイント(3.29%)高い5,735.66で引けたと伝えた。指数は5,666.34で始まり、午前中に4%台まで上げた(聯合ニュース)。東亜日報は、午前10時52分ごろに買いサイドカーが発動され、そのときのKOSPI200先物は5.22%高の904.84だったと報じた。電子新聞は、今年25回目の買いサイドカーだと集計した。KOSDAQは1.4%上げた(聯合ニュース・SBS)。聯合ニュースとSBSは、投資家預託金が90兆ウォンに減り、借金投資が30兆ウォンに減ったと伝えた。", "why": "KOSPIは時価総額に占めるサムスン電子とSKハイニックスの比重が大きく、この2銘柄が5%動けば指数全体が3%台揺れる。買いサイドカーは、先物の急騰が現物のプログラム買いに波及するのを5分間止める装置であり、発動そのものが、1日の変動幅が異常に大きくなったというシグナルである。", "me": "半導体の比重が大きいファンドやETFを持つ人は、2日連続で3%台の動きが反対方向に出たことを、口座の評価額で実感しただろう。投資家預託金と借金投資が同時に減ったということは、個人の資金が市場から抜けているという意味であり、反発が続くかを判断するときにあわせて見る数字である。", "a": "一方は、AI投資心理が回復し、外国人の純買い越しが戻った以上、底を過ぎつつあると見る。サムプロTVに出演した証券街の関係者の一部は、下値は限定的だとして、5,500台での対応策を語った。", "b": "もう一方は、1日に3～4%ずつ上げ下げする相場そのものが不安の証拠だと見る。聯合ニュースは、反発後も不安が続くと伝え、待機資金が減るなかで急騰が趨勢転換につながるのは難しいという見方も出ている。", "say": "確認できたのは、終値5,735.66、上昇率3.29%、午前の買いサイドカー発動、KOSDAQの1.4%上昇である。外国人の純買い越しの最終金額は未確認である。きょうは、反発の翌日に外国人の買いが続くか、韓国銀行の基準金利の決定が市場にどんなシグナルを送るかを見る。", "src": "聯合ニュース(KOSPI 5,735.66で引け、10/21) · 東亜日報(買いサイドカー発動、10/21) · SBS(KOSDAQと預託金、10/21) · 電子新聞(今年25回目の買いサイドカー、10/21)"},
+    "nk":{"kick": "北朝鮮・国境地帯 · 報道照合 ✓ 4社 · 拡声器の稼働日と場所は未確認", "title": "キム・ヨジョン「10月中に対南拡声器を全国境線で稼働」…パク・チョンチョンと南部国境の要塞化現場を視察", "what": "朝鮮中央通信は21日、パク・チョンチョン国防省顧問が20日、リ・イルファン書記、キム・ヨジョン部長、総参謀部の指揮官らと南部国境の要塞化工事現場を視察したと報じた(聯合ニュース・京郷新聞)。聯合ニュースは、北朝鮮が「敵の挑発時には即時反撃」を掲げたと伝えた。東亜日報は、キム・ヨジョンが、国境線を最も永久的な線にせよという命令に言及したと報じた。キム・ヨジョンは21日の談話で、「10月中に対韓国心理戦拡声器が全国境線で稼働状態に入ることになる」と明らかにした(東亜日報・京郷新聞)。京郷新聞は、キム・ヨジョンが韓国軍の警告放送と警告射撃を問題視したと伝えた。", "why": "北朝鮮は2024年から、軍事境界線一帯に障壁を築き地雷を埋める「国境線の要塞化」を続けており、その過程で軍事境界線の侵犯と韓国軍の警告射撃が繰り返された。拡声器は、南北が互いに向けて稼働と停止を繰り返してきた心理戦の手段であり、稼働の予告は、国境地帯の緊張を一段階引き上げる行動と受け止められている。", "me": "国境地域の住民は、拡声器の騒音や軍の対応措置を直接経験する可能性がある。国境観光や立ち入りの予定があるなら、該当する自治体と軍の統制の告知を確認する必要がある。", "a": "一方は、キム・ヨジョンの談話が、地雷爆発以降の韓国軍による要塞化中断の要求を真っ向から拒否したものだとして、朝鮮日報の報道のように、北朝鮮が要求を事実上拒否したと見る。拡声器の再稼働は偶発的な衝突のリスクを高めるという懸念がつきまとう。", "b": "もう一方は、北朝鮮が談話と視察の報道で警告の水準を調整する段階だと見る。キム・ジョンウン委員長が自ら乗り出さず、パク・チョンチョンとキム・ヨジョンが前面に立つ構図も、実際の行動よりも圧力のメッセージに重きを置いたものだという解釈がある。", "say": "確認できたのは、20日の視察、21日の朝鮮中央通信の報道、21日のキム・ヨジョンの「10月中に拡声器を稼働」という談話である。拡声器を実際にいつどこで稼働させるかは未確認である。きょうは、韓国軍と政府の公式な対応の水準を見る。", "src": "聯合ニュース(パク・チョンチョンとキム・ヨジョンの視察、10/21) · 京郷新聞(キム・ヨジョンの拡声器談話、10/21) · 東亜日報(キム・ヨジョンの発言全文、10/21) · 朝鮮日報(要塞化の歴史的使命に関する発言、10/21)"},
+    "psj":{"kick": "司法・内乱裁判 · 報道照合 ✓ 4社 · 特別検察の上告の有無は未確認", "title": "「内乱加担」パク・ソンジェ前法務長官、2審で懲役25年→9年に大幅減刑", "what": "東亜日報と聯合ニュースは、ソウル高裁刑事1部が21日、パク・ソンジェ前法務部長官に、1審の懲役25年を破棄して懲役9年を言い渡したと伝えた。東亜日報は、1審が7つの容疑を有罪と見たが、2審は2つの容疑だけを有罪と認めたと報じた。裁判部は、パク前長官が非常戒厳の違憲性を知っていたと判断した(東亜日報)。京郷新聞は、「合同捜査本部への検事派遣」などが無罪と判断されたと伝えた。朝鮮日報も控訴審の懲役9年の言い渡しを速報で伝えた。内乱特検は、2審でも懲役25年を求刑した(京郷新聞)。", "why": "パク前長官は、戒厳当時の国務委員のうち、キム・ヨンヒョン前長官に次いで重い1審の刑を受け、ほかの国務委員の裁判の基準のように見られていた。2審が有罪の容疑を7つから2つに減らしたことで、同じ内乱専担裁判部にかかっているほかの被告の量刑判断にも影響が及ぶ可能性がある。", "me": "12・3非常戒厳に関する裁判は、1審と2審で結論が大きく分かれうることが今回示された。最終的な判断は大法院の上告審で出るため、量刑のニュースを見るときは、何審の判決かをあわせて確認するのがよい。", "a": "一方は、裁判部が、戒厳の違憲性を知って加担したという核心は認めておきながら、刑を16年も減らしたのは行き過ぎた減刑だと見る。特別検察が25年を再び求刑していただけに、上告で争う余地が大きいという見方である。", "b": "もう一方は、2審が容疑ごとに証拠を改めて検討し、立証された部分だけを処罰したものだと見る。1審の刑が特別検察の求刑より重かった点を挙げ、2審が刑の均衡を取ったという評価もある。", "say": "確認できたのは、2審の懲役9年、有罪の容疑2つ、1審と比べて16年の減刑である。特別検察とパク前長官側の上告の有無は未確認である。今週の特別検察の立場表明を見る。", "src": "東亜日報(2審懲役9年と容疑2つ有罪、10/21) · 聯合ニュース(25年→9年に減刑、10/21) · 京郷新聞(合同捜査本部への検事派遣は無罪、10/21) · 朝鮮日報(控訴審懲役9年、10/21)"},
+    "museum":{"kick": "文化・人事 · 報道照合 ✓ 4社 · 後任館長の人選日程は未確認", "title": "「所蔵品を自ら出品」ユ・ホンジュン国立中央博物館長が辞任…李大統領、当日に辞職案を裁可", "what": "国立中央博物館は21日、ユ・ホンジュン館長が、個人所蔵の遺墨『一般時局は』の展示出品をめぐる論争の責任を取り、辞意を表明したと明らかにした(東亜日報)。博物館はこの遺墨を愛国志士パク・ウォングンの書として展示したが、親日反民族行為者パク・チュンヤンの書と確認された(東亜日報)。ユ館長は「これまでのすべての批判は、ひとえに私の責任」と述べた(京郷新聞)。李在明大統領は同じ日に辞職案を裁可したと、カン・ユジョン青瓦台首席報道官が明らかにした(朝鮮日報・聯合ニュース)。朝鮮日報は、国家人工知能戦略委員会の民間委員の委嘱解除案も裁可されたと伝えた。", "why": "国立中央博物館長は、国を代表する博物館の展示と所蔵品の検証に責任を負うポストである。館長本人の所蔵品が特別展に掛けられ、作者の判定まで誤っていたという点が重なり、利益相反と検証体制がともに俎上に載った。", "me": "博物館の特別展を訪れる観覧者は、展示品の出所と検証の過程がどのように公開されるかに注目する価値がある。後任館長の人選とともに、所蔵品の検証手続きを変えるかどうかが次の関心事である。", "a": "一方は、親日反民族行為者の書を愛国志士の作品として掛け、しかもそれが館長の所蔵品だったという点で、辞任は避けられなかったと見る。国政監査で謝罪した後、2日で退いたことも、事案の重さを示しているという見方である。", "b": "もう一方は、美術史の研究と大衆化に貢献してきたユ館長の経歴に比べ、個人のミス1件で退くことになったのが惜しいと見る。聯合ニュースは、「韓国美術5千年」の構想を掲げていた彼の不名誉な退任を伝えた。", "say": "確認できたのは、21日の辞意表明と同じ日の辞職案の裁可、問題の作品がパク・チュンヤンの書だという点である。後任の人選日程と、委嘱を解除された民間委員が誰なのかは未確認である。文化体育観光部の後続措置を見る。", "src": "東亜日報(辞意表明と辞職案の裁可、10/21) · 京郷新聞(ユ館長の声明、10/21) · 朝鮮日報(辞職案と委嘱解除案の裁可、10/21) · 聯合ニュース(辞職案裁可の速報、10/21)"},
+    "export":{"kick": "経済・輸出 · 報道照合 ✓ 4社 · 月末の半導体単価の流れは未確認", "title": "10月1～20日の輸出616億ドル、105.4%増で過去最大…半導体は222.5%の急増", "what": "関税庁が21日に発表した暫定値によると、10月1～20日の輸出は616億ドルで、1年前より105.4%増えた(朝鮮日報)。東亜日報は、正確な金額が616億1200万ドルで、1日平均の輸出額が47億4000万ドルと65.9%増えたと伝えた。輸出額も1日平均も、10月1～20日の基準で過去最大である(東亜日報)。半導体輸出は222.5%増えた(朝鮮日報・東亜日報)。聯合ニュースは、今月中旬の輸出が昨年の2倍だと伝えた。", "why": "半導体の単価と物量がともに上がり、全体の輸出の増加率が100%を超えた。輸出で入ってくるドルが増えればウォンの需要が大きくなり、為替レートが下がる経路が生まれる。反対に、半導体1品目への依存が大きくなったことも浮かび上がる。", "me": "輸出の好調はウォン高につながり、海外旅行や海外通販の費用を下げる方向に働く。一方、輸出企業の株価は株式市場の変動にいっそう大きく揺さぶられており、輸出の数字と株価が別々に動くことがありうる。", "a": "一方は、半導体の222.5%増がAI需要の実体を示すものだとして、株式市場のAIバブルへの懸念とは違い、実物の需要は堅調だと見る。1日平均の輸出額が過去最大という記録が、その根拠に挙げられる。", "b": "もう一方は、輸出の増加が半導体1品目に偏っており、半導体価格が崩れれば衝撃も大きいと見る。同じ時期に自動車部品の売上上位企業の多くが中国企業だったという聯合ニュースの報道のように、ほかの業種の競争圧力も取り沙汰される。", "say": "確認できたのは、616億ドル、105.4%増、半導体222.5%増、1日平均47億4000万ドルである。月末まで同じ流れが続くかは未確認である。11月1日の10月全体の輸出入動向の発表を見る。", "src": "朝鮮日報(10月1～20日の輸出616億ドル、10/21) · 東亜日報(1日平均47億4000万ドル、10/21) · 聯合ニュース(昨年の2倍、10/21) · 韓国経済(輸出616億ドルの速報、10/21)"},
+    "pys":{"kick": "司法 · ✓ 報道4件", "title": "「大庄洞の金品」パク・ヨンス元特別検察官、2審で懲役6年…1審より1年短縮", "what": "東亜日報は、ソウル高裁刑事15-2部が21日、パク・ヨンス元特別検察官に、懲役6年と罰金2億ウォン、追徴金2億ウォンを言い渡したと伝えた。1審の懲役7年より1年短くなった(東亜日報・聯合ニュース)。1審は3億ウォンの収受を認めたが、2審は2億ウォンだけが立証されたと見た(東亜日報)。「50億クラブ」の約定の容疑は、1審と同じく無罪または免訴と判断された(京郷新聞・東亜日報)。韓国経済も2審の懲役6年を速報で伝えた。", "why": "パク元特別検察官の事件は、大庄洞の民間業者が法曹界の人物らに巨額を約束したという「50億クラブ」疑惑の核心的な裁判である。約定の容疑が2審でも無罪のまま残ったことで、疑惑の大きな柱は法廷で認められなかった形になった。", "me": "大庄洞に関する裁判は複数の筋で続いており、同じ「50億クラブ」でも被告ごとに結論が違う。上告審の結果まで見守ってこそ、最終的な判断がわかる。", "a": "一方は、元特別検察官が民間業者から金を受け取った事実が2審でも有罪と確認された点を重く見る。減刑の幅が1年にとどまり、実刑判断の重みは維持されたという見方である。", "b": "もう一方は、50億約定が無罪のまま維持された点を挙げ、捜査段階の疑惑の提起が行き過ぎていたと見る。収受額も3億ウォンから2億ウォンに減り、立証の範囲が狭まったという指摘である。", "say": "確認できたのは、懲役6年、罰金・追徴金各2億ウォン、50億約定の無罪維持である。双方の上告の有無は未確認である。", "src": "東亜日報(2審懲役6年、10/21) · 聯合ニュース(7年→6年に減刑、10/21) · 京郷新聞(50億クラブは無罪、10/21) · 韓国経済(2審懲役6年の速報、10/21)"},
+    "hynix":{"kick": "企業 · ✓ 報道4件", "title": "SKハイニックス、40兆ウォン規模の自社株買いを予定より1か月早く終了", "what": "聯合ニュースは、SKハイニックスの大規模な自社株買いが21日に終了したと伝えた。朝鮮日報は、SKハイニックスが40兆ウォン規模の自社株買いを、予定より1か月ほど早く終えたと報じた。韓国経済も、買い付けが1か月早く終わったと伝えた。朝鮮日報によると、サムスン電子も先に15兆ウォン規模の自社株取得を完了した。SBSも40兆ウォン規模の買い付け完了を伝えた。", "why": "自社株買いは、会社が市場で自ら株式を買い入れることであり、外国人の売り物を吸収する役割を果たしてきた。両社の買い付けがいずれも終わったことで、大型半導体株を支えていた大きな買い手がいなくなった。", "me": "半導体の大型株を持つ投資家なら、会社の買いが抜けた後は、外国人と機関の需給が株価をいっそう大きく左右するようになる点を見る必要がある。", "a": "一方は、朝鮮日報の報道のように、外国人の純売り越しが続くなかで、需給の空白が大きくなりうると懸念する。買い付けの終了時期が、変動の大きい相場と重なった点が負担だという見方である。", "b": "もう一方は、買い入れた株式が消却などで株主価値を高める効果が残ると見る。買い付けを前倒しで終えたのは、会社が安い価格で物量を確保したという意味だという解釈もある。", "say": "確認できたのは、SKハイニックス40兆ウォン、サムスン電子15兆ウォンの自社株買いの完了である。買い入れた株式をいつどのように消却するかは未確認である。", "src": "聯合ニュース(自社株買いの完了、10/21) · 朝鮮日報(需給の空白への懸念、10/21) · 韓国経済(1か月前倒しで終了、10/21) · SBS(40兆ウォンの買い付け完了、10/21)"},
+    "lh":{"kick": "不動産 · ✓ 報道4件", "title": "LH、2030年までにモジュラー住宅1万6000戸を発注…今年は2100戸に拡大", "what": "朝鮮日報は、韓国土地住宅公社(LH)が2030年までにモジュラー住宅1万6000戸を発注すると21日に明らかにしたと伝えた。東亜日報は、LHが今年の発注量を当初目標の2000戸より多い2100戸に増やし、2027～2030年に1万4000戸を追加発注すると報じた。今月の発注対象は、高陽チャンルンA3ブロックの668戸と南楊州ワンスク2のA10ブロックの555戸である(朝鮮日報・東亜日報)。聯合ニュースとSBSは、1万6千世帯の発注を推進すると、同じ内容を伝えた。", "why": "モジュラー住宅は、構造物と設備を工場であらかじめ作り、現場で組み立てる方式であるため、工期を短縮できる(東亜日報)。政府が供給の速さを強調するなか、LHが工法の転換で物量を前倒ししようとするものである。", "me": "3期新都市の分譲を待っている人なら、該当ブロックがモジュラー方式で建てられる点を、入居時期と品質の判断にあわせて考慮できる。", "a": "一方は、工場製作で工期を縮め、現場の人手不足と安全の問題を減らせるとして、供給拡大に役立つと見る。", "b": "もう一方は、モジュラー住宅の単価や耐久性、層間騒音といった品質検証がまだ十分でないと見る。発注量を増やしても、実際の入居までには時間がかかるという指摘もある。", "say": "確認できたのは、2030年までの1万6000戸、今年の2100戸、今月の2ブロック1223戸の発注計画である。ブロックごとの入居時期は未確認である。", "src": "朝鮮日報(モジュラー住宅1万6000戸を発注、10/21) · 東亜日報(年3000戸以上に拡大、10/21) · 聯合ニュース(1万6千世帯の発注を推進、10/21) · SBS(1万6千世帯、10/21)"},
+    "wage":{"kick": "労働 · ✓ 報道2件", "title": "正規職405万ウォン・非正規職211万ウォン…月給格差がまた広がり、非正規職は過去最多", "what": "聯合ニュースは21日、正規職の労働者の月平均賃金が405万ウォン、非正規職は211万ウォンだったと伝えた。聯合ニュースは、今年の非正規雇用の労働者数が60歳以上の高齢者を中心に増え、また過去最多を記録したと報じた。SBSも同じ統計を伝えた。この数値は、国家データ処の8月の経済活動人口調査・勤労形態別付加調査の結果である。同じ日、聯合ニュースとSBSは、5大銀行で正規職が減り非正規職が増えたという集計も伝えた。", "why": "非正規職の増加が60歳以上に集中しているということは、引退後の再就職が主に短期・短時間の仕事で行われるという意味である。高齢の非正規職が増えるほど平均賃金が低く出て、正規職との格差が広がる構造になる。", "me": "親世代の引退後の所得や、自分の再就職の計画を立てるとき、非正規職の月給が正規職の半分ほどの水準だという数字を基準にできる。", "a": "一方は、格差の拡大が労働市場の二重構造の固定化を示す証拠だとして、非正規職の待遇改善が急務だと見る。", "b": "もう一方は、高齢層が望んで選んだ短時間の仕事が増えた影響が大きく、単純な比較で格差を読んではならないと見る。労働時間の違いを加味した時間当たり賃金で見るべきだという見方もある。", "say": "確認できたのは、正規職405万ウォン、非正規職211万ウォン、非正規職の規模が過去最多という点である。時間当たり賃金の格差は未確認である。", "src": "聯合ニュース(正規職405万ウォン・非正規職211万ウォン、10/21) · SBS(月給格差、10/21)"},
+    "haitai":{"kick": "金融 · ✓ 報道2件", "title": "金融委、会計処理基準に違反したヘテ製菓と関係者らに13億ウォンの課徴金", "what": "聯合ニュースは、金融委員会が21日、会計処理基準に違反して財務諸表を作成・公示したヘテ製菓食品と会社関係者らに課徴金を科したと伝えた。SBSは、課徴金の規模が約13億ウォンだと報じた。制裁の対象には、会社だけでなく会社関係者らも含まれた(聯合ニュース・SBS)。ヘテ製菓食品は有価証券市場の上場企業である(聯合ニュース)。", "why": "上場企業の財務諸表は、投資家が企業価値を判断する基本的な資料であるため、会計処理の違反は、課徴金とともに会社の信頼にも打撃を与える。金融当局が関係者個人まで制裁したのは、責任を会社にだけ問わないという意味である。", "me": "ヘテ製菓の株を持つ投資家なら、会社が訂正公示を出すか、追加の制裁や訴訟が続くかを確認する必要がある。課徴金の処分は会社の公示でも確認でき、公示の内容が違反の規模を推し量る手がかりになる。", "a": "一方は、食品大手の系列会社でも会計違反が出た以上、監督をより緻密にすべきだと見る。", "b": "もう一方は、課徴金13億ウォンが会社の規模に比べて大きくなく、実質的な影響は限られると見る。違反の内容が故意か過失かによって重みが変わるという見方もある。", "say": "確認できたのは、金融委の約13億ウォンの課徴金の賦課である。違反の項目と故意かどうかは未確認である。きょうは、会社の公示と立場表明を見る。", "src": "聯合ニュース(ヘテ製菓の課徴金、10/21) · SBS(13億ウォンの課徴金、10/21)"}
+  };
+  const G = {
+    "KOSPI":{"f": "株式", "d": "有価証券市場に上場する全銘柄で作る代表的な株価指数", "w": "21日に3.29%上げて5,735.66で引け"},
+    "KOSDAQ":{"f": "株式", "d": "中小・ベンチャー企業が中心の市場の株価指数", "w": "21日に1.4%上昇"},
+    "買いサイドカー":{"f": "株式", "d": "先物が急騰したとき、プログラムの買い注文を5分間止める装置", "w": "21日午前、2か月ぶりに発動"},
+    "KOSPI200":{"f": "株式", "d": "KOSPIの大型株200銘柄で作る指数で、先物・オプションの基礎", "w": "先物が5%超上がりサイドカー発動"},
+    "先物":{"f": "金融", "d": "将来の一定時点に決めた価格で売買すると約束した契約", "w": "KOSPI200先物904.84"},
+    "サムジョンニクス":{"f": "株式", "d": "サムスン電子とSKハイニックスをまとめて呼ぶ市場の隠語", "w": "2銘柄が5%上昇"},
+    "投資家預託金":{"f": "株式", "d": "株を買うために証券口座に入れておく待機資金", "w": "90兆ウォンに減少"},
+    "借金投資":{"f": "株式", "d": "借金をして株式に投資すること。信用融資残高", "w": "30兆ウォンに減少"},
+    "年初来安値":{"f": "外為", "d": "1年のうちで最も低い水準", "w": "ウォン/ドル相場が4取引日連続で更新"},
+    "外国人の純買い越し":{"f": "株式", "d": "外国人投資家が売った金額より買った金額のほうが多い状態", "w": "21日の取引時間中に継続"},
+    "朝鮮中央通信":{"f": "北朝鮮", "d": "北朝鮮の国営通信社", "w": "パク・チョンチョン、キム・ヨジョンの視察を報道"},
+    "パク・チョンチョン":{"f": "北朝鮮", "d": "北朝鮮の国防省顧問で、軍の元老", "w": "南部国境の要塞化現場を視察"},
+    "キム・ヨジョン":{"f": "北朝鮮", "d": "キム・ジョンウン国務委員長の妹で、朝鮮労働党総務部長", "w": "拡声器稼働を予告する談話"},
+    "リ・イルファン":{"f": "北朝鮮", "d": "北朝鮮の朝鮮労働党書記", "w": "視察に同行"},
+    "総参謀部":{"f": "北朝鮮", "d": "北朝鮮の人民軍の作戦指揮機構", "w": "主要指揮官が同行"},
+    "南部国境":{"f": "北朝鮮", "d": "北朝鮮が軍事境界線一帯を呼ぶ表現", "w": "要塞化工事現場"},
+    "要塞化":{"f": "軍事", "d": "障壁・地雷などで警戒を固める工事", "w": "北朝鮮が2024年から進める"},
+    "非武装地帯":{"f": "軍事", "d": "停戦協定に基づき、軍事境界線の南北に2kmずつ設けた緩衝地帯", "w": "先月21日に地雷爆発"},
+    "拡声器":{"f": "軍事", "d": "国境で相手に向けて放送する心理戦の装備", "w": "10月中の稼働を予告"},
+    "内乱重要任務従事":{"f": "法律", "d": "内乱で重要な任務を担って遂行した罪", "w": "パク・ソンジェ前長官の核心の容疑"},
+    "ソウル高裁":{"f": "法律", "d": "ソウル高等裁判所。控訴審の裁判を担う裁判所", "w": "パク・ソンジェ、パク・ヨンスの2審判決"},
+    "非常戒厳":{"f": "法律", "d": "戦時などに軍が行政・司法を担う戒厳の形態", "w": "2024年12月3日に宣布"},
+    "国務委員":{"f": "政治", "d": "国務会議を構成する長官級の構成員", "w": "戒厳当時の国務委員の刑期を比較"},
+    "内乱特検":{"f": "法律", "d": "12・3非常戒厳事件の捜査のための特別検察官", "w": "2審で25年を求刑"},
+    "合同捜査本部":{"f": "法律", "d": "戒厳時に捜査を統括するために作られた機構", "w": "検事派遣の容疑は無罪"},
+    "国立中央博物館":{"f": "文化", "d": "ソウルの龍山にある国を代表する博物館", "w": "館長が辞任"},
+    "遺墨":{"f": "文化", "d": "生前に残した書や絵", "w": "『一般時局は』の出品論争"},
+    "親日反民族行為者":{"f": "歴史", "d": "日本統治期の親日行為で国が規定した人物", "w": "パク・チュンヤン"},
+    "裁可":{"f": "行政", "d": "大統領が案件を承認すること", "w": "辞職案を裁可"},
+    "国家人工知能戦略委員会":{"f": "政策", "d": "大統領直属のAI政策の諮問機関", "w": "民間委員の委嘱解除"},
+    "委嘱解除":{"f": "行政", "d": "委嘱していた委員の資格を取り上げること", "w": "民間委員の委嘱解除案"},
+    "関税庁":{"f": "行政", "d": "輸出入の通関と貿易統計を担う機関", "w": "10月1～20日の輸出を発表"},
+    "暫定値":{"f": "統計", "d": "確定前に先に発表する数値", "w": "輸出入状況"},
+    "操業日数":{"f": "統計", "d": "通関が行われた営業日の数", "w": "1日平均の計算基準"},
+    "中堅企業":{"f": "経済", "d": "中小企業の基準を超えたが、大企業ではない企業", "w": "第2四半期の輸出358億ドル"},
+    "大庄洞":{"f": "事件", "d": "城南の大庄洞の開発特恵疑惑事件", "w": "パク・ヨンスの金品収受"},
+    "50億約定":{"f": "事件", "d": "大庄洞の業者が法曹人に50億ウォンを約束したという疑惑", "w": "2審で無罪"},
+    "自社株":{"f": "株式", "d": "会社が買い入れて保有する自社の株式", "w": "SKハイニックスが40兆ウォンの買い付けを完了"},
+    "モジュラー住宅":{"f": "不動産", "d": "工場で作った構造物を現場で組み立てる住宅", "w": "1万6000戸を発注"},
+    "LH":{"f": "不動産", "d": "韓国土地住宅公社。公共住宅の供給機関", "w": "モジュラーの発注を拡大"},
+    "非正規雇用":{"f": "労働", "d": "有期・短時間など、雇用が一時的な労働者", "w": "過去最多"},
+    "金融委員会":{"f": "金融", "d": "金融政策と監督・制裁を担う政府機関", "w": "ヘテ製菓に課徴金"},
+    "課徴金":{"f": "行政", "d": "法令違反に対して行政機関が科す金銭的制裁", "w": "約13億ウォン"},
+    "財務諸表":{"f": "会計", "d": "企業の財務状態と業績をまとめた報告書", "w": "会計処理基準の違反"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

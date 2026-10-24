@@ -1,0 +1,13 @@
+import { clusterItems } from '/home/user/Playground_01/feed/worker/src/cluster.js';
+import fs from 'fs';
+const items = JSON.parse(fs.readFileSync('items_13.json','utf8'));
+const cl = clusterItems(items);
+const find = s => cl.find(c => c.items.some(i => i.title.includes(s)));
+let fail = 0;
+const sep = (a, b, name) => { const ok = find(a) !== find(b); console.log((ok?'PASS':'FAIL') + ' ' + name + ' separate'); if (!ok) fail++; };
+const tog = (a, b, name) => { const ok = find(a) === find(b); console.log((ok?'PASS':'FAIL') + ' ' + name + ' together'); if (!ok) fail++; };
+sep('Palestinian killed, several injured', 'Israeli soldier assaults', '서안지구 2건(가해자·피해자 다름)');
+sep('€213.5 bln corporate', '€1,654.8 bln public-sector', 'ECB 회사채/공공채');
+tog('Kagan and Soai', 'Henri Kagan, Kenso Soai', '노벨화학상 AP/AJ');
+tog('203 쾅! 204 쾅!', '최원준 203안타', '최원준 최다안타');
+console.log('clusters', cl.length, 'fail', fail);

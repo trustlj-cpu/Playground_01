@@ -1,0 +1,500 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>69,030.92円</b>日経平均 · 10/9 大引け · 前日比 −0.02%（12日はスポーツの日で休場、再開は13日）</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ドル円 · 12日の終値は2社で確認できず（東京市場は休場、17時時点は158円40銭台との配信あり）</div>
+    </div>
+    <div class="dateline"><span>第 9 号 · 朝刊</span><b>2026年10月13日 火曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="nk">
+      <div class="kick">国際·安全保障<span>報道照合 ✓ 10社 · 機種と変則軌道の詳細は未確認</span></div>
+      <h2 class="hl">北朝鮮が日本海へ弾道ミサイル2発以上。防衛省「EEZの外に落下」、一部は変則軌道の可能性</h2>
+      <p class="deck">いずれも日本のEEZの外に落下したと推定され、被害の情報はない。2026年に入って11回目の発射とされ、首相は万全の態勢を指示した。東京市場は13日に再開する。</p>
+      <div class="body">
+        <p>防衛省は12日午前、北朝鮮が日本海に向けて弾道ミサイルを少なくとも2発発射したと発表した（NHK、毎日新聞、朝日新聞）。第一報の段階で、防衛省は日本への影響の有無について情報の収集を進めているとした（NHK）。韓国軍の合同参謀本部によると、発射は午前9時20分ごろ、平壌の近くから朝鮮半島の東側の海に向けて行われた（ストレーツ・タイムズ、CNA）。日本経済新聞は、1発目が9時19分ごろに発射されて最高高度は約20キロ、飛行距離は約220キロ、2発目は9時36分ごろで最高高度は約70キロ、飛行距離は910キロを超えたと伝えた。飛行距離が4倍ほど違い、飛び方は大きく異なる。防衛省は、いずれも日本の排他的経済水域（EEZ）の外に落下したと推定している。NHKは、EEZへの飛来は確認されていないと報じ、テレビ朝日は、被害の情報はないと伝えた。毎日新聞は、一部が変則軌道で飛んだ可能性があるとし、高市早苗首相が万全の態勢で情報収集と警戒にあたるよう指示したと報じた。時事通信は、韓国軍の説明として、発射されたのは数発の弾道ミサイルだと伝えた。日本の防衛省が確認した数との差は、まだ埋まっていない。日本経済新聞は、政府が北京の大使館ルートで北朝鮮に抗議したとも伝えているが、他社の確認は取れていない。</p>
+        <p>今回は、2026年に入って11回目の発射とされる（防衛省の発表として日本経済新聞が伝えた）。GMAニュースは、今月に入って4回目で、韓国が極超音速ミサイルを試験した数日後の発射だと報じた。ミントは、北朝鮮が韓国に対し、自国の領土が侵されれば報復すると警告した数日後でもあったと伝えた。一方、EUは12日、北朝鮮のミサイル技術者ら個人3人と4団体を独自の制裁リストに加えた（朝鮮日報日本語版）。弾道ミサイルの発射は、国連安全保障理事会の決議で北朝鮮に禁じられている。ただ、2発目の機種、変則軌道の詳しい内容、発射の狙いは、まだ確認できていない。東京市場は12日、スポーツの日で休場だったため、株価や円相場への反応は、13日の再開後に出る。日本政府の対応は、日米韓の連携と、中国を通じた抗議の実効性が問われる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2発</b><span>少なくとも発射された弾道ミサイルの数（防衛省、NHKなど）</span></div>
+        <div><b>910キロ超</b><span>2発目の飛行距離。最高高度は約70キロ（日本経済新聞）</span></div>
+        <div><b>11回目</b><span>2026年に入っての発射回数（防衛省の発表として日本経済新聞）</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="baseball">
+      <div class="kick">スポーツ<span>報道照合 ✓ 7社 · 大谷の打席内容とスクバルの奪三振数は台湾・自由時報による</span></div>
+      <h3 class="hl">ドジャース、NLCS初戦を1対2で落とす。日本ハムはCS突破、伊藤大海は動じず</h3>
+      <div class="one">
+        <p>日本時間12日、米大リーグのナショナル・リーグ優勝決定シリーズ（NLCS）が開幕し、ブルワーズが本拠地ミルウォーキーでドジャースを2対1で破った（ジャパンタイムズ、朝日新聞、CBC）。ドジャースは2回に先制したが、5回に逆転された（自由時報）。ブルワーズはブライス・トゥラングの一発と救援陣の好投で逃げ切った（CBC）。ドジャース先発のタリク・スクバルは7三振を奪ったが、報われなかった（自由時報）。大谷翔平は4番で先発し（朝日新聞）、四球で出塁して得点したほか安打も1本あった（自由時報）。第2戦は日本時間13日で、山本由伸が先発する予定だ（フォックス・ニュース、ナンバー）。国内では、パ・リーグのクライマックスシリーズ（CS）ファーストステージ第3戦で、日本ハムが西武に4対1で勝ち、2勝1敗でファイナルステージに進んだ（NHK、朝日新聞、時事通信）。エースの伊藤大海は、左足に打球が当たるアクシデントにも動じなかった（朝日新聞、時事通信）。万波中正がポストシーズン第1号を放った（道新スポーツ）。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>クライマックスシリーズ<i>くらいまっくすしりーず</i></b><p>プロ野球で、シーズン上位チームが日本シリーズ進出をかけて戦う短期決戦。略してCS。第1段階がファーストステージ、第2段階がファイナルステージ。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="riyadh"><b>リヤド空港、攻撃で運航停止が延長</b><em>キング・ハリド国際空港の停止が延び、便の約6割が欠航の見通し。日本政府は石油の備蓄の強化を呼びかけた。</em><span>国際·中東 · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="katayama"><b>片山財務相が世銀・IMF合同開発委の議長に</b><em>高市首相が発表した。日本人の就任は初めてとされる。</em><span>国内政治·経済 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="ehybrid"><b>EU、中国製ハイブリッド車に輸入の上限枠</b><em>上限は年35万台で、毎年6%ずつ増える。中国の対EU輸出は半減する見通し。</em><span>国際·産業 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="yandex"><b>「ロシアのグーグル」、データセンターに無人機攻撃</b><em>ヤンデックスのサービスが一時止まった。徐々に復旧している。</em><span>国際·IT · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="rail"><b>連休最終日、鉄道の運転見合わせが相次ぐ</b><em>山手線は渋谷駅の人身事故で全線停止。九州と東北の新幹線も一時止まった。</em><span>社会·交通 · ✓ 4社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="nobel">
+      <div class="kick">国際·経済<span>報道照合 ✓ 5社 · 授賞の貢献の詳しい中身は、論文を未確認</span></div>
+      <h3 class="hl">ノーベル経済学賞に米国のホール、ウッドフォード両氏。景気を安定させる政策の理論を築く</h3>
+      <div class="body">
+        <p>王立スウェーデン科学アカデミーは日本時間12日夕方、2026年のノーベル経済学賞を、米国のロバート・ホール氏（スタンフォード大）とマイケル・ウッドフォード氏（コロンビア大）に贈ると発表した（ロイター、時事通信、朝日新聞、毎日新聞、読売新聞）。授賞理由は「マクロ経済の安定化のミクロ的な基礎」で、賞金は1,200万スウェーデン・クローナ、約120万ドルだ（ミント）。</p>
+        <p>朝日新聞は、景気安定化政策の理論的な基盤を築いたと評価し、毎日新聞は、危機の際に財政政策と金融政策を有効に使えるようにしたと伝えた。アカデミーは、新しいマクロ経済モデルによって、適切な時期の財政・金融政策が景気の落ち込みを和らげられるようになったと説明した（ヒンドゥー）。ヒンドゥーは、政策の効果は、政府が理由をどう説明するかにも左右されるという研究の側面も紹介した。今年の賞の発表は、これが最後だった（ジャパンタイムズ）。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="energy">
+      <div class="kick">国際·ウクライナ<span>報道照合 ✓ 8社 · ロシア側の確認と停戦の中身は未確認</span></div>
+      <h3 class="hl">トランプ氏が「エネルギー停戦」と主張、直後にロシアがハルキウの発電所を攻撃。クレムリンは60日停戦案を拒否</h3>
+      <div class="body">
+        <p>トランプ米大統領は、ロシアとウクライナの間で「エネルギー停戦」が成立したと主張した。日本時間12日朝にかけて報じられた（NHK、毎日新聞、朝日新聞）。ゼレンスキー大統領は、ロシアも同じことをするなら応じる用意があると述べ（ロイターなど）、トランプ氏の発表は「初耳」だったと語った（朝日新聞など）。ところがウクライナ側は、発表の直後にロシア軍がハルキウの火力発電所を攻撃したと訴え、停戦違反だと非難した（ロイター、ストレーツ・タイムズ、ザ・ヒル）。ハルキウの死傷者の数は報道で異なり、キーウ・ポストは負傷19人（子ども2人を含む）、イタリアのTGcom24は死者3人と負傷25人と伝えた。</p>
+        <p>ロシア大統領府（クレムリン）は、エネルギー停戦について「接触は続いている」と述べるにとどめ、確認していない（RFI、NU.nl）。ウクライナ側の60日間の停戦案は退け、全体の和平合意を求めると述べた（ロイター）。EUは12日、ロシアの企業や個人約1,600件への制裁を決めた。過去最大の規模で、軍需産業に重点を置く（時事通信、ロイター）。WTI原油は12日の取引中に一時94ドル台まで上げた（フィスコ）。停戦の対象と期間、トランプ氏とプーチン大統領の「軽油取引」の中身は、まだ確認できていない。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="yana">
+      <div class="kick">国内政治<span>報道照合 ✓ 6社 · 公選法違反の疑いと国会日程は未確認</span></div>
+      <h3 class="hl">簗農水相の「道路予算」発言、野党が辞任を要求。首相は更迭を見送り、自民政調会長は説明の継続を求める</h3>
+      <div class="body">
+        <p>簗和生農林水産相は5月、栃木県内の自民党の会合で、市と町の道路予算を「大幅にカットした」と述べたとされる。簗氏は10月5日に発言を撤回して陳謝し、7日の会見では、国土交通省に道路予算を問い合わせたのは「地元の関心の声があったから」と説明して、辞任を否定した（日本経済新聞、時事通信）。国土交通省の調査は、簗氏からの働きかけは確認できなかったとした。一方で、2市町の道路予算は前年度より最大54%減っていた（日本経済新聞、時事通信）。</p>
+        <p>12日は、野党が追及を強めた。国民民主党の古川代表代行は「説明ができないのであれば、潔く身を処するのが当然だ」と述べ（NHK）、階猛幹事長は、自ら辞任するべきで、しないなら首相が更迭するべきだと求めた（毎日新聞、産経新聞）。階氏は、有権者をどう喝したとも受け取れる点も問題だと指摘した。一方、自民党の政調会長は、簗氏は引き続き説明をするべきだと述べた（47NEWS）。時事通信は、公職選挙法違反の疑いが浮上していると伝えている。高市首相は更迭を見送っている（女性自身ほか）。進退の判断と国会での説明が焦点になる。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>米国の金曜（9日）の終値は、S&amp;P500が7,811.54（+0.59%）、ナスダックが27,366.17（+0.64%）、ダウが51,654.95（+0.83%）。月曜（12日）の米国の終値は、本紙の発行後に出る<span>取引所の終値データ</span></li>
+        <li>日経平均は9日に6万9030円92銭（−11円19銭、−0.02%）で3日続落。12日は休場で、再開は13日<span>時事通信・財経新聞・株探</span></li>
+        <li>ドル円は12日午後5時時点で158円40銭台。東京市場は休場。終値ではない<span>フィスコ</span></li>
+        <li>WTI原油は12日の取引中に一時94ドル台。終値は本紙の発行後に出る<span>フィスコ</span></li>
+        <li>ジブチ沖の移民船の転覆は、死者が139人に。紛争が続くエチオピアからの移民とされる<span>NHK・毎日新聞</span></li>
+        <li>出雲駅伝は、早稲田大が大会新記録で優勝<span>毎日新聞・NHK</span></li>
+        <li>柔道の世界選手権、混合団体で日本が優勝。決勝でロシアを破る<span>NHK・ジャパンタイムズ</span></li>
+        <li>マイクロソフトが、自社設計のAI向け半導体の大規模な配備を計画。エヌビディアへの対抗が狙い<span>ロイター・ジャパンタイムズ</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「ウクライナがヤンデックスのデータセンターを攻撃したため、SNSのボット（自動投稿）が減った。」</b> <span>ゼレンスキー氏が語ったと伝えられた（ファイナンシャルジュース）。米テック誌は、減った可能性は低いと指摘し（ザ・ヴァージ）、独紙も裏付けはないとしている（ターゲス・アンツァイガー）。</span></div>
+        <div><b>「ロシアとウクライナは、エネルギー停戦に合意した。」</b> <span>トランプ氏は成立したと主張したが、ゼレンスキー氏は「初耳」と語り、クレムリンは確認していない。双方の合意は確認できていない。</span></div>
+        <div><b>「簗農水相は、近く辞任する。」</b> <span>野党は辞任を求めているが、首相は更迭を見送り、簗氏も辞任を否定している。自民党の政調会長は説明の継続を求めた。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>10/13 火</b><span>東京市場が3営業日ぶりに再開（日経平均は9日以来の取引） · 北朝鮮の追加発射と、防衛省による2発目の分析 · ロシアのエネルギー停戦への対応と、ハルキウ攻撃の続報 · 簗農水相の進退と国会での説明 · NLCS第2戦（山本由伸が先発予定、日本時間13日） · 教皇レオ14世が手術のため入院（バチカンの発表としてロイターが伝えた）。月曜（12日）の米国の終値は本紙の発行後に出る。</span><b>今週</b><span>14日 セ・リーグCSのファイナルステージ開幕（甲子園、前号の記載） · 18日 滋賀・草津市長選の投開票（前号の記載） · 米国のインフレ指標の発表（ロイターが「焦点」と伝えたが、日付は未確認）。</span><b>その先</b><span>11月9日 COP31の開幕（時事通信、前号の記載）。</span><b>読者へ</b><span>13日朝は、鉄道の運行情報と防衛省の発表を確かめる。投資をしている人は、東京市場の再開後の値動きを、月曜の米国の終値が出てから見る。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    nk:{kick:"国際·安全保障 · 報道照合 ✓ 10社 · 機種と変則軌道の詳細は未確認",
+       title:"北朝鮮が日本海へ弾道ミサイル2発以上。防衛省「EEZの外に落下」、一部は変則軌道の可能性",
+       what:"防衛省は10月12日（月）午前、北朝鮮が日本海に向けて弾道ミサイルを少なくとも2発発射したと発表した（NHK、毎日新聞、朝日新聞、時事通信）。韓国軍の合同参謀本部は、発射は午前9時20分ごろで、平壌の近くから東側の海に向けて複数の弾道ミサイルが発射されたと明らかにした（ストレーツ・タイムズ、CNA）。日本経済新聞によると、1発目は9時19分ごろに発射されて最高高度は約20キロ、飛行距離は約220キロ。2発目は9時36分ごろで、最高高度は約70キロ、飛行距離は910キロを超えた。防衛省はいずれも日本のEEZの外に落下したと推定し、NHKはEEZへの飛来は確認されていないと伝えた。テレビ朝日は、被害の情報はないと報じた。毎日新聞は、一部が変則軌道で飛んだ可能性があり、首相が万全の態勢を指示したと伝えた。ジャパンタイムズは、少なくとも2発がEEZの外の海に落ちたとみられると報じた。韓国軍は飛行距離が900キロを超えたと説明し、韓国の国家安全保障会議は緊急の会合を開いた（ファイナンシャルジュース）。日本の海上保安庁は、落下の可能性について航行警報を出した（ファイナンシャルジュース）。",
+       why:"弾道ミサイルは、短い時間で日本の近くの海に落ちる。変則軌道は、迎撃を難しくするとされる飛び方で、本当にそうだったかは防衛上の重要な点になる。今回は今月4回目とされ、発射の間隔が短い（GMAニュース）。北朝鮮と韓国の間では、韓国の極超音速ミサイルの試験や、国境をめぐる警告が続いていて、緊張が高まっている。",
+       me:"すぐに身の回りの生活が変わる話ではない。ただ、発射時の政府の警報や、鉄道・航空の運行情報は、確かめられるようにしておきたい。13日に再開する東京市場では、防衛関連の株や円相場に反応が出る可能性がある。",
+       a:"発射は繰り返されていて、日米韓が情報を共有して警戒を続け、外交ルートで抗議するのは当然だ。EUの新たな制裁も、技術の流れを断つ手段になる。",
+       b:"制裁と抗議を重ねても、発射は止まっていない。対話の糸口を探らないまま警戒だけを続けても、緊張は下がらないという指摘がある。",
+       say:"きょうの数字は「910キロ超」。2発目の飛行距離で、1発目の約4倍だ。見るべきは三つある。防衛省が2発目の機種と変則軌道をどう分析するか、北朝鮮が追加の発射や挑発に進むか、そして13日に再開する東京市場の反応だ。「11回目」という回数は、発射が例外ではなく、日常になりつつあることを示している。",
+       src:"NHK · 毎日新聞 · 朝日新聞 · 時事通信 · 日本経済新聞 · テレビ朝日 · ジャパンタイムズ · ストレーツ・タイムズ · CNA · GMAニュース · ミント · 朝鮮日報日本語版（10/12。発射時刻と飛行距離は日本経済新聞、EEZの外への落下はNHKと毎日新聞、EUの制裁は朝鮮日報。北京ルートの抗議と11回目は日本経済新聞のみ）"},
+    baseball:{kick:"スポーツ · 報道照合 ✓ 7社 · 大谷の打席内容とスクバルの奪三振数は台湾・自由時報による",
+       title:"ドジャース、NLCS初戦を1対2で落とす。日本ハムはCS突破、伊藤大海は動じず",
+       what:"米大リーグのナショナル・リーグ優勝決定シリーズ（NLCS）第1戦は日本時間10月12日に行われ、ブルワーズがドジャースを2対1で破った（ジャパンタイムズ、朝日新聞、CBC）。ドジャースは2回に先制したが、5回に逆転された（自由時報）。ブルワーズは、ブライス・トゥラングの一発と救援陣の好投で逃げ切った（CBC）。ドジャース先発のタリク・スクバルは7三振を奪った（自由時報）。大谷翔平は4番で先発し（朝日新聞）、四球で出塁して得点したほか安打も1本あった（自由時報）。朝日新聞は、ドジャースの監督が「長いシリーズになる」と述べたと伝えた。第2戦は日本時間13日で、山本由伸が先発する予定だ（フォックス・ニュース、ナンバー）。国内では、パ・リーグCSファーストステージ第3戦で日本ハムが西武に4対1で勝ち、2勝1敗でファイナルステージに進んだ（NHK、朝日新聞、時事通信）。",
+       why:"ドジャースは敵地での初戦を落とし、ブルワーズに本拠地の利を渡した（フォックス・ニュース）。大谷の調子と、第2戦の山本の投球が、シリーズの流れを左右する。日本ハムは1週間で5勝が必要なファイナルに挑むため、エースの状態が焦点になる。",
+       me:"NLCSの放送や配信の時間は日本時間の朝になる。13日の第2戦は、通勤前後に結果を確かめる人が多そうだ。プロ野球のファイナルステージの日程は、球団の発表で確かめたい。",
+       a:"",
+       b:"",
+       say:"きょうの数字は「2対1」。1点差の初戦は、救援陣の差が出た。見るべきは、山本由伸が第2戦で流れを変えられるか、大谷の打撃が数字に戻るか、そして日本ハムが短い日程でどこまで先発を回せるかだ。",
+       src:"ジャパンタイムズ · 朝日新聞 · NHK · 時事通信 · CBC · 自由時報 · フォックス・ニュース · ナンバー · 道新スポーツ（10/12。結果はジャパンタイムズと朝日新聞とCBC、日本ハムの勝ち上がりはNHKと朝日新聞と時事通信。大谷の打席内容と奪三振数は自由時報のみ）"},
+    nobel:{kick:"国際·経済 · 報道照合 ✓ 5社 · 授賞の貢献の詳しい中身は、論文を未確認",
+       title:"ノーベル経済学賞に米国のホール、ウッドフォード両氏。景気を安定させる政策の理論を築く",
+       what:"王立スウェーデン科学アカデミーは日本時間10月12日夕方、2026年のノーベル経済学賞を、米国のロバート・ホール氏（スタンフォード大）とマイケル・ウッドフォード氏（コロンビア大）に贈ると発表した（ロイター、時事通信、朝日新聞、毎日新聞、読売新聞）。授賞理由は「マクロ経済の安定化のミクロ的な基礎」で、賞金は1,200万スウェーデン・クローナ、約120万ドルだ（ミント）。朝日新聞は、景気安定化政策の理論的な基盤を築いたと評価し、毎日新聞は、危機の際に財政政策と金融政策を有効に使えるようにしたと伝えた。ヒンドゥーが引いたアカデミーの説明では、新しいマクロ経済モデルにより、適切な時期の財政・金融政策が景気の落ち込みを和らげられる。ヒンドゥーは、政策の効果は、政府が理由をどう説明するかにも左右されるという側面も紹介した。ジャパンタイムズは、今年の賞の発表はこれが最後だったと伝えた。",
+       why:"物価の上昇や景気の悪化のたびに、政府と中央銀行は、財政と金利をどう動かすかを問われる。その判断の土台になる理論が評価された。政策の意図を言葉で伝えることも、効果を左右するという点は、日本銀行の記者会見や政府の説明のあり方にも通じる。",
+       me:"暮らしに直接の影響はない。ただ、物価高や金利の話題で出てくる「財政政策」「金融政策」の考え方を整理するきっかけになる。住宅ローンや預貯金の金利の見通しは、日銀の発表や報道で確かめられる。",
+       a:"危機の際に政策がどう効くかを理論で示したことは、実際の政策判断の質を上げる。賞に値する貢献だ。",
+       b:"モデルは単純化した前提に基づく。現実の経済では、政策が思い通りに効かない場面も多く、理論の限界も忘れるべきではない。",
+       say:"きょうの数字は「2人」。ともに米国の経済学者だ。見るべきは、授賞理由の「ミクロ的な基礎」という考え方が、日本の政策論議にどう取り入れられるか、そして日銀が政策の説明をどう工夫するかだ。受賞を、言葉の選び方の議論に結びつけたい。",
+       src:"ロイター · 時事通信 · 朝日新聞 · 毎日新聞 · 読売新聞 · ミント · ヒンドゥー · ジャパンタイムズ（10/12。受賞者と授賞理由はロイターと時事通信と朝日新聞、賞金はミント）"},
+    energy:{kick:"国際·ウクライナ · 報道照合 ✓ 8社 · ロシア側の確認と停戦の中身は未確認",
+       title:"トランプ氏が「エネルギー停戦」と主張、直後にロシアがハルキウの発電所を攻撃。クレムリンは60日停戦案を拒否",
+       what:"トランプ米大統領は、ロシアとウクライナの間で「エネルギー停戦」が成立したと主張した。日本時間10月12日朝にかけて報じられた（NHK、毎日新聞、朝日新聞）。ゼレンスキー大統領は、ロシアも同じことをするなら応じる用意があると述べ（ロイターなど）、トランプ氏の発表は「初耳」だったと語った（朝日新聞など）。ウクライナ側は、発表の直後にロシア軍がハルキウの火力発電所を攻撃したと訴え、停戦違反だと非難した（ロイター、ストレーツ・タイムズ、ザ・ヒル）。ハルキウの死傷者の数は報道で異なり、キーウ・ポストは負傷19人（子ども2人を含む）、TGcom24は死者3人と負傷25人と伝えた。クレムリンは、エネルギー停戦について「接触は続いている」と述べるにとどめ（RFI、NU.nl）、ウクライナ側の60日間の停戦案は退けて、全体の和平合意を求めると述べた（ロイター）。EUは12日、約1,600件の対ロシア制裁を決めた（時事通信、ロイター）。",
+       why:"発電所や製油所への攻撃が止まれば、ウクライナの市民が冬を迎える前の電力不足が和らぎ、原油や軽油の供給にも響く。一方で、米国の発表をロシアが認めないままなら、停戦の枠組みは空洞になる。EUが制裁を広げたのは、米国と欧州で対ロシアの足並みが異なることも示している。",
+       me:"日本のガソリンや灯油の価格は、原油相場に遅れて反映される。12日はWTIが一時94ドル台まで上がった（フィスコ）。ロシアの停戦が実際に守られるかで、数週間後の価格が変わりうる。",
+       a:"戦争を終わらせるには、米国が当事者に直接働きかけ、攻撃の対象を絞る合意から積み上げるのが現実的だ。",
+       b:"ロシアが認めていない合意を一方的に発表すれば、信頼を損なう。攻撃を続けるロシアに圧力をかけるなら、制裁の強化が先だという見方もある。",
+       say:"きょうの数字は「60日」。ゼレンスキー氏側が出した停戦期間で、クレムリンは退けた。見るべきは、クレムリンが停戦を公式に認めるか、ハルキウの攻撃が止まるか、そして13日の原油相場がどう動くかだ。「軽油取引」の中身が明らかになるかも重要だ。",
+       src:"NHK · 毎日新聞 · 朝日新聞 · 時事通信 · ロイター · ストレーツ・タイムズ · ザ・ヒル · キーウ・ポスト · TGcom24 · RFI · NU.nl · フィスコ（10/12。停戦の主張はNHKと毎日新聞と朝日新聞、ハルキウの攻撃はロイターとストレーツ・タイムズとザ・ヒル、制裁は時事通信とロイター）"},
+    yana:{kick:"国内政治 · 報道照合 ✓ 6社 · 公選法違反の疑いと国会日程は未確認",
+       title:"簗農水相の「道路予算」発言、野党が辞任を要求。首相は更迭を見送り、自民政調会長は説明の継続を求める",
+       what:"簗和生農林水産相は5月、栃木県内の自民党の会合で、市と町の道路予算を「大幅にカットした」と述べたとされる。簗氏は10月5日に発言を撤回して陳謝し、7日の会見では、国土交通省に道路予算を問い合わせたのは「地元の関心の声があったから」と説明して、辞任を否定した（日本経済新聞、時事通信）。国土交通省の調査は、簗氏からの働きかけは確認できなかったとしたが、2市町の道路予算は前年度より最大54%減っていた。12日、国民民主党の古川代表代行は「説明ができないのであれば、潔く身を処するのが当然だ」と述べ（NHK）、階猛幹事長は、自ら辞任するべきで、しないなら首相が更迭するべきだと求めた（毎日新聞、産経新聞）。自民党の政調会長は、引き続き説明をするべきだと述べた（47NEWS）。",
+       why:"予算の配分が選挙の対立と結びつけられて語られたことで、行政の公平性への信頼が問われている。任命した首相の責任も焦点になる。公職選挙法違反の疑いが浮上していると時事通信が伝えており、事実関係の確認が欠かせない。",
+       me:"道路や防災の予算は、暮らしに直結する。自分の住む市や町の予算が、どう決まるのかを知る機会にもなる。国会での説明が、予算の決定過程をどこまで明らかにするかを見たい。",
+       a:"撤回と陳謝で一度は区切りがついた。働きかけが確認されなかった以上、仕事で責任を果たすという考え方もある。",
+       b:"予算の配分が選挙の対立と結びついたかもしれないという疑いは重い。説明が尽くされるまで、進退の議論は終わらない。",
+       say:"きょうの数字は「54%」。2市町の道路予算の減少幅の最大値で、発言との前後関係が問われる。見るべきは、簗氏が国会でどこまで具体的に説明するか、与党内の声が割れるか、そして首相が判断を変えるかだ。",
+       src:"日本経済新聞 · 時事通信 · NHK · 毎日新聞 · 産経新聞 · 47NEWS · 女性自身（10/5〜12。発言と撤回は日本経済新聞と時事通信、12日の追及はNHKと毎日新聞）"},
+    riyadh:{kick:"国際·中東 · 報道照合 ✓ 5社 · 実行者の特定は未確認",
+       title:"リヤド国際空港の運航停止が延長。便の約6割が欠航の見通し、日本政府は石油備蓄の強化を呼びかけ",
+       what:"サウジアラビアの民間航空当局は、フーシ派が主張した攻撃を受け、リヤドのキング・ハリド国際空港の運航停止を延長した。再開の時期は示していない（CNA）。航空分析会社シリウムによると、12日は予定便の約6割が欠航となる見通しだ（ストレーツ・タイムズ）。10日の攻撃の死者は13人にのぼり（CNA、GMAニュース、CBS）、11日にも空港への攻撃があって、1人が死亡、11人が負傷したと伝えられた（毎日新聞、NHK、アルジャジーラ）。NHKは、フーシ派が攻撃を主張したと報じた。ジャパンタイムズは、日本政府が中東情勢を受け、石油の備蓄と開発を強めるよう呼びかけたと伝えているが、他社の確認は取れていない。フィリピン航空は、リヤド便の運休を11月29日まで延ばした（フィリピン・インクワイアラー）。",
+       why:"空港は人と物の流れの要で、サウジの空の玄関が止まれば、湾岸の航空と物流に響く。サウジは日本が原油を多く頼る国の一つで、供給や海上輸送への影響が心配される。",
+       me:"ガソリンや灯油の価格は、原油相場に遅れて反映される。中東への出張や旅行を予定している人は、外務省の海外安全情報と航空会社の運航情報を確かめたい。",
+       a:"民間人が犠牲になる攻撃は許されず、サウジを守る国際的な連携が必要だ。",
+       b:"報復が連鎖すれば、地域の戦争が広がる。実行者の特定が済む前の軍事的な対応は危険だ。",
+       say:"きょうの数字は「6割」。欠航の見通しの割合で、空港の機能がほとんど止まっていることを示す。見るべきは、運航停止がいつ解けるか、フーシ派が次の攻撃を予告するか、そして原油相場が13日にどう反応するかだ。",
+       src:"CNA · ストレーツ・タイムズ · 毎日新聞 · NHK · アルジャジーラ · GMAニュース · CBS · ジャパンタイムズ · フィリピン・インクワイアラー（10/11〜12。運航停止の延長はCNA、欠航の見通しはストレーツ・タイムズ、備蓄はジャパンタイムズのみ）"},
+    katayama:{kick:"国内政治·経済 · 報道照合 ✓ 2社 · 就任の時期は未確認",
+       title:"片山財務相が、世界銀行・IMF合同開発委員会の次期議長に。高市首相が発表",
+       what:"高市早苗首相は10月12日、自身のSNSへの投稿で、片山財務相が世界銀行・IMF（国際通貨基金）の合同開発委員会の次の議長に就任すると明らかにした（NHK）。時事通信は、日本初だと伝えた。合同開発委員会は、世界銀行とIMFの総会の期間中に開かれる大臣級の会議で、途上国の開発や支援の方針を話し合う。就任の時期や任期、議長としての最初の仕事は、まだ確認できていない。",
+       why:"途上国の債務や開発の資金をめぐる議論で、日本の財務相が議長を務めることは、日本の発言力を示す機会になる。中東情勢で世界経済の見通しが不透明な中での就任でもある。",
+       me:"暮らしへの直接の影響はない。ただ、円相場や日本の国債に関する国際的な議論の場で、日本の立場が注目される可能性がある。",
+       a:"日本初の議長就任は、国際金融の場での日本の存在感を高める。",
+       b:"就任は名誉だが、国内では物価高や財政の課題が山積している。議長の仕事に時間を割くことで、国内の対応が後回しにならないかという指摘もありうる。",
+       say:"きょうの数字は「日本初」。見るべきは、就任の時期と、議長として何を議題にするか、そして国内の課題との両立だ。",
+       src:"NHK · 時事通信（10/12）"},
+    ehybrid:{kick:"国際·産業 · 報道照合 ✓ 7社 · 台数は欧州委員会当局者の発言による",
+       title:"EUと中国がハイブリッド車で合意。中国製に年35万台の輸入上限、毎年6%ずつ増やす",
+       what:"EUと中国は、中国製ハイブリッド車のEU向け輸出に、年35万台の上限を設けることで合意した（FAZ、BFMTV）。EU欧州委員会の当局者は、上限は毎年6%ずつ増えると述べた（ファイナンシャルジュース）。BFMTVは、年80万台ほどの中国製ハイブリッド車が欧州に流れ込もうとしていたと伝え、時事通信は台数が半減すると報じた。ロイターは、75億ドル規模に膨らんだ中国のハイブリッド車の対EU輸出が、新たな制限を受けると報じた。中国商務省は、合意はWTO（世界貿易機関）のルールに沿うもので、中国製品だけを狙い撃ちにしてはならないとの立場を示した（ファイナンシャルジュース）。ブルームバーグは、中国側が輸出の余地は確保されると説明したと伝えた。フランスのマクロン大統領は合意を歓迎した（ファイナンシャルジュース）。",
+       why:"EUは、電気自動車への関税に続き、ハイブリッド車でも中国製の流入を抑える。台数の上限は、価格の安い中国車が欧州の市場を一気に奪う事態を防ぐ狙いがある。日本の自動車メーカーは欧州でハイブリッド車を強みにしてきたため、競争条件が変わる可能性がある。",
+       me:"自動車関連の企業で働く人や、欧州向けの輸出に関わる企業の株を持つ人には、関連の動きだ。日本の消費者への直接の影響は小さい。",
+       a:"特定の国からの急増を抑える措置は、域内の産業を守るために必要だ。上限が毎年増えるので、貿易の流れを断つわけではない。",
+       b:"上限枠は貿易を歪める。消費者は選択肢が狭まり、価格が高くなる恐れがある。中国側も、特定の国を狙い撃ちにする措置には反対している。",
+       say:"きょうの数字は「35万台」。EU向けの上限で、現在の流入の見込みの半分以下だ。見るべきは、日本車への影響、他の国や地域が同様の枠を設けるか、そして上限の運用が公表されるかだ。",
+       src:"時事通信 · ロイター · ブルームバーグ · ジャパンタイムズ · FAZ · BFMTV · ファイナンシャルジュース（10/12。35万台はFAZとBFMTVと欧州委員会当局者、半減は時事通信）"},
+    yandex:{kick:"国際·IT · 報道照合 ✓ 6社 · 被害の規模と復旧の時期は未確認",
+       title:"「ロシアのグーグル」ヤンデックス、データセンターに無人機攻撃。サービスが一時停止",
+       what:"ロシアのIT大手ヤンデックスのデータセンターが、ウクライナの無人機による攻撃を受け、一部のサービスが止まった（毎日新聞、NHK、朝日新聞）。朝日新聞は、ロシアのデータセンターへの攻撃が相次いでいると伝えた。スペインの新聞エル・ムンドは、3か所目のデータセンターへの攻撃だと報じた。インドネシアのアンタラ通信は、サービスが徐々に復旧していると伝えた。ゼレンスキー氏は、攻撃のあとSNSのボットが減ったと語ったと報じられた（ファイナンシャルジュース）。ザ・ヴァージは、障害がロシア発のボットを大きく減らしたとは考えにくいと指摘し、ターゲス・アンツァイガーも、それを裏付ける証拠はないとしている。ポーランドの報道は、修復に半年かかる可能性があると伝えた。",
+       why:"データセンターは、通販や地図、検索などの基盤になる。攻撃が続けば、ロシアの市民の暮らしと経済に響く。ウクライナの攻撃が、エネルギー施設から情報インフラに広がっていることも示す。",
+       me:"直接の影響はない。ただ、日本でもデータセンターの建設が各地で増えていて、電力や安全の面で注目されている。",
+       a:"戦争の遂行を支えるインフラへの攻撃は、軍事的に意味がある。",
+       b:"市民生活を支える基盤への攻撃は、民間人に被害を広げる。国際法上の問題も指摘される。",
+       say:"きょうの数字は「半年」。修復にかかるとされる期間で、ポーランドの報道による。見るべきは、復旧の速さと、攻撃の対象が広がるかだ。",
+       src:"毎日新聞 · NHK · 朝日新聞 · アンタラ通信 · エル・ムンド · ザ・ヴァージ · ターゲス・アンツァイガー · ファイナンシャルジュース（10/12。攻撃は毎日新聞とNHKと朝日新聞、復旧はアンタラ通信、ボットの話は裏付けなし）"},
+    rail:{kick:"社会·交通 · 報道照合 ✓ 4社 · 原因の詳細は鉄道会社の発表を確認",
+       title:"連休最終日、鉄道の運転見合わせが相次ぐ。山手線は渋谷駅の人身事故で全線停止、九州と東北の新幹線も",
+       what:"12日午後1時45分から、JR山手線は渋谷駅での人身事故の影響で、内回りと外回りの全線で運転を見合わせた（NHK、読売新聞）。埼京線や湘南新宿ラインにも影響が出た（読売新聞）。東北新幹線は、岩手県内での信号確認の影響で、仙台駅と盛岡駅の間の上下線で一時、運転を見合わせたが、その後再開した（NHK、TBS）。夜には、九州新幹線が全線で運転を見合わせた。パンタグラフの異常で安全を確認するためだ（朝日新聞）。再開の時期は、各社の発表を確かめる必要がある。",
+       why:"連休の最終日は、帰省や行楽の帰りで鉄道が混む。運転見合わせが重なると、駅に人があふれる。",
+       me:"13日朝の通勤・通学では、鉄道各社の運行情報を確かめておきたい。九州新幹線を使う人は、始発から通常どおり動くかを確認する。",
+       a:"",
+       b:"",
+       say:"きょうの数字は「3路線」。見るべきは、13日朝までに運転が平常に戻るかだ。",
+       src:"NHK · 読売新聞 · 朝日新聞 · TBS（10/12。山手線はNHKと読売新聞、東北新幹線はNHKとTBS、九州新幹線は朝日新聞のみ）"}
+  };
+  const G = {
+    "合同開発委員会":{f:"国際機関",d:"世界銀行とIMFが共同で設ける大臣級の委員会。途上国の開発や援助の方針を話し合う。",w:"片山財務相が次期議長に就く。"},
+    "ターゲス・アンツァイガー":{f:"メディア",d:"スイスの日刊紙。",w:"ボットの話に裏付けはないとした。"},
+    "ナショナル・リーグ優勝決定シリーズ":{f:"野球",d:"米大リーグのナ・リーグで、優勝チームを決める7戦制のシリーズ。NLCSと略す。勝つとワールドシリーズに進む。",w:"ブルワーズがドジャースとの初戦に勝った。"},
+    "シリウム":{f:"メディア",d:"航空分野のデータを分析する会社。",w:"欠航の見通しを示した。"},
+    "ザ・ヴァージ":{f:"メディア",d:"米国のテクノロジー専門のニュースメディア。",w:"ボットが減ったという話に疑問を示した。"},
+    "TGcom24":{f:"メディア",d:"イタリアのニュース局メディアセットのニュースサイト。",w:"ハルキウの死傷者の数を伝えた。"},
+    "NU.nl":{f:"メディア",d:"オランダのニュースサイト。",w:"クレムリンの反応を伝えた。"},
+    "GMAニュース":{f:"メディア",d:"フィリピンの大手テレビ局GMAのニュース部門。",w:"今月4回目の発射だと報じた。"},
+    "COP31":{f:"気候変動",d:"国連の気候変動枠組条約の第31回締約国会議。世界の国々が温室効果ガスの削減や途上国への支援を話し合う年に一度の会議。",w:"11月9日の開幕と、時事通信が伝えた。"},
+    "FAZ":{f:"メディア",d:"ドイツの有力な日刊紙フランクフルター・アルゲマイネ。",w:"年35万台の上限を伝えた。"},
+    "ミクロ的な基礎":{f:"経済",d:"国全体の経済の動きを、家計や企業ひとつひとつの行動から説明しようとする考え方。",w:"受賞理由に挙げられた。"},
+    "パンタグラフ":{f:"交通",d:"電車の屋根にあり、架線から電気を取り込む装置。",w:"異常があり、安全の確認のために止まった。"},
+    "フィスコ":{f:"メディア",d:"日本の金融情報の会社。為替や原油の速報を配信する。",w:"ドル円とWTIの値を伝えた。"},
+    "ザ・ヒル":{f:"メディア",d:"米国の政治専門のニュースメディア。",w:"ロシアの攻撃の報道を引いた。"},
+    "RFI":{f:"メディア",d:"フランスの国際ラジオ局。",w:"クレムリンの反応を伝えた。"},
+    "BFMTV":{f:"メディア",d:"フランスのニュース専門テレビ局。",w:"中国車の流入の見込みを伝えた。"},
+    "エネルギー停戦":{f:"国際",d:"戦争中の双方が、発電所や製油所など、電力や燃料にかかわる施設への攻撃をやめる取り決め。全面的な停戦とは別。",w:"トランプ氏が成立を主張したが、ロシア側の確認はない。"},
+    "ミント":{f:"メディア",d:"インドの経済紙ミント（Livemint）。",w:"北朝鮮の警告の数日後だったと報じた。賞金額の報道も引いた。"},
+    "アンタラ通信":{f:"メディア",d:"インドネシアの国営通信社。",w:"サービスの復旧を伝えた。"},
+    "CNA":{f:"メディア",d:"シンガポールのニュース局チャンネル・ニュースアジアの略。",w:"発射の報道を引いた。"},
+    "軽油取引":{f:"国際",d:"トランプ氏とプーチン氏の間で語られている、ロシア産の軽油に関する取引。中身はまだはっきりしていない。",w:"ロイターが解説記事を配信した。"},
+    "トゥラング":{f:"野球",d:"ブルワーズの内野手ブライス・トゥラング。",w:"一発を放った。"},
+    "ヤンデックス":{f:"産業",d:"ロシア最大の検索サービス企業。「ロシアのグーグル」と呼ばれる。通販や地図、配車なども手がける。",w:"データセンターが無人機攻撃を受けた。"},
+    "スクバル":{f:"野球",d:"ドジャースの投手タリク・スクバル。サイ・ヤング賞を2度とった。",w:"7三振を奪ったが、勝てなかった。"},
+    "変則軌道":{f:"安全保障",d:"放物線ではなく、途中で高度や向きを変えて飛ぶ軌道。迎撃を難しくするとされる。",w:"毎日新聞が、一部がこの軌道で飛んだ可能性があると伝えた。"},
+    "エル・ムンド":{f:"メディア",d:"スペインの大手の新聞。",w:"3か所目の攻撃だと報じた。"},
+    "自由時報":{f:"メディア",d:"台湾の大手日刊紙。",w:"大谷の打席の内容を引いた。"},
+    "フーシ派":{f:"国際",d:"イエメンの北部を支配する武装組織。イランが支援している。サウジアラビアを繰り返し攻撃してきた。",w:"空港への攻撃を主張したと伝えられた。"},
+    "合同参謀本部":{f:"安全保障",d:"韓国軍の最高の軍事機関で、陸海空軍を統括する。北朝鮮のミサイル発射を最初に発表することが多い。",w:"発射の時刻と場所を発表した。"},
+    "WTI原油":{f:"市場",d:"米国で産出される原油の先物価格の指標。国際的な原油価格の目安になる。",w:"12日の取引中に一時94ドル台まで上がった。"},
+    "EEZ":{f:"国際法",d:"排他的経済水域の略。海岸から200海里（約370キロ）までの海域で、沿岸国が漁業や海底資源の権利を持つ。",w:"ミサイルはEEZの外に落ちたと推定されている。"},
+    "NLCS":{f:"野球",d:"ナショナル・リーグ優勝決定シリーズの略。7戦制で、先に4勝したチームがワールドシリーズに進む。",w:"第2戦は日本時間13日の予定。"},
+    "ストレーツ・タイムズ":{f:"メディア",d:"シンガポールの主要な英字新聞。",w:"発射の時刻と場所の報道を引いた。"},
+    "CBC":{f:"メディア",d:"カナダの公共放送。",w:"第1戦の結果を引いた。"},
+    "ポストシーズン":{f:"野球",d:"レギュラーシーズンのあとに行われる、優勝を決める試合の総称。",w:"万波中正が今季の第1号を放った。"},
+    "スウェーデン・クローナ":{f:"経済",d:"スウェーデンの通貨。",w:"賞金は1,200万クローナ、約120万ドル。"},
+    "ブルワーズ":{f:"野球",d:"米大リーグ、ナ・リーグ中地区のミルウォーキーの球団。",w:"本拠地でドジャースに2対1で勝った。"},
+    "キーウ・ポスト":{f:"メディア",d:"ウクライナの英字メディア。",w:"ハルキウの負傷者数を伝えた。"},
+    "ファイナンシャルジュース":{f:"メディア",d:"金融の速報を配信するサービス。",w:"ゼレンスキー氏の発言を伝えた。"},
+    "極超音速ミサイル":{f:"安全保障",d:"音速の5倍以上で飛び、飛行中に軌道を変えられるとされるミサイル。迎撃が難しい。",w:"韓国が数日前に試験し、北朝鮮の発射はその後だった。"},
+    "フィリピン・インクワイアラー":{f:"メディア",d:"フィリピンの大手の英字新聞。",w:"フィリピン航空の運休を伝えた。"},
+    "万波中正":{f:"野球",d:"日本ハムの外野手。",w:"ポストシーズン第1号を放った。"},
+    "排他的経済水域":{f:"国際法",d:"海岸から200海里（約370キロ）までの海域。沿岸国が漁業や資源の権利を持つが、船や飛行機の通行は自由。EEZと略す。",w:"防衛省は、いずれも日本のEEZの外に落下したと推定している。"},
+    "ドジャース":{f:"野球",d:"米大リーグ、ナ・リーグのロサンゼルスの球団。大谷翔平と山本由伸が所属する。",w:"初戦を1対2で落とした。"},
+    "上限枠":{f:"貿易",d:"輸入できる量や金額の上限を決める仕組み。割当ともいう。",w:"中国製ハイブリッド車に設けられる。"},
+    "大使館ルート":{f:"外交",d:"正式な外交の経路のひとつで、相手国にある大使館を通して抗議や連絡をすること。",w:"日本経済新聞が、北京の大使館ルートでの抗議を伝えた。"},
+    "政調会長":{f:"政治",d:"政党の政策を取りまとめる役職。",w:"自民党の政調会長が説明の継続を求めた。"},
+    "ボット":{f:"IT",d:"人の代わりに、自動で投稿や操作をするプログラム。SNSで世論を操作するのに使われることがある。",w:"ゼレンスキー氏が、攻撃後に減ったと語ったと伝えられた。"},
+    "教皇レオ14世":{f:"国際",d:"ローマ教皇（カトリック教会の最高位）。2025年に就任した米国出身の教皇。",w:"手術のため13日に入院すると、バチカンが発表したとロイターが伝えた。"},
+    "フォックス・ニュース":{f:"メディア",d:"米国のニュース専門チャンネル。",w:"第2戦の先発予定を引いた。"},
+    "欧州委員会":{f:"国際",d:"EUの行政を担う機関。法案の提案や貿易交渉を受け持つ。",w:"当局者が上限を説明した。"},
+    "安定化政策":{f:"経済",d:"景気の波を小さくするための政策の総称。不況のときは景気を支え、過熱のときは抑える。",w:"ノーベル賞の対象になった研究分野。"},
+    "道新スポーツ":{f:"メディア",d:"北海道新聞のスポーツ紙。",w:"万波中正の本塁打を引いた。"},
+    "ファーストステージ":{f:"野球",d:"クライマックスシリーズの第1段階。シーズン2位と3位が3戦で戦い、勝ったほうが次に進む。",w:"日本ハムが2勝1敗で突破した。"},
+    "ハルキウ":{f:"地名",d:"ウクライナ北東部の大都市で、ロシア国境に近い。ロシア語では「ハリコフ」。",w:"火力発電所が攻撃された。"},
+    "簗和生":{f:"政治",d:"農林水産相。栃木県選出の自民党の衆院議員。",w:"道路予算の発言をめぐり、野党が辞任を求めている。"},
+    "世界銀行":{f:"国際機関",d:"途上国の貧困削減や開発のために、資金や知識を提供する国際機関。本部は米ワシントン。",w:"片山氏が世界銀行・IMFの合同開発委員会の議長になる。"},
+    "ダウ":{f:"市場",d:"米国の代表的な30社の株価をまとめた、ダウ工業株30種平均。",w:"9日は51,654.95で引けた。"},
+    "ナンバー":{f:"メディア",d:"日本のスポーツ雑誌「Number」とそのウェブ版。",w:"山本由伸の先発予定を引いた。"},
+    "ヒンドゥー":{f:"メディア",d:"インドの大手の英字新聞。",w:"アカデミーの説明を引いた。"},
+    "王立スウェーデン科学アカデミー":{f:"国際",d:"ノーベル物理学賞・化学賞・経済学賞を選ぶスウェーデンの学術団体。",w:"受賞者を発表した。"},
+    "マクロ経済":{f:"経済",d:"国全体や世界全体の景気、物価、失業、金利などをまとめてとらえる見方。個々の家計や企業を見るのは「ミクロ経済」。",w:"受賞理由の「マクロ経済の安定化」。"},
+    "公職選挙法":{f:"法律",d:"選挙のルールを定めた法律。選挙運動のやり方や、寄付の制限などを決める。",w:"違反の疑いが浮上していると時事通信が伝えた。"},
+    "ブルームバーグ":{f:"メディア",d:"米国の経済ニュース会社。",w:"合意を伝えた。"},
+    "エヌビディア":{f:"産業",d:"AI向けの半導体で世界最大の米国企業。",w:"マイクロソフトが対抗を狙う。"},
+    "クライマックスシリーズ":{f:"野球",d:"日本のプロ野球で、シーズン上位チームが日本シリーズ進出をかけて戦う短期決戦。CSと略す。",w:"パ・リーグのファーストステージで日本ハムが勝ち上がった。"},
+    "S&P500":{f:"市場",d:"米国の大企業500社の株価をまとめた指数。",w:"9日は7,811.54で引けた。"},
+    "救援陣":{f:"野球",d:"先発投手のあとに登板する投手たち。",w:"ブルワーズは救援陣の好投で逃げ切った。"},
+    "代表代行":{f:"政治",d:"党のトップである代表を補佐し、代理を務める役職。",w:"古川氏が務める。"},
+    "更迭":{f:"政治",d:"大臣などを、本人の意思に関係なく辞めさせること。自ら辞めるのは「辞任」。",w:"階氏は、辞任しないなら首相が更迭するべきだと求めた。"},
+    "47NEWS":{f:"メディア",d:"全国の地方紙と共同通信が運営するニュースサイト。",w:"自民党政調会長の発言を伝えた。"},
+    "キング・ハリド国際空港":{f:"地名",d:"サウジアラビアの首都リヤドにある国際空港。サウジの空の玄関のひとつ。",w:"運航停止が延長された。"},
+    "ファイナルステージ":{f:"野球",d:"クライマックスシリーズの第2段階。ファーストステージの勝者が、シーズン1位のチームに挑む。優勝チームは日本シリーズに進む。",w:"日本ハムが進んだ。"},
+    "四球":{f:"野球",d:"打者にボールを4つ与えて、一塁に進ませること。",w:"大谷が四球で出塁して得点した。"},
+    "IMF":{f:"国際機関",d:"国際通貨基金。各国の経済を監視し、危機の国に融資する国際機関。本部は米ワシントン。",w:"合同開発委員会は世界銀行とIMFが共同で開く。"},
+    "湘南新宿ライン":{f:"交通",d:"神奈川・東京・埼玉などを結ぶJR東日本の直通運転。",w:"山手線の停止の影響を受けた。"},
+    "財政政策":{f:"経済",d:"政府が、税金や支出を使って景気を調整する政策。公共事業や減税など。",w:"適切な時期の財政政策が景気の落ち込みを和らげる。"},
+    "金融政策":{f:"経済",d:"中央銀行が、金利やお金の量を動かして景気や物価を調整する政策。日本では日本銀行が担う。",w:"財政政策とあわせて効果を高める。"},
+    "ナスダック":{f:"市場",d:"米国の新興企業やIT企業が多く上場する株式市場。その総合指数。",w:"9日は27,366.17で引けた。"},
+    "陳謝":{f:"政治",d:"自分の非を認めて、相手にわびること。",w:"簗氏は5日に陳謝した。"},
+    "軍需産業":{f:"産業",d:"武器や弾薬などの軍事用の物資を作る産業。",w:"EUの制裁は軍需産業に重点を置く。"},
+    "バチカン":{f:"国際",d:"ローマ教皇が治める、世界最小の独立国。カトリック教会の中心。",w:"教皇の入院を発表した。"},
+    "幹事長":{f:"政治",d:"政党の運営や選挙を取り仕切る役職。党のナンバー2にあたることが多い。",w:"階猛氏が辞任を求めた。"},
+    "WTO":{f:"国際機関",d:"世界貿易機関。貿易のルールを定め、国どうしの争いを解決する国際機関。",w:"中国商務省が、合意はWTOのルールに沿うべきだと述べた。"},
+    "データセンター":{f:"IT",d:"大量のコンピューターを置き、インターネットのサービスを支える施設。",w:"ヤンデックスの3か所が攻撃されたと伝えられた。"},
+    "片山財務相":{f:"政治",d:"片山さつき氏。高市内閣の財務大臣。",w:"世銀・IMFの合同開発委員会の議長に就く。"},
+    "日経平均":{f:"市場",d:"東京証券取引所に上場する代表的な225銘柄の株価の平均。日本の株価の目安。",w:"9日は6万9030円92銭で引けた。"},
+    "出雲駅伝":{f:"スポーツ",d:"毎年10月に島根県で行われる大学駅伝。全日本大学駅伝、箱根駅伝とあわせて「三大駅伝」と呼ばれる。",w:"早稲田大が大会新で優勝した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

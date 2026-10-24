@@ -1,0 +1,504 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>49,313.44</b>加権指数 · 10/8 終値 · −0.99%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>31.875</b>米ドル/台湾ドル · 10/8 終値 · 台湾ドル0.08安</div>
+    </div>
+    <div class="dateline"><span>第4号 · 朝刊</span><b>2026年10月8日 木曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="songshan">
+      <div class="kick">地方 · 選挙<span>報道照合 ✓ 6社 · 市の構想段階で、正式な計画文書はない</span></div>
+      <h2 class="hl">蒋万安市長が松山空港の移転を計画と発表、跡地に300ヘクタールの台北AI園区　交通部「松山は重要インフラ、現行の桃園空港計画に含めず」</h2>
+      <p class="deck">台北市長が、選挙の7週間前に、10年がかりになりかねない都市計画を打ち出した。交通部は「市はこの4年間、協議してこなかった」と言い、離島の県の立候補予定者も次々に反対している。これは構想であり、決定ではない。</p>
+      <div class="body">
+        <p>台北市長で国民党所属、再選を目指す蒋万安氏は8日、市が松山空港の移転を計画し、跡地周辺の約300ヘクタールに「台北AI園区」をつくると発表した。住宅と緑地公園も配置する。市側の理由は、エヌビディア（NVIDIA）が、北投士林科技園区への進出を決めたことで、台北市は産業用地が極端に足りない状況に置かれている、というものだ。TVBSと聯合報の報道によると、市は移転の目標を2033年前後に置き、桃園空港の第3ターミナルと第3滑走路の供用開始に合わせて、松山空港の取扱量を桃園の第3ターミナルが吸収する構想だ。蒋氏は、AI時代の台北に十分な産業空間を確保するためだと述べた。</p>
+        <p>交通部はただちに反応した。松山空港は空勤総隊の拠点でもあり、国際線、中台線、離島線を複数運航していて、国の重要インフラに指定されている。国の中長期の発展にかかわる決定は、国全体の視点から慎重に評価する必要がある、という。聯合報によると、交通部は市が過去4年間この件を協議してこなかったことも指摘し、現行の桃園空港計画に松山の移転は含まれていないとした。研究者や航空関係者は、桃園の第3ターミナルが松山の機能をすべて代替できるとは限らず、運航の効率が下がる恐れがあるとみる。土地を計画し直すなら、まず市民の需要を考えるべきだという。連江県と澎湖県の県長選の立候補予定者も、離島の住民の権利を犠牲にしてはならないと表明した。</p>
+        <p>この話題は、自然と選挙戦の争点になった。民進党の台北市長選立候補予定者、沈伯洋氏は蒋氏に「10年間、何を準備してきたのか」と皮肉った。蒋氏は同日、中天のインタビューで、「民進党全体から私一人が袋だたきにされている」と感じており、これまで経験した中で最も激しい選挙戦だと語った。DailyDropは、読者に三つの層を分けて見るよう勧める。第一に、300ヘクタールとAI園区は、市の計画目標である。第二に、移転するかどうかは中央政府の同意が要るが、交通部は今のところ支持を表明していない。第三に、2033年は想定上の時点で、どの機関が決めた日程でもない。松山空港は過去数十年、台北市長選のたびに話題になり、そのつど選挙後に立ち消えになった。今回が違うかどうかは、市が検証できる財政と交通の分析を出すかにかかっている。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>約300ヘクタール</b><span>市が松山空港の周辺に構想する台北AI園区の面積。住宅と緑地を含む（聯合報、壹蘋新聞網、三立新聞）</span></div>
+        <div><b>2033年</b><span>市が想定する移転完了の時期。桃園空港の第3ターミナルと第3滑走路に合わせる（TVBS。確定した日程ではない）</span></div>
+        <div><b>4年</b><span>交通部は、市が過去4年間この件を協議しなかったと述べた（聯合報）</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="tfall">
+      <div class="kick">経済 · 市場<span>原資料 ✓ 取引所統計 · 報道照合 ✓ 6社</span></div>
+      <h3 class="hl">連休前に台湾株が急反落、492.93ポイント安の49,313で引け　外国人は758億台湾ドルの売り越し、日韓株も連れ安</h3>
+      <div class="one">
+        <p>双十節の連休前、最後の取引日となった8日の台湾株は、安く始まって下げ幅を広げた。場中は一時600ポイント超下げ、安値は49,189.77。終値は492.93ポイント（0.99%）安の49,313.44、売買代金は8,696.97億台湾ドルだった。5万ポイントはまた少し遠のいた。三大法人の合計は898.95億台湾ドルの売り越しで、うち外国人投資家（外資・中国資本）は758.52億台湾ドルの売り越し、投信は46.88億台湾ドルの買い越し、自営商は187.31億台湾ドルの売り越し。外国人は3日連続の売り越しで、合計は約955億台湾ドルになる。TSMCは2,550台湾ドルで引け、1.35%安。台塑グループは逆行高だった。今週の加権指数は通算で837.7ポイント上昇し、週足は4週連続の上昇。背景には世界の債券市場がある。米10年債と30年債の利回りは前夜にそろって24年ぶりの高水準を付け、FRBの会合の議事要旨も、多数の当局者が年末までの追加利上げを見込んでいることを示した。日経平均は993.6ポイント安、韓国株は2%超下落、台湾ドルは対米ドルで0.08台湾ドル安の31.875台湾ドルとなり、外国人投資家の資金が流出した。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>利回り<i>金融</i></b><p>債券を満期まで持った場合に得られる、年率の収益率。債券の価格が下がると、利回りは上がる。国債の利回りは借り入れコストの基準で、上がると住宅ローンや企業の借り入れ、株式の評価に重しとなる。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="zhang"><b>米裁判所、張婉瑩被告の勾留継続を決定　FBI「中国の口座に資金流入、パスポートは所在不明」</b><em>頼総統の長男を監視したとされる華人女性が、手錠と足かせ姿で出廷した。裁判官は逃亡の恐れが高いとして保釈を認めなかった。中国のための未登録の外国代理人を務めた罪に問われているが、有罪とはされていない。</em><span>安保 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="largan"><b>大立光の7〜9月期EPSは39.62台湾ドル、粗利益率42.2%で13年ぶりの低水準　会長「11月は調達の勢いが鈍る」</b><em>聯合報と自由時報によると、法人説明会で同社は、11月は顧客の調達の勢いが緩むと述べた。AIサプライチェーンの売上高が過去最高を付ける中、レンズメーカーは見劣りする。</em><span>産業 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="shen"><b>沈伯洋氏が「少康戦情室」に出演し支持層の外へ、政治的前提なしで双城フォーラムに参加する意向</b><em>中央社と自由時報によると、趙少康氏に大麻合法化を問われた沈氏は、蒋万安氏の発言を引いて答えた。民進党の新北市長選立候補予定者、蘇巧慧氏は21日に番組に出ると述べた。</em><span>選挙 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="transit"><b>国慶節連休の輸送対策：高鉄・台鉄が増発、国道5号は依然として最も渋滞しやすい</b><em>高速公路局は国道5号が最も渋滞しやすいと予測。高鉄は8日から増発し、台中方面の南下は各駅とも毎時2本。各地が通行止めの区間を公表している。</em><span>暮らし · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="tsai"><b>蔡英文氏、スタンフォードで「台湾は安全保障の受け手にとどまらず、世界の安全保障の重要なパートナー」</b><em>退任後初の訪米で、蔡氏は台湾の製造能力の強みをテーマに講演し、台米でインド太平洋の安全と繁栄をともに築きたいと語った。</em><span>外交 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="cash">
+      <div class="kick">財政 · 暮らし<span>報道照合 ✓ 5社 · 日程は計画で、総予算の可決が前提</span></div>
+      <h3 class="hl">行政院、1万台湾ドルの現金一律給付の日程を公表：総予算が来年1月5日までに可決なら、最短1月26日に入金　国民党会派は2万台湾ドルを主張</h3>
+      <div class="body">
+        <p>行政院会（閣議）は8日、財政部から、2027年に実施する1万台湾ドルの現金一律給付の計画について報告を受けた。聯合報、自由財経、中国時報、公視の報道によると、前提は、立法院が来年1月5日までに2027年度の中央政府総予算を最終可決し、総統が1月20日までに公布することだ。その場合、最短で1月20日に事前登録が始まり、第1陣は1月26日に入金される（公視は「最短1月25日」と報じており、各紙で1日ずれている）。ATMでの受け取りは2月15日、郵便局での受け取りは2月22日に始まる予定だ。一般の人の受け取り期限は2027年8月31日で、来年末までに生まれた新生児は2028年1月31日まで受け取れる。財政部は対象者を約2,353万人と見積もる。受け取り方法は、口座登録、ATM、郵便局、直接入金、名簿に基づく支給の5種類で、資格は2023年と2025年に準ずる。</p>
+        <p>財政部は、総予算が来年1月初めの可決に間に合わなければ、旧正月（春節）前の入金には間に合わないとも注意を促した。国民党会派の書記長、許宇甄氏は8日、2万台湾ドルの給付を推す立場は変わらないと改めて述べた。民進党側は、野党に総予算の早期審議を呼びかけた。この日程が絡むのは二つ、金額（1万か2万か）と時期（春節の前か後か）で、どちらもまだ決まっていない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="agc">
+      <div class="kick">労働 · 雲林<span>報道照合 ✓ 6社 · ストの日数は各紙で数え方が異なる</span></div>
+      <h3 class="hl">艾杰旭（AGC）のストライキが決着：7時間のマラソン協議、2年連続で毎月の基本給を1,200台湾ドル引き上げ</h3>
+      <div class="one">
+        <p>雲林にある日系企業、艾杰旭（AGC）の労組が起こしたストライキは、労働部と雲林県政府の仲介で7日午後から約7時間の協議が行われ、深夜に決着した。聯合報、中国時報、ETtoday、中央社、公視の報道によると、合意の内容は、2027年と2028年の2年連続で毎月の基本給を一律1,200台湾ドル引き上げ、2029年と2030年の賃上げは引き続き労組と協議する、というもの。労組は今回の賃金争議でストライキを起こさず、会社もストに参加したことを理由に不利益な扱いをしてはならない。労組は会員代表大会の追認を経て、8日午後5時30分にストを終えた。ストの日数は各紙で数え方が異なり、3日と書くものも4日と書くものもある。労組は当初、毎年一律5%の賃上げを求めており、会社が25年間、全般的な賃上げをしていないことを理由に挙げていた。会社側は、最低賃金は3万5千台湾ドルだと説明している。労働部は協議の結果に評価を示した。労組は、19日に台湾工人鬥陣総工会の呼びかけに応じて凱達格蘭大道（凱道）に上がり、労働者退職金の新制度で雇用主の拠出率を引き上げるよう訴えるとしている。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="fed">
+      <div class="kick">国際 · 金利<span>報道照合 ✓ 5社 · 議事要旨はFRBの公開文書</span></div>
+      <h3 class="hl">FRB議事要旨：多数の当局者が年内の追加利上げを予想　米10年債・30年債の利回りがともに24年ぶり高水準、米株は全面安</h3>
+      <div class="body">
+        <p>FRBは米東部時間の7日（台湾時間8日未明）、9月15〜16日の会合の議事要旨を公表した。多数の参加者が、今年末までにあと1回の利上げが必要になるとみているが、時期は示さなかった。中央社と経済日報は、10月の会合は据え置き、12月に再び利上げする確率が高いと読んでいる。同じ日、米10年債と30年債の利回りはいずれも24年ぶりの高水準に上昇し、ダウ平均は341.41ドル安の51,179.87ドル、S&P500は0.22%安の7,801.77で、主要4指数がそろって下落した。国際原油価格は1バレル100ドル前後にとどまり、ブレント原油は100ドルを上回った。インフレと借り入れコストへの懸念が、世界の市場の重しになった。台湾時間8日、日経平均は993.6ポイント安の69,042.11、韓国のKOSPIは2%超下落し、台湾株も連れ安となった。</p>
+        <p>これらの数字が台湾の読者にとって持つ実際の意味は、住宅ローンと企業向け融資の金利の方向にある。中央銀行の理事、黄男州氏は8日、資金が逼迫して金利が上がるなか、中銀が12月に半碼（0.125ポイント）の利上げをする可能性があると語った（中央社）。ただし、中銀の次の理監事会は12月まで開かれず、利上げの話はすべて予想であって、決定ではない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>カナダの詩人カーソン氏がノーベル文学賞、女性の受賞は史上19人目<span>公視</span></li>
+        <li>新北市議の黄永昌氏、100台湾ドル相当の関廟麺を配った買収の疑いで勾留を請求される<span>公視</span></li>
+        <li>2023年の「金虎爺」爆発事件の主犯格、趙偉志被告は懲役28年の判決を受けたが、誤って釈放された<span>公視</span></li>
+        <li>ロシアの大規模空爆でウクライナの28人が死亡、ウクライナ外務省はプーチン氏の戦争犯罪と非難<span>公視</span></li>
+        <li>サムスン電子、7〜9月期の営業利益は前年同期比780%超の増加と予想、AIブームが追い風<span>中央社</span></li>
+        <li>中国、宋莉氏をWHO事務局長選に擁立すると確認<span>中央社</span></li>
+        <li>サッカー中国男子代表の世界ランキングは96位に後退、10年で最低<span>中央社</span></li>
+        <li>国内旅行の平日宿泊補助、予算の24.95%を消化<span>中央社</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「松山空港の移転はもう決まった。」</b> <span>これは蒋万安氏の計画構想だ。交通部は松山を重要インフラとし、現行の桃園空港計画には含まれておらず、確定した日程もないとしている。</span></div>
+        <div><b>「米国とイスラエルがまもなくイランへの大規模空爆を再開する。」</b> <span>聯合報が伝聞を引いただけで、独立した第2の情報源は見つからず、公式の説明もない。トランプ氏は先日も、戦争の最大の問題は、いまイランを誰が率いているのか誰も知らないことだと述べた。</span></div>
+        <div><b>「1万台湾ドルの給付は必ず旧正月前に入金される。」</b> <span>財政部は、前提は総予算が1月5日までに可決され、1月20日までに公布されることだとしている。間に合わなければ、春節後の入金になる可能性がある。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>これから見るもの</h4>
+        <div><b>10/9 金</b><span>ノーベル平和賞（台湾時間の夕方）· プロ野球（CPBL）ポストシーズンの挑戦シリーズが台中で開幕 · マイクロン（Micron）労組が取締役会に示した9日の期限 · 張婉瑩被告の事件のその後。</span><b>10/10–10/11</b><span>国慶式典と花火 · 連休の輸送 · 取引所の連休中の休場日程は発表に従う。</span><b>その先</b><span>米9月CPI（14日）· 少康戦情室に蘇巧慧氏が登場（21日）· 11月28日の統一地方選。</span><b>読者へ</b><span>連休前、外国人投資家の3日間の売り越しは合計で約955億台湾ドル。株は高値を追って買わず、1日の下げで慌てることもなく、まず自分の資金の使い道を見ること。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    songshan:{
+      "kick": "地方 · 選挙 · 報道照合 ✓ 6社 · 市の構想段階で、正式な計画文書はない",
+      "title": "蒋万安市長が松山空港の移転を計画と発表、跡地に300ヘクタールの台北AI園区　交通部「松山は重要インフラ、現行の桃園空港計画に含めず」",
+      "what": "蒋万安氏は8日、松山空港の移転を計画し、跡地周辺の約300ヘクタールに産業・住宅・緑地を備えた台北AI園区をつくると発表した。市は、エヌビディアが北投士林科技園区への進出を決め、台北は産業用地が極端に足りないためだと説明する。TVBSは目標を2033年前後とし、桃園空港の第3ターミナルと第3滑走路の供用に合わせるとした。聯合報は、松山の取扱量を桃園の第3ターミナルが吸収すると報じた。交通部は、松山空港は空勤総隊の拠点で、国際線、中台線、離島線を運航し、国の重要インフラに指定されており、国全体の視点から慎重に評価する必要があると応じた。市は過去4年間、交通部と協議しておらず、現行の桃園空港計画に松山の移転は含まれていない。研究者は、第3ターミナルが松山の機能を完全に代替できるとは限らないと指摘し、連江県と澎湖県の県長選の立候補予定者は、離島の住民の権利を犠牲にできないと表明した。沈伯洋氏は「10年間、何を準備してきたのか」と応じた。",
+      "why": "松山は、民間航空、離島の足、空中勤務、災害救援の結節点だ。移転は単なる土地開発ではなく国レベルのインフラの判断で、中央と地方、台北と離島がかかわる。統一地方選では、AI時代の産業空間を台北に誰が示せるか、という意思表示の意味もある。",
+      "me": "離島に住む人や、松山空港のビジネス路線をよく使う人は、この構想が実現すれば利用の経路が変わる。台北の住宅価格や産業に関心があるなら、解放される300ヘクタールという土地の規模は、台北市の大型の区画整理区いくつ分にも当たる。ただし、2033年という時点までは、何も自動的には起きない。",
+      "a": "台北の産業用地は確かに足りず、エヌビディアの進出は具体的な需要だ。空港周辺の土地は高さ制限や用途制限を受けており、計画を見直せば大きな価値を生み出せる。市には案を示す責任がある。",
+      "b": "松山には国防、災害救援、離島航空の機能があり、桃園の第3ターミナルで代替できるとは限らない。中央が関与しておらず、発表も選挙前なので、選挙戦術と見られやすい。",
+      "say": "三つの文書を待ってほしい。交通部と民用航空局の評価、桃園空港の第3ターミナルの処理能力の分析、そして市の財政と土地の計画だ。三つがそろうまで、この話題の重みは「決定」ではなく「構想」に置くべきだ。離島の県の反応も追う。",
+      "src": "聯合報 · 経済日報 · 知新聞 · NOWnews · 三立新聞 · TVBS · 壹蘋新聞網 · 公視 · 中央社（10月8日）· 市の計画文書は入手していない"
+    },
+    tfall:{
+      "kick": "経済 · 市場 · 原資料 ✓ 取引所統計 · 報道照合 ✓ 6社",
+      "title": "連休前に台湾株が急反落、492.93ポイント安の49,313で引け　外国人は758億台湾ドルの売り越し、日韓株も連れ安",
+      "what": "8日は双十節の連休前、最後の取引日で、台湾株は安く始まって下げた。場中の安値は49,189.77、終値は492.93ポイント（0.99%）安の49,313.44、売買代金は8,696.97億台湾ドル。三大法人は合計898.95億台湾ドルの売り越しで、外国人投資家（外資・中国資本）が758.52億台湾ドルの売り越し、投信は46.88億台湾ドルの買い越し、自営商は187.31億台湾ドルの売り越し。TSMCは2,550台湾ドルで引け、1.35%安。今週の加権指数は通算で837.7ポイント上昇し、週足は4週連続の上昇。要因には、米債利回りの24年ぶり高値、FRB議事要旨のタカ派色、原油高、連休前の様子見がある。日経平均は993.6ポイント安、韓国株は2%超下落、台湾ドルは対米ドルで0.08台湾ドル安。",
+      "why": "外国人投資家がわずか1週間のうちに買いから売りへ転じ、「5万ポイント」は目前の水準から、勢いを積み直す必要のある水準へ遠のいた。同時に、米債利回りの上昇でリスクのない資産の利回りが高まり、株式の評価に重しとなっている。",
+      "me": "長期の投資家にとって、1日の下げはシグナルにならない。短期で売買する人には、連休で市場が休む間の米国株と国際ニュースが、来週の寄り付きに響く。",
+      "a": "続伸のあとの押しは通常の調整だ。週足は4週連続で上昇しており、売上高など業績面の支えもまだある。",
+      "b": "外国人投資家の売り越し、出来高の減少、高値圏でのテクニカル面の弱含みに、世界的な債券売りが重なり、リスクは確かに高まっている。",
+      "say": "来週の寄り付きの前に、三つを見てほしい。連休中に米債利回りがさらに高値を更新するか、外国人投資家が売り越しを続けるか、TSMCが2,500台湾ドルを守れるかだ。1日の下げを傾向と思わず、1週間の上昇を保証とも思わないこと。",
+      "src": "経済日報 · 鉅亨網 · 中国時報 · 新頭殼 · 自由時報 · 中央社（10月8日）· 日韓株の数字は各紙で少し異なり、終値ベースの報道を採った"
+    },
+    cash:{
+      "kick": "財政 · 暮らし · 報道照合 ✓ 5社 · 日程は計画で、総予算の可決が前提",
+      "title": "行政院、1万台湾ドルの現金一律給付の日程を公表：総予算が来年1月5日までに可決なら、最短1月26日に入金　国民党会派は2万台湾ドルを主張",
+      "what": "行政院会は8日、財政部から報告を受けた。2027年度の総予算が来年1月5日までに最終可決され、総統が1月20日までに公布すれば、1月20日から事前登録が始まり、第1陣は最短1月26日に入金される（公視は1月25日と報じた）。ATMでの受け取りは2月15日、郵便局での受け取りは2月22日に始まる予定で、一般の人は2027年8月31日まで、新生児は2028年1月31日まで受け取れる。約2,353万人が対象で、受け取り方法は5種類、資格は2023年、2025年に準ずる。総予算が来年1月初めまでに可決されなければ、旧正月（春節）前の入金には間に合わない。国民党会派は2万台湾ドルの主張を堅持している。",
+      "why": "予算の審議と、人々が現金を受け取る時期が結び付けられ、総予算をめぐる与野党の協議に具体的な期限もできた。",
+      "me": "今は何もしなくてよい。公式の登録サイトはまだ公表されておらず、今の時点で口座情報や認証コードを求めるメッセージは、すべて詐欺だ。",
+      "a": "政府は明確な日程を示した。立法院に早期の審議を求め、人々が旧正月前に現金を受け取れるようにしたい。",
+      "b": "1万か2万かは、与野党の争点のままだ。総予算が1月までに可決されるかどうかは、行政院が決めることではない。",
+      "say": "総予算の審議の進み具合と、国民党会派が主張を変えるかを見ること。あとは付随的なことだ。",
+      "src": "聯合報 · 自由財経 · 中国時報 · 公視 · 風傳媒 · 中央社（10月8日）"
+    },
+    agc:{
+      "kick": "労働 · 雲林 · 報道照合 ✓ 6社 · ストの日数は各紙で数え方が異なる",
+      "title": "艾杰旭（AGC）のストライキが決着：7時間のマラソン協議、2年連続で毎月の基本給を1,200台湾ドル引き上げ",
+      "what": "雲林の艾杰旭の労組のストライキは、7日午後からおよそ7時間のマラソン協議を経て合意に達した。2027年と2028年の2年連続で、毎月の基本給を一律1,200台湾ドル引き上げ、2029年と2030年は別途協議する。労組は今回の賃金争議でのストとそのほかの争議行為をやめ、会社はストに参加したことを理由に不利益な扱いをしてはならない。会員代表大会の追認を経て、8日午後5時30分にストを終えた。労組の当初の要求は、毎年一律5%の賃上げだった。ストの日数は、各紙で3日と4日の二通りの数え方がある。労働部は評価した。労組は19日に凱道へ上がり、労働者退職金の新制度で雇用主の拠出率を引き上げるよう訴える。",
+      "why": "最近の労使紛争の中で、ストのあと速やかに合意に至った数少ない例だ。同じ週のマイクロンのスト権をめぐる動きとは対照をなす。",
+      "me": "製造業で働いているなら、この合意は、「25年間、全般的な賃上げがない」といった争議がどう決着するかの一例になる。",
+      "a": "協議がまとまり、労使の双方が譲歩した。良い結果だ。",
+      "b": "毎月1,200台湾ドルは、労組が当初求めた毎年5%を大きく下回る。労組が得たのは、実質より象徴かもしれない。",
+      "say": "19日の凱道での行動と、労働者退職金の新制度の雇用主拠出率をめぐる法改正の議論に注意。",
+      "src": "聯合報 · 中国時報 · ETtoday · 中央社 · 公視 · 三立新聞（10月7〜8日）"
+    },
+    fed:{
+      "kick": "国際 · 金利 · 報道照合 ✓ 5社 · 議事要旨はFRBの公開文書",
+      "title": "FRB議事要旨：多数の当局者が年内の追加利上げを予想　米10年債・30年債の利回りがともに24年ぶり高水準、米株は全面安",
+      "what": "FRBの9月15〜16日の会合の議事要旨が台湾時間8日未明に公表され、多数の当局者が今年末までにあと1回の利上げが必要とみていることが分かった。時期は示されていない。中央社と経済日報は、10月は据え置き、12月に再び利上げと読む。同じ日、米10年債と30年債の利回りはともに24年ぶりの高水準となり、ダウ平均は341.41ドル安の51,179.87ドル、S&P500は0.22%安の7,801.77で、主要4指数が全面安となった。ブレント原油は100ドルを上回っている。8日の日経平均は993.6ポイント安の69,042.11、韓国株は2%超下落した。中央銀行の理事、黄男州氏は、資金が逼迫して金利が上がるなか、12月に半碼の利上げをする可能性があると述べたが、中銀の理監事会はまだ開かれていない。",
+      "why": "世界の金利は、すべての資産の値付けの基礎だ。利回りの上昇は、株式の評価と住宅ローンのコストの両方に重しとなる。台湾の中銀が追随するかどうかは、住宅ローンと企業向け融資に直結する。",
+      "me": "住宅ローンを抱える人、とくに変動金利の人は、年末までの金利の動きに注意したい。預金のある人は、定期預金の金利が小幅に上がるかもしれない。",
+      "a": "インフレと原油高が続くなか、当局者が追加利上げを見込むのは、妥当な慎重さだ。",
+      "b": "議事要旨は最新の雇用と物価の統計より前に書かれたもので、「年末までに」は「近く」と同じではない。市場が過剰に反応する可能性がある。",
+      "say": "次の重要な数字は、米9月CPI（14日）だ。それまで、この議事要旨は方向であって、決定ではない。",
+      "src": "中央社 · 経済日報 · 聯合報 · 自由時報 · 鉅亨網（10月8日）· 米株の終値は米国の同日の報道による"
+    },
+    zhang:{
+      "kick": "安保 · 報道照合 ✓ 4社",
+      "title": "米裁判所、張婉瑩被告の勾留継続を決定　FBI「中国の口座に資金流入、パスポートは所在不明」",
+      "what": "中国政府のために頼清徳総統の長男を監視したとして罪に問われている華人女性、張婉瑩被告は7日、米連邦裁判所に出廷し、手錠と足かせをつけていた。裁判官は逃亡の恐れが高いとして勾留の継続を決め、保釈を認めなかった。FBIは、被告が中国に会社を持ち、中国の銀行口座にたびたび資金が入り、家族はすべて中国にいて、ほかに中国のパスポート1冊の所在が不明だと指摘した。被告は120万米ドル超の不動産を保釈の担保に出したが、拒まれた。検察は、被告を敵対的な外国勢力の秘密エージェントだとする。弁護人は、資産申告の食い違いは誤解だと述べた。被告は有罪とはされていない。",
+      "why": "勾留の継続は、事件がより長い司法手続きに入ることを意味する。この事件についての台湾の当局者の説明も、米裁判所の証拠を待つ必要がある。",
+      "me": "一般の人に直接の影響はないが、国境を越えた弾圧の問題が、司法と政策の場に入る一つの出発点になる。",
+      "a": "",
+      "b": "",
+      "say": "起訴状の続報で、被告に指示した中国側の人物の身元が補われるか、台湾がそれを受けて法改正するかに注意したい。",
+      "src": "聯合報 · 世界日報 · ETtoday · 自由時報（10月8日）"
+    },
+    largan:{
+      "kick": "産業 · 報道照合 ✓ 2社",
+      "title": "大立光の7〜9月期EPSは39.62台湾ドル、粗利益率42.2%で13年ぶりの低水準　会長「11月は調達の勢いが鈍る」",
+      "what": "大立光は8日に法人説明会を開き、7〜9月期の1株当たり利益は39.62台湾ドル、粗利益率は42.2%で、13年ぶりの低水準となった。林恩平会長は、11月は顧客の調達の勢いが落ちると述べた。9月の売上高が57.79億台湾ドルで前月比15%増だったこと、会社がかつて10月の勢いを9月と同程度と見込んでいたことに照らすと、説明会の発言は慎重寄りだ。鴻海、台光電、創意などAIサプライチェーンの他社は売上高が過去最高を付けており、レンズ産業の状況は相対的に異なる。",
+      "why": "台湾株の上昇はAI関連に集中しており、すべての電子株が同時に恩恵を受けているわけではないことを、投資家に思い出させる。",
+      "me": "保有銘柄が一つのテーマに偏っているなら、分散に注意したい。",
+      "a": "",
+      "b": "",
+      "say": "売上高の前月比だけでなく、会社に新製品や顧客の受注が実際に付くかを見ること。",
+      "src": "聯合報 · 自由時報 · 中央社（10月5〜8日）"
+    },
+    shen:{
+      "kick": "選挙 · 報道照合 ✓ 3社",
+      "title": "沈伯洋氏が「少康戦情室」に出演し支持層の外へ、政治的前提なしで双城フォーラムに参加する意向",
+      "what": "沈伯洋氏は趙少康氏の番組「少康戦情室」に出演し、支持層の外へ踏み出した。政治的前提なしに双城フォーラムへ参加する意向を示し、趙氏に大麻合法化の問題を追及された際は、蒋万安氏のこれまでの発言を引いて率直に答えた。民進党の新北市長選立候補予定者、蘇巧慧氏は、21日に同番組に出ると述べた。同日、蒋万安氏は中天のインタビューで、選挙戦はこれまでで最も激しく、「民進党全体から私一人が袋だたきにされている」と語った。",
+      "why": "自党の支持者の外へメディア露出を広げることは、地方選の重要な戦術だ。双城フォーラムは、台北市と新北市にまたがる課題にかかわる。",
+      "me": "投票まで7週間あり、各陣営はさらに公開討論の場を設けるだろう。切り取り動画ではなく、公約の全体を見ることを勧める。",
+      "a": "相手陣営の番組に出る意思は、自信と、異なる有権者と対話する誠意を示している。",
+      "b": "番組に出るのは形にすぎず、本当の試金石は政策の細部と予算だ。",
+      "say": "討論の一つひとつを、具体的な財政計画があるかどうかで見てほしい。",
+      "src": "中央社 · 自由時報 · 聯合報（10月8日）"
+    },
+    transit:{
+      "kick": "暮らし · 報道照合 ✓ 3社",
+      "title": "国慶節連休の輸送対策：高鉄・台鉄が増発、国道5号は依然として最も渋滞しやすい",
+      "what": "高鉄は8日から国慶節連休向けに増発し、台中方面の南下は各駅とも毎時2本。台鉄も増発する。高速公路局は、国道5号が引き続き最も渋滞しやすいと予測する。各県・市が国慶節の催しと交通規制を発表し、台南、台東などでは接駁と通行止めの区間が設けられる。",
+      "why": "連休は行楽の人出が集中するため、早めの計画が遅れを減らす。",
+      "me": "ピークの時間帯を避け、早めに切符を取り、催しによる通行止めの区間を調べておくとよい。",
+      "a": "",
+      "b": "",
+      "say": "連休の交通の悩みは毎年似ている。上に挙げた助言のほかに、付け加えることはしない。",
+      "src": "公視 · 中央社（10月5〜8日）"
+    },
+    tsai:{
+      "kick": "外交 · 報道照合 ✓ 2社",
+      "title": "蔡英文氏、スタンフォードで「台湾は安全保障の受け手にとどまらず、世界の安全保障の重要なパートナー」",
+      "what": "蔡英文前総統は、退任後初めて訪米した。スタンフォード大学の研究会の晩さん会であいさつし、台湾は安全保障の受け手にとどまらず、世界の安全保障の重要なパートナーだと語った。台湾の製造能力の強みをテーマに講演し、台米でインド太平洋の安全と繁栄をともに築きたいと述べた。サンフランシスコで飛行機を降りた際は、在米の台湾の人々が出迎えた。",
+      "why": "退任した総統の日程は公式のものではないが、米側の姿勢を探る窓になる。",
+      "me": "一般の人に直接の影響はない。",
+      "a": "",
+      "b": "",
+      "say": "中国外務省がこれに反応するかに注意したい。",
+      "src": "中央社 · 公視（10月7〜8日）"
+    }
+  };
+
+  // ───── Glossary
+  const G = {
+    "重要インフラ":{"f":"政策","d":"機能が止まると、国の安全保障、経済、国民生活に深刻な影響が出る施設。空港、電力網、通信、エネルギーなど。政府は通常、保護と審査の仕組みを設けている。","w":"交通部は松山空港を国の重要インフラに挙げた。"},
+    "空勤総隊":{"f":"政府","d":"内政部の下にある航空救難・勤務の部隊。空中での救急、災害救援、輸送を担い、一部の基地は民間空港に置かれている。","w":"松山空港は空勤総隊の拠点の一つだ。"},
+    "第3ターミナル":{"f":"交通","d":"桃園国際空港で建設中の新しいターミナル。第3滑走路とあわせて計画され、空港の処理能力を高めるためのもの。","w":"市は、松山の取扱量を桃園の第3ターミナルが吸収する構想を描く。"},
+    "加権指数":{"f":"市場","d":"台湾証券取引所が算出する、発行済み株式数で加重した株価指数。台湾株で最もよく使われる市場全体の指標。","w":"8日は49,313.44で引け、492.93ポイント安。"},
+    "三大法人":{"f":"市場","d":"外国人投資家（外資・中国資本）、投信、自営商という3種類の機関投資家の総称。取引所が毎日、売買超を公表する。","w":"8日は合計898.95億台湾ドルの売り越し。"},
+    "週足":{"f":"市場","d":"1週間を単位にしたローソク足チャート。中期の傾向を見るのに使う。","w":"今週の台湾株は通算で上昇し、週足は4週連続の上昇となった。"},
+    "利回り":{"f":"金融","d":"債券を満期まで持った場合に得られる年率の収益率。債券の価格とは逆に動く。借り入れコストと資産の値付けの基準になる。","w":"米10年債と30年債の利回りが、そろって24年ぶりの高水準を付けた。"},
+    "議事要旨":{"f":"経済","d":"FRBが金利を決める会合の3週間後に公表する文書の記録。当局者の見方の分布が分かる。","w":"9月の議事要旨は、多数の当局者が年末までの追加利上げを見込むことを示した。"},
+    "半碼":{"f":"金融","d":"金利を0.125ポイント引き上げること。台湾の中央銀行は、半碼（0.125）か1碼（0.25）を調整の単位にすることが多い。","w":"中銀の理事は、12月に半碼の利上げの可能性があると述べた。"},
+    "法人説明会":{"f":"市場","d":"上場・店頭公開企業が、機関投資家に業績と財務を説明する会合。見通しや方針が示されることが多い。","w":"大立光は8日の説明会で、11月は調達の勢いが落ちると述べた。"},
+    "粗利益率":{"f":"財務","d":"売上高に占める粗利益の割合。製品の価格決定力とコスト管理を映す。","w":"大立光の7〜9月期の粗利益率は42.2%で、13年ぶりの低さ。"},
+    "現金一律給付":{"f":"財政","d":"政府が予算を組み、全国民に一定額の現金を配る措置。","w":"財政部は来年の1万台湾ドルの給付を計画し、最短で1月26日に入金する。"},
+    "総予算":{"f":"財政","d":"中央政府の1年度の全収支の予算。立法院での三読（最終可決）を経て、総統が公布して初めて執行できる。","w":"給付が旧正月前に間に合うかは、総予算が1月5日までに可決されるかによる。"},
+    "基本給":{"f":"労働","d":"労働者が毎月固定で受け取る、残業代やボーナスを含まない基本の賃金。","w":"合意は、2年連続で毎月の基本給を1,200台湾ドルずつ上げるもの。"},
+    "勾留":{"f":"法律","d":"被告の出廷を確保し、証拠の隠滅を防ぐため、裁判所が身体の自由を制限する措置。有罪判決とは別のもの。","w":"米裁判所は張婉瑩被告の勾留継続を決め、保釈を認めなかった。"},
+    "未登録の外国代理人":{"f":"法律","d":"米国の法律では、外国政府のために政治活動をする者は、司法省に外国代理人として登録する必要がある。登録せずに活動すれば、犯罪になりうる。","w":"張婉瑩被告は、中国政府のための未登録の外国代理人を務めた罪に問われている。"},
+    "AGC":{"f":"企業","d":"旭硝子を前身とする日本のAGCグループ。ガラス、化学品、ディスプレー材料を作り、台湾の雲林に工場がある。","w":"雲林にある日系企業AGCの労組によるストが決着した。"},
+    "CPI":{"f":"経済","d":"消費者物価指数。生活に身近な商品やサービスの価格変動を測る指標で、インフレを見る主要統計。米国のCPI発表は、金利の見通しや株・為替市場を動かすことが多い。","w":"次の焦点は米9月CPI（14日）だ。"},
+    "EPS":{"f":"金融","d":"1株当たり利益。会社の税引き後純利益を発行済み株式数で割ったもので、収益力を測る一般的な指標。","w":"大立光の7〜9月期EPSは39.62台湾ドルだった。"},
+    "KOSPI":{"f":"市場","d":"韓国総合株価指数。韓国株式市場の代表的な指数で、サムスン電子など大型株の影響が大きい。","w":"韓国のKOSPIは2%超下落し、台湾株も連れ安となった。"},
+    "WHO事務局長":{"f":"役職","d":"世界保健機関(WHO)のトップ。加盟国の選挙で選ばれ、世界の保健分野を率いる。","w":"中国は宋莉氏をWHO事務局長選に擁立すると確認した。"},
+    "最終可決":{"f":"政治","d":"立法院で法案が一読、二読、三読と進む最後の手続き（三読通過）。可決されると総統の公布に回る。","w":"総予算は来年1月5日までの最終可決が前提だ。"},
+    "急反落":{"f":"市場","d":"株価や指数が短い時間で大きく下げること。","w":"連休前に台湾株が急反落し、492.93ポイント安で引けた。"},
+    "株式の評価":{"f":"金融","d":"株価収益率などの手法で、企業の株式にどれだけの価値があるかを測ること。評価が高いのは成長への期待が大きいことを示すが、金利や心理の変化で引き下げられやすい。","w":"国債の利回りが上がると、株式の評価に重しとなる。"},
+    "保釈":{"f":"法律","d":"被告が保証金などを納めて、裁判を待つ間、拘置所から一時的に釈放される制度。","w":"裁判官は逃亡の恐れが高いとして保釈を認めなかった。"},
+    "債券市場":{"f":"市場","d":"国債や社債を売買する市場。利回りの変動には、資金調達のコストや景気の見方が反映される。","w":"背景には世界の債券市場がある。"},
+    "凱達格蘭大道":{"f":"地名","d":"総統府の前にある大通りで、集会やデモ、行事の舞台になる。中国語では「凱道」と略される。","w":"労組は19日に凱達格蘭大道（凱道）に上がる。"},
+    "労働者退職金の新制度":{"f":"労働","d":"2005年に始まった制度。雇用主が毎月、賃金の6%以上を労働者個人の口座に積み立て、転職しても持ち運べる。","w":"労組は、労働者退職金の新制度で雇用主の拠出率を引き上げるよう訴える。"},
+    "北投士林科技園区":{"f":"地名","d":"台北市の北投区と士林区の間にある園区。エヌビディアが台湾本社を置くと決めた場所。","w":"エヌビディアが北投士林科技園区への進出を決めた。"},
+    "利上げ":{"f":"金融","d":"中央銀行が政策金利を引き上げ、借り入れコストを高めること。インフレを抑える手段だが、景気や株価の重しになりうる。","w":"多数の当局者が年末までの追加利上げを見込んでいる。"},
+    "インド太平洋":{"f":"国際","d":"インド洋と太平洋をひとつながりで捉える戦略的な地域。米国などがこの概念で地域の安全保障や経済協力を進めている。","w":"蔡氏は台米でインド太平洋の安全と繁栄をともに築きたいと語った。"},
+    "台光電":{"f":"企業","d":"台湾の銅張積層板の大手。製品はAIサーバーやネットワーク機器の回路基板に使われ、高性能材料の需要の恩恵を受ける。","w":"AIサプライチェーンの鴻海や台光電などは売上高が過去最高となった。"},
+    "台北AI園区":{"f":"政策","d":"台北市が打ち出した構想で、松山空港の跡地にAI産業の園区をつくる。まだ構想段階で、正式な計画はない。","w":"市は跡地周辺の約300ヘクタールに台北AI園区をつくるとした。"},
+    "スタンフォード":{"f":"機関","d":"米カリフォルニア州の名門大学。シリコンバレーに近く、ハイテク産業と関係が深い。政策や技術の会議もよく開かれる。","w":"蔡氏はスタンフォードで講演した。"},
+    "国内旅行":{"f":"産業","d":"国内での旅行。政府は景気を支えるため、宿泊補助などの対策を打ち出したことがある。","w":"国内旅行の平日宿泊補助は、予算の24.95%を消化した。"},
+    "外国人投資家":{"f":"市場","d":"台湾株式市場では、外国と中国本土の投資家を指す。売買代金が最大級の機関投資家で、買い越し・売り越しは国際資金の台湾観を示す指標とされる。","w":"外国人投資家は758.52億台湾ドルの売り越しだった。"},
+    "大立光":{"f":"企業","d":"台湾のスマートフォン向けレンズの大手。高級スマホに使われ、売上高はアップルなど顧客の新機種の動向と強く連動する。","w":"大立光の7〜9月期EPSは39.62台湾ドルだった。"},
+    "挑戦シリーズ":{"f":"スポーツ","d":"CPBLで前期・後期の優勝チームが決まった後、王者決定シリーズの前に行われるシリーズ。通常は勝率の高いチームが参加する。","w":"CPBLのポストシーズン挑戦シリーズが台中で開幕する。"},
+    "台湾工人鬥陣総工会":{"f":"機関","d":"台湾の労働者団体。最近は、労働者退職金の新制度で雇用主の拠出率を引き上げるよう求めている。","w":"労組は19日に台湾工人鬥陣総工会の呼びかけに応じる。"},
+    "ブレント原油":{"f":"エネルギー","d":"北海ブレント原油の価格。西テキサス産原油と並ぶ、国際原油価格の主要な指標。","w":"ブレント原油は100ドルを上回った。"},
+    "戦情室":{"f":"メディア","d":"趙少康氏が司会を務める政治討論番組「少康戦情室」。政治家を招いて選挙情勢や政策を語り合う。","w":"沈伯洋氏が「少康戦情室」に出演した。"},
+    "投信":{"f":"市場","d":"投資信託会社、つまり国内の運用会社。公募投信やETFの資金を運用する。","w":"投信は46.88億台湾ドルの買い越しだった。"},
+    "調達の勢い":{"f":"産業","d":"顧客が在庫の確保や新製品の発売に間に合わせるため、サプライヤーに前倒しで大量に発注する動き。サプライヤーの出荷と売上が増える。","w":"会長は、11月は顧客の調達の勢いが鈍ると述べた。"},
+    "据え置き":{"f":"金融","d":"現状を維持し、何も動かないこと。中央銀行が据え置くとは、金利を変えないという意味。","w":"10月の会合は据え置き、12月に再び利上げする確率が高い。"},
+    "拠出率":{"f":"労働","d":"雇用主が毎月、賃金の一定割合を労働者の退職金口座に入れる比率。新制度では法定で最低6%。","w":"労組は雇用主の拠出率の引き上げを訴える。"},
+    "日経平均":{"f":"市場","d":"東京証券取引所の大型株225銘柄で構成される日本の株価指数（日経225）。日本株で最も広く使われる指標。","w":"日経平均は993.6ポイント安の69,042.11だった。"},
+    "書記長":{"f":"役職","d":"国民党の立法院会派の幹部の役職。会派の事務と議事の調整を担う。","w":"国民党会派の書記長、許宇甄氏は立場を改めて述べた。"},
+    "会員代表大会":{"f":"労働","d":"労組の最高意思決定機関で、組合員の代表で構成される。ストを行うか、終えるかなどの重要事項を審議する。","w":"労組は会員代表大会の追認を経て、ストを終えた。"},
+    "S&P500":{"f":"市場","d":"米S&Pが算出する株価指数。米国の大型上場企業500社で構成され、米国株全体を測る代表的な指標のひとつ。","w":"S&P500は0.22%安の7,801.77だった。"},
+    "沈伯洋":{"f":"人物","d":"民進党所属の立法委員で学者出身。今回、民進党が公認した台北市長選の立候補予定者。","w":"沈伯洋氏は蒋氏に「10年間、何を準備してきたのか」と皮肉った。"},
+    "営業利益":{"f":"金融","d":"会社が本業で稼いだ利益。売上高から原価と営業費用を引いたもので、営業外の収益は含まない。","w":"サムスン電子は7〜9月期の営業利益が780%超増えると予想している。"},
+    "理監事会":{"f":"機関","d":"中央銀行の最高意思決定会合。理事と監事で構成され、四半期ごとに開かれて金利などの金融政策を決める。","w":"中銀の次の理監事会は12月まで開かれない。"},
+    "輸送対策":{"f":"交通","d":"連休や大型行事のとき、増発や経路の調整で大量の人や車の流れをさばくこと。","w":"国慶節連休の輸送対策として、高鉄・台鉄が増発する。"},
+    "支持層の外へ":{"f":"社会","d":"もともとの支持層や自分の領域の外に出て、より広い層に接すること（「破圏」）。","w":"沈伯洋氏が「少康戦情室」に出演し、支持層の外へ踏み出した。"},
+    "米10年債":{"f":"金融","d":"米国政府が発行する国債（米国債）は世界で最も安全な資産のひとつとされ、その利回りは世界の資金コストの基準。利回りが上がると借金が高くなり、株、とくに成長株の重しになる。","w":"米10年債と30年債の利回りは前夜にそろって24年ぶりの高水準を付けた。"},
+    "マイクロン":{"f":"企業","d":"米国のメモリー大手。台湾の桃園と台中に大規模な拠点があり、従業員労組がストの投票の主体になっている。","w":"マイクロン労組が取締役会に示した9日の期限がある。"},
+    "FRB":{"f":"機関","d":"米国の中央銀行にあたる連邦準備制度理事会。金利などの金融政策を決め、その判断が世界の為替や株式市場を動かす。","w":"FRBの議事要旨は、多数の当局者が追加利上げを見込んでいることを示した。"},
+    "自営商":{"f":"市場","d":"証券会社が自己資金で株を売買する部門。三大法人のひとつで、買い越し・売り越しは短期売買の方向を映すことが多い。","w":"自営商は187.31億台湾ドルの売り越しだった。"},
+    "艾杰旭":{"f":"企業","d":"日本の旭硝子（AGC）の台湾子会社。ガラスやディスプレー関連材料を作り、雲林工場の労組がストを起こした。","w":"雲林の艾杰旭の労組によるストは、7日午後からの協議で合意した。"},
+    "プーチン":{"f":"人物","d":"ロシアのウラジーミル・プーチン大統領。ウクライナへの戦争を主導している。台湾メディアは「蒲亭」と訳すことが多い。","w":"ウクライナ外務省はプーチン氏の戦争犯罪と非難した。"},
+    "買い越し":{"f":"市場","d":"ある投資家グループが一定期間に、売った額より買った額が多いこと。資金が純流入したことを示す。","w":"投信は46.88億台湾ドルの買い越しだった。"},
+    "売り越し":{"f":"市場","d":"ある投資家グループが一定期間に、買った額より売った額が多いこと。資金が純流出したことを示す。","w":"外国人投資家は758.52億台湾ドルの売り越しだった。"},
+    "趙少康":{"f":"人物","d":"メディア人で政治討論番組の司会者。元中広会長、元立法委員で、国民党内で今も影響力がある。","w":"趙少康氏に大麻合法化を問われた沈氏は答えた。"},
+    "エヌビディア":{"f":"企業","d":"米国の半導体企業NVIDIA。AIやグラフィックス用のGPUを設計し、製品の多くをTSMCが製造する。AIブームの中心的な受益者。","w":"エヌビディアが北投士林科技園区への進出を決めた。"},
+    "追認":{"f":"政治","d":"すでに下された決定に、あとから同意を示すこと。労組の決定は、会員代表大会の追認を経て正式な効力を持つ。","w":"労組は会員代表大会の追認を経て、ストを終えた。"},
+    "名簿に基づく支給":{"f":"財政","d":"政府が資格のある人の名簿をもとに、現金や補助を一括して支給する方法。登録による入金などと並ぶ受け取り方法のひとつ。","w":"受け取り方法は、口座登録、ATM、郵便局、直接入金、名簿に基づく支給の5種類だ。"},
+    "ダウ平均":{"f":"市場","d":"ダウ・ジョーンズ工業株30種平均の略。米国の優良大企業30社の株価で構成され、米国株の重要な指標。","w":"ダウ平均は341.41ドル安の51,179.87ドルだった。"},
+    "レンズメーカー":{"f":"産業","d":"スマホやカメラ向けのレンズモジュールを作る企業。売上高はブランドの新機種の時期や販売台数に左右される。","w":"AIサプライチェーンの好調と比べ、レンズメーカーは見劣りする。"},
+    "双城フォーラム":{"f":"政治","d":"台北と上海が交互に開く都市交流フォーラム。近年は両岸関係のせいで、政治的な論争の焦点になっている。","w":"沈伯洋氏は政治的前提なしで双城フォーラムに参加する意向を示した。"},
+    "高速公路局":{"f":"機関","d":"交通部の高速公路局。国道の建設、維持管理、交通管理を担う。","w":"高速公路局は国道5号が最も渋滞しやすいと予測している。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

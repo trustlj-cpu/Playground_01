@@ -1,0 +1,361 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>48,341.31</b>加権指数 · 13日終値 · −1.95%（中央社、自由時報、公視）</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>—</b>米ドル/台湾ドル · 13日の台北終値32.085台湾ドルは中央社のみが明確に報じており、2社に達していない</div>
+    </div>
+    <div class="dateline"><span>第10号 · 朝刊</span><b>2026年10月14日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="mkt">
+      <div class="kick">経済 · 市場<span>報道照合 ✓ 5社 · 金額とポイントは中央社、自由時報を引用</span></div>
+      <h2 class="hl">台湾株、13日に960ポイント急落し48,341ポイントで引け　外国人投資家の売り越し1,653億台湾ドルは史上3番目　台湾ドルは一時0.3台湾ドル超下落、終値は32.085台湾ドル</h2>
+      <p class="deck">米国のフィラデルフィア半導体株指数が4営業日続落したうえ、中東情勢、AI投資への懸念、連邦準備制度理事会の当局者のタカ派的な発言が重なり、韓国・日本・台湾がアジア株の下げを主導した。同じ日、国際通貨基金は台湾の今年の経済成長率を10.7%に上方修正しており、相場とは対照的だった。</p>
+      <div class="body">
+        <p>台北株式市場は13日（火）、安く寄り付いてそのまま下げ続けた。加権指数は終値で960.65ポイント、1.95%下落して48,341.31ポイントとなり、売買代金は1兆1,250億台湾ドルだった（中央社）。場中の下げ幅は最大で1,200ポイント超に達し、48,000ポイントの節目を試した。自由時報は、最も深いところで1,235ポイント、48,066ポイントまで下げたと伝え、終盤に金融株と、プラスチック、食品、石油化学、海運などの業種に買いが入って下げが収まったという（中央社、自由時報）。TSMCの終値は50台湾ドル安（中央社）。三大機関投資家の売り越しは合計1,984.46億台湾ドル。うち外国人投資家（外資・中国系資金）が1,653.42億台湾ドルを売り越し、中央社と自由時報はいずれも1日の売り越し額として史上3番目の大きさだと伝えた。投信は買い越した（中央社）。為替も同時に圧迫された。台湾ドルは対米ドルで朝方に31.97台湾ドルで寄り付き、午後に下げが強まって、場中は一時0.3台湾ドル超下落し、32.2台湾ドル台まで落ち込んだ。中央銀行が引け間際の調節に入ったあと、台北の終値は32.085台湾ドルとなり、それでも0.19台湾ドル安だった（中央社）。台北外国為替市場の取引高は47.98億米ドル。元太外匯市場を合わせると71.145億米ドルで、中央社は史上最大とし、自由時報と工商時報は史上2番目と伝えた。算出の基準が異なる可能性があり、私たちが確認できるのは取引量が極めて大きかったことだけだ。</p><p>原因は一つではない。AI投資への懸念が主線だ。中央社によると、ブロードコムのCEO、陳福陽（ホック・タン）氏とインテルのCEO、陳立武（リップブー・タン）氏が相次いで警告し、AI拡大の最大のボトルネックはすでにチップではなく資金になっている。フィラデルフィア半導体株指数は12日（月）に335.63ポイント、2.67%下落し、4営業日続落となった。自由時報は、市場が中国の長鑫存儲のメモリー技術の進展も懸念していると補足している。マイクロンは12日に3.88%下落し、13日の米国株の寄り付き後、マイクロンとSKハイニックスはそれぞれさらに約4%と5%下げた。ロイターは、米国のチップ株が13日も下落したのは、中国のメモリーに関する報告書とAI支出への懸念が原因だと伝えた。韓国のKOSPIは場中に5%超急落し（AP通信）、Yahoo!株式と自由時報はいずれも一時サーキットブレーカーが発動したと伝えた。日経平均は下落して引けた（中央社）。中東が第二の線だ。サウジの空港が攻撃を受けたあと原油価格が上昇し、インフレへの懸念を深めた（自由時報、中央社）。第三は連邦準備制度理事会（FRB）当局者のタカ派的な発言で、ロイターによると、コリンズ氏は年末までにもう一度利上げする可能性があると述べた。同じ日、国際通貨基金（IMF）が『世界経済見通し』を公表した。台湾の今年の実質GDP成長率は、4月予測の5.2%から10.7%へ上方修正され、アジア太平洋で最高、2桁に引き上げられた唯一の経済でもある（中央社、自由時報、公視）。世界の成長率は3.1%に上方修正され、AI投資がエネルギー衝撃の一部を相殺した（公視）。IMFは同時に、AIの見通しが弱まれば市場の調整を招きかねないと警告した（中央社、ロイター）。米国の13日の終値の指数は、2社以上の情報源を得られていないため掲載しない。寄り付きではS&amp;P500とナスダック指数が下げ、ダウは上げた（中央社）。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>960.65ポイント</b><span>13日の加権指数の下げ幅、48,341.31ポイントで引け（中央社）</span></div><div><b>1,653.42億台湾ドル</b><span>外国人投資家（外資・中国系資金）の売り越し、1日として史上3番目（中央社、自由時報）</span></div><div><b>10.7%</b><span>IMFによる台湾の今年の経済成長率予測、4月は5.2%（中央社、自由時報）</span></div>
+      </div></div>
+    </article>
+    <article class="col c2 vr story" tabindex="0" data-id="ntpc">
+      <div class="kick">政治 · 選挙<span>報道照合 ✓ 2社 · 数字は信民協会の単一の世論調査</span></div>
+      <h3 class="hl">新北市長選の世論調査：蘇巧慧氏43.1%、李四川氏30.0%、差は13.1ポイント　李氏の選対は標本構成を疑問視し、民意は世論調査より重要と主張</h3>
+      <div class="one">
+        <p>台北市の信民両岸研究協会は13日、新北市長選の世論調査を公表し、世論調査の専門家の戴立安氏が説明した。民進党の候補の蘇巧慧氏の支持率は43.1%、国民党の候補の李四川氏は30.0%で、差は13.1ポイント。「誰が市長にふさわしいか」の設問では、蘇巧慧氏が48.6%、李四川氏が35.9%で、蘇氏は8月下旬より4.8ポイント増えた（自由時報）。蘇巧慧氏は永和の民治市場で街頭活動を行った際、藍陣営が実施した世論調査でも先行するまで努力すると述べた。李四川氏は自信があるとして、民意は世論調査より重要だと述べた（中央社）。李四川氏の選対は、この調査の標本は新北の実際の選挙構造との乖離が極めて大きいと疑問を呈した。戴立安氏は、藍寄りの一部メディアの調査が李四川氏の先行を示しているのは、2018年の「韓流」のデータで加重しているためで、歪みが生じると述べた（自由時報）。これは一つの協会による一つの世論調査で、標本数と標本誤差は協会が公表する報告書を参照してほしい。11月28日の統一地方選挙まであと45日だ。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>標本誤差<i>統計</i></b><p>世論調査は一部の人にしか聞かないため、結果と全体の本当の意見との間には、どうしても差が生じる。その差の妥当な範囲が標本誤差だ。二人の候補の差が誤差の範囲内に収まるなら、どちらが先行しているとは言い切れない。</p></div>
+    </article>
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="pope"><b>ローマ教皇レオ14世の肺の手術は無事終了、病理検査の結果は未公表</b><em>バチカンは手術が無事に終わったと説明（自由時報）。ロイターとCBCは、13日に入院して肺結節を切除したと報じた。謁見は20日まで取り消し。</em><span>国際 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="hqf"><b>中国共産党中央規律検査委員会、前重慶市長の黄奇帆氏が調査を受けていると発表</b><em>ロイターとBBCによると、黄奇帆氏は薄熙来氏と組んでいたことがあり、退職して10年近くになる。自由時報は、今月末に予定されていた講演が突然取り消されたと伝えた。</em><span>両岸 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="bsea"><b>黒海で商船2隻がドローン攻撃、ブルガリアはロシアの関与を疑う</b><em>AP通信とロイターは、うち1隻が沈没し救助が始まったと報じた。公視と自由時報は、ブルガリア首相がロシア大使を呼び出す方針だと伝えた。</em><span>国際 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="greece"><b>ホワイトハウス、駐ギリシャ大使キンバリー・ギルフォイル氏に辞任を要求、本人は利益供与の疑惑を否認</b><em>BBCとロイターがホワイトハウスの要求を報道。自由時報は、「金で動く」利益供与の疑惑に巻き込まれ、本人は否認していると伝えた。</em><span>国際 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="tsb"><b>台湾シリーズ17日開幕、味全ドラゴンズ対中信ブラザーズ、最初の2試合の前売りは6万枚突破</b><em>公視とYahoo!スポーツは、史上初の「龍象対決」で、7試合すべてが台北ドームで行われると報じた。味全ドラゴンズは外野上層スタンドを追加で開放した。</em><span>スポーツ · ✓ 3社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="debate">
+      <div class="kick">政治 · 選挙<span>報道照合 ✓ 3社 · 日程の主張は各陣営の説明</span></div>
+      <h3 class="hl">台北市長選の討論会の日程は依然難航　沈伯洋氏は10月31日は蒋陣営の提案と主張、蒋万安氏は主催者の共同決定と反論　蒋陣営は2〜3回の開催に歩み寄り、沈陣営は3つの日程を提示</h3>
+      <div class="body">
+        <p>TVBSと三立テレビは12日、沈伯洋氏と蒋万安氏の両陣営を招いて最初の協議を行い、双方は相互質問を盛り込むことで一致したが、回数と初回の日程は決まらなかった。13日午前、二人はそれぞれ取材に応じ、説明が食い違った。沈伯洋氏は、10月31日は蒋陣営が提案したもので主催者が決めたものではなく、自分はいつでも討論できるが、まず回数を確定しなければテーマを割り振れないと述べた。蒋万安氏は、10月31日は主催者が共同で決めたもので、自分はすぐに同意した、初回があれば次の回の話ができると述べた（公視）。主催者の一つであるTVBSはその後、声明を出して応じたが、内容は同社の告知を基準にしてほしい。私たちが得た報道の要約は不完全なため、ここでは伝えない（自由時報）。蒋万安氏は、沈側の協議代表に決定権がないと疑問を呈し、「われわれに彼の選挙カーでの遊説に合わせろというのか」と問い返した。沈伯洋氏は、本当に10月31日に行うなら、1万人が大型スクリーンで生配信を見るのも悪くないと応じた（自由時報）。10月31日は台湾の同志パレードの日でもあり、パレードの主催者は同志コミュニティの主体性を保ちたいとしている（自由時報）。</p><p>その後、歩み寄りの兆しが出た。蒋万安氏は後に、2〜3回の開催が可能だと述べ、沈伯洋氏の選対は3つの日程を示して、いつでも協議に応じると述べた（中央社、自由時報）。蒋陣営の回数の説明は、1日のうちに1回、2回、2〜3回と変わった（自由時報、中央社）。もう一つの線は、『自由時報』など6社による共同討論会の招待だ。沈伯洋氏はすでに同意書に署名し、蒋陣営の報道官の羅智強氏は歓迎し、参加に同意すると述べた（自由時報。同紙は主催者の一つ）。台中市長選では、民進党の何欣純氏が、5社が主催する3回のテレビ討論会に同意する書面に署名済みで、国民党の江啓臣氏の事務所は前向きで開かれた姿勢を示し、確認が取れたら公表するとしている（中央社、自由時報）。蒋万安氏は15日（木）、黄国昌氏が司会を務めるライブ配信番組のインタビューを受ける（中央社、自由時報）。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="aramco">
+      <div class="kick">国際 · 中東<span>報道照合 ✓ 6社 · 被害の程度は未確認</span></div>
+      <h3 class="hl">フーシ派の攻勢、サウジアラムコ本社のあるダーランに波及、被害の程度は不明　トランプ氏は、フーシ派が中間選挙前に原油価格を押し上げようとしていると主張</h3>
+      <div class="body">
+        <p>ロイターは13日、サウジアラムコの本社があるダーラン付近で大きな音が聞こえたと報じた。ブルームバーグは見出しで、フーシ派によるサウジ攻撃の中で本社が被弾したとしている。イランメディアは本社から退避したと伝え、サウジ主導の連合軍は、ダーランに向かうミサイル1発を迎撃したと述べた（FinancialJuiceが伝えた。イランメディアの説明は独自には確認されていない）。「大きな音が聞こえた」と「被弾した」では表現が異なり、被害と死傷者について、信頼できる数字は見つからなかった。同じ日、サウジ主導の連合軍はイエメンの首都サヌアの石油施設に退避を命じ、作戦の準備に入った（ロイター）。BBCは、連合軍がサヌア近郊の燃料貯蔵施設を爆撃したと伝え、フィナンシャル・タイムズは、連合軍がサヌアのフーシ派の標的を攻撃したと述べた。トランプ氏はSNSで、フーシ派は「ふるまいが悪質」で、米国の中間選挙前に原油価格を押し上げようとしていると述べた（ロイター、エルサレム・ポスト、自由時報）。これはトランプ氏の主張であり、確認された動機ではない。</p><p>原油価格と台湾：中央社と自由時報によると、13日の国際原油価格は、米イラン戦争の不透明感の中で上げ下げまちまちだった。FinancialJuiceは、ブレント原油先物の清算値は105.69米ドルで0.9%下落したと伝える（単一の情報源）。自由時報は関係筋の話として、サウジがより多くの原油をホルムズ海峡経由で輸出するよう進めており、台湾を含むアジアの製油所が11月渡しの予定のサウジ産原油をスポット市場で買ったと報じた（単一の情報源）。外交部は、リヤドのハーリド国王国際空港が攻撃を受けた際に台湾籍の1人が負傷し、支援を提供したと述べ、サウジ国境地域の渡航警戒を最高の第4級レッドに引き上げた（中央社）。空港の閉鎖期間は土曜まで延長された（自由時報がロイターを引用）。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="sanc">
+      <div class="kick">両岸 · 外交<span>報道照合 ✓ 3社 · 制裁の詳細は中国外務省の告知を基準に</span></div>
+      <h3 class="hl">中国がパラグアイ、ベリーズの閣僚を制裁、米国務省は「威圧と侵略」と批判　卓栄泰氏は「覇権は世界の反感を招く」、陸委会は越境弾圧の新たな形と指摘</h3>
+      <div class="body">
+        <p>中国外務省は12日、台湾の友好国パラグアイとベリーズの現職閣僚級官員2人に対し、初めて制裁を発表した（公視、中央社）。13日、行政院長の卓栄泰氏は、中国は覇権的な心理を繰り返し見せつけて世界中の反感を買っており、台湾は主権独立国家で、中華人民共和国には内政と外交に干渉する権利がないと述べた（中央社、公視）。外交部次長の陳明祺氏は、これは中国があらゆる威圧の手段を用い、さらには国境をまたぐ弾圧にまで及ぶ事例の再来で、今は台湾の友好国にまで広がっていると述べた。大陸委員会（陸委会）の邱垂正主任委員は、この「対台湾の新たな形の越境弾圧」を厳しく非難し、陸委会は対応策をとるとした（中央社）。米国務省は、北京が西半球の国々に対して「威圧と侵略」の手段をとっていると公に非難し、トランプ政権は反対すると述べた（自由時報、公視）。</p><p>制裁を受けた官員の反応：自由時報によると、パラグアイの科学技術相は制裁を「名誉勲章」と呼んだ。別の報道は、友好国のある閣僚が資産を中国に凍結されたが、なお「台湾を支持することを誇りに思う」と述べたと伝える（自由時報、単一の情報源）。Taipei Timesは、パラグアイとベリーズがともに中国側の制裁を非難したと報じた。中央社は、パラグアイ中央銀行の総裁が、台湾および東南アジアとの協力を深め、経済貿易と投資を拡大すると述べたと伝える。自由時報は、中国共産党が総統の頼清徳氏の10日の国慶日の演説のあと、5つの海域で実弾射撃を行うと発表したことも指摘した。制裁の理由と範囲は中国外務省の告知原文を基準にしてほしく、ここでの記述は台湾と米国の官員およびメディアの伝えるところが中心だ。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>労働部は、「外国人労働者が妊娠すれば雇用主がその家族全員を養う」とする投稿は重大な誤情報だと明らかにした<span>労働部、自由時報</span></li>
+        <li>金融監督管理委員会（金管会）は、外国籍の従業員の持ち株信託への参加を認め、12月下旬に開始する<span>中央社、自由時報</span></li>
+        <li>米司法省は、OpenAIのサウジアラビア国籍の従業員を逮捕した。同社のオフィスに隠し盗聴装置を設置したと指摘している<span>ロイター、フィナンシャル・タイムズ</span></li>
+        <li>Metaは、AIモデルのMuse Wonderシリーズを発表し、能力はOpenAI、Anthropicと同等だとしている<span>ロイター、自由時報</span></li>
+        <li>ロシアは、国防能力に関する情報を収集した疑いで、日本の『北海道新聞』の記者を拘束した<span>ロイター、自由時報</span></li>
+        <li>韓国・仁川のスーパーで刃物による傷害事件があり、少なくとも8人が負傷した<span>ロイター、公視、自由時報</span></li>
+        <li>台南の鉄道地下化の第1段階工事が17日に開通し、台南駅は16日夜に最後の汽笛を鳴らす<span>自由時報、公視</span></li>
+        <li>前総統の蔡英文氏は9日間の訪米を終え、13日早朝に桃園空港に帰着した（単一の情報源）<span>自由時報</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「ロシアで肺ペストが発生し、中国の各地に広がり、上海、重慶も陥落した。」</b> <span>自由時報は「ネットで拡散」として報じ、SNSのXに未検証の投稿が大量にあると指摘した。同紙の別の報道は、ロシア当局者が現地の防疫状況は安定しており予防的措置は解除されたと述べたと伝える。卓栄泰氏は政府がロシアの疫病を注視していると述べ、中国の疫病のうわさについては小三通の往来を全面的に検査・管理するよう求めた（中央社）。衛生当局または2社目の主要メディアによる確認は見つからず、未確認に分類した。</span></div>
+        <div><b>「ローマ教皇レオ14世は肺がんと診断された。」</b> <span>Politicoは見出しで教皇が肺がんと診断されたとしている。しかしロイター、CBCなど複数のメディアはバチカンの説明を引いて、肺結節を切除する手術だと報じており、フォックス・ニュースは、医師が病変は「非常に早期」に見つかったと述べたと伝える。バチカンは手術が無事に終わったと述べたが（自由時報）、病理検査の結果の公表は確認できておらず、「肺がん」という言葉は現在、単一の情報源にしか見えないため、未確認に分類した。</span></div>
+        <div><b>「トランプ氏がエネルギー停戦を発表したあと、ロシア軍はウクライナのエネルギー施設への攻撃をやめた。」</b> <span>ロイターは、ロシア側が13日の早い時間、初めてウクライナのエネルギー関連の標的を攻撃しなかったと報じた。しかしゼレンスキー氏は後に、ロシア軍が弾道ミサイルでキーウを攻撃し、主な標的はエネルギー施設で、事前に同盟国から警告を受けていなかったと述べた（米国公共テレビ網、ウクライナメディア）。ロシア側のこれに対する説明は得られておらず、停戦の実際の履行には争いがある。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/14（水）</b><span>陸軍の旅団級対抗演習「陸勝2号」がきょうから23日まで行われ、諸兵科連合第269旅団が第564旅団と対戦し、M1A2T戦車が初めて投入される（中央社、自由時報）· 秋の台風「薔琵」は早ければきょう発生する見通しで、進路は見極め待ち。水曜は朝晩に涼しさがあり、最低気温は22度まで下がる（Yahoo!ニュース、自由時報）· 外国人投資家の売り越しが続くか、台湾ドルが32台湾ドル付近でどう動くか（中央社）· 台北市長選の討論会協議のその後 · IMFと世界銀行の年次総会がバンコクで続く（中央社）· 市場は今週後半の米国の経済指標を待っている（中央社）。</span><b>今週 10/14–10/18</b><span>蒋万安氏が15日に黄国昌氏のライブ配信番組に出演（中央社、自由時報）· TSMCが15日に法人説明会を開き、第3四半期決算を発表（自由時報）· 台南の鉄道地下化第1段階工事が17日に開通 · 台湾シリーズが17日に開幕、味全ドラゴンズ対中信ブラザーズ、7試合すべて台北ドーム（公視、Yahoo!スポーツ）· 全民運動会が17日に桃園で開幕（自由時報）· 沈伯洋氏の18日の「台北大洋流」イベントは会場変更（自由時報）· 教皇の謁見は20日まで取り消し（欧州通信社）。</span><b>その後</b><span>10月31日：台北市長選の討論会の提案日で、同日は同志パレードの日でもある（自由時報）· 11月28日に統一地方選挙。</span><b>読者へ</b><span>世論調査は発表者、標本抽出、加重を見る。「肺がん」「ペスト」のような話は、公式発表を待ってから結論を出す。原油価格や台湾ドルの1日の動きは傾向と同じではない。薔琵の進路が出たら、気象署の最新予報を基準にする。米国の13日の終値のデータは本号が得た情報源より遅いため、きょうの寄り付き前にもう一度見る。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    mkt:{"kick": "経済 · 市場 · 報道照合 ✓ 5社 · 金額とポイントは中央社、自由時報を引用", "title": "台湾株、13日に960ポイント急落し48,341ポイントで引け　外国人投資家の売り越し1,653億台湾ドルは史上3番目　台湾ドルは一時0.3台湾ドル超下落、終値は32.085台湾ドル", "what": "台北株式市場の13日（火）の加権指数は960.65ポイント、1.95%下落して48,341.31ポイントで引け、売買代金は1兆1,250億台湾ドルだった（中央社）。場中の下げ幅は最大で1,200ポイント超に達した（中央社）。自由時報は、最も深いところで1,235ポイント、48,066ポイントまで下げたが、その後、金融株とプラスチック、食品、石油化学、海運などの業種に買いが入って相場を支えたと伝えている。外国人投資家（外資・中国系資金）は1,653.42億台湾ドルを売り越し、1日の売り越し額として史上3番目の大きさだった。三大機関投資家の売り越しは合計1,984.46億台湾ドルで、投信は買い越した（中央社、自由時報）。台湾ドルの対米ドルの台北終値は32.085台湾ドルで、0.19台湾ドル安、場中は一時0.3台湾ドル超下落した（中央社）。中央社は、ブロードコムとインテルのCEOによるAI拡大のボトルネックへの警告を引き、中東情勢の緊迫と連邦準備制度理事会当局者のタカ派的な発言が同時に圧力をかけたと指摘している。同じ日、IMFは台湾の今年の経済成長率を5.2%から10.7%に上方修正した（中央社、自由時報、公視）。", "why": "台湾株の構成はAIと半導体のサプライチェーンに高度に集中しており、米国のチップ株や韓国のメモリー株が弱くなると、台湾株はすぐに連動する。外国人投資家の大口の売り越しは資金を台湾ドル市場から引き離すため、株安と通貨安が同時に起きた。IMFの予測はもう一つの側面だ。台湾の輸出と成長は確かにAI需要で大きく伸びているが、それは景気が同じサプライチェーンと非常に強く結びついていることも意味する。", "me": "台湾株、ETF、関連ファンドを持つ人は、この日の変動が評価額にそのまま表れる。1日の上げ下げは長期的な結論を意味せず、自分のリスク許容度に基づいて判断してほしい。米ドルで支払う必要がある人、留学、旅行、原材料の輸入をする人は台湾ドル安を感じるが、32.085台湾ドルは1日の終値にすぎず、傾向ではない。", "a": "Yahoo!株式はアナリストの見方を引いている。外国人投資家は大幅に売り越したが、投信は238億台湾ドルの買い越しを続け、金融株と伝統産業株が補ったため、相場が完全に弱気に傾いたわけではない。", "b": "市場関係者は、フィラデルフィア半導体株指数が続落し、TSMCのADRが月線を割り込んだため、後から追随して下げる可能性があると注意を促している（Newtalk新聞）。IMFは同時に、AIの見通しが弱まれば市場の調整を招きかねないと警告した（中央社）。", "say": "この日は3つの問いに分けて考えられる。第一に、「AIのボトルネックは資金」というのは長期的な課題か短期的な心理か。15日のTSMCの法人説明会と第3四半期決算が、次に照らし合わせられる資料だ。第二に、外国人投資家の売り越しは続くか。1日として3番目の大きさは傾向を意味せず、この先数日続くかを見る必要がある。第三に、台湾ドルが32台湾ドル付近にあるとき、中央銀行がどう調節するか。私たちは指数を予測しない。米国の13日の終値の指数は2社以上の情報源を得られていないため、掲載していない。", "src": "中央社 · 自由時報 · 公視 · ロイター · AP通信 · Yahoo!株式 · Newtalk新聞（10月12日〜13日）"},
+    ntpc:{"kick": "政治 · 選挙 · 報道照合 ✓ 2社 · 数字は信民協会の単一の世論調査", "title": "新北市長選の世論調査：蘇巧慧氏43.1%、李四川氏30.0%、差は13.1ポイント　李氏の選対は標本構成を疑問視し、民意は世論調査より重要と主張", "what": "信民協会は13日に新北市長選の世論調査を公表し、戴立安氏が結果を説明した。蘇巧慧氏の支持率は43.1%、李四川氏は30.0%で、差は13.1ポイント。「誰が新北市長にふさわしいか」では、蘇巧慧氏が48.6%、李四川氏が35.9%で、蘇氏は8月下旬より4.8ポイント増えた（自由時報）。支持政党の部分では、自由時報は民衆党が3.7%にとどまると伝えている。蘇巧慧氏は藍陣営が行った世論調査でも先行するまで努力すると述べ、李四川氏は自信があり、民意は世論調査より重要だと述べた（中央社）。李四川氏の選対は、標本が新北の実際の選挙構造と大きく乖離していると批判した。戴立安氏は、藍寄りのメディアの調査が2018年の「韓流」のデータで加重すると、歪みが出ると述べた（自由時報）。国民党の立法委員の王鴻薇氏はSNSで、これは認知戦だと厳しく批判した（自由時報）。", "why": "新北は全国で最も人口の多い直轄市で、情勢は双北（台北と新北）の選挙戦の空気に響く。異なる世論調査が大きく異なる結果を出すとき、鍵はしばしば標本の抽出方法や加重の仕方であり、誰に聞いたかだけではない。", "me": "世論調査の数字を見たら、まず3点を確認してほしい。誰が発表したか、どのように標本を抽出し加重したか、標本数と標本誤差はどれほどか。単一の世論調査はある時点のスナップショットにすぎず、それだけで結果の予告とはできない。", "a": "民進党陣営と戴立安氏は、この調査は有権者の構成と最近の情勢の変化を反映しており、藍陣営が古いデータで加重する手法がすでに外れていることも示すと見ている。", "b": "李四川氏の陣営と王鴻薇氏は、標本構成が新北の実際の有権者構成と合っておらず、世論調査自体に政治的な目的があると見ている。", "say": "双方が相手の加重方法を攻撃しており、答えは方法に戻るべきだということを示している。私たちは報道が引く結果しか見ておらず、完全な報告書は見ていない。協会が標本数、調査方法、加重の説明を公表してはじめて、13.1ポイントがどれだけ信頼できるかを判断できる。それまでは、「結論」ではなく「一つの」世論調査として扱ってほしい。", "src": "自由時報 · 中央社（10月13日）"},
+    debate:{"kick": "政治 · 選挙 · 報道照合 ✓ 3社 · 日程の主張は各陣営の説明", "title": "台北市長選の討論会の日程は依然難航　沈伯洋氏は10月31日は蒋陣営の提案と主張、蒋万安氏は主催者の共同決定と反論　蒋陣営は2〜3回の開催に歩み寄り、沈陣営は3つの日程を提示", "what": "TVBSと三立は12日に台北市長選の討論会を協議し、双方は相互質問で一致したが、回数と日程は未定。13日、沈伯洋氏は10月31日は蒋陣営の提案で、いつでも討論できるがまず回数を確定すべきだと述べ、蒋万安氏は10月31日は主催者の共同決定で、すぐに同意したと述べた（公視）。TVBSは声明で応じたが、内容は完全には入手できていない（自由時報）。蒋万安氏は沈側の協議代表に決定権がないと疑問を呈し、沈伯洋氏は10月31日に開くなら1万人が大型スクリーンで生配信を見るのも悪くないと述べた（自由時報）。蒋万安氏は後に2〜3回の開催が可能だと歩み寄り、沈陣営は3つの日程を示した（中央社、自由時報）。沈伯洋氏は『自由時報』など6社の共同討論会の同意書に署名済みで、蒋陣営は歓迎し参加に同意すると述べた（自由時報）。", "why": "テレビ討論会は、候補者が同じ舞台で相手の質問に答えなければならない数少ない機会だ。何回行うか、いつ行うか、相互質問があるかによって、市民が目にするのは相互検証か、それぞれの言い分かが決まる。日程の帰属をめぐる争いも、双方が相手の引き延ばしを指摘する材料になっている。", "me": "台北市民は、最終的に決まる日程とルールに注目し、二人の候補の交通、住宅、薬物政策への具体的な取り組みを見比べるとよい。10月31日は同志パレードの日でもあり、予定は先に確認してほしい。注意：自由時報は共同討論会の主催者の一つなので、同紙の報道を読むときは他のメディアと照らし合わせてほしい。", "a": "沈伯洋氏の陣営は、複数回の討論と相互質問があってこそ市民が政策を検証でき、日程は一方の提案ではなく主催者が明らかにすべきだと見ている。", "b": "蒋万安氏の陣営は、主催者は少なくとも15日間の準備が必要だと説明しており、10月31日は最も早い日付だと述べ、相手の協議代表に決定権がないことこそが引き延ばしの原因だと見ている。", "say": "「誰が10月31日を提案したか」は事実の問題で、主催者が協議記録を公開すれば答えられ、双方がそれぞれ言い合う必要はない。TVBSが声明を出したことは見たが、完全な内容は入手していないため、どちらにも肩入れしない。次に最も役立つ情報は、主催者が発表する正式な日程、回数、ルールだ。", "src": "公視 · 中央社 · 自由時報（10月12日〜13日）"},
+    aramco:{"kick": "国際 · 中東 · 報道照合 ✓ 6社 · 被害の程度は未確認", "title": "フーシ派の攻勢、サウジアラムコ本社のあるダーランに波及、被害の程度は不明　トランプ氏は、フーシ派が中間選挙前に原油価格を押し上げようとしていると主張", "what": "ロイターは、サウジアラムコの本社があるダーラン付近で大きな音が聞こえたと報じた。ブルームバーグは、本社がフーシ派の攻撃で被弾したとしている。イランメディアは本社が退避したと伝え、サウジ連合軍はダーランに向かうミサイルを迎撃したと述べた（FinancialJuiceが伝えた）。連合軍は同じ日、イエメンのサヌアにある石油施設に退避を命じ（ロイター）、サヌア近郊の燃料貯蔵施設とフーシ派の標的を爆撃した（BBC、フィナンシャル・タイムズ）。トランプ氏は、フーシ派は米国の中間選挙前に原油価格を押し上げようとしていると述べた（ロイター、エルサレム・ポスト、自由時報）。台湾の外交部は、リヤドの空港が攻撃を受けた際に台湾籍の1人が負傷し、サウジ国境地域の渡航警戒を第4級レッドに引き上げたと述べた（中央社）。", "why": "アラムコはサウジアラビアの国営石油会社で、本社所在地が攻撃の標的になれば、市場が心配するのは航空便や空港だけでなく、原油の生産と輸出設備の安全だ。台湾の石油製品は輸入に大きく頼っており、中東の供給リスクは価格と海運コストを通じて国内に伝わる。", "me": "原油価格と海運コストの変動は、輸送、石油化学、電力などのコストに影響する。ただ国内の油価を改定するかどうかは別の仕組みがあり、国際価格が1日で比例して反映されることはない。サウジを経由する旅行者は、航空会社と外交部に最新の警戒情報を確認してほしい。", "a": "米国とサウジ側は、攻撃を民間とエネルギーのインフラへの脅威と位置づけ、より強い防空と国際的な対応が必要だと見ている。", "b": "フーシ派は自らの行動をサウジへの反撃と位置づけ、サウジがサヌアを攻撃すれば反撃を受けると警告した（FinancialJuice）。米国が直接介入すれば地域の紛争が拡大しかねないとの分析もある。", "say": "この記事の肝は、「大きな音」「被弾」「被害」という三つの異なる言い方を見分けることだ。いま確認できるのは、アラムコ本社付近で攻撃事案が起きたことで、被害の大きさや生産への影響の有無は、サウジアラムコまたはサウジ政府の公式説明が必要になる。トランプ氏の動機についての発言も、確認された事実とは扱わない。この先見るのは、原油価格が一方向の上昇に転じるか、アラムコが声明を出すかだ。", "src": "ロイター · ブルームバーグ · BBC · フィナンシャル・タイムズ · 中央社 · 自由時報 · エルサレム・ポスト · FinancialJuice（10月12日〜13日）"},
+    sanc:{"kick": "両岸 · 外交 · 報道照合 ✓ 3社 · 制裁の詳細は中国外務省の告知を基準に", "title": "中国がパラグアイ、ベリーズの閣僚を制裁、米国務省は「威圧と侵略」と批判　卓栄泰氏は「覇権は世界の反感を招く」、陸委会は越境弾圧の新たな形と指摘", "what": "中国外務省は12日、パラグアイとベリーズの現職閣僚級官員2人に初めて制裁を発表した（公視、中央社）。卓栄泰氏は13日、中国は覇権的な振る舞いを繰り返して世界中の反感を買っており、台湾の内政と外交に干渉する権利はないと述べた。外交部次長の陳明祺氏はこれを国境をまたぐ弾圧が友好国に広がったものと述べ、陸委会の邱垂正主任委員は新たな形の対台湾の越境弾圧と呼び、対応策をとるとした（中央社）。米国務省は北京の「威圧と侵略」の手段を批判した（自由時報、公視）。パラグアイの科学技術相は制裁を「名誉勲章」と呼び、パラグアイ中央銀行の総裁は台湾との協力を深めると述べた（自由時報、中央社）。", "why": "制裁の対象は友好国の現職官員で、台湾に関する発言が理由になった。これは北京の台湾への圧力を、台湾自身から台湾を支持する第三国の政府へと広げるもので、米国の西半球での利益も動かされるため、国務省が表に出て態度を示した。", "me": "短期的には一般の人々の日常生活に直接の影響はない。この種の事件は台湾の外交空間と両岸関係の方向を映すもので、今後は外交部と陸委会が発表する対応措置や、友好国との協力項目が変わるかに注目するとよい。", "a": "台湾政府と米国側の見方は、北京が制裁で第三国の官員に圧力をかけるのは威圧にあたり、国際社会が共同で反対すべきだ、というものだ。", "b": "北京は一貫して、台湾の公的機関との往来を中国の内政への干渉とみなしており、それを外国官員に圧力をかける理由にしている。", "say": "いま確認できるのは、制裁の対象と、台湾・米国の官員の反応だ。中国側の告知の全文と制裁の範囲は原文を基準にしてほしく、私たちは補って書かない。注目点は、両国政府が台湾との往来を見直すか、陸委会の「対応策」が何か、ほかの友好国の官員も名指しされるかだ。", "src": "中央社 · 公視 · 自由時報 · Taipei Times（10月12日〜13日）"},
+    pope:{"kick": "国際 · ✓ 4社 · 病理検査の結果は未公表", "title": "ローマ教皇レオ14世の肺の手術は無事終了、病理検査の結果は未公表", "what": "ローマ教皇レオ14世（71歳）は13日に入院し、肺結節を切除する手術を受けた。本人は11日の公の場で手術のことを明らかにした（CBSニュース）。CBCによると、この種の手術は通常は全身麻酔で、入院は約1週間かかり、バチカンは10月20日までの謁見をすべて取り消した。自由時報はバチカンの説明として、手術は無事に終わったと伝える。フォックス・ニュースは、医師が病変は「非常に早期」に見つかったと述べたと伝える。2025年5月8日の就任以来、初めての入院だ（Channelsテレビ）。", "why": "教皇は世界のカトリック信徒の精神的指導者で、健康状態はバチカンの日程や外交の手配に響く。外部が最も気にするのは病変の性質と回復までの期間だ。", "me": "台湾の大半の読者には直接の影響はない。カトリック信徒は、バチカンの発表や祈りの呼びかけに注意するとよい。", "a": "", "b": "", "say": "「結節」はがんと同じではなく、悪性かどうかは病理検査の結果次第だ。Politicoは見出しで肺がんと診断されたとしているが、私たちは単一の情報源でしか確認できず、未確認に分類した。バチカンが病理検査の結果を公表するまでは採用しない。", "src": "自由時報 · ロイター · CBC · CBSニュース · フォックス・ニュース · ガーディアン（10月11日〜13日）"},
+    hqf:{"kick": "両岸 · ✓ 3社 · 案件の内容は中国側の通報による", "title": "中国共産党中央規律検査委員会、前重慶市長の黄奇帆氏が調査を受けていると発表", "what": "ロイターは中国の反汚職機関を引き、薄熙来氏のかつてのパートナー、重慶の前市長の黄奇帆氏が調査を受けていると報じた。BBCの見出しは「中国共産党中央規律検査委員会：薄熙来氏のかつてのパートナーの黄奇帆氏が調査を受けている」。自由時報は、黄奇帆氏は退職して10年近くで、今月末に浙江で予定されていた講演が突然、事情により取り消され、ネット上では連行されたとのうわさが出たあと、中国共産党が正式に通報したと伝えた。中国が通報した具体的な容疑の内容は、見つからなかった。", "why": "黄奇帆氏は重慶市政の重要人物で、退職して何年もたつが、経済学者として頻繁に公開の場で講演を続けていた。彼が調査を受けたことで、中国共産党の上層部の人事と反腐敗の動きへの関心が高まっている。", "me": "台湾の読者には直接の影響はない。中国の政治経済の動きに関心がある人は、中国側の続報に注意するとよい。", "a": "", "b": "", "say": "いまあるのは「調査を受けている」という事実だけで、容疑の内容はない。自由時報が触れた「事後の清算」という見方は同紙の解釈で、第2の情報源による確認がないため採用しない。", "src": "ロイター · BBC · 自由時報（10月13日）"},
+    bsea:{"kick": "国際 · ✓ 4社 · 攻撃元は未確認", "title": "黒海で商船2隻がドローン攻撃、ブルガリアはロシアの関与を疑う", "what": "AP通信はブルガリア側の話として、ドローンが黒海の船を攻撃し、1隻が沈没して救助が始まったと報じた。ロイターは、ブルガリアの首相がドローンがブルガリア沖で船1隻を沈めたと述べたと報じた。公視は、商船2隻がドローン攻撃を受け、ブルガリア政府はロシアの関与を疑っていると伝え、自由時報は、ブルガリア首相がロシア大使を呼び出す方針だと伝える。ロシア側の反応は、得られていない。", "why": "黒海はウクライナの穀物とエネルギー輸出の海運の要衝で、商船への攻撃は保険料と輸送コストを押し上げ、周辺国を戦争に巻き込む可能性もある。", "me": "台湾の日常への影響は限られる。長期的には、海運や穀物・エネルギー価格にさらに圧力がかかれば、台湾の輸入コストにも波及しうる。", "a": "", "b": "", "say": "「ロシアの関与を疑う」はブルガリア政府の説明で、判明した事実ではない。調査結果とロシア側の反応を待つ必要がある。", "src": "AP通信 · ロイター · 公視 · 自由時報（10月13日）"},
+    greece:{"kick": "国際 · ✓ 3社 · 疑惑の内容は未確認", "title": "ホワイトハウス、駐ギリシャ大使キンバリー・ギルフォイル氏に辞任を要求、本人は利益供与の疑惑を否認", "what": "ロイターによると、ホワイトハウスは駐ギリシャ米国大使のキンバリー・ギルフォイル氏に辞任を求めたと述べた。トランプ氏はその前に、解任を検討していると述べていた。BBCは、トランプ氏は汚職疑惑のあと彼女を解任したと伝える。自由時報は、彼女が「金で動く」利益供与のスキャンダルに巻き込まれ、疑惑を否認していると報じた。疑惑の具体的な内容は、見つからなかった。", "why": "駐外大使は米国政府の代表で、関与が事実なら、米・ギリシャ関係やトランプ政権の人事への見方に影響しうる。", "me": "台湾の読者には直接の影響はない。", "a": "", "b": "", "say": "いま確認できるのは「辞任を求められた」と「本人が否認している」の二点だけで、利益供与の証拠と捜査機関は報道に明記されておらず、結論は出さない。", "src": "BBC · ロイター · 自由時報（10月12日〜13日）"},
+    tsb:{"kick": "スポーツ · ✓ 3社", "title": "台湾シリーズ17日開幕、味全ドラゴンズ対中信ブラザーズ、最初の2試合の前売りは6万枚突破", "what": "中華職棒の台湾シリーズが10月17日に開幕する。7戦4勝制で、味全ドラゴンズが中信ブラザーズと対戦する。史上初の「龍象対決」で、7試合すべてが台北ドームで行われる（公視、Yahoo!スポーツ）。Yahoo!スポーツとETtodayによると、G1、G2の前売りは合計6万枚を突破し、味全ドラゴンズは外野上層スタンドを追加で開放した。自由時報は、中信ブラザーズがG3、G4のチケット販売情報を発表したと報じた。", "why": "台湾シリーズはプロ野球の年間王者決定戦だ。すべての試合が初めて同じ球場で行われることで、チケットと交通の手配も焦点になる。", "me": "観戦したい人は、中華職棒と球団が発表する販売情報に従って購入し、台北ドームへの移動時間を余裕をもって見込んでほしい。", "a": "", "b": "", "say": "日程、先発、販売は中華職棒と両球団の告知を基準にしてほしい。", "src": "公視 · Yahoo!スポーツ · ETtoday · 自由時報（10月13日）"},
+  };
+  const G = {
+    "KOSPI":{"f": "金融", "d": "韓国総合株価指数で、韓国の上場企業全体の株価の動きを映す。", "w": "KOSPIは13日、場中に5%超急落し、アジア株安の一環となった。"},
+    "M1A2T戦車":{"f": "国防", "d": "国軍が米国から調達した主力戦車の型式、M1A2T。", "w": "自由時報は、今回が陸勝演習への初投入だと伝えた。"},
+    "SKハイニックス":{"f": "半導体", "d": "韓国のメモリーチップメーカーで、サムスンと並ぶ世界の主要なメモリーメーカー。", "w": "13日の米国株の寄り付き後、マイクロンとSKハイニックスはそれぞれさらに約4%と5%下げた（自由時報）。"},
+    "三大機関投資家":{"f": "金融", "d": "外国人投資家（外資・中国系資金）、投信、自己売買部門の三種の機関投資家の総称。毎日の売買超過額は資金の動きの目安とされる。", "w": "13日の三大機関投資家の売り越しは合計1,984.46億台湾ドルで、うち投信は買い越した。"},
+    "世界経済見通し":{"f": "経済", "d": "国際通貨基金が毎年数回公表する世界と各国の経済予測報告書で、各国政府や市場によく引用される。", "w": "この報告書は、台湾の今年の成長率を10.7%に上方修正した。"},
+    "中央規律検査委員会":{"f": "中国政治", "d": "中国共産党の党員・幹部の規律違反・法律違反を調べる機関で、官員の調査は通常ここが通報する。", "w": "ロイターとBBCによると、同委員会は黄奇帆氏が調査を受けていると発表した。"},
+    "統一地方選挙":{"f": "選挙", "d": "同じ日に合同で行われる地方公職の選挙（九合一選挙）。今回の投票日は11月28日。", "w": "投票日まであと45日。"},
+    "相互質問":{"f": "政治", "d": "討論の中で、候補者が交互に相手へ直接質問し、その場で答えを求める部分。双方の主張が互いの検証を受ける。", "w": "台北市長選の討論会は、双方がすでに相互質問を盛り込むことで一致した。"},
+    "信民協会":{"f": "選挙", "d": "台北市の信民両岸研究協会。今号の新北市長選の世論調査の発表元。", "w": "同協会は13日に新北市長選の世論調査を公表し、蘇巧慧氏が李四川氏を13.1ポイントリードした。"},
+    "加権指数":{"f": "金融", "d": "上場株式の時価総額で加重して計算する株価指数で、台湾株で最もよく引用される全体の指標。英語ではTAIEXと呼ぶことが多い。", "w": "13日は960.65ポイント下落し、48,341.31ポイントで引けた。"},
+    "同志パレード":{"f": "社会", "d": "台湾で毎年開かれる同志（LGBTQ+）の大パレード。今年は10月31日に開催予定。", "w": "10月31日は、台北市長選の討論会が提案された日でもある。"},
+    "国際通貨基金":{"f": "国際機関", "d": "略称IMF。世界の金融の安定を監視し、加盟国に政策助言と資金支援を行う国際機関。", "w": "IMFはワシントン時間の12日に最新の予測を公表した。"},
+    "外国人投資家":{"f": "金融", "d": "外国の機関と個人の投資家（台湾の統計では外資と中国系資金をまとめて示す）。資金規模が大きいため、台湾株への出入りが相場全体を左右することが多い。", "w": "外国人投資家は13日に大幅に売り越し、同時に台湾ドルが下落した。"},
+    "キンバリー・ギルフォイル":{"f": "人物", "d": "米国の駐ギリシャ大使（自由時報の訳名は「季伏爾」、英語表記はKimberly Guilfoyle）。13日にホワイトハウスから辞任を求められた。", "w": "利益供与の疑惑を否認している。"},
+    "実質GDP":{"f": "経済", "d": "物価変動を除いた国内総生産で、経済が実際にどれだけ成長したかを測る。", "w": "IMFは台湾の今年の実質GDPが10.7%成長すると予測している。"},
+    "引け間際の調節":{"f": "為替", "d": "中央銀行が為替市場の引けの前後に米ドルを売買し、為替の急激な変動を和らげることが目的で、特定の水準に固定するものではない。", "w": "中央銀行が引け間際の調節に入ったあと、台湾ドルは32.085台湾ドルで引けた。"},
+    "ブレント原油":{"f": "エネルギー", "d": "北海ブレント原油を基準とする先物価格で、国際原油価格として最もよく引用される指標の一つ。", "w": "FinancialJuiceは、ブレント原油先物の13日の清算値は105.69米ドルだったと伝えた。"},
+    "標本誤差":{"f": "統計", "d": "世論調査は一部の人にしか聞かないため、結果と全体の本当の意見との間には、どうしても差が生じる。その差の妥当な範囲が標本誤差だ。", "w": "13.1ポイントがどれだけ信頼できるかは、協会が公表する標本数と誤差を見て判断する。"},
+    "持ち株信託":{"f": "金融", "d": "従業員が信託を通じて資金を集め、会社の株式を保有する制度。金管会は外国籍の従業員の参加を認めた。", "w": "この開放は12月下旬に始まる予定。"},
+    "日経平均":{"f": "金融", "d": "日本の東京株式市場で最もよく引用される株価指数。", "w": "中央社は、日経平均は13日に下落して引けたと伝えた。"},
+    "サウジアラムコ":{"f": "エネルギー", "d": "サウジアラビアの国営石油会社。略してアラムコ。世界で最も重要な石油生産者の一つ。", "w": "アラムコ本社のあるダーラン付近で大きな音が聞こえた。"},
+    "法人説明会":{"f": "金融", "d": "上場企業が投資家に決算と事業の見通しを説明する会合。", "w": "TSMCは15日に法人説明会を開き、第3四半期決算を発表する。"},
+    "サーキットブレーカー":{"f": "金融", "d": "株式市場の保護の仕組み。指数の1日の下落率が基準に達すると、一定時間取引を止めて市場を冷静にさせる。", "w": "Yahoo!株式と自由時報は、韓国のKOSPIが13日に一時サーキットブレーカーが発動したと伝えた。"},
+    "病理検査":{"f": "医学", "d": "取り出した組織を検査に出し、病理医が良性か悪性かを判定する検査の報告。", "w": "バチカンは教皇の手術後の病理検査の結果をまだ公表していない。"},
+    "連邦準備制度理事会":{"f": "金融政策", "d": "米国の中央銀行制度で、米国の金利政策を決め、世界の資金の流れに大きな影響を与える。", "w": "連邦準備制度理事会当局者のタカ派的な発言は、今回市場を押し下げた要因の一つ。"},
+    "肺結節":{"f": "医学", "d": "肺の画像で見つかる小さな病変で、大半は良性だが、切除または経過観察と病理検査で性質を確かめる必要がある。", "w": "教皇が13日に入院して切除したのは肺結節だ。"},
+    "肺ペスト":{"f": "医学", "d": "ペスト菌が肺に感染して起こる重症で、飛沫で感染しうるため、早期の治療が必要。", "w": "ロシアで肺ペストが発生し中国に広がったとのうわさがネットで流れているが、確認は見つかっていない。"},
+    "フーシ派":{"f": "中東", "d": "イエメンの武装組織。報道によればイランと連携している。今号の報道は、サウジアラビアを攻撃したとしている。", "w": "ロイターとブルームバーグは、攻撃がサウジアラムコ本社のある地域に及んだと報じた。"},
+    "エネルギー停戦":{"f": "国際", "d": "トランプ氏が発表した、ロシアとウクライナ双方が相手のエネルギー施設への攻撃をやめる取り決め。詳細と履行には争いがある。", "w": "ゼレンスキー氏は、ロシア軍がなおキーウのエネルギー施設を攻撃していると述べた。"},
+    "ホルムズ海峡":{"f": "エネルギー", "d": "ペルシャ湾とアラビア海をつなぐ狭い水路で、世界の原油の海上輸送のかなりの割合がここを通る。", "w": "自由時報は、サウジがより多くの原油をホルムズ海峡経由で輸出するよう進めていると伝えた。"},
+    "薄熙来":{"f": "人物", "d": "元重慶市党委員会書記で、失脚した中国共産党の高官。", "w": "黄奇帆氏はかつて彼と組んでいた。"},
+    "薔琵":{"f": "気象", "d": "発生する可能性がある台風の名前。熱帯低気圧が台風の強さに発達してはじめて、気象機関が名簿に従って命名する。", "w": "報道は、早ければ14日（水）に発生し、進路は見極め待ちだと伝える。"},
+    "フィラデルフィア半導体株指数":{"f": "金融", "d": "米国に上場する半導体企業の株価を追う指数で、世界のチップ株の風向計とされることが多い。", "w": "12日に2.67%下落し、4営業日続落となり、アジア株を押し下げた。"},
+    "売り越し":{"f": "金融", "d": "ある種類の投資家が1日に売った金額が買った金額を上回ること。その差が売り越しで、逆は買い越し。", "w": "外国人投資家（外資・中国系資金）の売り越しは1,653.42億台湾ドルで、1日として史上3番目だった。"},
+    "越境弾圧":{"f": "両岸", "d": "国家が圧力を国外に広げ、他国の人や官員に圧力をかけ、罰すること。陸委会は、今回の友好国の官員への制裁を新たな形だとしている。", "w": "邱垂正氏は、この新たな形の対台湾の越境弾圧を厳しく非難した。"},
+    "ダーラン":{"f": "地名", "d": "サウジ東部の都市で、サウジアラムコ本社の所在地。", "w": "ダーラン付近で13日に大きな音が聞こえ、サウジ連合軍はミサイル1発を迎撃したと述べた。"},
+    "長鑫存儲":{"f": "半導体", "d": "中国のメモリーチップ（DRAM）メーカーで、英語ではCXMTと呼ぶことが多い。", "w": "自由時報は、市場がその技術の進展を懸念して、メモリー株を押し下げたと伝えた。"},
+    "陸勝2号":{"f": "国防", "d": "陸軍の旅団級の実兵対抗演習で、14日から23日まで実施され、諸兵科連合第269旅団が第564旅団と対戦する（中央社）。", "w": "演習はきょう始まり、10日間9夜、昼夜を問わず続く。"},
+    "黄奇帆":{"f": "人物", "d": "元重慶市長で、薄熙来氏と組んでいた。退職して10年近くになる（BBC、自由時報）。", "w": "13日に中国共産党から調査を受けていると通報された。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

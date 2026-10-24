@@ -1,0 +1,362 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,533.77</b>KOSPI · 10/22 終値 · 前日比3.52%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>764.10</b>KOSDAQ · 10/22 終値</div>
+    </div>
+    <div class="dateline"><span>第19号 · 朝刊</span><b>2026年10月23日 金曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="kospi">
+      <div class="kick">経済・株式市場<span>報道照合 ✓ 4社 · 外国人の純売り越し規模の最終値は未確認</span></div>
+      <h2 class="hl">KOSPIが3.5%急落して引け、5,533.77に…KOSDAQも3.6%下落</h2>
+      <p class="deck">前日に反発した1日後、再び3%台の下げ。サムスン電子とSKハイニックスが指数を押し下げた</p>
+      <div class="body">
+        <p>聯合ニュースは、22日のKOSPIが寄り付きで1.14%安の5,670.11で始まった後、午後に入って下げ幅を広げ、3.5%の急落のまま通常取引を終えたと伝えた。韓国取引所の集計による終値は5,533.77である。韓国経済は、取引時間中に指数が5,600台に押し込まれる過程で、「サムジョンニクス」と呼ばれるサムスン電子とSKハイニックスが下落を主導したと報じ、聯合ニュース・SBS・韓国経済はKOSDAQ指数も3.6%下げたと同じように伝えた。KOSPIが3%台の下げ幅を記録したのは、今月初めてではない。12日にも指数は3.65%下がって6,384で引けたとSBS Bizが報じており、10日の間に指数の水準は800ポイント以上低くなった。この日の午前には韓国銀行の金融通貨委員会が基準金利を年3.00%で据え置き、午後にはシン・ヒョンソン総裁の記者会見が続いた。</p>
+        <p>海外要因も重なった。ブルームバーグTVは、同じ日にアジア株が技術株を中心にそろって下げ、中国株はいわゆる「解放の日」以降で最も大きく下げたと伝えた。ブルームバーグはまた、イエメンのフーシ派によるサウジアラビアへの攻撃が続くなか、米国が一部の外交官にサウジからの退避を指示し、ブレント原油が1バレル110ドルを超えたと報じた。米国では、メタがAI投資の見通しを引き上げ、テスラが設備投資の見通しを引き下げたという決算発表があった。サムプロTVの「クロージングベル・ライブ」は、この日の引け後の放送で、業績よりも「需給の空白」が下げ幅を広げたと診断した。シン・ヒョンソン総裁は記者会見で「株価の調整で消費が一時的に減る」と語ったと、聯合ニュースと韓国経済が伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="jsc">
+      <div class="kick">政治・検察改革<span>報道照合 ✓ 4社 · 野党の法的対応の有無は未確認</span></div>
+      <h3 class="hl">李大統領「重捜庁の指揮・監督の放棄は弾劾事由」…野党は「捜査指揮宣言」と反発</h3>
+      <div class="one">
+        <p>聯合ニュース・朝鮮日報・京郷新聞は、李在明大統領が22日、Xに投稿し、「国政に対する大統領の指揮・監督は権限であると同時に責任」だとしたうえで、「重大犯罪捜査庁に対する指揮・監督を放棄することは、憲法と政府組織法に違反し、弾劾事由になる」と述べたと伝えた。朝鮮日報は、李大統領が「職務遺棄」という表現も使ったと報じた。論争は、重大犯罪捜査庁長ら捜査・公訴機関の長の国務会議への出席をめぐって始まった。東亜日報は、李大統領が前日、グーグルのジェミニの回答を引用して出席不可論を「詭弁」と反論し、22日には「知らずに引用したのではない」と再び書いたと伝えた。聯合ニュースは、国民の力など保守系野党がこれを「捜査指揮宣言」と批判したと報じ、韓国経済は、ハン・ドンフン前代表が「まったく逆だ」と言い返したと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="kgh"><b>大法院、27日にキム・ゴンヒ氏の追加拘束令状審問を実施</b><em>聯合ニュースと朝鮮日報は、大法院が27日にキム・ゴンヒ氏の追加拘束令状の審問を開くと伝えた。売官売職事件は大法院第2部に配当され、オ・ギョンミ大法官が主審を務める。</em><span>司法 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="kz"><b>ヨンプン・MBK、高麗亜鉛を相手取った8000億ウォン台の株主代表訴訟で1審敗訴</b><em>聯合ニュース・東亜日報は、ヨンプンが高麗亜鉛の取締役らを相手取って起こした8000億ウォン台の株主代表訴訟で、1審で敗訴したと伝えた。ヨンプン・MBKは遺憾を表明し、直ちに控訴すると述べた。</em><span>企業 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="wallet"><b>来年1月施行を控えた仮想資産課税、政府「最大限熟慮して判断」</b><em>京郷新聞とZDNetコリアは、3度猶予された仮想資産課税について、財政経済部が業界・国会の意見をさらに聞くとして施行の可否を明らかにしなかったと伝えた。</em><span>税制 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="asy"><b>アン・セヨン、フランス・オープン16強でタンビ・シャルマに2-0の完勝…47連勝</b><em>スポーツ朝鮮は、アン・セヨンが22日の16強でインドのタンビ・シャルマを21-11、21-14で破ったと伝えた。今季の戦績は63勝1敗となり、大会3連覇に挑む。</em><span>スポーツ · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="house"><b>イ・ヒョンイル副首相「公的住宅15万戸、来年までに入居」…首都圏10万戸</b><em>聯合ニュースは、イ・ヒョンイル副首相兼財政経済部長官が22日、今年第4四半期から来年までに公的住宅約15万戸が入居すると述べたと伝えた。このうち10万戸が首都圏である。</em><span>不動産 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="bok">
+      <div class="kick">経済・金融政策<span>報道照合 ✓ 4社 · 11月の利上げの有無は未確認</span></div>
+      <h3 class="hl">韓銀、基準金利を年3.00%で全会一致で据え置き…2度の利上げ後に一息</h3>
+      <div class="body">
+        <p>聯合ニュースは、韓国銀行の金融通貨委員会が22日、基準金利を年3.00%に据え置いたと伝え、SBSは金融通貨委員7人全員が据え置きに賛成したと報じた。京郷新聞と東亜日報は、今回の決定が2回連続の利上げ後の「一息」だと伝えた。聯合ニュースによると、金融通貨委員会は「利上げの影響を点検する必要がある」と明らかにした。シン・ヒョンソン韓銀総裁は記者会見で「引き締め政策の基調を続ける必要がある」とし、第3四半期のGDPと10月の物価をさらに確認すると述べたと聯合ニュースが伝えた。韓国経済は、シン総裁がウォンは実効為替レートで見ればまだ例年より弱く、最近の為替レートの下落は正常化の過程だと述べたと報じた。シン総裁は、物価上昇率が再来年ごろに2%の目標に近づくだろうと述べ、石油最高価格制は長期的に財政の問題になると語った。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="nk">
+      <div class="kick">北朝鮮・国境地帯<span>報道照合 ✓ 4社 · 「新たな対応手段」の実体は未確認</span></div>
+      <h3 class="hl">キム・ヨジョン「全国境線で新たな対応手段が任務待機…拡声器も数日内に待機」</h3>
+      <div class="body">
+        <p>聯合ニュースは、北朝鮮の朝鮮労働党総務部長キム・ヨジョンが22日の談話で「全国境線で新たな対応手段が任務待機状態に入る」と述べ、対南拡声器も数日以内に待機状態に入ると明らかにしたと伝えた。朝鮮日報は、前日にキム・ヨジョンが「今月中に拡声器を稼働する」と予告したのに続き、強度を一段階引き上げたものだと報じ、この日が非武装地帯での地雷挑発から1か月目に当たる日だと付け加えた。東亜日報は、キム・ジョンウン国務委員長は沈黙し、キム・ヨジョンが攻勢を担う構図を指摘した。東亜日報は、キム・ヨジョンが共に民主党のキム・ビョンジュ議員に向けて「雑魚のような者」と非難した場面も伝えた。京郷新聞と韓国経済も、同じ談話の内容を速報で伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="ship">
+      <div class="kick">産業・造船<span>報道照合 ✓ 4社 · 船価は未確認</span></div>
+      <h3 class="hl">HD現代重工業、9万3000㎥級の世界最大アンモニア推進船を命名…11月に引き渡し</h3>
+      <div class="body">
+        <p>聯合ニュースと東亜日報は、HD現代重工業が22日、蔚山造船所で、世界最大規模の9万3000㎥級アンモニア推進船「テラ・クローブ(Terra Clove)号」の命名式を開いたと伝えた。ZDNetコリアによると、この船はシンガポールの海運会社イースタン・パシフィック・シッピング(EPS)が発注したガス運搬船で、従来の船舶油とアンモニアの両方を使える推進システムを備え、11月に船主会社へ引き渡される。ZDNetコリアは、船の全長を77階建てのマンションの高さにたとえた。京郷新聞は、「テラ」がラテン語で地球を意味すると紹介した。</p>
+        <p>東亜日報は、命名式にイ・サンギュンHD現代重工業総括副会長、シリル・ドゥコEPS最高経営責任者(CEO)、シンガポール海事港湾庁(MPA)の関係者が出席したと報じた。HD現代重工業は先立つ4月、4万6000㎥級の中型アンモニア推進ガス運搬船を世界で初めて進水させたと韓国経済が伝えている。アンモニアは燃焼時に二酸化炭素を出さないため、国際海事機関(IMO)の脱炭素規制に対応する燃料として挙げられる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>9万3000㎥</b><span>テラ・クローブ号の貨物倉の規模(聯合ニュース)</span></div>
+        <div><b>11月</b><span>船主会社EPSへの引き渡し予定(ZDNetコリア)</span></div>
+        <div><b>2種</b><span>船舶油・アンモニア兼用の推進(ZDNetコリア)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>李大統領がAIの回答だけを見て重捜庁長の出席を決めたという主張</b> <span>東亜日報によると、李大統領は、知らずにジェミニを引用したのではなく、相手の論理の水準を示そうとしたとXに書いた。青瓦台も、法条文の事実を尋ねたものだと釈明した(京郷新聞、10/22)。</span></div>
+        <div><b>ユーチューバーのキルバダクがインド旅行後に行方不明・監禁されたといううわさ</b> <span>OSENは、キルバダクがオーストラリアから直接生存を知らせ、監禁・脅迫説を全面的に否定したと伝えた(10/22)。</span></div>
+        <div><b>韓銀が10月に3回連続の利上げをするという観測</b> <span>金融通貨委員会は22日、年3.00%の据え置きを全会一致で決めた(聯合ニュース・SBS、10/22)。11月の利上げの有無は決まっていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 金 10月23日</b><span>KOSPIの寄り付き直後の外国人の需給、キム・ヨジョンが予告した拡声器の待機の有無と合同参謀本部の対応。</span><b>今週</b><span>アン・セヨンのフランス・オープン準々決勝・準決勝、サムスン・ライオンズのプレーオフ準備。</span><b>その後</b><span>27日の大法院でのキム・ゴンヒ氏の追加拘束令状審問、11月の金融通貨委員会とHD現代重工業のテラ・クローブ号の引き渡し。</span><b>読者へ</b><span>変動金利ローンの利子と年金口座の収益率を、今週一度確認しておこう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "kospi":{"kick": "経済・株式市場 · 報道照合 ✓ 4社 · 外国人の純売り越し規模の最終値は未確認", "title": "KOSPIが3.5%急落して引け、5,533.77に…KOSDAQも3.6%下落", "what": "聯合ニュースは、22日のKOSPIが1.14%安の5,670.11で始まり、3.5%の急落で引けたと伝えた。終値は5,533.77である。KOSDAQも3.6%下げたと聯合ニュース・SBS・韓国経済が報じた。韓国経済は、サムスン電子とSKハイニックスが下落を主導したと伝えた。ブルームバーグTVは、アジアの技術株がそろって下げ、ブレント原油が110ドルを超えたと報じた。シン・ヒョンソン韓銀総裁は、株価の調整で消費が一時的に減ると語った。", "why": "KOSPIは半導体2銘柄の比重が大きく、米国のAI投資への期待が揺らぐと指数全体が大きく動く。原油高は輸入物価を押し上げ、企業利益と金利の経路の双方に負担をかける。", "me": "年金・ファンドの収益率が今週大きく揺れるかもしれない。レバレッジ商品を持つ人は、1日の下げ幅が2倍以上に膨らむ点を確認しておく価値がある。", "a": "サムプロTVの出演者らは、業績よりも需給の空白が下げ幅を広げたとして、半導体価格の調整は終わりに近づいていると見た。韓国経済が伝えた証券街の見方も、サムジョンニクスが底値圏に入ったとして、W字型の反発を期待した。", "b": "ブルームバーグTVは、メタの投資拡大とテスラの投資縮小が食い違い、AI取引への不安が再燃したと伝えた。シタデルのケン・グリフィンは、AIは今ほぼ確実にバブルだと語った。", "say": "確認できたのは、1日で3.5%下落したことと、半導体が主導したという事実である。外国人の売りの規模と年金基金の対応は、まだ集計前だ。きょうは米国市場の引け後のナスダックの動きと、寄り付き直後の外国人の需給を見る。", "src": "聯合ニュース(KOSPI引け、10/22) · SBS(KOSDAQ 3.6%、10/22) · 韓国経済(サムジョンニクス下落、10/22) · ブルームバーグTV(アジア株と原油、10/22)"},
+    "jsc":{"kick": "政治・検察改革 · 報道照合 ✓ 4社 · 野党の法的対応の有無は未確認", "title": "李大統領「重捜庁の指揮・監督の放棄は弾劾事由」…野党は「捜査指揮宣言」と反発", "what": "聯合ニュース・朝鮮日報・京郷新聞は、李大統領が22日、Xに重捜庁に対する指揮・監督の放棄は弾劾事由だと書いたと伝えた。朝鮮日報は、職務遺棄という表現もあったと報じた。東亜日報は、李大統領が前日、ジェミニの回答を引用して出席不可論を詭弁だと述べたと伝えた。22日に李大統領は、知らずに引用したのではないと再び書いた。聯合ニュースは、国民の力など保守系野党が捜査指揮宣言だと批判したと伝えた。", "why": "重捜庁は検察の捜査機能を切り離して作られた機関であり、大統領との距離をどう置くかが、捜査の独立性をめぐる論争の核心である。国務会議への出席は、その距離を象徴する場面になった。", "me": "自分が告訴・告発した事件が重捜庁に回れば、捜査の指揮体系が結果に影響しうる。庁長の出席が制度として固まるかを見守る価値がある。", "a": "青瓦台は、国務会議への出席は捜査機関の統制とはまったくそぐわないとして、すべての省庁の外庁の長が同じ原則に従うと説明したと京郷新聞が伝えた。", "b": "国民の力とハン・ドンフン前代表は、大統領が指揮を強調することが個別の捜査への介入につながりうると反論した。東亜日報は、AIの回答がモデルや質問によって変わる点も指摘した。", "say": "大統領の発言の内容と野党の反発は、複数の媒体で確認できる。実際に出席が制度化されたり、法改正が動いたりする兆しは、まだない。きょうは国会の法制司法委員会などで、与野党がこの問題をどう扱うかを見る。", "src": "聯合ニュース(大統領のX投稿、10/22) · 朝鮮日報(職務遺棄発言、10/22) · 京郷新聞(青瓦台の釈明、10/22) · 東亜日報(ジェミニ引用、10/22)"},
+    "bok":{"kick": "経済・金融政策 · 報道照合 ✓ 4社 · 11月の利上げの有無は未確認", "title": "韓銀、基準金利を年3.00%で全会一致で据え置き…2度の利上げ後に一息", "what": "聯合ニュースは、金融通貨委員会が22日、基準金利を年3.00%に据え置いたと伝えた。SBSは、金融通貨委員7人の全会一致だと報じた。京郷新聞と東亜日報は、2回連続の利上げ後の一息だと伝えた。シン・ヒョンソン総裁は、引き締め基調を続ける必要があると述べた。総裁は、第3四半期のGDPと10月の物価をさらに見ると語った。韓国経済は、シン総裁がウォンは実効為替レートの基準でまだ弱いと述べたと伝えた。", "why": "据え置きだが、総裁が引き締め基調に言及したため、市場は11月の追加利上げの可能性を残して見ている。金利の水準は、ローンの利子、住宅価格、為替レートに同時に影響する。", "me": "変動金利のローンがあるなら、11月の金融通貨委員会までに金利の引き下げを期待するのは難しい。預金金利は、当面いまの水準が続くかもしれない。", "a": "聯合ニュースは、タカ派的な据え置きだとして、来月の利上げ再開のシグナルに注目した。韓国経済も、11月の追加利上げの可能性に言及した。", "b": "電子新聞は、連続利上げは止まったが、引き締めの火種はなお残っていると伝え、韓銀は半導体の好況が消費を支えるという分析を出した。シン総裁は、今回の据え置きは先制的な利上げで政策の余力を確保した結実だと述べた。", "say": "据え置きと全会一致は確定した事実である。11月の利上げの有無は、第3四半期のGDPと10月の物価次第だと総裁が自ら語った。きょうは債券金利とウォン/ドル相場の反応を見る。", "src": "聯合ニュース(金利据え置き、10/22) · SBS(全会一致、10/22) · 京郷新聞(一息、10/22) · 韓国経済(総裁の為替発言、10/22)"},
+    "nk":{"kick": "北朝鮮・国境地帯 · 報道照合 ✓ 4社 · 「新たな対応手段」の実体は未確認", "title": "キム・ヨジョン「全国境線で新たな対応手段が任務待機…拡声器も数日内に待機」", "what": "聯合ニュースは、北朝鮮の朝鮮労働党総務部長キム・ヨジョンが22日の談話で、全国境線の新たな対応手段が任務待機態勢に入り、対南拡声器も数日以内に待機状態に入ると明らかにしたと伝えた。聯合ニュースによると、キム・ヨジョンは、北朝鮮軍の軍事境界線(MDL)越境に対応した韓国軍の警告射撃に重ねて反発した。東亜日報は、キム・ヨジョンが前日の談話でも、今月中に全国境線で拡声器放送を稼働すると予告したと伝えた。朝鮮中央通信は、今回の談話が青瓦台の国防政策特別補佐官であるキム・ビョンジュ共に民主党議員の発言への対応だと明らかにしたと、東亜日報が報じた。キム議員は前日、キム・ヨジョンに向けて「ふてぶてしく厚かましい盗人猛々しさ」と述べ、キム・ヨジョンは「雑魚のような者」と言い返した。京郷新聞は、パク・チョンチョン北朝鮮国防省顧問が20日、キム・ヨジョンらと南部国境の要塞化工事現場を視察したと、朝鮮中央通信が21日に報じたと伝えた。", "why": "朝鮮日報は、今回の談話が非武装地帯での地雷挑発から1か月目に当たる日に出たと伝えた。東亜日報の集計では、キム・ジョンウン総書記は9月4日の全国教員大会から10月19日の被服・靴の展示会の参観まで11件の公開活動を行い、対外メッセージはキム・ヨジョンが事実上専担している。", "me": "京郷新聞は、20日に仁川の江華郡松海面で北朝鮮側の対南拡声器が見えたと、写真とともに伝えた。統一部は、1年余り前に南北が互いに拡声器を鳴らし、国境地域の住民が苦痛を受けたと述べた。", "a": "統一部は22日「軍事境界線一帯で停戦協定に違反し、緊張と衝突の危険を高める行為は直ちに中止されなければならない」と述べたと、京郷新聞と東亜日報が伝えた。統一部は、根本的な解決策として、軍事境界線に対する南北の共通理解に言及した。", "b": "東亜日報は、キム・ジョンウンが民生に集中しキム・ヨジョンが攻勢を担う役割分担は、局面転換の際に「最高指導者の決定」を使う余地を残そうとするものだという分析を伝えた。", "say": "談話の内容と統一部の対応は、複数の媒体で確認できる。新たな対応手段の実体と、拡声器が実際に稼働する時期は未確認である。きょうは拡声器が稼働するかどうかと、合同参謀本部の発表を見る。", "src": "聯合ニュース(キム・ヨジョン談話、10/22) · 朝鮮日報(地雷挑発から1か月、10/22) · 東亜日報(統一部の立場、10/22) · 京郷新聞(要塞化視察、10/22)"},
+    "ship":{"kick": "産業・造船 · 報道照合 ✓ 4社 · 船価は未確認", "title": "HD現代重工業、9万3000㎥級の世界最大アンモニア推進船を命名…11月に引き渡し", "what": "聯合ニュースと東亜日報は、HD現代重工業が22日、蔚山造船所で9万3000㎥級アンモニア推進船「テラ・クローブ号」の命名式を開いたと伝えた。ZDNetコリアによると、この船はHD現代重工業が2023年にシンガポールの海運会社イースタン・パシフィック・シッピング(EPS)と契約したアンモニア推進船2隻のうちの1番船である。船舶油とアンモニアの両方を使う推進システムを備え、11月に船主会社へ引き渡される。京郷新聞は、船名が地球を意味するラテン語の「テラ」と、つぼみを意味する「クローブ」を合わせたものだと伝えた。朝鮮日報は、命名式にイ・サンギュン総括副会長、シリル・ドゥコEPS最高経営責任者、ロー・クム・イェン シンガポール海事港湾庁会長が出席したと報じた。", "why": "韓国経済は、HD現代重工業が4月、4万6000㎥級の中型ガス運搬船2隻を世界初のアンモニア推進船として進水させたと伝えた。それらの船の2倍の規模の9万3000㎥級が、半年で出てきた。", "me": "ヘラルド経済は、9月の報道で、チョン・ギソンHD現代会長が、同じ船主会社系列のエクスマーのアンモニア推進船の命名式に直接出席したと伝えた。会社が環境配慮型の船舶を主力に掲げているという意味である。", "a": "ZDNetコリアは、この船の全長を77階建てのマンションの高さにたとえ、世界最大規模だという点を際立たせた。", "b": "朝鮮日報は、シンガポール海事港湾庁の会長が命名式に出席したと伝えた。シンガポールは世界最大の船舶燃料供給港であり、アンモニア燃料の供給体制が整って初めて実際の運航が可能になる。", "say": "船の規模、船主会社、引き渡し時期は、複数の媒体で確認できる。船価と2番船の引き渡し時期は未確認である。きょうは11月の引き渡し日程が変わるかを見る。", "src": "聯合ニュース(命名式、10/22) · 東亜日報(テラ・クローブ号、10/22) · ZDNetコリア(EPS 2隻契約、10/22) · 京郷新聞(船名、10/22)"},
+    "kgh":{"kick": "司法 · ✓ 報道3件", "title": "大法院、27日にキム・ゴンヒ氏の追加拘束令状審問を実施", "what": "京郷新聞は、大法院第2部(主審オ・ギョンミ大法官)が27日にキム・ゴンヒ夫人の拘束前審問を行うと22日に伝えた。キム夫人は大法院に直接出席せず、映像で審問を受ける。聯合ニュースは、拘束期限を控えたキム夫人を追加で拘束するか判断する審問だと報じた。聯合ニュースによると、キム夫人は人事・利権の請託とともに高価な貴金属を受け取った、いわゆる「売官売職」の容疑で裁判にかけられた。この事件の上告審の裁判部と主審は22日に決まった。同じ日、大法院はキム夫人の「ミョン・テギュン世論調査授受疑惑」事件の全員合議体の審理も開いたと京郷新聞が伝えた。朝鮮日報も27日の審問の知らせを速報で伝えた。", "why": "京郷新聞は、キム夫人がドイツ・モーターズ株価操作の容疑と統一教会の金品授受疑惑などで拘束起訴され、昨年9月24日に初公判に出廷したと伝えた。拘束期限が近づくなか、別件である売官売職事件で拘束を続けるかが争点になった。", "me": "京郷新聞によると、キム夫人をめぐる疑惑はミン・ジュンギ特別検察チームが捜査した。大法院の判断は27日以降に出る。", "a": "聯合ニュースは、今回の審問が拘束期限を控えて開かれる点を前面に出して報じた。", "b": "SBSは、同じ日にキム夫人の元随行秘書チョン・ジウォン氏が公開した、ユン・ソンニョル前大統領夫妻の過去の歌の映像が話題になったと伝えた。", "say": "審問の日付、裁判部、映像方式は、複数の媒体で確認できる。拘束期限の正確な日付は未確認である。きょうは特別検察側の意見書の提出を見る。", "src": "聯合ニュース(拘束期限、10/22) · 朝鮮日報(27日の審問、10/22) · 京郷新聞(映像審問、10/22)"},
+    "kz":{"kick": "企業 · ✓ 報道3件", "title": "ヨンプン・MBK、高麗亜鉛を相手取った8000億ウォン台の株主代表訴訟で1審敗訴", "what": "東亜日報は、ソウル中央地裁民事合議30部(部長判事キム・ソクポム)が22日、ヨンプンがチェ・ユンボム高麗亜鉛会長ら取締役10人を相手取って起こした株主代表訴訟で、原告敗訴の判決を言い渡したと伝えた。京郷新聞は、請求額が約8370億ウォンだと報じた。裁判部は、取締役らの自己株式取得の決定が善管注意義務に違反したとは見がたく、取得の過程に法令違反があると断定できないと判断した。聯合ニュースは、訴訟の対象が、自己株式の公開買い付けと一般公募の有償増資を決議した取締役だと伝えた。東亜日報によると、ヨンプンは2024年11月に訴訟を起こした。聯合ニュースは、ヨンプンとMBKパートナーズが高麗亜鉛の経営陣を相手取って起こした1兆ウォン台の訴訟で相次いで敗訴したと伝えた。", "why": "朝鮮日報は、裁判所が原告の請求をすべて棄却したと伝えた。高麗亜鉛の経営権紛争で、経営権防衛用の自社株公開買い付けの適法性を扱った判決である。", "me": "ZDNetコリアによると、ヨンプン・MBKは、自社株公開買い付けで生じた借入負担と株主価値の毀損を、裁判所が十分に考慮しなかったと主張した。", "a": "高麗亜鉛は、裁判所が経営権防衛のための取締役会の経営判断を認めたとして、ヨンプン・MBKに訴訟攻勢をやめるよう促したと朝鮮日報が伝えた。", "b": "ヨンプン・MBKは声明で「上級審の厳正な法理的判断を求めるため、直ちに控訴する」と述べたと、ZDNetコリアが報じた。", "say": "判決の内容と控訴の方針は、複数の媒体で確認できる。控訴状の提出日は未確認である。きょうは高麗亜鉛とヨンプンの株価の反応を見る。", "src": "聯合ニュース(1兆ウォン訴訟の敗訴、10/22) · 東亜日報(裁判部の判断、10/22) · 京郷新聞(8370億ウォンの請求、10/22)"},
+    "wallet":{"kick": "税制 · ✓ 報道3件", "title": "来年1月施行を控えた仮想資産課税、政府「最大限熟慮して判断」", "what": "京郷新聞は、イ・ヒョンイル副首相兼財政経済部長官が22日、国会財政経済企画委員会の総合国政監査で、来年1月に施行予定の仮想資産課税について「業界と国会の意見を総合して最大限熟慮したうえで判断する」と述べたと伝えた。聯合ニュースは、仮想資産課税がこれまでに3度猶予され、与野党がこの日、施行をめぐって食い違う見方を示したと報じた。ZDNetコリアは、ユン・フドク共に民主党議員が「課税当局は計画どおり準備しており、準備はすべて整った」という趣旨で質疑したと伝えた。ZDNetコリアは、政府が施行の可否や制度補完の方向について明確な方針を示さなかったと報じた。", "why": "課税が再び猶予されるかは、来年1月の施行を2か月余り後に控え、投資家の税引き後収益と取引所のシステム準備に直結する。ZDNetコリアは、猶予を求める声が高まっていると伝えた。", "me": "仮想資産に投資しているなら、来年1月以降の売却益に税金がかかるかどうかは、今回の判断にかかっている。", "a": "ZDNetコリアによると、ユン・フドク議員は課税当局の準備が終わったとして、計画どおり施行する側に重きを置いた質疑をした。", "b": "聯合ニュースは、与野党が国政監査で課税の施行をめぐって見方の違いを見せたと伝えた。イ副首相は、専門家や業界の意見をさらに聞くと述べた。", "say": "副首相の発言と3度の猶予の経緯は、複数の媒体で確認できる。4度目の猶予があるかどうかは決まっていない。きょうは国会の租税小委員会の日程を見る。", "src": "聯合ニュース(課税猶予論争、10/22) · 京郷新聞(副首相の発言、10/22) · ZDNetコリア(ユン・フドクの質疑、10/22)"},
+    "asy":{"kick": "スポーツ · ✓ 報道2件", "title": "アン・セヨン、フランス・オープン16強でタンビ・シャルマに2-0の完勝…47連勝", "what": "スポーツ朝鮮は、アン・セヨンが22日、フランス・パリのアリーナ・グラン・パリで開かれたBWFワールドツアー、フランス・オープン(スーパー750)の16強で、インドのタンビ・シャルマに2-0(21-11、21-14)で勝ったと伝えた。OSENは、試合が37分で終わり、アン・セヨンが47連勝を飾ったと報じた。スポーツ朝鮮によると、アン・セヨンの今季の戦績は63勝1敗である。OSENは、アン・セヨンが21日の32強で世界45位のアマリエ・シュルツ(デンマーク)を25分で下したと伝えた。アン・セヨンは24歳、サムスン生命所属の世界ランキング1位である。シャルマは2008年生まれで、世界24位である。", "why": "OSENは、アン・セヨンがこの大会で3連覇に挑み、シーズン10勝を狙うと伝えた。8強進出で、その記録にまた一歩近づいた。", "me": "OSENは、大会前、アン・セヨンのアキレス腱の痛みが懸念されたと伝えた。32強と16強の両方を40分以内に終えた。", "a": "OSENは、けがの心配は杞憂だったとして、初戦から圧倒的な試合内容を見せたと評価した。", "b": "OSENは、アン・セヨンがアキレス腱の痛みを乗り越えて試合をしていると伝え、体の状態が残りの試合の変数であることを指摘した。", "say": "16強のスコア、連勝、今季の戦績は、2つの媒体で確認できる。アキレス腱の状態の正確な診断は未確認である。きょうは8強の相手と試合時間を見る。", "src": "スポーツ朝鮮(16強2-0、10/22) · OSEN(47連勝、10/22)"},
+    "house":{"kick": "不動産 · ✓ 報道2件", "title": "イ・ヒョンイル副首相「公的住宅15万戸、来年までに入居」…首都圏10万戸", "what": "聯合ニュースは、イ・ヒョンイル副首相兼財政経済部長官が22日「公的住宅は今年第4四半期から来年までに約15万戸が入居する」と述べ、このうち首都圏が10万戸だと語ったと伝えた。SBSは、この発言が国会財政経済企画委員会の2026年度総合国政監査で出たと報じた。朝鮮日報によると、イ副首相は、イ・ジョンウク国民の力議員の庶民の住居安定対策についての質疑に「現在、許認可、着工など供給先行指標が上がっている」と答えた。イ副首相は「供給拡大の努力をもっと熱心に続ければ、不動産市場もだんだん安定する姿を取り戻すのではないかと思う」と語った。", "why": "同じ日、韓国銀行が物価と住宅価格を警戒して基準金利を据え置いたと、聯合ニュースが伝えた。金利と供給の二つの政策が、同じ日に住宅価格の安定を狙った。", "me": "首都圏の公共賃貸・公共分譲の待機者なら、入居10万戸の地域別日程が関心事だ。", "a": "イ副首相は、許認可や着工といった先行指標が上がっており、市場が安定するだろうと述べたと朝鮮日報が伝えた。", "b": "質疑したイ・ジョンウク議員は、庶民の住居安定対策が必要だとして、政府の対策を問いただしたと朝鮮日報が報じた。", "say": "物量の発言は、2つ以上の媒体で確認できる。地域別の詳細な入居日程は公開されていない。きょうは国土交通部の後続資料を見る。", "src": "聯合ニュース(公的住宅15万戸、10/22) · 朝鮮日報(供給先行指標、10/22)"}
+  };
+  const G = {
+    "KOSPI":{"f": "株式", "d": "有価証券市場の総合株価指数", "w": "22日に3.5%下落"},
+    "KOSDAQ":{"f": "株式", "d": "中小型・技術株が中心の市場の指数", "w": "同じ日に3.6%下落"},
+    "韓国取引所":{"f": "株式", "d": "国内の証券取引を運営する機関", "w": "終値の集計"},
+    "サムジョンニクス":{"f": "株式", "d": "サムスン電子とSKハイニックスをまとめて呼ぶ言葉", "w": "下落を主導"},
+    "SKハイニックス":{"f": "企業", "d": "メモリー半導体企業", "w": "指数の下落を主導"},
+    "通常取引":{"f": "株式", "d": "午前9時～午後3時30分の取引時間", "w": "急落で引け"},
+    "韓国銀行":{"f": "経済", "d": "韓国の中央銀行", "w": "金利据え置き"},
+    "金融通貨委員会":{"f": "経済", "d": "基準金利を決める韓銀の最高意思決定機関", "w": "全会一致で据え置き"},
+    "基準金利":{"f": "経済", "d": "中央銀行が決める政策金利", "w": "年3.00%"},
+    "シン・ヒョンソン":{"f": "人物", "d": "韓国銀行総裁", "w": "記者会見"},
+    "ブルームバーグTV":{"f": "媒体", "d": "米国の経済放送", "w": "アジア株の報道"},
+    "フーシ派":{"f": "国際", "d": "イエメンの親イラン武装勢力", "w": "サウジへの攻撃"},
+    "ブレント原油":{"f": "国際", "d": "国際原油価格の指標となる原油", "w": "110ドルを突破"},
+    "メタ":{"f": "企業", "d": "フェイスブックの親会社", "w": "AI投資を拡大"},
+    "サムプロTV":{"f": "媒体", "d": "経済系のユーチューブチャンネル", "w": "引け後の放送"},
+    "需給の空白":{"f": "株式", "d": "買い手がいなくて価格が押される状況", "w": "下げ幅の原因の診断"},
+    "重大犯罪捜査庁":{"f": "制度", "d": "検察の捜査機能を引き継いだ捜査機関", "w": "指揮・監督をめぐる論争"},
+    "重捜庁":{"f": "制度", "d": "重大犯罪捜査庁の略称", "w": "国務会議への出席"},
+    "政府組織法":{"f": "法律", "d": "政府省庁の構成を定めた法律", "w": "大統領の発言の根拠"},
+    "国務会議":{"f": "制度", "d": "大統領が主宰する最高の政策審議機関", "w": "出席をめぐる論争"},
+    "職務遺棄":{"f": "法律", "d": "公務員が職務を放棄する行為", "w": "大統領の表現"},
+    "ジェミニ":{"f": "技術", "d": "グーグルの対話型AI", "w": "大統領が引用"},
+    "ハン・ドンフン":{"f": "人物", "d": "国民の力の前代表", "w": "反論"},
+    "国民の力":{"f": "政党", "d": "第1野党", "w": "捜査指揮宣言への批判"},
+    "全会一致":{"f": "経済", "d": "委員全員の賛成", "w": "7人が据え置き"},
+    "実効為替レート":{"f": "経済", "d": "貿易相手国の通貨を加重平均した為替レート", "w": "ウォン安の評価"},
+    "石油最高価格制":{"f": "制度", "d": "石油の販売価格の上限制", "w": "財政負担への発言"},
+    "GDP":{"f": "経済", "d": "国内総生産", "w": "第3四半期を確認"},
+    "キム・ヨジョン":{"f": "人物", "d": "朝鮮労働党総務部長", "w": "談話"},
+    "拡声器":{"f": "軍事", "d": "国境地域の心理戦放送機器", "w": "数日内に待機"},
+    "非武装地帯":{"f": "軍事", "d": "南北の軍事境界線の両側にある緩衝地帯", "w": "地雷挑発"},
+    "キム・ビョンジュ":{"f": "人物", "d": "共に民主党議員", "w": "非難の対象"},
+    "アンモニア推進船":{"f": "産業", "d": "アンモニアを燃料に使う船", "w": "世界最大"},
+    "命名式":{"f": "産業", "d": "船に名前をつける行事", "w": "22日 蔚山"},
+    "イースタン・パシフィック・シッピング":{"f": "企業", "d": "シンガポールの海運会社EPS", "w": "発注元"},
+    "海事港湾庁":{"f": "機関", "d": "シンガポールの港湾当局MPA", "w": "命名式に出席"},
+    "国際海事機関":{"f": "機関", "d": "海運を規制する国連機関IMO", "w": "脱炭素規制"},
+    "ガス運搬船":{"f": "産業", "d": "液化ガスの運搬船", "w": "船種"},
+    "株主代表訴訟":{"f": "法律", "d": "株主が会社に代わって取締役の責任を問う訴訟", "w": "ヨンプンが敗訴"},
+    "MBK":{"f": "企業", "d": "私募ファンドのMBKパートナーズ", "w": "ヨンプンと連合"},
+    "売官売職":{"f": "法律", "d": "金を受け取って官職を与える行為", "w": "キム・ゴンヒ事件"},
+    "公的住宅":{"f": "不動産", "d": "公共が供給する住宅", "w": "15万戸が入居"},
+    "財政経済部":{"f": "機関", "d": "経済政策を統括する省庁", "w": "イ・ヒョンイル長官"},
+    "仮想資産":{"f": "金融", "d": "ビットコインなどのデジタル資産", "w": "課税猶予論争"},
+    "フランス・オープン":{"f": "スポーツ", "d": "BWFワールドツアーのスーパー750大会", "w": "16強"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

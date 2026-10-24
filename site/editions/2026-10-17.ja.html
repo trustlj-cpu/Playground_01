@@ -1,0 +1,361 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5668.05</b>KOSPI · 10/16 終値 · +2.05%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>1,329.6ウォン</b>ウォン/ドル相場 · 10/16 終値</div>
+    </div>
+    <div class="dateline"><span>第13号 · 朝刊</span><b>2026年10月17日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会・災害<span>報道照合 ✓ 8社 · 火災の原因は合同鑑識中、負傷者の数は報道ごとに異なる</span></div>
+      <h2 class="hl">富川の塗装工場火災、消火中に心肺停止となった消防士が殉職。消防士6人ら8人が負傷</h2>
+      <p class="deck">16日午前に富川市梧亭区の工場で起きた火災で、真っ先に突入したキム・ジンソク消防司令補(44)が17日0時55分ごろ亡くなった。工場内には第2石油類の20リットル入り容器が約100個あった。</p>
+      <div class="body">
+        <p>16日午前8時38分ごろ、京畿道富川市梧亭区内洞の金属部品の塗装工場で火災が起きた(京仁日報・インサイト・中央エコノミーニュース)。消防当局は19分後に対応1段階を、午前9時9分ごろに対応2段階を発令し、人員80人と装備38台を投入した(京畿新聞)。出入り口側の隊員2人は脱出したが、奥にいた2人が孤立し、1人は治療中に意識を取り戻したものの、もう1人は心肺停止の状態で搬送された(京仁日報・京郷新聞)。韓国経済は消防士6人が倒れたと伝え、京畿新聞は消防士6人と工場関係者2人の計8人が負傷したと集計した。心肺停止で運ばれた富川消防署梧亭センターのキム・ジンソク消防司令補(44)は、17日0時55分ごろ治療中に亡くなったと、ファイナンシャルニュース・MBC・天地日報が消防庁と京畿道を引用して報じた。SBSとMBCは、彼が退勤の20分ほど前に出動して通報から5分で到着し、同僚と2人1組で真っ先に進入して20分余り消火にあたるうち、炎と煙に閉じ込められ、30分後に救出されたときは心肺停止状態だったと伝えた。勤続13年目の消防士だった(SBS)。</p>
+        <p>工場内には4類危険物である第2石油類が入った20リットル入りの容器が約100個保管されており、消防当局はこの工場に危険物取扱いの許可を受けた履歴がないとみていると京畿新聞が報じた。警察は、火災当時に金属の洗浄作業が行われていたとみて、油蒸気に静電気などが触れて出火した可能性に重きを置き、合同鑑識を行ったとMBCが伝えた。消防当局は故人に1階級特進を追贈し、国立顕忠院への埋葬を支援することにした。弔問所を訪れた李在明大統領は「国民は犠牲を永遠に記憶するだろう」と述べ、玉条勤政勲章を追贈したとMBCが報じた。葬儀は遺族の意向により京畿道庁葬で営まれ、告別式は19日に開かれる(天地日報・ファイナンシャルニュース)。ファイナンシャルニュースは、与野党が口をそろえて哀悼の意を示し、消防予算に取り組むと表明したと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>0時55分</b><span>17日、キム・ジンソク消防司令補の殉職時刻(ファイナンシャルニュース・MBC)</span></div>
+        <div><b>8人</b><span>負傷者。消防士6人・工場関係者2人(京畿新聞)</span></div>
+        <div><b>約100個</b><span>工場内の第2石油類20L入り容器(京畿新聞)</span></div>
+      </div></div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>対応2段階<i>消防</i></b><p>管轄の消防署だけでは対処しきれず、隣接する複数の消防署の人員や装備まで動員する警報令だ。今回の火災では午前9時9分ごろに発令された。</p></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">経済・雇用<span>報道照合 ✓ 7社 · 製造業が増加に転じるまでの月数は26・27か月と表記が分かれる</span></div>
+      <h3 class="hl">9月の就業者11万3000人増、製造業は27か月ぶりに反転。若年層の雇用率は29か月連続で低下</h3>
+      <div class="one">
+        <p>国家データ処が16日に発表した9月の雇用動向で、就業者は2926万6000人と、1年前より11万3000人増えた(アジア経済・イートゥデイ・中央エコノミーニュース)。3か月連続で10万人台の増加だが、8月(18万4000人)より幅は縮んだ。製造業の就業者は1万6000人増え、2024年6月以降で初めて増加に転じた。ファイナンシャルニュースとソウル経済は27か月ぶり、イートゥデイは26か月ぶりと表記した。ビン・ヒョンジュン社会統計局長は、自動車・繊維は減ったが、化学物質、金属加工、その他運送装備で増えたと説明した。宿泊・飲食店業は9万7000人、建設業は4万8000人減った。15～29歳の雇用率は44.0%と1.1ポイント下がり、29か月連続で低下した。この年齢層の就業者は14万7000人減って47か月連続の減少となった(世界日報・ソウル新聞・ニュースピム)。若年層の失業率は5.4%と0.6ポイント上がった。一方、15～64歳の雇用率は70.6%で、9月としては過去最高だった(国民日報・ニュースピム)。今回の発表から加わった15～34歳の指標では、就業者が9万8000人減り、雇用率が56.1%と0.4ポイント下がった(ニュースピム)。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>+11.3万</b><span>9月の就業者の増加(国家データ処)</span></div>
+        <div><b>+1.6万</b><span>製造業の就業者、27か月ぶりの増加(ファイナンシャルニュース)</span></div>
+        <div><b>44.0%</b><span>15～29歳の雇用率、29か月連続で低下(ソウル新聞)</span></div>
+      </div></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>富川火災で殉職のキム・ジンソク消防司令補、19日に京畿道庁葬で告別式</b><em>故人には1階級特進と玉条勤政勲章が追贈された。李在明大統領が弔問所を訪れ、与野党は消防予算に取り組むと述べた。</em><span>社会 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>9月の15～29歳の就業者14万7000人減、47か月連続の減少</b><em>若年層の雇用率は44.0%と29か月連続で下がり、失業率は5.4%に上がった。15～34歳の雇用率も56.1%と0.4ポイント低下した。</em><span>経済 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>公州で行方不明の50代女性、ストーカー行為を届け出ていた60代男性の車内で死亡しているのが見つかる</b><em>1月のストーカー行為の届け出は現場で終結し、6月の交際暴力の届け出は不送致となった。男性は服毒状態で搬送され、警察は殺人容疑で捜査している。</em><span>社会 · ✓ 報道5件</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>政府、第11次石油最高価格も凍結、ガソリン1784ウォンを4週間維持</b><em>17日から11月13日まで適用される。15日のドバイ原油は1バレル107.0ドルで、9月の石油類物価は14.8%上昇した。</em><span>経済 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>7人が死亡した現代アウトレット火災、4年ぶりの1審で元請け・下請け関係者4人に実刑</b><em>大田地裁は消防施設管理業者の所長に懲役3年を言い渡した。裁判部は廃紙の積み置きと火災受信機の連動停止を指摘した。</em><span>社会 · ✓ 報道4件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">社会・事件<span>報道照合 ✓ 6社 · 犯行の動機は捜査中</span></div>
+      <h3 class="hl">仁川・九月洞の刃物乱暴事件、被疑者の身上を公開。59歳のチェ・チュンラク、8人にけがをさせた疑い</h3>
+      <div class="body">
+        <p>仁川警察庁は16日、身上情報公開審議委員会を開き、殺人未遂と公共の場所での刃物所持の容疑で拘束されたチェ・チュンラク(59)の氏名・年齢・顔写真を公開することにしたと、亜洲経済・YTN・仁川日報・イーデイリーが報じた。委員会は犯行の残忍性、重大な被害、十分な証拠、公共の利益を考慮して全員一致で議決し、被疑者が異議を申し立てなかったため、16日から来月16日まで仁川警察庁のホームページに掲載される(仁川日報・トップスターニュース)。チェ氏は13日、南洞区九月洞の商業施設で刃物を振るい、8人にけがをさせた疑いが持たれている(韓国経済・国際ニュース)。心肺停止状態で運ばれた20代の女性は、意識を回復しないまま集中治療室で治療を受けていると仁川日報が伝えた。裁判所は逃亡の恐れがあるとして拘束令状を発付した(仁川日報)。事件当時、椅子を投げて制圧を助けた市民ら5人について、警察が褒賞を検討しているとYTNが報じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>59歳</b><span>被疑者チェ・チュンラクの年齢(仁川警察庁)</span></div>
+        <div><b>8人</b><span>13日の刃物乱暴事件の負傷者(韓国経済)</span></div>
+      </div></div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">市場・株式<span>報道照合 ✓ 6社 · 反発の要因はメディアごとに強調点が異なる</span></div>
+      <h3 class="hl">KOSPI、2.05%上昇し5668.05、8取引日ぶりに反発。KOSDAQは4.46%急騰し買いのサイドカー</h3>
+      <div class="body">
+        <p>KOSPIは16日、113.83ポイント(2.05%)上昇の5668.05で取引を終え、6日から続いた7取引日連続の下落に歯止めをかけた(世界日報・慶北道民日報・共感新聞)。KOSDAQは33.96ポイント(4.46%)上昇の794.78で終え、取引時間中は807.54まで上がって一時800台を回復した(世界日報・ファイナンシャルポスト)。昼12時55分ごろ、KOSDAQ市場で買いのサイドカーが発動され、プログラム買い注文の効力が5分間停止した(スペシャルタイムズ・グッドモーニング経済)。今年のKOSDAQ市場で34回目のサイドカーであり、19回目の買いのサイドカーだ。KOSPIで外国人は3413億ウォンを純買い越し、個人と機関はそれぞれ4858億ウォンと6824億ウォンを純売り越した(世界日報)。KOSDAQでは機関が1684億ウォンの買い越しで指数を押し上げた。世界日報は急落後に反発の買いが入ったと書き、CBCニュースは外国人が戻っても粘りが足りないという慎重論を伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>+2.05%</b><span>KOSPIの16日の上昇率、終値5668.05</span></div>
+        <div><b>+4.46%</b><span>KOSDAQの上昇率、終値794.78</span></div>
+        <div><b>12:55</b><span>KOSDAQの買いのサイドカー発動(スペシャルタイムズ)</span></div>
+      </div></div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">政治・法<span>報道照合 ✓ 7社 · 世論調査の数値は韓国ギャラップの単独調査</span></div>
+      <h3 class="hl">特別検察、『平壌無人機』の尹錫悦に控訴審でも懲役30年を求刑。宣告は12月4日</h3>
+      <div class="body">
+        <p>内乱特別検察チームは16日、ソウル高裁刑事1部(ユン・ソンシク部長判事)の審理で開かれた一般利敵容疑の控訴審の結審公判で、尹錫悦前大統領と金龍顕前国防部長官にそれぞれ懲役30年を求刑したと、YTN・京郷新聞・時事ジャーナル・世界日報が報じた。尹前大統領の求刑は1審の求刑・宣告刑と同じで、金前長官は1審の求刑(25年)より重くなった。呂寅兄前国軍防諜司令官には懲役20年、金龍大前ドローン作戦司令官には懲役5年が求刑された。特別検察は、戒厳の名分をつくるために北朝鮮の武力挑発を誘導し、局地戦まで甘受しようとしたとして「内乱より罪質が重い」と述べ、尹前大統領側は北朝鮮の挑発に対応した安保措置だったと反論した(京郷新聞・デジタルデイリー)。宣告は12月4日午後3時だ(スペシャルタイムズ)。</p>
+        <p>同じ日に公表された韓国ギャラップの調査(13～15日、1003人)で、李在明大統領の職務肯定率は39%と1週間前より2ポイント上がり、否定率は52%だった(世界日報・文化日報)。政党支持率は共に民主党36%、国民の力27%だった。2028年の総選挙で政府を牽制するために野党が多く当選すべきだという回答は47%、与党支援論は34%だった(創業日報・アジアニュース通信)。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>公州で行方不明の50代女性、届け出ていた男性の車内で死亡しているのが見つかる<span>同乗していた60代男性は服毒状態で搬送、警察は殺人容疑で捜査(京郷新聞・イートゥデイ・文化日報)</span></li>
+        <li>石油最高価格、第11次も凍結<span>ガソリン1784ウォン・軽油1773ウォン・灯油1380ウォン、17日から11月13日まで(ファイナンシャルニュース・世界日報・ニュースピム)</span></li>
+        <li>『7人死亡』の現代アウトレット火災、4年ぶりに1審<span>消防施設管理業者の所長に懲役3年、大田店長に懲役1年(ソウル新聞・世界日報・大田日報)</span></li>
+        <li>OK貯蓄銀行の流出被害、250人に拡大<span>当初の183人から増え、年収・融資額も含まれる(土曜経済・SBS Biz)</span></li>
+        <li>現代百貨店に罰金6000万ウォン<span>現代アウトレット火災の1審で法人にも罰金刑、管理業者は1億ウォン(ソウル新聞・大田日報)</span></li>
+        <li>15～34歳の若年雇用指標を初公開<span>就業者9万8000人減、雇用率56.1%(ニュースピム・時事オヌル)</span></li>
+        <li>殉職した消防士の告別式は19日<span>京畿道庁葬で営み、1階級特進を追贈(天地日報・MBC)</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>富川の火災現場で負傷した消防士が全員亡くなったという話</b> <span>亡くなった消防士はキム・ジンソク消防司令補の1人で、もう1人は治療中に意識を回復した(京仁日報・ファイナンシャルニュース・MBC)。</span></div>
+        <div><b>KOSDAQの買いのサイドカーが午後1時ごろ、4.9%の急騰時に発動されたという投稿</b> <span>発動は昼12時55分ごろで、KOSDAQの終値の上昇率は4.46%だった(スペシャルタイムズ・世界日報)。</span></div>
+        <div><b>仁川の刃物乱暴事件が16日に起きたという投稿</b> <span>犯行は13日で、16日は身上公開を決めた日だ(仁川日報・韓国経済)。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 土 10月17日</b><span>第11次石油最高価格(ガソリン1784ウォン)が0時から適用される。富川火災の合同鑑識結果の発表があるかを見る。</span><b>今週</b><span>19日、キム・ジンソク消防司令補の告別式が京畿道庁葬で行われる(天地日報)。</span><b>その後</b><span>平壌無人機事件の控訴審の宣告は12月4日午後3時だ(スペシャルタイムズ)。石油最高価格の第11次は11月13日まで適用される。</span><b>読者へ</b><span>仁川警察庁のホームページに、チェ・チュンラクの身上情報が11月16日まで掲載される(仁川日報)。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会・災害 · 報道照合 ✓ 8社 · 火災の原因は合同鑑識中、負傷者の数は報道ごとに異なる", "title": "富川の塗装工場火災、消火中に心肺停止となった消防士が殉職。消防士6人ら8人が負傷", "what": "16日午前8時38分ごろ、富川市梧亭区内洞の金属部品の塗装工場で火災が起き、消防当局は午前9時9分ごろに対応2段階を発令した(京仁日報・京畿新聞)。奥に進入した消防士2人が孤立し、このうち1人は意識を取り戻したが、1人は心肺停止で搬送された(京仁日報・京郷新聞)。負傷者は消防士6人と工場関係者2人の計8人と集計された(京畿新聞・韓国経済)。心肺停止で運ばれたキム・ジンソク消防司令補(44)は17日0時55分ごろ亡くなった(ファイナンシャルニュース・MBC・天地日報)。彼は退勤の20分ほど前に出動して真っ先に進入し、30分後に救出された(SBS・MBC)。工場には第2石油類の20リットル入り容器が約100個あり、危険物取扱いの許可の履歴はなかった(京畿新聞)。警察は、金属洗浄中に油蒸気へ静電気が触れた可能性をみている(MBC)。", "why": "引火性の液体を大量に積んでおいた作業場は、火がつくと煙と熱が一瞬で広がり、中に入った隊員が真っ先に危険にさらされる。許可の対象となる量を許可なく置いていたかが確認されれば、事故の責任は現場の対応ではなく事前の管理の側へ移っていく。小規模工場の危険物管理が点検網の外にあるのかも、併せて浮かび上がる。", "me": "塗料・溶剤を扱う工場の周辺で働いたり暮らしたりしている人は、その事業所が危険物の許可と消防点検を受けているかを、管轄の消防署に尋ねられる。火災現場のニュースは時間が経つにつれて数字が変わるため、消防庁の発表を基準に見ればよい。", "a": "消防士の殉職が繰り返されているのだから、人員の増員と2人1組での進入基準、装備・予算を増やすべきだという声だ。ファイナンシャルニュースは、与野党が口をそろえて消防予算に取り組むと述べたと伝えた。", "b": "事故の根は、許可なく危険物を積んでいた事業所の管理にあるという見方だ。京畿新聞が伝えたとおり、消防当局が危険物の許可対象かどうかを調べているため、点検の空白をまず問うべきだというのである。", "say": "確認されたのは、出火時刻と対応段階、キム・ジンソク消防司令補の殉職、工場内の危険物の容器約100個だ。正確な出火原因と、その量が許可の対象だったかは、まだ確認されていない。きょうは合同鑑識結果の発表と19日の告別式、危険物管理違反に対する捜査着手の有無を見よう。", "src": "京仁日報・京畿新聞・韓国経済・京郷新聞・ファイナンシャルニュース・MBC・SBS・天地日報 (16～17日)"},
+    "s2":{"kick": "経済・雇用 · 報道照合 ✓ 7社 · 製造業が増加に転じるまでの月数は26・27か月と表記が分かれる", "title": "9月の就業者11万3000人増、製造業は27か月ぶりに反転。若年層の雇用率は29か月連続で低下", "what": "国家データ処は16日、9月の就業者が2926万6000人で、1年前より11万3000人増えたと発表した(アジア経済・イートゥデイ)。8月の増加幅18万4000人よりは縮んだ(中央エコノミーニュース)。製造業の就業者は1万6000人増え、2024年6月以降で初めて増加した(ファイナンシャルニュース・イートゥデイ)。宿泊・飲食店業は9万7000人、建設業は4万8000人減った。15～29歳の雇用率は44.0%と1.1ポイント下がって29か月連続で低下し、就業者は14万7000人減って47か月連続の減少となった(世界日報・ニュースピム)。15～64歳の雇用率は70.6%で、9月としては過去最高だった(国民日報)。", "why": "全体の雇用率は過去最高なのに若年層だけが4年近く減り続けているのは、増えた働き口が高齢層と一部の業種に集まっているということだ。製造業の反転は、輸出好調が時間差をおいて雇用に届いた結果だという政府の解釈が出たが、化学・金属加工など一部の業種に限られた。内需業種である宿泊・飲食店の減少幅が大きくなったことも、体感景気と結びついている。", "me": "求職中の20代なら、製造業のうち化学物質・金属加工・運送装備のように実際に増えた業種に目を向けてみる価値がある。自営業者にとっては、宿泊・飲食店の就業者減少が消費鈍化の信号と読めるかもしれない。", "a": "政府は、輸出好調が時間差をおいて雇用市場に反映されているとして、製造業の反転に意味を置く。15～64歳の雇用率が過去最高という点も、全般的な雇用環境が悪くない根拠に挙げる。", "b": "ソウル経済などは、過去最高の雇用率は錯覚であり、若年層の就業者の減少と内需業種の打撃が実際の姿だと指摘した。15～34歳に広げても就業者が9万8000人減ったことが根拠として示される。", "say": "確認されたのは、就業者11万3000人増、製造業1万6000人増、若年層の雇用率が29か月連続で低下したことだ。製造業の反転が一時的か傾向かは、まだ分からない。来月の10月の雇用動向で、製造業の増加が続くか、若年層の就業者の減少幅が縮まるかを見よう。", "src": "アジア経済・イートゥデイ・ファイナンシャルニュース・世界日報・ソウル新聞・ニュースピム・国民日報・ソウル経済 (16日)"},
+    "s3":{"kick": "社会・事件 · 報道照合 ✓ 6社 · 犯行の動機は捜査中", "title": "仁川・九月洞の刃物乱暴事件、被疑者の身上を公開。59歳のチェ・チュンラク、8人にけがをさせた疑い", "what": "仁川警察庁は16日、身上情報公開審議委員会を開き、チェ・チュンラク(59)の氏名・年齢・顔を公開することにした(亜洲経済・YTN・イーデイリー)。容疑は殺人未遂と公共の場所での刃物所持だ(仁川日報)。委員会は、残忍性、重大な被害、十分な証拠、公共の利益を根拠に全員一致で議決した(仁川日報)。公開期間は16日から来月16日までだ(トップスターニュース)。事件は13日、南洞区九月洞の商業施設で起き、8人がけがをした(韓国経済・国際ニュース)。心肺停止で運ばれた20代の女性は意識を回復していない(仁川日報)。警察は、制圧を助けた市民5人への褒賞を検討中だ(YTN)。", "why": "身上公開は、知る権利と再犯への警戒心、被疑者の無罪推定がぶつかる制度であるため、審議基準が事件ごとに一貫していてこそ信頼を得られる。不特定多数を狙った犯行は、商店街やショッピングモールのような日常空間の安全の問題へ広がる。", "me": "公開された写真と情報は、仁川警察庁のホームページで確認できる。動機や被害者の状態を断定する投稿は、警察の発表と照らし合わせて見るのが先だ。", "a": "残忍性と被害規模が大きく証拠も明らかである以上、公開は当然であり、市民の警戒心と知る権利のための措置だという見方だ。委員会が全員一致で議決した点が、その根拠として報じられた。", "b": "有罪が確定するまでは無罪と推定されるという原則も併せて指摘すべきだという見方も、報道に載った。身上公開が再発防止策の代わりにはなれないという指摘だ。", "say": "確認されたのは、被疑者の氏名・年齢、容疑、公開期間、負傷者8人だ。犯行の動機と被害女性の回復の有無は、確認されていない。検察への送致の時期と、捜査結果の発表を見よう。", "src": "亜洲経済・YTN・仁川日報・イーデイリー・韓国経済・国際ニュース (16日)"},
+    "s4":{"kick": "市場・株式 · 報道照合 ✓ 6社 · 反発の要因はメディアごとに強調点が異なる", "title": "KOSPI、2.05%上昇し5668.05、8取引日ぶりに反発。KOSDAQは4.46%急騰し買いのサイドカー", "what": "KOSPIは16日、113.83ポイント(2.05%)上昇の5668.05で取引を終え、7取引日連続の下落に歯止めをかけた(世界日報・慶北道民日報)。KOSDAQは4.46%上昇の794.78で、取引時間中は807.54まで上がった(世界日報・ファイナンシャルポスト)。昼12時55分ごろ、KOSDAQ市場で買いのサイドカーが発動され、プログラム買い注文の効力が5分間止まった(スペシャルタイムズ・グッドモーニング経済)。今年のKOSDAQで34回目のサイドカー、19回目の買いのサイドカーだ。KOSPIで外国人は3413億ウォンの純買い越し、個人と機関はそれぞれ4858億ウォン・6824億ウォンの純売り越しだった(世界日報)。KOSDAQでは機関が1684億ウォンの買い越しだった。", "why": "7取引日連続の下落のあとの1日の反発は、安値での買いが入ったという意味であって、下落要因が解消されたという意味ではない。今年のKOSDAQでサイドカーが34回も発動されたことは、指数が1日に大きく揺れる相場が日常になったという意味だ。", "me": "株式・ファンドの評価額が1日のうちに回復したかもしれないが、こうした相場では1日の上げ下げだけを見て売買を急ぐと、逆方向で損失が出かねない。サイドカーの発動自体は売買を止めず、プログラム注文だけを一時止める。", "a": "世界日報は、急落による反発の買いで2%超上がったと指摘した。外国人が純買い越しに転じた点を反発の根拠とみる見方だ。", "b": "CBCニュースは、外国人が戻っても粘りが足りないとして、本当の反発かを疑う慎重論を伝えた。個人と機関がともに売ったことが根拠だ。", "say": "確認されたのは、二つの指数の終値と上げ幅、サイドカーの発動時刻と需給だ。反発が続くかどうかは確認されていない。次の取引日に外国人の純買い越しが続くか、KOSDAQが800の大台を終値で回復するかを見よう。", "src": "世界日報・慶北道民日報・共感新聞・ファイナンシャルポスト・スペシャルタイムズ・グッドモーニング経済・CBCニュース (16日)"},
+    "s5":{"kick": "政治・法 · 報道照合 ✓ 7社 · 世論調査の数値は韓国ギャラップの単独調査", "title": "特別検察、『平壌無人機』の尹錫悦に控訴審でも懲役30年を求刑。宣告は12月4日", "what": "内乱特別検察チームは16日、ソウル高裁刑事1部の審理で開かれた平壌無人機事件の控訴審の結審公判で、尹錫悦前大統領と金龍顕前長官にそれぞれ懲役30年を求刑した(YTN・京郷新聞・世界日報)。呂寅兄前防諜司令官には20年、金龍大前ドローン作戦司令官には5年が求刑された(デジタルデイリー)。1審は尹前大統領と金前長官に各30年、呂前司令官に15年を言い渡した。特別検察は「内乱より罪質が重い」と述べ、尹前大統領側は安保措置だったと反論した(京郷新聞)。宣告は12月4日だ(スペシャルタイムズ)。韓国ギャラップの調査で、大統領の職務肯定率は39%、否定率は52%だった(世界日報・文化日報)。", "why": "一般利敵の容疑は、外国との通謀なしに敵国に利益を与えた行為を処罰する条項であり、前大統領にこの容疑が控訴審まで争われるのは前例が少ない。控訴審の判断は、戒厳に関わる他の裁判の事実認定にも影響を与えうる。支持率の反発幅は2ポイントで、標本誤差の範囲内だ。", "me": "宣告は12月4日午後3時に出る。世論調査の数値は一つの機関の1週間分の結果なので、ほかの調査と併せて見るのがよい。", "a": "特別検察は、軍の統帥権を悪用して北朝鮮の挑発を誘導し、全面戦争まで甘受しようとした犯行であり、内乱より重いとみる。1審も同じ刑期を言い渡した点を挙げる。", "b": "尹前大統領側は、無人機作戦は北朝鮮の挑発に対応した正当な安保措置であり、戒厳の名分づくりとは関係がないと主張する。先立つ1審判決をめぐっても強く反発した。", "say": "確認されたのは、被告人ごとの求刑と宣告の日付だ。控訴審が1審の事実認定をそのまま維持するかは分からない。12月4日の宣告までに双方の最終意見書の内容と、来週の韓国ギャラップの調査で肯定率の反発が続くかを見よう。", "src": "YTN・京郷新聞・世界日報・時事ジャーナル・デジタルデイリー・スペシャルタイムズ・文化日報 (16日)"},
+    "i1":{"kick": "社会 · ✓ 報道4件", "title": "富川火災で殉職のキム・ジンソク消防司令補、19日に京畿道庁葬で告別式", "what": "富川の工場火災で心肺停止となって搬送されたキム・ジンソク消防司令補(44)が、17日0時55分ごろ亡くなった(ファイナンシャルニュース・MBC)。彼は富川消防署梧亭センター所属の勤続13年目の消防士だった(SBS)。消防当局は1階級特進の追贈と国立顕忠院への埋葬の支援を決めた(MBC)。李在明大統領は弔問所を訪れ、玉条勤政勲章を追贈した(MBC)。葬儀は遺族の意向により京畿道庁葬で営まれ、告別式は19日だ(天地日報・ファイナンシャルニュース)。与野党は哀悼の意を示し、消防予算に取り組むと述べた(ファイナンシャルニュース)。", "why": "現場の隊員が2人1組で真っ先に進入して孤立した経緯は、進入の判断と指揮系統が適切だったかの検討につながる。殉職のあとに約束された予算が実際の予算案に反映されるかが、繰り返される問いだ。", "me": "告別式は19日に開かれる。消防の予算と人員の問題は、来年度の予算案の審議で扱われうる。", "a": "与野党は消防予算に取り組むと口をそろえたと、ファイナンシャルニュースが伝えた。処遇と装備の拡充を先にすべきだという見方だ。", "b": "危険物を許可なく置いていた事業所をふるい分けられなかった事前管理がまず問題だという見方もある。京畿新聞は、許可の対象かどうかを調べていると報じた。", "say": "殉職の時刻と礼遇の決定、告別式の日程は確認された。進入時の指揮判断がどうだったかは、まだ知られていない。国会の予算議論で消防予算が実際に増えるかを見よう。", "src": "ファイナンシャルニュース・MBC・SBS・天地日報 (17日)"},
+    "i2":{"kick": "経済 · ✓ 報道4件", "title": "9月の15～29歳の就業者14万7000人減、47か月連続の減少", "what": "9月の15～29歳の就業者は14万7000人減り、47か月連続で減少した(ニュースピム・国民日報)。この年齢層の雇用率は44.0%と1.1ポイント下がり、29か月連続で低下した(世界日報・ソウル新聞)。若年層の失業率は5.4%と0.6ポイント上がった(ソプル)。国家データ処は今回から15～34歳の指標も公開した(ニュースピム)。15～34歳の就業者は9万8000人減り、雇用率は56.1%だった(ニュースピム・時事オヌル)。同じ月の15～64歳の雇用率は70.6%で、9月としては最高だった。", "why": "若年人口の減少だけでは雇用率の低下を説明しにくい。雇用率は人口に対する割合なので、割合まで下がるのは、若者が実際に仕事を得にくくなっているということだ。", "me": "若年の求職者は、政府の若者向け雇用支援事業の公告を、15～34歳の基準で改めて確認してみる価値がある。法上の若者の基準に合わせた統計が出たため、政策の対象もこの範囲で議論されうる。", "a": "人口構造の変化と経験者優遇が重なった結果であり、若者向けの個別支援が必要だという見方だ。", "b": "ソウル経済は、過去最高の雇用率は錯覚であり、若年層と内需業種が実際に打撃を受けていると指摘した。", "say": "若年層の就業者47か月減少と雇用率29か月低下は、複数のメディアで同じ数字で確認された。原因が景気のせいか構造のせいかは、まだ見分けられていない。政府が今回の統計を根拠に若者向け対策を出すかを見よう。", "src": "ニュースピム・国民日報・世界日報・ソウル新聞・時事オヌル (16日)"},
+    "i3":{"kick": "社会 · ✓ 報道5件", "title": "公州で行方不明の50代女性、ストーカー行為を届け出ていた60代男性の車内で死亡しているのが見つかる", "what": "忠清南道公州で行方不明届が出された50代の女性が、牙山の国道沿いに止められていた60代男性の車内で、死亡した状態で見つかった(京郷新聞・イートゥデイ・文化日報)。男性は服毒状態で病院に運ばれた(イートゥデイ・韓国経済TV)。2人に関して今年1月にストーカー行為の届け出があったが、警察は軽微と判断して現場で終結させた(ファイナンシャルニュース・世界日報)。6月の交際暴力の届け出は捜査につながったが、双方が処罰を望まず不送致となった。警察は男性を殺人容疑で捜査している(世界日報)。警察は、2人が約2年前から交際と別れを繰り返していたとみている。", "why": "2度の届け出がいずれも処罰や保護措置なく終わった点で、届け出時点の危険性の判断が適切だったかが核心の争点になる。交際暴力は被害者が処罰を望まなければ捜査が止まる仕組みであり、同じことが繰り返されうる。", "me": "ストーカー行為や交際暴力の被害に遭っているなら、112番通報とともにメッセージ・通話の記録を残しておくことが、のちの保護措置の要請の根拠になる。処罰を望まない意思とは別に、接近禁止などの保護措置を求められるかを警察に尋ねられる。", "a": "警察が1月の届け出を危険性なしとして現場で終結させた判断がずさんだったという批判だ。京郷新聞は、届け出が2度もあった点を見出しで指摘した。", "b": "6月の事件は双方が処罰を望まず不送致となったため、現行制度では警察がそれ以上関与しにくかったという説明も出ている。制度そのものを見直すべきだという見方だ。", "say": "2度の届け出とそれぞれの処理結果、発見の経緯は、複数のメディアで確認された。正確な死因と犯行時点は確認されていない。警察の危険性判断の経緯の説明と、男性の回復の有無を見よう。", "src": "京郷新聞・イートゥデイ・文化日報・ファイナンシャルニュース・世界日報 (16～17日)"},
+    "i4":{"kick": "経済 · ✓ 報道4件", "title": "政府、第11次石油最高価格も凍結、ガソリン1784ウォンを4週間維持", "what": "産業通商部は16日、第11次石油最高価格を第10次の水準で凍結すると発表した(ファイナンシャルニュース・世界日報・ニュースピム)。1リットル当たりガソリン1784ウォン、軽油1773ウォン、灯油1380ウォンだ(デイリアン)。適用期間は17日0時から11月13日までの4週間だ。15日時点でブレント原油は1バレル105.9ドル、ドバイ原油は107.0ドルだった。9月の石油類物価は1年前より14.8%上がった。製油会社の損失補填のため、予備費4兆2000億ウォンに1兆4000億ウォンが追加編成された状態だ。", "why": "国際原油価格が100ドルを超えているのに消費者価格の上限を据え置くと、その差額を政府が製油会社に埋め合わせなければならない。凍結が長引くほど物価は安定するが、財政負担が膨らむ構造だ。", "me": "11月13日までは、ガソリンスタンドの価格が上限を超えない。その後の第12次の決定で引き上げられうるため、年末に車での移動が多いなら考慮してよい。", "a": "政府は、庶民の物価負担と需給状況をあわせて考慮したとして凍結を選んだ。物価の安定が優先だという見方だ。", "b": "ニュースピムは、製油会社への補償金の負担が10兆ウォンまで膨らみうると伝えた。凍結を続ければ財政負担が耐えがたくなるという懸念だ。", "say": "価格と適用期間、原油価格の水準は確認された。第12次の決定で引き上げるかは決まっていない。11月初めの国際原油価格と、追加の財政編成の有無を見よう。", "src": "ファイナンシャルニュース・世界日報・ニュースピム・デイリアン (16日)"},
+    "i5":{"kick": "社会 · ✓ 報道4件", "title": "7人が死亡した現代アウトレット火災、4年ぶりの1審で元請け・下請け関係者4人に実刑", "what": "大田地裁刑事4単独(イ・ジェスン部長判事)は16日、2022年の現代プレミアムアウトレット大田店の火災事件の1審で、消防施設管理業者の所長に懲役3年を言い渡した(ソウル新聞・世界日報・大田日報)。消防チーム長は懲役2年、大田店長は懲役1年、支援チーム長は懲役1年6か月を受けた。支援チームの職員は懲役1年、執行猶予2年を言い渡された。法人である現代百貨店は罰金6000万ウォン、管理業者は罰金1億ウォンを受けた。裁判部は、廃紙の積み置きを防がず、火災受信機の連動を停止して避難時間を確保できなかったと指摘した。火災は2022年9月26日に地下1階で起き、協力業者の労働者ら7人が死亡した。", "why": "火災受信機の連動を切っておいたことは、誤作動の苦情を避けるために警報を切る慣行と通じており、ほかの大型施設にも同じ危険があるという警告になる。事故から4年での最初の判断であり、大型惨事の裁判がどれだけ長くかかるかも示している。", "me": "大型ショッピングモール・アウトレットの地下駐車場や荷さばき場は、火が広がりやすい空間だ。利用中に警報が鳴ったら、誤作動と思わずにすぐ避難するのが安全だ。", "a": "裁判部は、被告人らの業務上の注意義務違反が軽くないとして、元請け・下請けの関係者に実刑を言い渡した。現場の管理責任を重くみた判決だ。", "b": "検察は所長に懲役4年、店長に懲役1年6か月を求刑した(ソウル新聞・大田日報)。宣告が求刑より低いため、検察が刑期をさらに争う余地があるという見方だ。", "say": "刑期と裁判所の判断の根拠は、複数のメディアで同じ内容で確認された。控訴の有無は、まだ知られていない。検察と被告側の控訴、遺族の反応を見よう。", "src": "ソウル新聞・世界日報・大田日報・デイリアン (16日)"}
+  };
+  const G = {
+    "対応2段階":{"f": "消防", "d": "隣接する複数の消防署の人員・装備まで動員する警報令", "w": "富川の工場火災、午前9時9分ごろに発令"},
+    "消防司令補":{"f": "消防", "d": "消防公務員の階級の一つで、警察の警部補に当たる", "w": "殉職したキム・ジンソク消防司令補"},
+    "第2石油類":{"f": "安全", "d": "灯油・軽油のように引火点が21～70度の第4類危険物", "w": "工場内の20L入り容器約100個"},
+    "油蒸気":{"f": "安全", "d": "油が蒸発して空気中に広がった蒸気", "w": "警察がみた出火の可能性"},
+    "合同鑑識":{"f": "捜査", "d": "警察・消防などが共同で火災現場を調べること", "w": "火災原因の究明"},
+    "玉条勤政勲章":{"f": "行政", "d": "公務員に贈る勤政勲章の5等級のうち4等級", "w": "殉職した消防士に追贈"},
+    "京畿道庁葬":{"f": "行政", "d": "京畿道が主管する葬儀", "w": "19日に告別式"},
+    "国家データ処":{"f": "経済", "d": "旧統計庁を改編した国家統計機関", "w": "9月の雇用動向を発表"},
+    "雇用率":{"f": "経済", "d": "当該年齢の人口に占める就業者の割合", "w": "15～29歳44.0%"},
+    "身上情報公開審議委員会":{"f": "刑事", "d": "重大犯罪の被疑者の氏名・顔の公開を決める警察の委員会", "w": "仁川の刃物乱暴事件の被疑者公開を議決"},
+    "殺人未遂":{"f": "刑事", "d": "人を殺そうとしたが死に至らなかった犯罪", "w": "チェ・チュンラクの容疑"},
+    "サイドカー":{"f": "証券", "d": "先物価格の急変時にプログラム売買の注文を5分間止める装置", "w": "KOSDAQで12時55分ごろ買いのサイドカー"},
+    "純買い越し":{"f": "証券", "d": "買った金額から売った金額を引いた値がプラスの状態", "w": "外国人3413億ウォン"},
+    "内乱特別検察チーム":{"f": "法", "d": "12・3非常戒厳に関わる事件を捜査・起訴する特別検察官チーム", "w": "尹前大統領に30年を求刑"},
+    "一般利敵":{"f": "法", "d": "敵国に軍事上の利益を与えたり、自国軍に害を及ぼしたりした罪", "w": "平壌無人機事件の容疑"},
+    "結審公判":{"f": "法", "d": "検事の求刑と最終陳述で審理を終える裁判", "w": "16日の控訴審"},
+    "求刑":{"f": "法", "d": "検事が裁判部に求める刑期", "w": "懲役30年"},
+    "韓国ギャラップ":{"f": "世論", "d": "毎週、大統領の職務評価を発表する世論調査機関", "w": "肯定率39%"},
+    "石油最高価格":{"f": "経済", "d": "政府が定めた石油製品の販売価格の上限", "w": "第11次を凍結"},
+    "交際暴力":{"f": "法", "d": "恋人同士の間で起きる暴力", "w": "公州の事件、6月の届け出"},
+    "火災受信機":{"f": "消防", "d": "感知器の信号を受けて警報を鳴らす装置", "w": "現代アウトレット火災で連動停止"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

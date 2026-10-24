@@ -1,0 +1,373 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>7,811.26</b>CAC40 · 10月22日（木）終値 · −1.39%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · フランス版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,663.43</b>S&amp;P 500 · 10月22日（木）終値 · −1.21%</div>
+    </div>
+    <div class="dateline"><span>第19号 · 朝刊</span><b>2026年10月23日 金曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">保健 · ウイルス<span>報道照合 ✓ 5社 · ウイルスが死亡にどう関わったかは未確定</span></div>
+      <h2 class="hl">動物のウイルス「シャモンダ」、人で初めて検出　リヨンで免疫不全の患者が死亡</h2>
+      <p class="deck">当局は、10月初めに免疫不全の男性が死亡したと発表した。男性は、これまで動物でしか知られていなかった反芻動物のウイルスに感染していた。</p>
+      <div class="body">
+        <p>免疫不全の患者が10月初め、リヨンで死亡した。患者は、これまで人での確認例がなかった反芻動物のウイルス「シャモンダ」に感染していた。当局が10月22日（木）に発表したと、Ouest-France、Le Figaro、franceinfoは伝える。Le Figaroによれば、男性はウイルスと「きわめて高い確率で関連する」脳の合併症で亡くなった。60歳前後の男性としているReutersは、当局が、ウイルスが動物の間で広がっていたフランス東部で、感染した小さな羽虫に刺されたとみていると書く。franceinfoによれば、当局は一般の人々に健康上のリスクはないとみており、同メディアはこれを世界初の事例と位置づける。Ouest-Franceは、ウイルスが54の県（デパルトマン）の畜産農家で確認されたと説明する。Al Jazeeraは、感染の経緯を突き止めるため、世界保健機関（WHO）とECDC（欧州疾病予防管理センター）とともに、臨床、生物学、疫学の調査が続いていると付け加える。</p>
+        <p>Reutersは、このウイルスが欧州に現れたのは7月末で、10月20日までに12を超える欧州の国が動物での症例を届け出ていたと伝える。世界保健機関はReutersに対し、近縁のウイルスの感染に関する知見からみて「これは孤立した人の症例」であり、現時点でさらに広い範囲に広がる可能性は低いと述べた。Reutersは、牛から人への感染も、人から人への感染も報告されていないと指摘する。Al Jazeeraは、現時点で一般の人々に健康上のリスクは確認されていないとするフランス当局の立場を伝える。Ouest-Franceは、死亡の時期を10月初め、場所をリヨンとする。引用した各メディアは、ウイルスが死因となったのか、死に関与しただけなのか、また男性がどこで感染したのかを述べていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">政治 · 欧州<span>報道照合 ✓ 4社 · 辞任の主な理由は見方が分かれる</span></div>
+      <h3 class="hl">ピエール・モスコビシ氏、欧州会計検査院を辞任　就任から10カ月足らず</h3>
+      <div class="one">
+        <p>ピエール・モスコビシ（Pierre Moscovici）氏が、就任から10カ月足らずで欧州会計検査院を辞任した。同院が10月22日（木）に発表したと、Le Monde、franceinfo、Le Figaroは伝える。Le Mondeによれば、特に発言の自由を守るためだという。引用した各メディアによれば、氏は「私のような経験を持つ者の居場所は、ここフランスでの公の議論に貢献することでもあると思う」と述べている。Eunewsは、同院が詳細を示さずに「一身上の理由」を挙げていると伝える。Eunewsによれば、モスコビシ氏は2026年1月1日付で同院の委員に就き、任期は2031年12月31日までだった。Eunewsは、後任が任命されるまで氏が職にとどまると付け加える。この席はフランス国籍の者に割り当てられ、新しい委員はEU理事会が、欧州議会との協議を経て任命する。franceinfoは、任命から1年足らずでの辞任と見出しを付けている。引用した各メディアは、現時点で誰が後任になりうるのか、氏がフランスでどのような役職に就くのかを述べていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>アート・バーゼル・パリ、土曜のデモでの混乱を懸念し、予定より2日早い金曜夜に閉幕</b><em>200を超えるギャラリーが参加し、日曜にグラン・パレで閉幕する予定だったこの見本市は、土曜と日曜は閉鎖される。Le FigaroとLe Mondeが伝える。</em><span>文化 · ✓ 報道4社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>インターポール、サイバー犯罪対策の「セレンゲティIII」作戦でアフリカ1,462人を逮捕と発表</b><em>Le Figaroによれば、作戦には21か国が参加し、悪質なネットワーク10,909を摘発した。インターポールは、回収した不正資金を1億500万ドル超とする。</em><span>テクノロジー · ✓ 報道3社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>LFP、PSG-OLの延期を拒否　10月25日（日）20時45分の試合、判断は警視庁に</b><em>L'ÉquipeとBFMTVによれば、警視庁はリーグに延期を受け入れるかと書面で尋ね、LFPは否と答えた。franceinfoは、リヨンのサポーターの遠征が禁じられていると伝える。</em><span>スポーツ · ✓ 報道4社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>「エイリアン」「トップガン」で知られる米俳優トム・スケリット氏が死去、93歳</b><em>Le Figaroによれば、デトロイト出身で、ハリウッドでの経歴は1960年代から2020年代に及んだ。VarietyとNPRは、死因は自然死と伝える。</em><span>文化 · ✓ 報道3社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>パリ警視総監、10月24日のデモを前に商店主へ民間警備の活用を助言</b><em>10月17日の略奪を受け、パトリス・フォール氏は閉店時間の繰り上げも提案していると、BFMTVは伝える。franceinfoは、民間警備の見積もり依頼が2倍になったと伝える。</em><span>社会 · ✓ 報道3社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">文化 · 競売<span>報道照合 ✓ 4社 · 4300万ユーロと5000万ユーロの差は全社が詳しく伝えてはいない</span></div>
+      <h3 class="hl">モネの「イリス」、パリで5000万ユーロで落札　フランスの競売で最高額</h3>
+      <div class="body">
+        <p>クロード・モネの絵画「イリス」が10月22日（木）、パリのサザビーズで5000万ユーロで売れた。フランスにおける美術品の競売で最高額だと、BFMTVとfranceinfoは伝える。franceinfoによれば、画家の晩年に描かれたこの大作の推定価格は2200万〜3000万ユーロで、同メディアは競売前、この推定価格自体がフランスで最高だと説明していた。一方Ouest-Franceは、落札額を4300万ユーロとし、国内の競売で過去最高額の絵画と位置づける。</p>
+        <p>Bloombergは、一度も展示されたことのないこの作品が、パリのサザビーズで5600万ドルで売れたと伝える。BFMTVとfranceinfoが伝える価格は、franceinfoが示した推定価格の上限を2000万ユーロ上回る。読んだ記事のすべてが、Ouest-Franceの挙げる4300万ユーロとBFMTVとfranceinfoの挙げる5000万ユーロの差を詳しく説明しているわけではなく、買い手が誰かも明らかにしていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>5000万ユーロ</b><span>BFMTVとfranceinfoが伝える価格</span></div>
+        <div><b>2200万〜3000万ユーロ</b><span>franceinfoによる、競売前の推定価格</span></div>
+        <div><b>4300万ユーロ</b><span>Ouest-Franceが挙げる落札額</span></div>
+      </div></div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">社会 · 軍<span>報道照合 ✓ 4社 · 事故の原因は未確定</span></div>
+      <h3 class="hl">ナンシー近郊でミラージュ2000Dが墜落　メス検察庁、軍人2人の死亡を確認</h3>
+      <div class="body">
+        <p>メス検察庁は10月22日（木）、ナンシー近郊で墜落したミラージュ2000Dに乗っていた軍人2人の死亡を確認したと、Le Monde、Ouest-France、BFMTVは伝える。機体は10月20日（火）の夜、夜間の訓練飛行中にムルト＝エ＝モゼル県で墜落した。Ouest-Franceは当初、軍人1人が死亡し、もう1人は行方不明のままだと伝えていた。L'Essentielは、操縦士をカンタン・クリシュ（Quentin Klysz）中尉（27歳）、航法士で兵装システム士官をアントラニグ・サルキシアン（Antranig Sarkissian）中佐（44歳）と特定し、2人は「命じられた航空任務の遂行中に」死亡したと伝える。</p>
+        <p>検察官のダヴィド・トゥヴェ（David Touvet）氏はAFPに対し、L'Essentielが引用する形で、操縦士も航法士も地面に激突する前に脱出する時間がなかったと述べた。2基の射出座席のエンジンが地上で見つかったためという。機体は兵装を積んでいない複座のミラージュ2000Dだったと、同じ情報源は述べる。L'Essentielは、事故の原因は司法捜査と安全調査で明らかにされることになると伝える。墜落はロジェヴィルの自治体で起きたと、L'Essentielは付け加える。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>27歳</b><span>操縦士の年齢、L'Essentielによる</span></div>
+        <div><b>44歳</b><span>航法士の年齢、L'Essentielによる</span></div>
+        <div><b>10月20日</b><span>墜落した夜、Ouest-Franceによる</span></div>
+      </div></div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">エネルギー · 原子力<span>報道照合 ✓ 4社 · 貯蔵の開始時期は未定</span></div>
+      <h3 class="hl">フィンランド、核廃棄物の最終処分場に世界で初めて運転許可</h3>
+      <div class="body">
+        <p>フィンランド政府は10月22日（木）、南西部のエウラヨキにある使用済み核燃料の封入・最終処分施設について、ポシヴァ社に運転許可を出したと発表した。Le FigaroとBFMTVは、この施設を核廃棄物の最終処分場として世界初と位置づける。Le Figaroは、約19億年前から安定している岩盤に掘られていると説明する。BFMTVは、建設開始から22年を経た「歴史的な大きな日」と引用する。</p>
+        <p>許可の期限は2070年末で、オルキルオトとロヴィーサの原子力発電所の使用済み燃料が対象だと、フィンランド政府は述べる。政府は、原子力安全当局STUKの2026年8月4日付の好意的な意見に依拠した。France 24も同じ決定を伝えている。ただしフィンランド政府は、この許可がすぐの運転開始を認めるものではないと明記する。ポシヴァはSTUKの検査を受けるまで施設を運転できず、詳細な稼働の日程も示されていない。ポシヴァの所有者であるTVOとフォータムは、運営の資金調達に引き続き責任を負う。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2070年</b><span>運転許可の有効期限の終わり</span></div>
+        <div><b>8月4日</b><span>原子力安全当局STUKの好意的な意見</span></div>
+        <div><b>22年</b><span>建設開始から許可までの年数</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>シャモンダウイルスは今後、人から人へ感染するという。</b> <span>Reutersは、牛から人への感染も人から人への感染も報告されていないと指摘し、世界保健機関はこの症例を孤立したものとみている（Reuters、10月22日）。</span></div>
+        <div><b>混乱がアート・バーゼル・パリのコレクターを遠ざけたという。</b> <span>Le Mondeは、社会的な緊張は海外のコレクターをひるませず、大勢が訪れたと伝える。モネの「イリス」は5000万ユーロで売れた（BFMTV、10月22日）。</span></div>
+        <div><b>PSG-OLの試合はすでに月曜に延期されたという。</b> <span>Le Figaroは10月21日、月曜への延期に触れていた。10月22日、LFPは拒否し（L'Équipe、BFMTV）、判断は警視庁に委ねられている。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 10月23日（金）</b><span>アート・バーゼル・パリの最終日。金曜夜に閉幕する（Le Monde）。PSG-OLをめぐる警視庁の判断が待たれる（BFMTV）。</span><b>今週</b><span>10月24日（土）は動員の日で、パリの商店主には用心を促す指示が出ている（BFMTV、Le Figaro）。10月25日（日）は、試合が維持されれば20時45分からPSG-OL（L'Équipe）。</span><b>さらに先</b><span>EU理事会が、欧州議会との協議を経て、ピエール・モスコビシ氏の後任を任命する（Eunews）。フィンランドの施設は、運転開始の前にSTUKの検査がある（フィンランド政府）。</span><b>読者へ</b><span>今週末にパリへ行く予定なら、出発前に警視庁の指示を確認しておきたい（BFMTV）。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "保健 · ウイルス · 報道照合 ✓ 5社 · ウイルスが死亡にどう関わったかは未確定", "title": "動物のウイルス「シャモンダ」、人で初めて検出　リヨンで免疫不全の患者が死亡", "what": "当局は10月22日（木）、免疫不全の患者が10月初めにリヨンで死亡し、シャモンダウイルスに感染していたと発表した（Ouest-France、Le Figaro）。Le Figaroは、ウイルスと「きわめて高い確率で関連する」脳の合併症を伝える。Reutersは、男性が60歳前後で、当局は感染した小さな羽虫にフランス東部で刺されたとみていると書く。franceinfoは、当局が一般の人々に健康上のリスクはないとみており、世界初の事例だと書く。Ouest-Franceは、ウイルスが54の県（デパルトマン）の畜産農家で確認されたと説明する。Al Jazeeraは、世界保健機関とECDCとともに調査が続いていると伝える。世界保健機関はReutersに対し、これは孤立した人の症例で、さらに広い範囲に広がる可能性は低いと述べた。", "why": "シャモンダは、小さな羽虫が刺して媒介する家畜のウイルスとして知られていた。人での症例が出たことは、免疫の力がひどく弱っていた患者であっても、種の壁を越えうることを示す。当局にとっては、ほかに症例があるかどうかを知る前に、いつ、どのように感染したのかを把握することが課題になる。", "me": "健康な読者にとっては、当局が健康上のリスクは確認されていないとしている。影響を受けた県の畜産農家と、免疫不全の度合いが重い人が、今後の調査の結果に最も関わる。", "a": "保健当局の側では、メッセージは安心を促すものだ。franceinfoは一般の人々にリスクはないと伝え、世界保健機関はReutersに対し、孤立した症例で広がる可能性は低いと述べている。", "b": "畜産農家と科学者の側では、注意すべき点は、ウイルスが畜産農家に急速に広がったことで、Ouest-Franceによれば54の県（デパルトマン）に及ぶ。もう一つは、死亡にウイルスがどう関わったかが確定していないことだ（Al Jazeera）。", "say": "確認済み：10月初めのリヨンでの死亡、シャモンダへの感染、10月22日の当局の発表、孤立した症例だとするWHOの見解。未確認：ウイルスが死亡にどう関わったか、そして刺された場所。きょうの注目点：WHOとECDCとともに進められている調査の結果。", "src": "Le Figaro（脳の合併症、10月22日）· Ouest-France（リヨン、10月初め、54の県、10月22日）· franceinfo（健康上のリスクなし、10月22日）· Reuters（WHO、羽虫、10月22日）· Al Jazeera（WHOとECDCとの調査、10月22日）"},
+    "s2":{"kick": "政治 · 欧州 · 報道照合 ✓ 4社 · 辞任の主な理由は見方が分かれる", "title": "ピエール・モスコビシ氏、欧州会計検査院を辞任　就任から10カ月足らず", "what": "欧州会計検査院は10月22日（木）、ピエール・モスコビシ氏が就任から10カ月足らずで辞任したと発表した（Le Monde、franceinfo）。Le Mondeは、特に発言の自由を守りたいのだと書く。引用した各メディアによれば、氏は自らの居場所は、フランスの公の議論に貢献することでもあると考えている。Eunewsは、同院が一身上の理由を挙げていると伝える。委員としての任期は、2026年1月1日から2031年12月31日までだった（Eunews）。氏は後任が任命されるまで職にとどまる。後任はフランス国籍の者で、EU理事会が欧州議会との協議を経て任命する（Eunews）。", "why": "Le Mondeは、この退任を発言の自由を守りたいという意思と結びつけている。それは、欧州の職務がその自由を制約していたことを前提にしている。空席は、人事も生む。この席はフランス国籍の者に割り当てられ、EU理事会が任命する（Eunews）。", "me": "フランスの読者にとって、この退任は、引用した各メディアによれば、ピエール・モスコビシ氏が国内の公の議論に再び加わりたいという意思の表れだ。読んだ記事は、同院の仕事への影響については何も述べていない。", "a": "Le MondeとLe Figaroによれば、辞任はまず、フランスの公の議論で自由に発言する立場を取り戻すためで、国内の政治に影響を及ぼしたい意思の表れと読まれている。", "b": "Eunewsが引く同院によれば、辞任は一身上の理由であり、それ以上の説明はない。このため、ほかの計画があるのかという問いは開いたままだ。", "say": "確認済み：10月22日に発表された辞任、2031年12月31日までだった任期、後任が決まるまで職にとどまること。未確認：氏の今後の役職と、後任の名前。きょうの注目点：ピエール・モスコビシ氏による、今後の計画についての説明。", "src": "Le Monde（発言の自由、10月22日）· franceinfo（任命から1年足らず、10月22日）· Le Figaro（公の議論、10月22日）· Eunews（一身上の理由、後任、10月22日）"},
+    "s3":{"kick": "文化 · 競売 · 報道照合 ✓ 4社 · 4300万ユーロと5000万ユーロの差は全社が詳しく伝えてはいない", "title": "モネの「イリス」、パリで5000万ユーロで落札　フランスの競売で最高額", "what": "クロード・モネの「イリス」は10月22日（木）、パリのサザビーズで5000万ユーロで売れた。フランスにおける美術品の競売で最高額だ（BFMTV、franceinfo）。franceinfoは、画家の晩年に描かれた大作で、推定価格は2200万〜3000万ユーロだったと説明する。Ouest-Franceは落札額を4300万ユーロとし、フランスの競売で最高額の絵画だとする。Bloombergは、一度も展示されたことのない作品が5600万ドルで売れたと伝える。franceinfoは、競売前、この推定価格をフランスで最高だと説明していた。読んだ記事のすべてが、4300万ユーロと5000万ユーロの差を詳しく説明しているわけではない。", "why": "フランスで最高額が出たことは、パリが非常に高い水準の競売を開けることを示す。franceinfoの推定価格の上限を上回る価格は、需要が専門家の予想を超えたことを示す。", "me": "フランスの読者にとって、この出来事が関わるのは主に美術市場とパリのイメージで、消費者物価や税制に直接の影響はない。", "a": "一般紙・放送局の側では、この売却はパリの市場にとって成功で、価格は推定価格の上限を上回った（BFMTV、franceinfo）。", "b": "数字を比べるメディアの側では、金額は数え方による。Ouest-Franceは落札額4300万ユーロ、BFMTVとfranceinfoは5000万ユーロで、手数料の内訳を読む必要がある。", "say": "確認済み：10月22日のパリのサザビーズでの売却とフランスでの最高額、BFMTVとfranceinfoが伝える5000万ユーロという価格。未確認：Ouest-Franceの4300万ユーロとの差の正確な性格と、買い手が誰か。きょうの注目点：サザビーズによる結果の発表。", "src": "BFMTV（5000万ユーロ、最高額、10月22日）· Ouest-France（落札額4300万ユーロ、10月22日）· franceinfo（推定価格2200万〜3000万ユーロ、10月22日）· Bloomberg（5600万ドル、10月22日）"},
+    "s4":{"kick": "社会 · 軍 · 報道照合 ✓ 4社 · 事故の原因は未確定", "title": "ナンシー近郊でミラージュ2000Dが墜落　メス検察庁、軍人2人の死亡を確認", "what": "メス検察庁は10月22日（木）、ナンシー近郊で墜落したミラージュ2000Dの軍人2人の死亡を確認した（Le Monde、Ouest-France、BFMTV）。機体は10月20日（火）の夜、ムルト＝エ＝モゼル県で墜落した（Ouest-France）。Ouest-Franceは当初、軍人1人が死亡し、もう1人は行方不明と伝えていた。L'Essentielは、カンタン・クリシュ中尉（27歳）とアントラニグ・サルキシアン中佐（44歳）の名前を挙げる。L'Essentielが引用する検察官ダヴィド・トゥヴェ氏によれば、どちらも脱出する時間がなかった。L'Essentielは、2基の射出座席のエンジンが地上で見つかったこと、原因は司法捜査と安全調査で明らかにされることになると伝える。", "why": "飛行は夜間の訓練だった。司法捜査と安全調査が原因を明らかにすることになり、それが機体と搭乗員に生じうる影響を左右する。", "me": "2人の軍人の遺族と空軍にとって、さしあたっての課題は悲劇の受け止めと捜査の日程だ。読んだ記事は、地上の犠牲者には触れていない。", "a": "軍の司法と空軍の側では、すべてが捜査に委ねられている。メス検察庁は原因について何も述べていない（Le Monde、L'Essentiel）。", "b": "報道の側では、Ouest-Franceは当初、軍人1人が死亡し、もう1人は行方不明と伝えていた。死者の数は2日で確定したが、飛行の経過についてのより詳しい情報は、まだ待たれている。", "say": "確認済み：2人の死亡、夜間の訓練飛行、脱出がなかったこと。未確認：事故の原因のすべて。きょうの注目点：安全調査の最初の結果と、2人の軍人への公式の追悼。", "src": "Le Monde（検察庁による確認、10月22日）· Ouest-France（軍人1人死亡、1人行方不明、10月21日。2人目の死亡、10月22日）· BFMTV（2人目の死亡の確認、10月22日）· L'Essentiel（名前、脱出、10月22日）"},
+    "s5":{"kick": "エネルギー · 原子力 · 報道照合 ✓ 4社 · 貯蔵の開始時期は未定", "title": "フィンランド、核廃棄物の最終処分場に世界で初めて運転許可", "what": "フィンランド政府は10月22日（木）、エウラヨキにある使用済み核燃料の封入・最終処分施設について、ポシヴァに運転許可を出した（フィンランド政府）。Le FigaroとBFMTVは、この施設をこの種のものとして世界初と位置づける。Le Figaroは、19億年前からの岩盤に掘られていると説明する。BFMTVは、建設開始から22年を経た「歴史的な大きな日」と引用する。許可の期限は2070年末で、オルキルオトとロヴィーサの発電所の燃料が対象だ（フィンランド政府）。原子力安全当局STUKは2026年8月4日に好意的な意見を出していた（フィンランド政府）。許可はすぐの運転開始を認めない。STUKの検査が必要だ（フィンランド政府、France 24）。", "why": "地層処分は、放射能を保ったまま残る燃料を、数十万年にわたって隔離することを目指す。フィンランドでのその成功は、最終的な解決策を持たない国々の参照になる。", "me": "フランスの読者にとって、この案件は原子力をめぐる議論を刺激する。廃棄物の管理はその一部で、外国で許可された施設は、比較の材料になる。", "a": "原子力を推進する側では、この許可は、高レベルの廃棄物に持続可能な解決策があることの証明だ（BFMTV、Le Figaro）。", "b": "慎重な側では、フィンランド政府自身が、すぐの運転開始は認められておらず、STUKが検査するまで日程も決まっていないと念を押している。", "say": "確認済み：2070年末までの許可、8月4日のSTUKの意見、運転開始の日程がないこと。未確認：最初の燃料の搬入の日付。きょうの注目点：STUKの検査日の発表。", "src": "フィンランド政府（許可、2070年、STUK、10月22日）· France 24（決定、10月22日）· Le Figaro（19億年、10月22日）· BFMTV（歴史的な大きな日、10月22日）"},
+    "i1":{"kick": "文化 · ✓ 報道4社", "title": "アート・バーゼル・パリ、土曜のデモでの混乱を懸念し、予定より2日早い金曜夜に閉幕", "what": "アート・バーゼル・パリの主催者は10月22日（木）、見本市を予定より2日早く、金曜夜に閉めると発表した（Le Monde、BFMTV、Libération）。Le Figaroは、デモのため、土曜と日曜は閉鎖されると書く。Le Figaroは、今週は200を超えるギャラリーが参加していると説明する。Le Mondeは、日曜にグラン・パレで閉幕する予定だったと伝える。Le Mondeはまた、社会的な緊張は海外のコレクターをひるませず、大勢が訪れたと伝える。", "why": "国際的な見本市には、非常に価値の高い作品と海外からの来場者が集まる。そのため主催者は、動員の日に被害や治安上の事故が起きる危険を冒すより、閉めることを選んだ。", "me": "土曜か日曜のチケットを買っていた来場者は、閉鎖によって、主催者に手続きを問い合わせる必要がある。", "a": "主催者の側では、Le Mondeによれば、決定の動機は土曜の動員での混乱への懸念だ。", "b": "ギャラリーとコレクターの側では、Le Mondeは、最初の数日は緊張で売り上げが落ちなかったと指摘する。そのため、前倒しの閉幕は出展者により重い。", "say": "確認済み：金曜夜の前倒しの閉幕と、来場者にとって2日減ること。未確認：チケットの払い戻しの手続き。きょうの注目点：すでに席を持つ来場者に向けた主催者の発表。", "src": "Le Monde（金曜夜の閉幕、大勢が訪れたコレクター、10月22日）· Le Figaro（土曜と日曜は閉鎖、10月22日）· Libération（金曜夜から閉幕、10月22日）· BFMTV（2日短縮、10月22日）"},
+    "i2":{"kick": "テクノロジー · ✓ 報道3社", "title": "インターポール、サイバー犯罪対策の「セレンゲティIII」作戦でアフリカ1,462人を逮捕と発表", "what": "インターポールは10月22日（木）、アフリカでのサイバー犯罪対策の「セレンゲティIII」作戦の結果を発表した（Le Figaro）。Le Figaroによれば、21か国で1,462人の容疑者が逮捕された。作戦で、悪質なネットワーク10,909が摘発された（Le Figaro）。インターポールは、回収した不正資金を1億500万ドル超とする。BleepingComputerは、作戦が2026年6月29日から8月31日にかけて行われたと伝える。BleepingComputerは、民間のパートナーとしてTeam Cymru、Kaspersky、Group-IB、Fortinetを挙げる。", "why": "アフリカに及ぶサイバー犯罪は、国境を越えるフィッシング、身代金要求型ウイルス、ネット詐欺のネットワークを通じて行われる。インターポールが調整する作戦は、各国の捜査を結びつけることを可能にする。", "me": "フランスの読者にとって、この作戦は、ネット上の詐欺が国境を越えること、そして捜査も国境を越えることを思い出させる。", "a": "法執行機関の側では、インターポールによれば、逮捕とネットワーク摘発の数は、各国の協力が有効なことを示す。", "b": "BleepingComputerが引く専門家の側では、悪質なインフラを特定するうえで、民間のサイバーセキュリティ企業の参加が欠かせなくなっている。", "say": "確認済み：インターポールによる、1,462人の逮捕、21か国、10,909のネットワーク、1億500万ドル超の回収。未確認：国ごとの司法手続きの続き。きょうの注目点：関係国での手続きの発表がありうること。", "src": "Le Figaro（容疑者1,462人、21か国、10月22日）· インターポール（発表、1億500万ドル、10月22日）· BleepingComputer（日程とパートナー、10月22日）"},
+    "i3":{"kick": "スポーツ · ✓ 報道4社", "title": "LFP、PSG-OLの延期を拒否　10月25日（日）20時45分の試合、判断は警視庁に", "what": "パリの警視庁はプロサッカーリーグ（LFP）に、PSG-OLの延期を受け入れるかと書面で尋ね、LFPは否と答えた（L'Équipe、BFMTV）。試合は10月25日（日）20時45分から、パルク・デ・プランスで行われる予定だ。BFMTVは、判断はいまや警視庁にあると書く。L'Équipeは、LFPが同じ日にスタッド・ド・フランスで行われるNFLの試合も理由に挙げていると伝える。franceinfoは、この日曜はリヨンのサポーターがパリへ遠征することが禁じられていると伝える。Le Figaroは10月21日、デモを理由に月曜への延期に触れていた。", "why": "リーグ戦の日程は、リーグと警察当局の双方にかかっている。警視庁は、週末のデモにすでに投入されている人員が足りないと判断すれば、行事を禁止できる。", "me": "サポーターや観客にとっては、試合が維持されるか延期されるかで、チケット、交通、日曜の時間が変わる。", "a": "LFPの側では、延期を拒むのは日程とNFLの試合に基づいており、命令が出ない限り譲る意思はない（L'Équipe）。", "b": "警視庁の側では、延期の求めは、週末の治安部隊の動員によるものだ。L'ÉquipeとBFMTVによる。", "say": "確認済み：警視庁の書面、LFPの拒否、リヨンのサポーターの遠征禁止。未確認：延期を命じる命令と、代わりの日付。きょうの注目点：警視庁の判断がありうること。", "src": "L'Équipe（警視庁の書面、LFPの拒否、10月22日）· BFMTV（判断は警視庁に、10月22日）· franceinfo（リヨンのサポーター禁止、10月22日）· Le Figaro（月曜への延期に言及、10月21日）"},
+    "i4":{"kick": "文化 · ✓ 報道3社", "title": "「エイリアン」「トップガン」で知られる米俳優トム・スケリット氏が死去、93歳", "what": "米俳優のトム・スケリット氏が93歳で死去した（Le Figaro、Variety、NPR）。Le Figaroは、デトロイト出身で、ハリウッドでの経歴は1960年代から2020年代に及んだと説明する。VarietyとNPRは、10月21日（水）の自然死を伝える。NPRによれば、「エイリアン」ではダラス船長、「トップガン」ではバイパーを演じた。Varietyは、ドラマ「ピケット・フェンシズ」の保安官役を挙げ、この役で1993年にエミー賞を受けた。", "why": "トム・スケリットは、アメリカ映画で見慣れた顔の一人で、SFとアクション映画の古典になった作品に出ていた。それが、追悼の広がりを説明する。", "me": "フランスの読者にとって、挙げられた映画はテレビで繰り返し放送されている。訃報は、この2作品への関心を呼び戻す。", "a": "Varietyの側では、振り返るのはテレビで、「ピケット・フェンシズ」の保安官役が1993年のエミー賞をもたらした。", "b": "NPRとLe Figaroの側では、振り返るのは映画で、「エイリアン」と「トップガン」で、ダラスとバイパーを演じた。", "say": "確認済み：93歳での自然死、10月22日の報道。未確認：葬儀の段取り。きょうの注目点：業界からの追悼。", "src": "Le Figaro（93歳での死去、経歴、10月22日）· Variety（自然死、ピケット・フェンシズ、10月22日）· NPR（死去、役、10月22日）"},
+    "i5":{"kick": "社会 · ✓ 報道3社", "title": "パリ警視総監、10月24日のデモを前に商店主へ民間警備の活用を助言", "what": "パリ警視総監のパトリス・フォール氏は、10月24日（土）のデモを前に、商店主に民間警備員の活用を勧める書簡を送った（BFMTV、Le Figaro）。BFMTVによれば、閉店時間の繰り上げも提案している。Le Figaroは、この書簡が強い反発を招いたと伝える。書簡は、10月17日の略奪を思い起こさせ、警視総監によれば数十の商店が壊されるか略奪された。franceinfoは、民間警備の見積もり依頼が、警備業の団体Union des métiers de la sécuritéによれば2倍になったと伝える。", "why": "警察の態勢では、すべての店舗の防護を保証できない。そのため警視総監は、予防の一部を商店主に回しており、責任の転嫁だという批判を生んでいる。", "me": "パリの商店主にとっては、早めに閉店するかを検討し、警報と防犯カメラを確かめ、保険会社に連絡することを意味する。", "a": "警視総監の側では、助言は10月17日に確認された略奪の危険に対する予防措置だ（BFMTV）。", "b": "批判する側では、Le Figaroによれば、書簡は店舗の防護を所有者に移すものと受け止められている。", "say": "確認済み：警視総監の書簡、その助言、民間警備の見積もり依頼の増加。未確認：土曜に閉める商店の数。きょうの注目点：批判に対する警視庁の答え。", "src": "BFMTV（警視庁の助言、10月22日）· Le Figaro（強い反発、10月22日）· franceinfo（見積もり2倍、10月22日）"}
+  };
+
+  // ───── 用語集: 本文・ポップアップ内の用語に点線
+  const G = {
+    "シャモンダ":{"f": "保健", "d": "主に反芻動物がかかる、オルトブニヤウイルスの仲間のウイルス。", "w": "初の人での症例が10月22日に発表された。"},
+    "免疫不全":{"f": "保健", "d": "病気や治療によって、体の防御力が弱まっていること。", "w": "リヨンで死亡した患者は免疫不全だった。"},
+    "反芻動物":{"f": "農業", "d": "牛、羊、ヤギなどの動物。", "w": "シャモンダは反芻動物のウイルス。"},
+    "羽虫":{"f": "保健", "d": "刺してウイルスを媒介しうる小さな虫。", "w": "刺されたことによる感染という見方。"},
+    "ECDC":{"f": "機関", "d": "欧州疾病予防管理センター。", "w": "WHOとともに調査に関わる。"},
+    "世界保健機関":{"f": "機関", "d": "公衆衛生を担う国連の機関。", "w": "孤立した症例とみている。"},
+    "デパルトマン":{"f": "領土", "d": "フランスの行政区画。日本語では「県」と訳される。", "w": "ウイルスは54の県で確認された。"},
+    "欧州会計検査院":{"f": "機関", "d": "EUの資金の使われ方を監査するEUの機関。", "w": "ピエール・モスコビシ氏が辞任する。"},
+    "EU理事会":{"f": "機関", "d": "加盟国の閣僚が出席する機関。", "w": "後任を任命する。"},
+    "欧州議会":{"f": "機関", "d": "EU市民が選ぶ議会。", "w": "任命にあたって協議を受ける。"},
+    "Eunews":{"f": "メディア", "d": "欧州のニュースを専門とするメディア。", "w": "任期と後任についての情報源。"},
+    "発言の自由":{"f": "政治", "d": "職務の制約を受けずに、公の場で発言できること。", "w": "Le Mondeが挙げる理由。"},
+    "サザビーズ":{"f": "美術市場", "d": "国際的な競売会社。", "w": "「イリス」の競売を行った。"},
+    "落札":{"f": "美術市場", "d": "競売で、最高の値をつけた人に品物が決まること。", "w": "絵画は木曜に落札された。"},
+    "推定価格":{"f": "美術市場", "d": "競売の前に示される、価格の幅。", "w": "2200万〜3000万ユーロ。"},
+    "クロード・モネ":{"f": "美術", "d": "フランスの印象派の画家。", "w": "絵画「イリス」の作者。"},
+    "ミラージュ2000D":{"f": "防衛", "d": "空軍の複座の戦闘機。", "w": "ナンシー近郊で墜落した機体。"},
+    "メス検察庁":{"f": "司法", "d": "捜査を担う検察。", "w": "軍人2人の死亡を確認した。"},
+    "検察官":{"f": "司法", "d": "公訴を指揮する司法官。", "w": "ダヴィド・トゥヴェ氏がAFPに語った。"},
+    "射出座席":{"f": "防衛", "d": "搭乗員が飛行中に機体から脱出するための座席。", "w": "そのエンジンが地上で見つかった。"},
+    "ムルト＝エ＝モゼル":{"f": "領土", "d": "ロレーヌ地方の県。", "w": "墜落の場所。"},
+    "航法士":{"f": "防衛", "d": "兵装システムと航法を受け持つ搭乗員。", "w": "サルキシアン中佐、44歳。"},
+    "ポシヴァ":{"f": "エネルギー", "d": "TVOとフォータムが所有するフィンランドの会社。", "w": "運転許可の取得者。"},
+    "STUK":{"f": "機関", "d": "フィンランドの原子力・放射線の安全当局。", "w": "2026年8月4日に好意的な意見を出した。"},
+    "エウラヨキ":{"f": "領土", "d": "フィンランド南西部の自治体。", "w": "処分場のある場所。"},
+    "使用済み核燃料":{"f": "エネルギー", "d": "原子炉から取り出された、まだ放射能を持つ燃料。", "w": "最終処分の対象。"},
+    "岩盤":{"f": "地質", "d": "施設が掘られている、古く安定した岩。", "w": "19億年前からのもの。"},
+    "運転許可":{"f": "エネルギー", "d": "施設を運転するための公的な許可。", "w": "2070年末まで有効。"},
+    "アート・バーゼル":{"f": "文化", "d": "国際的な現代美術の見本市。", "w": "パリでは金曜夜に閉幕する。"},
+    "グラン・パレ":{"f": "文化", "d": "見本市が開かれているパリの歴史的建造物。", "w": "催しの会場。"},
+    "インターポール":{"f": "機関", "d": "警察の協力のための国際機関。", "w": "セレンゲティIIIの結果を発表した。"},
+    "サイバー犯罪":{"f": "安全保障", "d": "コンピューターを使って行われる犯罪。", "w": "作戦の標的。"},
+    "セレンゲティIII":{"f": "安全保障", "d": "インターポールが調整するアフリカでの作戦。", "w": "1,462人の逮捕が発表された。"},
+    "LFP":{"f": "スポーツ", "d": "プロサッカーリーグ。", "w": "PSG-OLの延期を拒否している。"},
+    "警視庁":{"f": "機関", "d": "パリで公共の秩序を担う国の機関。", "w": "LFPに書面で尋ねた。"},
+    "PSG-OL":{"f": "スポーツ", "d": "リーグ・アンの、パリ対リヨンの試合。", "w": "10月25日に予定されている。"},
+    "エイリアン":{"f": "映画", "d": "1979年のSF映画。", "w": "トム・スケリットの有名な役。"},
+    "トップガン":{"f": "映画", "d": "1986年の航空映画。", "w": "トム・スケリットのもう一つの有名な役。"},
+    "民間警備":{"f": "社会", "d": "警備・巡回を行う企業。", "w": "パリの商店主に勧められている。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
