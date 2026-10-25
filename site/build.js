@@ -374,6 +374,20 @@ const ARTS = (h, e, l, base, edUrl, X) => { const m = h.match(/const A = (\{[\s\
     AJ.items[id] = { t: `${esc(t)} · DailyDrop`, d: esc(desc), u: url, ld, b: body };
     ARTLIST.push({ region: r, lang: l, date: e.date, url, title: t, desc, when, orig: own, pub: !e.publish_at || Date.parse(e.publish_at) <= NOW }); }
   fs.mkdirSync(path.join(OUT, base), { recursive: true }); fs.writeFileSync(path.join(OUT, base, 'a.json'), JSON.stringify(AJ)); };
+// 용어 전체 밑줄(사장님 10/25): 한 번 용어사전에 오른 단어는 본문·팝업·다른 판의 모든 등장 위치에 밑줄을 긋고 눌러서 설명을 본다.
+// 판마다 들어 있는 G(그 판의 용어)에 더해, 같은 언어의 전 판 용어를 /gx/<언어>.json 으로 내려받아 함께 건다. 비공개 나라 판은 제외.
+const GXL = {};
+const GXADD = (lang, html) => { const m = String(html).match(/const G = (\{[\s\S]*?\n  \});\n/); if (!m) return; let G; try { G = new Function('return ' + m[1])(); } catch (e) { return; } const o = (GXL[lang] ||= {}); for (const [k, v] of Object.entries(G)) { if (String(k).trim().length < 2 || /^[\d\s.,%\-]+$/.test(k)) continue; if (!o[k]) o[k] = { f: v.f || '', d: v.d || '' }; } };
+for (const e of editions) { if (HIDDEN.has(e.region || 'KR')) continue; const R0 = REGIONS[e.region || 'KR']; try { GXADD(R0.lang, fs.readFileSync(e.file, 'utf8')); } catch (err) {} for (const [l, f] of Object.entries(e.translations || {})) { try { GXADD(l, fs.readFileSync(path.resolve(path.dirname(spec), f), 'utf8')); } catch (err) {} } }
+fs.mkdirSync(path.join(OUT, 'gx'), { recursive: true }); for (const [l, o] of Object.entries(GXL)) fs.writeFileSync(path.join(OUT, 'gx', l + '.json'), JSON.stringify(o));
+const LINKALL = (html, lang) => String(html)
+  .replace('if(used.has(m[1])) continue; used.add(m[1]); ', '')
+  .replace("const used=new Set();", () => "const RE=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\\]\\\\\\/]/g,'\\\\$&')).join('|')+')','g');")
+  .replace(/\n\s*const re=new RegExp\('\('\+keys\.map\([^\n]*\n/, "\n      const re=RE; re.lastIndex=0;\n")
+  .replace('const keys=Object.keys(G).sort((a,b)=>b.length-a.length);', 'const keys=Object.keys(Object.assign({},window.GX||{},G)).sort((a,b)=>b.length-a.length);')
+  .replace('const g=G[el.dataset.term]; if(!g) return;', 'const g=G[el.dataset.term]||(window.GX||{})[el.dataset.term]; if(!g) return;')
+  .replace(/<div class="tw"><b>([^<]*)<\/b> \$\{g\.w\}<\/div>/, (m0, lab) => '${g.w?`<div class="tw"><b>' + lab + '</b> ${g.w}</div>`:\'\'}')
+  .replace("linkTerms(document.querySelector('.sheet'));", "linkTerms(document.querySelector('.sheet')); try{fetch('/gx/" + lang + ".json').then(function(r){return r.ok?r.json():null}).then(function(x){if(x){window.GX=x;linkTerms(document.querySelector('.sheet'))}}).catch(function(){})}catch(e){}");
 const glossary = {}; // term → {f,d,w,first:date,no}
 const GLOSS = {}; // 국가판별 용어사전(KR 제외): region → term → {f,d,w,first,no}
 for (const e of editions) {
@@ -391,14 +405,14 @@ for (const e of editions) {
   const dir = path.join(OUT, R.prefix, e.dkey); fs.mkdirSync(dir, { recursive: true });
   const tr = e.translations || {}; const variants = [[R.lang, `/${R.prefix}${e.dkey}/`], ...Object.keys(tr).map(l => [l, `/${R.prefix}${e.dkey}/${l}/`])];
   page = SEO_HEAD(page, (variants.length > 1 ? SEO_ALT(variants) : '') + SEO_LD(e, title, edDesc, `/${R.prefix}${e.dkey}/`, R.lang));
-  fs.writeFileSync(path.join(dir, 'index.html'), page.replace(/<nav class="dd-nav"[\s\S]*?<\/nav>/, NAV('/' + R.prefix, e.region || 'KR', { variants, cur: R.lang })));
+  fs.writeFileSync(path.join(dir, 'index.html'), LINKALL(page, R.lang).replace(/<nav class="dd-nav"[\s\S]*?<\/nav>/, NAV('/' + R.prefix, e.region || 'KR', { variants, cur: R.lang })));
   ARTS(html, e, R.lang, `/${R.prefix}${e.dkey}/`, `/${R.prefix}${e.dkey}/`, X);
   if (TTSD && TTSD.stories.length) fs.writeFileSync(path.join(dir, 'tts.json'), JSON.stringify(TTSD));
   for (const [l, f] of Object.entries(tr)) {
     const L = LOC(l); let th = fs.readFileSync(path.resolve(path.dirname(spec), f), 'utf8').replace(/\s*<\/body>\s*<\/html>\s*$/i, '\n'); if (l === 'ja') th = FURI(th, f);
     th = PRIVFOOT(FULLTEXT(th), R.prefix, l); let tpage = HEAD(TTITLE(l, e.region || 'KR', e.no, e.dkey) + LEADT(th), DESC(l, e.region || 'KR', e.dkey), `/${R.prefix}${e.dkey}/${l}/`, l) + NAV('/' + R.prefix, e.region || 'KR', { variants, cur: l }) + th.replace(/^<title>.*?<\/title>\s*/s, '').replace("'.term,.tip,h1,.ears,", "'.term,.tip,h1,.ears,.tape,.inside,").replace(/<(div|footer) class="colophon">/, (m0) => INSIDE(th, L.inside) + m0).replace(/(<h[23] class="hl">[\s\S]*?)<br\s*\/?>([\s\S]*?<\/h[23]>)/g, '$1 $2').replace(/<h1>데일리드롭<i>\.<\/i><\/h1>/, '<h1 lang="en">DailyDrop<i>.</i></h1>').replace(/<div class="sub">[^<]*<\/div>/, '').replace(/<div class="dateline">[\s\S]*?<\/div>\s*<\/header>/, `<div class="dateline"><span>${DL_LEFT(e.date.slice(0, 4), l, e.region || 'KR', e.no, e.dkey)}</span><b${DLB(l)}>${EDPICK(l, e.region || 'KR')}, ${L.date(e.date)}</b><span>${EDLABEL(l, e.region || 'KR', e.no, e.dkey)}</span></div>${TAPE(e.dkey, e.region || 'KR', l)}</header>`) + NYTCSS + EDPICK_CSS + DATELINE_CSS + LOCFIRST + BALANCE + JUSTIFY + INFLCSS + SVGFIT + (l === 'ja' ? FURICSS : '') + SRCJS(X, l, R.lang) + BREAK(e.region || 'KR', l, BRKU) + WORDJS(e.region || 'KR', e.date, l, th) + ACC.bmScript(e.region || 'KR', e.date, l, `/${R.prefix}${e.dkey}/${l}/`, ACC.pick(I18N, l)) + '</body></html>';
     tpage = PLACE_INFL(tpage, INFL(X, l, R.lang)); tpage = EARLY_MAST(tpage); tpage = SEO_HEAD(tpage, SEO_ALT(variants) + SEO_LD(e, TTITLE(l, e.region || 'KR', e.no, e.dkey), DESC(l, e.region || 'KR', e.dkey), `/${R.prefix}${e.dkey}/${l}/`, l));
-    const tdir = path.join(dir, l); fs.mkdirSync(tdir, { recursive: true }); fs.writeFileSync(path.join(tdir, 'index.html'), tpage.replace('<body>', `<body data-filler="${L.filler}">`));
+    const tdir = path.join(dir, l); fs.mkdirSync(tdir, { recursive: true }); fs.writeFileSync(path.join(tdir, 'index.html'), LINKALL(tpage, l).replace('<body>', `<body data-filler="${L.filler}">`));
   }
 }
 const byRegion = r => editions.filter(e => (e.region || 'KR') === r);
