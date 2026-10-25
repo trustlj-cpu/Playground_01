@@ -409,7 +409,7 @@ const FINCSS = `<style id="fin-css">
 .fin-badge,.fin-sw,.fin-entry{display:none}
 html.fin-on .fin-badge{display:block}html.fin-on .fin-sw{display:flex}html.fin-on .fin-entry{display:block}
 .mast .mast-w{position:relative;display:block;width:fit-content;margin:0 auto}
-.fin-badge{position:absolute;right:-3%;bottom:4%;z-index:3;text-decoration:none;transform:rotate(-2.2deg);transform-origin:100% 100%;
+.fin-badge{position:absolute;right:7.5%;bottom:3%;z-index:3;text-decoration:none;transform:rotate(-2.2deg);transform-origin:100% 100%;
  background:${FIN_TEAL};color:#f3eee2;font:800 clamp(8.5px,2.4vw,11.5px)/1 var(--serif,Georgia,serif);letter-spacing:.2em;padding:.5em .6em .5em .8em;
  box-shadow:0 0 0 1px ${FIN_TEAL},inset 0 0 0 1px rgba(243,238,226,.55),1px 2px 0 rgba(0,0,0,.18);text-shadow:0 0 1px rgba(0,0,0,.35);
  background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.2px);background-size:3px 3px}
@@ -512,6 +512,7 @@ const FINPAGE = () => {
 .fin-board .b i.u{color:#b3261e}.fin-board .b i.d{color:#1d5fa8}
 .fin-note{font:600 12px/1.5 var(--sans,sans-serif);color:var(--ink-2,#3d3a33);border:1px dashed ${FIN_TEAL};padding:7px 10px;margin:10px 0 0}
 .fin-rumor h4,.fin-opinion h4{color:${FIN_TEAL}}
+.mast h1{--logo-dot:${FIN_TEAL}!important}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .mast h1{--logo-dot:${FIN_TEAL_D}!important}}:root[data-theme="dark"] .mast h1{--logo-dot:${FIN_TEAL_D}!important}
 @media(max-width:560px){.fin-board{grid-template-columns:repeat(2,1fr)}.fin-board .b:nth-child(4n){border-right:1px dotted var(--rule,#b9b1a0)}.fin-board .b:nth-child(2n){border-right:0}}</style>`;
   h = h.replace(/<div class="sheet">[\s\S]*?\n<\/div>\n\n<div class="tip"/, () => sheet + '\n\n<div class="tip"');
   h = h.replace(/const A = \{[\s\S]*?\n  \};\n/, () => 'const A = ' + JSON.stringify(A) + ';\n').replace(/const G = \{[\s\S]*?\n  \};\n/, () => 'const G = ' + JSON.stringify(G) + ';\n');
