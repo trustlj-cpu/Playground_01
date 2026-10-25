@@ -401,6 +401,127 @@ const LINKALL = (html, lang) => String(html)
   .replace('const g=G[el.dataset.term]; if(!g) return;', () => 'const g=G[el.dataset.term]||(window.GX||{})[el.dataset.term]; if(!g) return;')
   .replace(/<div class="tw"><b>([^<]*)<\/b> \$\{g\.w\}<\/div>/, (m0, lab) => '${g.w?`<div class="tw"><b>' + lab + '</b> ${g.w}</div>`:(g.first?`<div class="tw"><b>' + (PASTLAB[lang] || PASTLAB[String(lang).split('-')[0]] || PASTLAB.en) + '</b> ${g.first}</div>`:\'\')}')
   .replace("linkTerms(document.querySelector('.sheet'));", () => "linkTerms(document.querySelector('.sheet')); try{fetch('/gx/" + lang + ".json').then(function(r){return r.ok?r.json():null}).then(function(x){if(x){window.GX=x;linkTerms(document.querySelector('.sheet'))}}).catch(function(){})}catch(e){}");
+
+// ── 파이낸스(시험 1단계, 사장님 10/25): /finance/kor/ 와 기본↔파이낸스 전환 장치. FIN_PUBLIC=false 인 동안은 ?fin=1 로 연 브라우저에서만 보인다(주소 뒤에 ?fin=0 으로 끔).
+const FIN_PUBLIC = process.env.DD_FIN_PUBLIC === '1';
+const FIN_TEAL = '#1f6f68', FIN_TEAL_D = '#5db3a8';
+const FINCSS = `<style id="fin-css">
+.fin-badge,.fin-sw,.fin-entry{display:none}
+html.fin-on .fin-badge{display:block}html.fin-on .fin-sw{display:flex}html.fin-on .fin-entry{display:block}
+.mast .mast-w{position:relative;display:block;width:fit-content;margin:0 auto}
+.fin-badge{position:absolute;right:-3%;bottom:4%;z-index:3;text-decoration:none;transform:rotate(-2.2deg);transform-origin:100% 100%;
+ background:${FIN_TEAL};color:#f3eee2;font:800 clamp(8.5px,2.4vw,11.5px)/1 var(--serif,Georgia,serif);letter-spacing:.2em;padding:.5em .6em .5em .8em;
+ box-shadow:0 0 0 1px ${FIN_TEAL},inset 0 0 0 1px rgba(243,238,226,.55),1px 2px 0 rgba(0,0,0,.18);text-shadow:0 0 1px rgba(0,0,0,.35);
+ background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.2px);background-size:3px 3px}
+.fin-badge:hover{filter:brightness(1.08)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fin-badge{background-color:${FIN_TEAL};color:#efe9da}}
+.fin-sw{align-items:stretch;justify-content:center;gap:0;margin:10px auto 2px;max-width:420px;font:700 12.5px/1 var(--sans,sans-serif);letter-spacing:.06em}
+.fin-sw a{flex:1;text-align:center;padding:9px 6px;text-decoration:none;color:var(--ink-2,#3d3a33);border:1px solid var(--ink,#1b1a17)}
+.fin-sw a+a{border-left:0}
+.fin-sw a.on{background:var(--ink,#1b1a17);color:var(--paper,#f3eee2)}
+.fin-sw a.fin.on{background:${FIN_TEAL};border-color:${FIN_TEAL};color:#f3eee2}
+.fin-sw a b{font-weight:800}.fin-sw a i{font-style:normal;opacity:.7;margin:0 4px}
+.fin-entry{margin:12px 0 6px;border:1px solid ${FIN_TEAL};background:color-mix(in srgb,${FIN_TEAL} 7%,transparent);padding:10px 12px;text-decoration:none;color:inherit}
+.fin-entry .t{font:800 12px/1.2 var(--sans,sans-serif);letter-spacing:.16em;color:${FIN_TEAL}}
+.fin-entry .v{display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0 4px;font:600 14px/1.4 var(--serif,serif)}
+.fin-entry .v b{font-weight:800}.fin-entry .v span.u{color:var(--red)}.fin-entry .v span.d{color:${FIN_TEAL}}
+.fin-entry .go{font:700 12.5px/1 var(--sans,sans-serif);color:${FIN_TEAL}}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fin-entry,:root:not([data-theme="light"]) .fin-entry .t,:root:not([data-theme="light"]) .fin-entry .go,:root:not([data-theme="light"]) .fin-entry .v span.d{color:${FIN_TEAL_D};border-color:${FIN_TEAL_D}}}
+.fin-slide-out-l{transition:transform .22s ease,opacity .22s ease;transform:translateX(-40px);opacity:.15}
+.fin-slide-out-r{transition:transform .22s ease,opacity .22s ease;transform:translateX(40px);opacity:.15}
+@keyframes finInL{from{transform:translateX(44px);opacity:.1}to{transform:none;opacity:1}}
+@keyframes finInR{from{transform:translateX(-44px);opacity:.1}to{transform:none;opacity:1}}
+.fin-in-l{animation:finInL .24s ease both}.fin-in-r{animation:finInR .24s ease both}
+.fin-coach{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:90;background:${FIN_TEAL};color:#f3eee2;font:700 12.5px/1.3 var(--sans,sans-serif);padding:9px 14px;box-shadow:0 4px 14px rgba(0,0,0,.3);max-width:88vw;text-align:center}
+</style>`;
+const FINHEAD = `<script>(function(){try{var q=location.search;if(/[?&]fin=1/.test(q))localStorage.setItem('dd_fin','1');if(/[?&]fin=0/.test(q))localStorage.removeItem('dd_fin');if(${FIN_PUBLIC ? 'true' : "localStorage.getItem('dd_fin')==='1'"})document.documentElement.classList.add('fin-on')}catch(e){}})()</script>`;
+// 스와이프: 로고 영역은 가볍게, 페이지 전체는 가장자리·가로 스크롤 영역·팝업·입력창을 피해 크게 밀 때만. 도착한 쪽은 반대편에서 밀려 들어온다.
+const FINJS = (sec) => `<script>(function(){var SEC=${JSON.stringify(sec)},GO={base:'/finance/kor/',fin:'/'};
+function ok(){return document.documentElement.classList.contains('fin-on')}
+try{var s=sessionStorage.getItem('dd_slide');if(s){sessionStorage.removeItem('dd_slide');document.body.classList.add(s==='l'?'fin-in-l':'fin-in-r')}}catch(e){}
+function go(dir){if(!ok())return;var to=SEC==='base'?GO.base:GO.fin;try{sessionStorage.setItem('dd_slide',dir)}catch(e){}document.body.classList.add(dir==='l'?'fin-slide-out-l':'fin-slide-out-r');setTimeout(function(){location.href=to+(location.search.indexOf('fin=')>-1?'':'')},170)}
+var sx=0,sy=0,st=0,use=false,logo=false;
+function hscroll(el){while(el&&el!==document.body){if(el.scrollWidth>el.clientWidth+4){var o=getComputedStyle(el).overflowX;if(o==='auto'||o==='scroll')return true}el=el.parentElement}return false}
+document.addEventListener('touchstart',function(e){if(!ok()||e.touches.length!==1){use=false;return}var t=e.touches[0],el=e.target;sx=t.clientX;sy=t.clientY;st=Date.now();
+ logo=!!(el.closest&&el.closest('.mast'));
+ use=logo||(sx>24&&sx<innerWidth-24&&!(el.closest&&el.closest('input,textarea,select,.ov:not([hidden]),.tip,[data-noswipe],.dd-nav'))&&!hscroll(el)&&!(getSelection&&String(getSelection()).length))},{passive:true});
+document.addEventListener('touchend',function(e){if(!use)return;var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy,dt=Date.now()-st;use=false;
+ var need=logo?48:110;if(Math.abs(dx)<need||Math.abs(dx)<Math.abs(dy)*(logo?1.4:2)||dt>(logo?800:650))return;
+ if(SEC==='base'&&dx<0)go('l');else if(SEC==='fin'&&dx>0)go('r')},{passive:true});
+try{if(ok()&&!localStorage.getItem('dd_fin_coach')){localStorage.setItem('dd_fin_coach','1');var c=document.createElement('div');c.className='fin-coach';c.textContent=SEC==='base'?'옆으로 밀면 파이낸스 · 로고 위 FINANCE를 눌러도 됩니다':'옆으로 밀면 데일리드롭 일반 판으로 돌아갑니다';document.body.appendChild(c);setTimeout(function(){c.remove()},5200)}}catch(e){}
+})()</script>`;
+const FINSW = (sec) => `<nav class="fin-sw" aria-label="섹션"><a class="${sec === 'base' ? 'on' : ''}" href="/"><b>데일리드롭</b></a><a class="fin ${sec === 'fin' ? 'on' : ''}" href="/finance/kor/"><b>파이낸스</b></a></nav>`;
+const FINBADGE = '<a class="fin-badge" href="/finance/kor/" aria-label="DailyDrop Finance">FINANCE</a>';
+const FINMK = (date) => { const ks = Object.keys(MARKETS).filter(k => /^\d{4}-\d\d-\d\d/.test(k) && k <= date + '~').sort(); for (let i = ks.length - 1; i >= 0; i--) { const m = MARKETS[ks[i]]; if (m && m.kospi) return m; } return {}; };
+const FINENTRY = (date) => { const m = FINMK(date); const cell = (label, q, d = 2) => { if (!q) return ''; const up = q.chg > 0, dn = q.chg < 0; return `<span><b>${label}</b> ${fmtNum(q.v, d)} <span class="${up ? 'u' : dn ? 'd' : ''}">${dn ? '▼' : up ? '▲' : '－'}${q.chg == null ? '' : Math.abs(q.chg).toFixed(2) + '%'}</span></span>`; }; const cells = [cell('코스피', m.kospi), cell('코스닥', m.kosdaq), cell('S&P 500', m.sp500), cell('나스닥', m.nasdaq)].filter(Boolean).join(''); return `<a class="fin-entry" href="/finance/kor/"><div class="t">오늘의 파이낸스 · 시험판</div><div class="v">${cells || '<span>시장 숫자는 파이낸스에서 보세요</span>'}</div><div class="go">주식·경제만 모은 한 장 — 파이낸스로 가기 →</div></a>`; };
+const FINUI = (html, sec = 'base', date = '') => {
+  let h = String(html);
+  h = h.replace('<div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1></div>', () => '<div class="mast"><span class="mast-w"><h1 lang="en">DailyDrop<i>.</i></h1>' + FINBADGE + '</span></div>');
+  h = h.replace(/(<\/header>)/, (m0) => m0 + (sec === 'base' ? '\n' + FINSW('base') + FINENTRY(date) : '\n' + FINSW('fin')));
+  h = h.replace('</head>', () => FINCSS + FINHEAD + '</head>');
+  h = h.replace(/<\/body>\s*<\/html>\s*$/, () => FINJS(sec) + '</body></html>');
+  return h;
+};
+
+// 파이낸스 시험판 샘플 페이지(/finance/kor/): 기본 판 첫 화면 골격을 그대로 쓰고 내용만 파이낸스 칸으로 바꾼다. 샘플 문구는 "자리 안내"이고 시장 사실은 쓰지 않는다. 시세 숫자는 마지막 수집값.
+const FINPAGE = () => {
+  let h; try { h = fs.readFileSync(path.join(OUT, 'index.html'), 'utf8'); } catch (e) { return; }
+  const mk = FINMK(latest.dkey); const cellE = (q, lab) => q ? `<div class="ear${lab.r ? ' r' : ''}"><b>${fmtNum(q.v, 2)}</b>${lab.t} · ${q.asof || ''} 종가 · 전일 대비 ${q.chg > 0 ? '+' : ''}${(q.chg || 0).toFixed(2)}%</div>` : '<div class="ear"></div>';
+  const dstr = `${latest.date.slice(0, 4)}년 ${+latest.date.slice(5, 7)}월 ${+latest.date.slice(8, 10)}일`;
+  const board = [['코스피', mk.kospi, 2], ['코스닥', mk.kosdaq, 2], ['S&P 500', mk.sp500, 2], ['나스닥', mk.nasdaq, 2], ['원/달러', mk.usdkrw, 1], ['WTI', mk.wti, 2], ['금', mk.gold, 1], ['미 10년', mk.us10y, 2]].filter(x => x[1]).map(([l, q, d]) => `<div class="b"><span>${l}</span><b>${fmtNum(q.v, d)}</b><i class="${q.chg > 0 ? 'u' : q.chg < 0 ? 'd' : ''}">${q.chg > 0 ? '▲' : q.chg < 0 ? '▼' : '－'} ${Math.abs(q.chg || 0).toFixed(2)}</i></div>`).join('');
+  const st = (id, cls, tag, kick, tit, body, deck = '') => `<article class="col ${cls} story" tabindex="0" data-id="${id}"><div class="kick">${kick}</div><${tag} class="hl">${tit}</${tag}>${deck ? `<p class="deck">${deck}</p>` : ''}<div class="${tag === 'h2' ? 'body' : 'one'}">${body}</div><div class="more">기사와 확인·미확인 정리 펼치기</div></article>`;
+  const sheet = `<div class="sheet fin-sheet">
+  <header>
+    <div class="ears">${cellE(mk.kospi, { t: '코스피' })}<div class="mast"><span class="mast-w"><h1 lang="en">DailyDrop<i>.</i></h1>${FINBADGE}</span></div>${cellE(mk.kosdaq, { t: '코스닥', r: 1 })}</div>
+    <div class="dateline"><span>No. 0 · 시험판</span><b>${dstr}</b><span>숫자는 틀릴 수 있음</span></div>
+  </header>
+  ${FINSW('fin')}
+  <div class="fin-note">시험판입니다. 아래 기사 칸은 지면 구성을 보여 주는 <b>자리 안내</b>이고 시장 사실이 아닙니다. 시세 숫자만 마지막으로 수집된 종가입니다.</div>
+  <section class="fin-board" aria-label="시세판">${board}</section>
+  <main class="grid">
+    ${st('f1', 'c3', 'h2', '시장 · 마감 요약<span>자리 안내 · 마감 후 판</span>', '[자리 안내] 마감 요약: 코스피·코스닥이 왜 움직였는지 한 장으로', '<p>마감 후 판의 머리기사 자리입니다. 지수 등락폭, 거래대금, 외국인·기관 수급, 움직임이 컸던 업종을 확인된 숫자와 출처로 설명합니다.</p><p>시세는 수집된 확정 종가만 쓰고, 매체마다 숫자가 다르면 어느 매체가 얼마라고 했는지 모두 적습니다.</p>', '지수와 수급, 업종 강약을 확인된 것 위주로 정리하는 칸')}
+    ${st('f2', 'c2 vr', 'h3', '일정 · 오늘의 지표<span>자리 안내 · 장 전 판</span>', '[자리 안내] 오늘 장을 움직일 일정: 지표 발표·실적·정책', '<p>장 전 판의 핵심 자리입니다. 발표 시각이 정해진 경제지표, 주요 기업 실적, 중앙은행·정부 일정을 시간순으로 모읍니다.</p>')}
+    <aside class="col c1 vr index"><h4>짧게 보는 시장</h4>
+      <div class="it story" tabindex="0" data-id="f3"><b>[자리 안내] 환율·금리 한 줄</b><em>원/달러와 국채 금리의 움직임을 한 줄로</em><span>환율·금리 · 자리 안내</span></div>
+      <div class="it story" tabindex="0" data-id="f4"><b>[자리 안내] 공시·실적 한 줄</b><em>주요 기업 공시와 실적을 출처와 함께 한 줄로</em><span>공시 · 자리 안내</span></div>
+      <div class="it story" tabindex="0" data-id="f5"><b>[자리 안내] 해외 시장 한 줄</b><em>미국·일본 시장의 간밤·장중 소식을 한 줄로</em><span>해외 · 자리 안내</span></div>
+    </aside>
+  </main>
+  <hr class="rule-h">
+  <section class="strip">
+    <div class="col c4"><div class="rumor fin-opinion"><h4>기관 의견 — 우리 의견이 아닙니다</h4>
+      <div><b>[자리 안내] 증권사·기관의 목표가·투자의견 변경</b> <span>"누가, 언제, 무엇을 바꿨는지"만 출처와 함께 적습니다. 어떤 종목을 사라는 뜻이 아닙니다.</span></div>
+      <div><b>[자리 안내] 상반된 의견은 함께</b> <span>같은 종목에 낙관과 신중 의견이 있으면 둘 다 싣습니다.</span></div></div></div>
+    <div class="col c2 vr"><div class="rumor fin-rumor"><h4>시장 속 소문 — 확인되지 않았습니다</h4>
+      <div><b>[자리 안내] 커뮤니티에서 많이 오르내린 말</b> <span>Reddit·X(트위터)·국내 주식 커뮤니티의 공개 글 가운데 반응이 큰 것만 모아 출처·시각과 함께 적습니다.</span></div>
+      <div><b>[자리 안내] 사실로 믿지 마세요</b> <span>소문은 사실 확인이 끝난 정보가 아닙니다. 공식 부인이나 정정이 있으면 함께 적습니다.</span></div>
+      <div><b>[자리 안내] 개인 정보·종목 홍보 제외</b> <span>작성자 개인 정보, 특정 종목을 띄우려는 글, 출처 불명의 단독 글은 싣지 않습니다.</span></div></div></div>
+  </section>
+  <div class="glos">용어 사전 · 선 밑줄 단어 — 일반 독자가 모르는 용어만 풀이합니다.</div>
+  <footer class="colophon">
+    <span>데일리드롭 파이낸스 · 시험판 · 원자료 ✓ = 발표 기준 확인 매체 수</span>
+    <span>숫자는 틀릴 수 있습니다. 시세는 지연될 수 있고, 출처마다 다를 수 있습니다. 투자 권유가 아니며, 투자 판단과 그 결과의 책임은 본인에게 있습니다.</span>
+  </footer>
+</div>`;
+  const A = { f1: { kick: '시장 · 마감 요약', title: '[자리 안내] 마감 요약', what: '마감 후 판의 머리기사 자리입니다.', why: '지수가 움직인 이유를 확인된 숫자와 출처로 설명합니다.', me: '내 계좌에 어떤 영향이 있는지가 아니라, 시장에서 확인된 사실을 먼저 정리합니다.', a: '낙관적으로 보는 기관·매체의 의견(출처 표기)', b: '신중하게 보는 기관·매체의 의견(출처 표기)', say: '확인된 것: 마감 지수·거래대금. 아직 모르는 것: 다음 거래일의 방향.', src: '시험판 자리 안내' }, f2: { kick: '일정 · 오늘의 지표', title: '[자리 안내] 오늘 장을 움직일 일정', what: '장 전 판의 핵심 자리입니다.', why: '발표 시각이 정해진 일정은 시장 변동의 이유가 되기 때문입니다.', me: '일정과 예상치를 보여 주되 결과를 예측하지 않습니다.', a: '', b: '', say: '확인된 것: 일정과 시각. 아직 모르는 것: 발표 결과.', src: '시험판 자리 안내' }, f3: { kick: '환율·금리', title: '[자리 안내] 환율·금리 한 줄', what: '원/달러와 국채 금리의 움직임입니다.', why: '수출입과 대출 비용에 영향을 줍니다.', me: '', a: '', b: '', say: '', src: '시험판 자리 안내' }, f4: { kick: '공시', title: '[자리 안내] 공시·실적 한 줄', what: '주요 기업의 공시·실적입니다.', why: '공시는 가장 믿을 수 있는 1차 자료입니다.', me: '', a: '', b: '', say: '', src: '시험판 자리 안내' }, f5: { kick: '해외', title: '[자리 안내] 해외 시장 한 줄', what: '미국·일본 시장의 소식입니다.', why: '한국 시장은 간밤 미국 시장의 영향을 받습니다.', me: '', a: '', b: '', say: '', src: '시험판 자리 안내' } };
+  const G = { '공매도': { f: '증시', d: '주식을 빌려서 먼저 팔고, 나중에 싸게 사서 갚아 차익을 노리는 거래. 주가 하락에 베팅하는 방식이다.', w: '시장 용어 설명 자리' }, '사이드카': { f: '증시', d: '선물 가격이 급변할 때 프로그램 매매 호가를 5분간 멈추게 하는 장치.', w: '시장 용어 설명 자리' } };
+  const pageCss = `<style id="fin-theme">:root{--red:${FIN_TEAL}}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--red:${FIN_TEAL_D}}}:root[data-theme="dark"]{--red:${FIN_TEAL_D}}
+.fin-board{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--ink,#1b1a17);border-bottom:1px solid var(--ink,#1b1a17);margin:8px 0 10px}
+.fin-board .b{padding:7px 8px;border-right:1px dotted var(--rule,#b9b1a0);border-bottom:1px dotted var(--rule,#b9b1a0)}.fin-board .b:nth-child(4n){border-right:0}
+.fin-board .b span{display:block;font:600 11px/1.2 var(--sans,sans-serif);color:var(--mute,#7b7569)}.fin-board .b b{display:block;font:800 16px/1.3 var(--serif,serif)}.fin-board .b i{font-style:normal;font:700 11.5px/1.2 var(--sans,sans-serif)}
+.fin-board .b i.u{color:#b3261e}.fin-board .b i.d{color:#1d5fa8}
+.fin-note{font:600 12px/1.5 var(--sans,sans-serif);color:var(--ink-2,#3d3a33);border:1px dashed ${FIN_TEAL};padding:7px 10px;margin:10px 0 0}
+.fin-rumor h4,.fin-opinion h4{color:${FIN_TEAL}}
+@media(max-width:560px){.fin-board{grid-template-columns:repeat(2,1fr)}.fin-board .b:nth-child(4n){border-right:1px dotted var(--rule,#b9b1a0)}.fin-board .b:nth-child(2n){border-right:0}}</style>`;
+  h = h.replace(/<div class="sheet">[\s\S]*?\n<\/div>\n\n<div class="tip"/, () => sheet + '\n\n<div class="tip"');
+  h = h.replace(/const A = \{[\s\S]*?\n  \};\n/, () => 'const A = ' + JSON.stringify(A) + ';\n').replace(/const G = \{[\s\S]*?\n  \};\n/, () => 'const G = ' + JSON.stringify(G) + ';\n');
+  h = h.replace('var SEC="base"', 'var SEC="fin"').replace('나에게는', '시장에는').replace('데일리드롭 생각', '확인된 것 · 아직 모르는 것').replace('이렇게 보는 쪽', '낙관으로 보는 쪽').replace('저렇게 보는 쪽', '신중하게 보는 쪽');
+  h = h.replace('</head>', () => pageCss + '<meta name="robots" content="noindex,nofollow"></head>');
+  h = h.replace(/<title>[\s\S]*?<\/title>/, '<title>데일리드롭 파이낸스 시험판</title>').replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="데일리드롭 파이낸스 시험판 — 주식·경제 한 장">').replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}/finance/kor/">`).replace(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${SITE}/finance/kor/">`);
+  h = h.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
+  fs.mkdirSync(path.join(OUT, 'finance', 'kor'), { recursive: true });
+  fs.writeFileSync(path.join(OUT, 'finance', 'kor', 'index.html'), h);
+};
 const glossary = {}; // term → {f,d,w,first:date,no}
 const GLOSS = {}; // 국가판별 용어사전(KR 제외): region → term → {f,d,w,first,no}
 for (const e of editions) {
@@ -418,7 +539,7 @@ for (const e of editions) {
   const dir = path.join(OUT, R.prefix, e.dkey); fs.mkdirSync(dir, { recursive: true });
   const tr = e.translations || {}; const variants = [[R.lang, `/${R.prefix}${e.dkey}/`], ...Object.keys(tr).map(l => [l, `/${R.prefix}${e.dkey}/${l}/`])];
   page = SEO_HEAD(page, (variants.length > 1 ? SEO_ALT(variants) : '') + SEO_LD(e, title, edDesc, `/${R.prefix}${e.dkey}/`, R.lang));
-  fs.writeFileSync(path.join(dir, 'index.html'), LINKALL(page, R.lang).replace(/<nav class="dd-nav"[\s\S]*?<\/nav>/, NAV('/' + R.prefix, e.region || 'KR', { variants, cur: R.lang })));
+  fs.writeFileSync(path.join(dir, 'index.html'), ((e.region || 'KR') === 'KR' ? FINUI(LINKALL(page, R.lang), 'base', e.dkey) : LINKALL(page, R.lang)).replace(/<nav class="dd-nav"[\s\S]*?<\/nav>/, NAV('/' + R.prefix, e.region || 'KR', { variants, cur: R.lang })));
   ARTS(html, e, R.lang, `/${R.prefix}${e.dkey}/`, `/${R.prefix}${e.dkey}/`, X);
   if (TTSD && TTSD.stories.length) fs.writeFileSync(path.join(dir, 'tts.json'), JSON.stringify(TTSD));
   for (const [l, f] of Object.entries(tr)) {
@@ -431,6 +552,7 @@ for (const e of editions) {
 const byRegion = r => editions.filter(e => (e.region || 'KR') === r);
 const latest = byRegion('KR')[byRegion('KR').length - 1];
 fs.writeFileSync(path.join(OUT, 'index.html'), WITHLIVE(NOALT(fs.readFileSync(path.join(OUT, latest.dkey, 'index.html'), 'utf8')).replace(`${SITE}/${latest.dkey}/`, `${SITE}/`), 'KR', 'ko'));
+FINPAGE();
 const TODAY = new Date().toISOString().slice(0, 10);
 for (const r of REGION_PAGES) {
   const R = REGIONS[r]; const list = byRegion(r); fs.mkdirSync(path.join(OUT, R.prefix), { recursive: true });
