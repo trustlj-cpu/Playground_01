@@ -89,3 +89,7 @@ finish.py 실행 시 `DD_META_DIR` 환경변수를 현재 세션 경로로 지�
   4. 예약: publish_at 이 미래면 schedule.js 가 `_sched/<나라>-<date>-pm` 사본을 만들어 Worker 가 현지 18:00에 내보낸다(조간 예약과 같음).
 - 번역 JOB(push 후, 원문 언어 제외): `JOB: site/editions/<prefix><date>.pm.html -> ko, en, ja` → 결과 파일은 `site/editions/<prefix><date>.pm.<lang>.html`.
 - 주의: 석간은 TTS 읽어주기·앵커 원고 대상이 아니다(한국판 조간 전용). run.py 폴백 자동 작성은 조간만 만든다(석간은 세션이 올린다). 앱 API(`/app/v1`)에는 석간이 `<date>-pm.<lang>.json` + index 항목 `slot:"pm", id:"<date>-pm"` 으로 추가된다(앱 쪽 표시는 별도 확인 필요). 푸시 알림은 `edition:"<date>-pm"` 으로 조간과 따로 한 번 나간다(feed Worker 배포 필요).
+
+## 용어사전은 어려운 용어만 (사장님 10/25)
+- 판마다 glossary 15~40개, 일반 독자가 설명 없이는 모르는 개념·약어·제도만. 기업명·매체명·인명·지명·스포츠 팀·누구나 아는 기관은 넣지 않는다(분야 f 도 기업·미디어·인물·지리·스포츠 불가). check_spec.py 가 개수(15~40)와 분야를 검사한다.
+- 화면: 그 판의 용어는 모든 등장 위치에 얇은 실선 밑줄, 지난 판에서 오른 용어는 연한 점선(site/build.js LINKALL, /gx/<언어>.json). 지난 판 용어는 짧은 단어·한 줄 뜻풀이·쉬운 분야를 뺀다. 기업·매체·지명·인물·스포츠 분야는 그 판 용어여도 밑줄을 걸지 않는다(기존 판 포함). 용어사전 페이지 목록은 그대로.

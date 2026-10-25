@@ -105,7 +105,10 @@ def check(spec):
     text += ' ' + ' '.join(r['text'] for r in spec.get('next', []))
     text += ' ' + ' '.join(' '.join(p.values()) for p in spec.get('popups', {}).values())
     g = spec.get('glossary', {})
-    if not 30 <= len(g) <= 60: err.append(f'glossary {len(g)} (30~60: 6~9호 수준)')
+    if not 15 <= len(g) <= 40: err.append(f'glossary {len(g)} (15~40: 어려운 용어만, 사장님 10/25)')
+    EASY = {'미디어', '언론', '방송', '지리', '지역', '인물', '스포츠', '야구', '축구', '농구', '배구', '골프', '연예', '기업', '회사', '메디아', 'メディア', '地理', '人物', 'スポーツ', '野球', 'サッカー', '企業', 'media', 'geography', 'people', 'person', 'sports', 'baseball', 'soccer', 'basketball', 'football', 'golf', 'business', 'company', 'companies', 'corporate', 'corporation', 'medios', 'geografía', 'personas', 'deportes', 'empresas'}
+    easy = [k for k, v in g.items() if any(t.strip().lower() in EASY for t in re.split(r'[·/、,・]', str(v.get('f', ''))))]
+    if easy: err.append(f'glossary easy terms (기업·매체·인물·지명·스포츠 분야는 용어사전에 넣지 않음): {easy[:6]}')
     body = ' '.join(' '.join(s['paras']) + ' ' + s['hl'] + ' ' + s.get('deck', '') for s in st) + ' ' + ' '.join(i['hl'] + ' ' + i['em'] for i in spec.get('index', []))
     miss = [k for k in g if k not in body]
     if miss: err.append(f'glossary keys not in visible text: {miss[:6]}')
