@@ -374,11 +374,23 @@ const ARTS = (h, e, l, base, edUrl, X) => { const m = h.match(/const A = (\{[\s\
     AJ.items[id] = { t: `${esc(t)} · DailyDrop`, d: esc(desc), u: url, ld, b: body };
     ARTLIST.push({ region: r, lang: l, date: e.date, url, title: t, desc, when, orig: own, pub: !e.publish_at || Date.parse(e.publish_at) <= NOW }); }
   fs.mkdirSync(path.join(OUT, base), { recursive: true }); fs.writeFileSync(path.join(OUT, base, 'a.json'), JSON.stringify(AJ)); };
-// 용어 전체 밑줄(사장님 10/25): 그 판(그날)에 실린 용어는 본문·팝업의 모든 등장 위치에 밑줄을 긋고 눌러서 설명을 본다. 지난 판의 용어는 걸지 않는다.
+// 용어 밑줄(사장님 10/25): 그 판의 용어는 본문·팝업의 모든 등장 위치에 얇은 실선, 지난 판에서 용어사전에 오른 용어는 더 연한 점선(.term.past)으로 건다.
+// 지난 판 용어는 같은 언어의 전 판 G를 /gx/<언어>.json 으로 내려받아 쓰고, 짧은 단어(CJK 4자 미만, 그 밖 5자 미만)·숫자는 뺀다. 비공개 나라 판은 제외.
+const GXL = {};
+const GXMIN = (lang) => (/^(ko|ja|zh)/.test(lang) ? 4 : 5);
+const GXADD = (lang, html, date) => { const m = String(html).match(/const G = (\{[\s\S]*?\n  \});\n/); if (!m) return; let G; try { G = new Function('return ' + m[1])(); } catch (e) { return; } const o = (GXL[lang] ||= {}); for (const [k, v] of Object.entries(G)) { const t = String(k).trim(); if (t.length < GXMIN(lang) || /^[\d\s.,%\-]+$/.test(t)) continue; if (!o[k] || date < o[k].first) o[k] = { f: v.f || '', d: v.d || '', first: date }; } };
+for (const e of editions) { if (HIDDEN.has(e.region || 'KR')) continue; const R0 = REGIONS[e.region || 'KR']; try { GXADD(R0.lang, fs.readFileSync(e.file, 'utf8'), e.date); } catch (err) {} for (const [l, f] of Object.entries(e.translations || {})) { try { GXADD(l, fs.readFileSync(path.resolve(path.dirname(spec), f), 'utf8'), e.date); } catch (err) {} } }
+fs.mkdirSync(path.join(OUT, 'gx'), { recursive: true }); for (const [l, o] of Object.entries(GXL)) fs.writeFileSync(path.join(OUT, 'gx', l + '.json'), JSON.stringify(o));
+const PASTLAB = { ko: '처음 나온 판', ja: '初出の号', es: 'Primera aparición', en: 'First appeared' };
 const LINKALL = (html, lang) => String(html)
   .replace('if(used.has(m[1])) continue; used.add(m[1]); ', '')
   .replace("const used=new Set();", () => "const RE=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\\]\\\\\\/]/g,'\\\\$&')).join('|')+')','g');")
-  .replace(/\n\s*const re=new RegExp\('\('\+keys\.map\([^\n]*\n/, "\n      const re=RE; re.lastIndex=0;\n");
+  .replace(/\n\s*const re=new RegExp\('\('\+keys\.map\([^\n]*\n/, "\n      const re=RE; re.lastIndex=0;\n")
+  .replace('const keys=Object.keys(G).sort((a,b)=>b.length-a.length);', () => 'const keys=Object.keys(Object.assign({},window.GX||{},G)).sort((a,b)=>b.length-a.length);')
+  .replace("a.className='term';", () => "a.className='term'+(G[k]?'':' past');")
+  .replace('const g=G[el.dataset.term]; if(!g) return;', () => 'const g=G[el.dataset.term]||(window.GX||{})[el.dataset.term]; if(!g) return;')
+  .replace(/<div class="tw"><b>([^<]*)<\/b> \$\{g\.w\}<\/div>/, (m0, lab) => '${g.w?`<div class="tw"><b>' + lab + '</b> ${g.w}</div>`:(g.first?`<div class="tw"><b>' + (PASTLAB[lang] || PASTLAB[String(lang).split('-')[0]] || PASTLAB.en) + '</b> ${g.first}</div>`:\'\')}')
+  .replace("linkTerms(document.querySelector('.sheet'));", () => "linkTerms(document.querySelector('.sheet')); try{fetch('/gx/" + lang + ".json').then(function(r){return r.ok?r.json():null}).then(function(x){if(x){window.GX=x;linkTerms(document.querySelector('.sheet'))}}).catch(function(){})}catch(e){}");
 const glossary = {}; // term → {f,d,w,first:date,no}
 const GLOSS = {}; // 국가판별 용어사전(KR 제외): region → term → {f,d,w,first,no}
 for (const e of editions) {
