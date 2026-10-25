@@ -376,14 +376,15 @@ const ARTS = (h, e, l, base, edUrl, X) => { const m = h.match(/const A = (\{[\s\
   fs.mkdirSync(path.join(OUT, base), { recursive: true }); fs.writeFileSync(path.join(OUT, base, 'a.json'), JSON.stringify(AJ)); };
 // 용어 밑줄(사장님 10/25): 그 판의 용어는 본문·팝업의 모든 등장 위치에 얇은 실선, 지난 판에서 용어사전에 오른 용어는 더 연한 점선(.term.past)으로 건다.
 // 지난 판 용어는 같은 언어의 전 판 G를 /gx/<언어>.json 으로 내려받아 쓰고, 짧은 단어(CJK 4자 미만, 그 밖 5자 미만)·숫자는 뺀다. 비공개 나라 판은 제외.
-const GXL = {};
+const GXL = {}; const GXRAW = {};
 const GXMIN = (lang) => (/^(ko|ja|zh)/.test(lang) ? 4 : 5);
 // 쉬운 말(사장님 10/25): 지난 판 용어에서는 매체·지명·인물·스포츠 분야와 뜻풀이가 한 줄짜리인 단어는 뺀다(그 판의 용어는 그대로 건다).
 const GXEASY = new Set(['미디어', '언론', '방송', '지리', '지역', '인물', '스포츠', '야구', '축구', '농구', '배구', '골프', '연예', '메디아', 'メディア', '地理', '人物', 'スポーツ', '野球', 'サッカー', 'media', 'geography', 'people', 'person', 'sports', 'baseball', 'soccer', 'basketball', 'football', 'golf', 'medios', 'geografía', 'personas', 'deportes', 'béisbol', '기업', '회사', '企業', 'business', 'company', 'companies', 'corporate', 'corporation', 'empresas', 'empresa']);
 const GXEASYF = (f) => String(f || '').split(/[·\/、,・]/).some(t => GXEASY.has(t.trim().toLowerCase()));
 const GXSHORT = (lang, d) => String(d || '').trim().length < (/^(ko|ja|zh)/.test(lang) ? 30 : 70);
-const GXADD = (lang, html, date) => { const m = String(html).match(/const G = (\{[\s\S]*?\n  \});\n/); if (!m) return; let G; try { G = new Function('return ' + m[1])(); } catch (e) { return; } const o = (GXL[lang] ||= {}); for (const [k, v] of Object.entries(G)) { const t = String(k).trim(); if (t.length < GXMIN(lang) || /^[\d\s.,%\-]+$/.test(t) || GXEASYF(v.f) || GXSHORT(lang, v.d) || (lang === 'ko' && /다$/.test(t))) continue; if (!o[k] || date < o[k].first) o[k] = { f: v.f || '', d: v.d || '', first: date }; } };
+const GXADD = (lang, html, date) => { const m = String(html).match(/const G = (\{[\s\S]*?\n  \});\n/); if (!m) return; let G; try { G = new Function('return ' + m[1])(); } catch (e) { return; } const o = (GXL[lang] ||= {}); const raw = (GXRAW[lang] ||= {}); for (const [k, v] of Object.entries(G)) { const t = String(k).trim(); if (!raw[t]) raw[t] = { t, f: v.f || '', d: String(v.d || '').slice(0, 160) }; if (t.length < GXMIN(lang) || /^[\d\s.,%\-]+$/.test(t) || GXEASYF(v.f) || GXSHORT(lang, v.d) || (lang === 'ko' && /다$/.test(t))) continue; if (!o[k] || date < o[k].first) o[k] = { f: v.f || '', d: v.d || '', first: date }; } };
 for (const e of editions) { if (HIDDEN.has(e.region || 'KR')) continue; const R0 = REGIONS[e.region || 'KR']; try { GXADD(R0.lang, fs.readFileSync(e.file, 'utf8'), e.date); } catch (err) {} for (const [l, f] of Object.entries(e.translations || {})) { try { GXADD(l, fs.readFileSync(path.resolve(path.dirname(spec), f), 'utf8'), e.date); } catch (err) {} } }
+if (process.env.DD_TERMS_OUT) { fs.mkdirSync(process.env.DD_TERMS_OUT, { recursive: true }); for (const [l, o] of Object.entries(GXRAW)) fs.writeFileSync(path.join(process.env.DD_TERMS_OUT, 'terms_' + l + '.json'), JSON.stringify(Object.values(o))); }
 fs.mkdirSync(path.join(OUT, 'gx'), { recursive: true }); for (const [l, o] of Object.entries(GXL)) fs.writeFileSync(path.join(OUT, 'gx', l + '.json'), JSON.stringify(o));
 const PASTLAB = { ko: '처음 나온 판', ja: '初出の号', es: 'Primera aparición', en: 'First appeared' };
 const GEX = (html) => { const m = String(html).match(/const G = (\{[\s\S]*?\n  \});\n/); if (!m) return []; try { const G = new Function('return ' + m[1])(); return Object.entries(G).filter(([k, v]) => GXEASYF(v.f)).map(([k]) => k); } catch (e) { return []; } };
