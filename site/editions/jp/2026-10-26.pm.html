@@ -1,0 +1,335 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>日経平均 · 終値の確定を確認できないため掲載なし</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ドル円 · 為替は終値が確定しないため掲載なし</div>
+    </div>
+    <div class="dateline"><span>No. 22 · 夕刊</span><b>2026年10月26日（月）</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · 訃報<span>✓ 5媒体 · 葬儀の日程は未確認</span></div>
+      <h2 class="hl">福田康夫元首相が90歳で死去 22日に心不全、首相在任は約1年で日中関係の改善に尽力</h2>
+      <p class="deck">NHKは、福田康夫元首相が今月22日に亡くなったと26日に伝えた。</p>
+      <div class="body">
+        <p>NHKは、福田康夫元首相が今月22日に亡くなり、90歳だったと伝えた。日本経済新聞は、死因は心不全で、都内の病院で亡くなったと報じた。同紙によると、福田氏は2007年に首相に就任しておよそ1年務め、消費者庁の設置を決め、公文書の管理を強化する法整備を進めた。父は福田赳夫元首相で、早稲田大学を卒業後、丸善石油（現・コスモエネルギーホールディングス）に勤めたという。朝日新聞は、福田氏が第91代首相で、衆院当選7回、小泉政権では官房長官を長く務め、首相としては地球温暖化対策などを進めたと伝えた。毎日新聞は、首相在任は1年で、洞爺湖サミットの議長を務めたと報じた。</p>
+        <p>朝日新聞は、福田氏が政界を引退した後も日中関係の改善に動いたと伝え、「大連立」を模索したことにも触れた。TBS NEWS DIGは、中国メディアが福田氏の死去を速報し、福田氏が親子二代にわたって中国と関わり、「戦略的互恵関係」の深化と民間交流の重要性を訴えたと報じた。同局は、高市首相が談話で「悲しみの念を禁じ得ません」と述べたとも伝えた。毎日新聞は、高市首相が「偉大な功績しのぶ」と語り、福田氏の遺族を弔問したと報じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">社会 · 将棋<span>✓ 6媒体 · 四段編入後の対局日程は未確認</span></div>
+      <h3 class="hl">西山朋佳女流四冠が棋士になる権利の行使を表明 2027年4月1日付で四段、女性初の棋士へ</h3>
+      <div class="one">
+        <p>NHKは、将棋の西山朋佳女流四冠（31）が26日に会見を開き、プロ棋士となる権利を行使する意向を表明したと伝えた。史上初の女性プロ棋士が誕生することになる。日本経済新聞は、女流タイトルの白玲を5期獲得し、昨年導入された新制度で棋士資格の権利を得ていた西山白玲が「権利の行使を決めた」と語り、2027年4月1日付で四段（棋士）になると報じた。ABEMA TIMESは、東京都渋谷区の将棋会館で開かれた会見で、白玲の通算5期獲得により得たフリークラス棋士への編入資格を行使する意向を示したと伝えた。 読売新聞は、西山女流四冠が「もっと強い方と戦いたい」と語ったと報じた。毎日新聞は、師匠の伊藤博文七段が「お互いの夢でした」と喜んだと伝え、棋士と女流棋士を兼ねることで対局環境がどう変わるかを取り上げた記事も掲載した。時事通信は、女流棋士第1号の蛸島女流六段が「よく頑張った」と語ったと報じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>自民の議連が安保3文書の改定に向け、防衛装備品の生産強化へ独立行政法人の新設を提言</b><em>NHKは議員連盟が2027年秋を念頭に早期設置を求めたと伝え、毎日新聞は無人機への対応も含むと報じた。</em><span>政治 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>沖縄の聖域をめぐる高額ツアー計画、地元の反対で見送りとジャパンタイムズが報道</b><em>ジャパンタイムズは、価格の高さに加え、参加者が神聖な場所に立ち入る計画が批判の的になったと伝えた。</em><span>社会 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>第一生命の豪州部門による44億ドルの買収提案を、チャレンジャーが拒否とジャパンタイムズが報道</b><em>ジャパンタイムズは、先週の提案が残る79.5％を1株11.80豪ドルで買い取る内容だったと報じた。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>イオンモール熊本の爆発事故、亡くなった7人全員が施設の南側で見つかる</b><em>産経ニュースは2階の遺体に衝撃波に由来する傷があったと報じ、共同通信は犠牲者の発見場所を伝えた。</em><span>社会 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>毎日新聞によると、日本音コンのバイオリン部門は大学生の的場桃さん、ピアノ部門は菊野さんが1位</b><em>毎日新聞は、バイオリン部門で1位となった的場さんと、ピアノ部門で1位の菊野さんの喜びの声を伝えた。</em><span>文化 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">国際 · 選挙<span>✓ 6媒体 · 最終的な得票率は未確認</span></div>
+      <h3 class="hl">ブラジル大統領選はルラ氏が勝利し通算4期目へ 日本政府は再選に祝意</h3>
+      <div class="body">
+        <p>朝日新聞は、ブラジル大統領選の決選投票で現職のルラ氏が再選され、米トランプ政権と距離を置く姿勢だと伝えた。英紙The Guardianは、80歳の左派のルラ大統領が、第1回投票で僅差で敗れた数週間後に右派のフラビオ・ボルソナロ氏を破り、4期目の当選を果たしたと報じた。The Japan Timesは、ルラ氏が劇的な逆転で歴史的な4期目を勝ち取り、中南米で続いてきた右派の選挙勝利の流れに歯止めをかけたと伝えた。</p>
+        <p>日本経済新聞は、投票が2時間延長されたと報じた。韓国の朝鮮日報は、AP通信などを引用し、敗れたフラビオ・ボルソナロ氏が結果を認められないと述べ、選挙の無効化を求める考えを示したと伝えた。iJAMPポータルは、日本政府がルラ大統領の再選に祝意を示したと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">経済 · サイバー<span>✓ 6媒体 · 会議の結果と被害額の総額は未確認</span></div>
+      <h3 class="hl">GMO代表が「社内で事前に指摘」と明かす 不正アクセスで政府は26日夕にサイバー関係閣僚会議</h3>
+      <div class="body">
+        <p>ITmediaは、GMOインターネットグループの熊谷正寿代表が、社内のホワイトハッカーから事前に課題の指摘があったものの対策が遅れたと明らかにしたと報じた。同記事によると、課題を解消できなかった理由は、サービスの可用性への影響や他の対処事項との優先順位を考慮しながら慎重に対応を進めた結果だという。SNSでは「責任転嫁では」との批判も出ていると同記事は伝えた。NHKは、熊谷氏がブログで、能動的サイバー防御を政府に要請したことについて「国民生活への影響に照らして適用可能性を検討してもらいたい」と述べたと伝えた。</p>
+        <p>毎日新聞は、政府がサイバーセキュリティー関係閣僚会議を26日夕に開くと報じ、25日付の別の記事では、GMOが適用を求めた能動的サイバー防御の発動は「政府として判断」すると伝えた。ロイターは、官房長官が会議を午後6時に開くと述べたと報じ、日本経済新聞は、高市首相が緊急対策の策定を指示する見通しだと伝えた。The Japan Timesは、GMOがFX自動売買向けのサーバーへの不正アクセスを公表し、政府に能動的サイバー防御を求めたと報じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">国際 · 邦人<span>✓ 3媒体 · 容疑の詳細・健康状態・日本語での氏名表記は未確認</span></div>
+      <h3 class="hl">ロシアで拘束された日本人記者、解放への協議に進展なし 政府は働きかけを続け、ロシアは態度を変えず</h3>
+      <div class="body">
+        <p>The Japan Timesは、ロシアで拘束されている日本人記者をめぐる協議に進展の兆しはなく、日本政府はロシア側に解決を求め続ける方針だが、ロシアは姿勢を軟化させていないと報じた。フィリピンのInquirer.netは、「Yuki Imai」と表記された記者が10月14日にロシア極東サハリン島のユジノサハリンスクでFSBに拘束されたと伝え、スパイの疑いがかけられていると報じた。</p>
+        <p>Inquirer.netは、日本の外務省の職員がモスクワを訪れ、本人との接触を試みたと伝えた。東洋経済オンラインは24日、サハリンでのロシア当局による北海道新聞記者の拘束事件を取り上げ、報道の自由と国家間の信頼を揺るがす重大な問題だと位置づけ、日本政府に求められるのは記者の安全確保と早期帰国だと論じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>FSB<i>安全保障</i></b><p>ロシアの連邦保安局。国内の治安維持や防諜を担う情報機関。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>福田康夫元首相が亡くなったのは26日だ。</b> <span>NHKは、福田氏が今月22日に亡くなったと26日に伝えた。日本経済新聞も22日に都内の病院で死去したと報じている。死去の公表が26日で、亡くなった日とは異なる（10/26）。</span></div>
+        <div><b>GMOの不正アクセスは、社内の誰も事前に気づいていなかった。</b> <span>ITmediaは、熊谷代表が社内のホワイトハッカーが事前に指摘していたと説明したと報じた。ただし対策が遅れた理由は優先順位を考慮した結果だと同記事は伝えており、被害の全体像は確認されていない（10/26）。</span></div>
+        <div><b>西山朋佳女流四冠は、女流棋士をやめて棋士に完全に移る。</b> <span>毎日新聞は、棋士と女流棋士の兼務で対局環境がどう変わるかを取り上げた記事を掲載した。兼務を前提にした報道がある一方、兼務の具体的な規定は確認されていない（10/26）。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 10月26日（月）</b><span>サイバーセキュリティー関係閣僚会議が26日午後6時に開かれると、ロイターが官房長官の発言として伝えている。日本経済新聞は、高市首相が緊急対策の策定を指示する見通しだと報じている。</span><b>今週</b><span>イスラエルの総選挙は27日（火）に行われると、Firstpostが伝えている。</span><b>その先</b><span>西山朋佳女流四冠の棋士への編入は2027年4月1日付（日本経済新聞）。自民党の議連が提言した新しい独立行政法人は、2027年秋を念頭に早期の設置が求められている（NHK）。</span><b>読者に</b><span>GMOのサービスを利用している人は、同社の注意喚起を確認できる。日本経済新聞は、攻撃者が利用者のパソコンの乗っ取りを企てているとして会社が注意を呼びかけたと報じている。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "政治 · 訃報 · ✓ 5媒体 · 葬儀の日程は未確認", "title": "福田康夫元首相が90歳で死去 22日に心不全、首相在任は約1年で日中関係の改善に尽力", "what": "NHKは、福田康夫元首相が今月22日に亡くなり、90歳だったと26日に伝えた。日本経済新聞は、死因は心不全で、都内の病院で亡くなったと報じた。同紙は、福田氏が2007年に首相に就任しておよそ1年務め、消費者庁の設置を決め、公文書の管理を強化する法整備を進めたと伝えた。朝日新聞は、福田氏が第91代首相で、衆院当選7回、小泉政権で官房長官を長く務めたと報じた。毎日新聞は、首相在任は1年で、洞爺湖サミットの議長を務めたと伝えた。TBS NEWS DIGは、中国メディアが死去を速報し、福田氏が「戦略的互恵関係」の深化を訴えたと報じた。毎日新聞は、高市首相が遺族を弔問したと伝えた。", "why": "福田氏は首相在任が約1年と短い一方、官房長官として小泉政権を支え、首相退任後も中国との関係づくりに関わった。中国メディアが速報したことは、日中の対話の窓口としての存在が国外でも知られていたことを示す。消費者庁の設置や公文書管理の整備は、今も行政の仕組みとして残る。", "me": "消費者庁や公文書管理の制度は、商品トラブルへの相談や、行政の記録を後から確かめる場面で、私たちの生活につながっている。日中関係のニュースを見るときは、首脳同士の接触だけでなく、民間交流を重ねてきた人物の役割にも目を向けられる。", "a": "日中関係への貢献を評価する視点。朝日新聞は政界引退後も日中関係の改善に動いたと伝え、TBS NEWS DIGは民間交流の重要性を訴えたと報じた。長く対話の回路を保った点が、この見方の根拠になる。", "b": "首相としての任期の短さに注目する視点。毎日新聞は首相在任が1年だったと伝え、朝日新聞は「大連立」を模索したと報じた。政策を進めた期間が限られ、構想が実現しなかった面があるという見方につながる。", "say": "確認できているのは、22日に90歳で亡くなったこと、死因が心不全であること、高市首相が談話を出し遺族を弔問したこと。確認できていないのは、葬儀の日程と形式。今日は、政府や党が弔意をどう表すか、日中双方の反応が続くかを見たい。", "src": "NHK(死去の発表、10/26) · 日本経済新聞(死因と経歴、10/26) · 朝日新聞(経歴と日中関係、10/26) · 毎日新聞(首相在任と首相の弔問、10/26) · TBS NEWS DIG(中国メディアの速報と首相談話、10/26)"},
+    "s2":{"kick": "社会 · 将棋 · ✓ 6媒体 · 四段編入後の対局日程は未確認", "title": "西山朋佳女流四冠が棋士になる権利の行使を表明 2027年4月1日付で四段、女性初の棋士へ", "what": "NHKは、将棋の西山朋佳女流四冠（31）が26日に会見を開き、プロ棋士となる権利を行使する意向を表明したと伝えた。日本経済新聞は、白玲を5期獲得し、昨年導入された新制度で棋士資格の権利を得ていた西山白玲が「権利の行使を決めた」と語り、2027年4月1日付で四段（棋士）になると報じた。ABEMA TIMESは、会見が東京都渋谷区の将棋会館で開かれ、フリークラス棋士への編入資格を行使する意向を示したと伝えた。読売新聞は、「もっと強い方と戦いたい」と語ったと報じた。毎日新聞は、師匠の伊藤博文七段が「お互いの夢でした」と喜んだと伝えた。時事通信は、女流棋士第1号の蛸島女流六段が「よく頑張った」と語ったと報じた。", "why": "棋士になるには従来、奨励会を経る道や編入試験があったが、日本経済新聞は昨年導入された新制度によって白玲5期で資格を得たと伝えた。この制度が初めて実際の棋士誕生につながったことで、女流タイトルの実績が棋士への道になりうることが具体的になった。", "me": "将棋に詳しくない人も、これまで男性だけだった職業の枠が動いた出来事として受け取れる。来年4月以降は、棋士の公式戦で西山四段の名前を目にする機会が出てくる。", "a": "新しい道が開いたことを重く見る視点。時事通信は女流棋士第1号の蛸島女流六段が「よく頑張った」と語ったと伝え、毎日新聞は師匠が夢の実現を喜んだと報じた。長く閉ざされていた扉が開いたことが根拠になる。", "b": "これから先の対局環境に目を向ける視点。毎日新聞は棋士と女流棋士の兼務で対局環境がどう変わるかを取り上げた。西山氏自身も「もっと強い方と戦いたい」と語っており、勝負の場が広がる一方で、棋士の公式戦での結果が問われる段階に入る。", "say": "確認できているのは、26日に権利行使を表明したこと、編入が2027年4月1日付で四段となること。確認できていないのは、編入後の最初の対局日程と、兼務の細かい取り扱い。今日は、日本将棋連盟の発表や、他の棋士の反応が出るかを見たい。", "src": "NHK(権利行使の表明、10/26) · 日本経済新聞(白玲5期と四段編入、10/26) · ABEMA TIMES(会見の会場と編入資格、10/26) · 読売新聞(会見での発言、10/26) · 毎日新聞(師匠のコメントと兼務、10/26) · 時事通信(女流棋士第1号のコメント、10/26)"},
+    "s3":{"kick": "国際 · 選挙 · ✓ 6媒体 · 最終的な得票率は未確認", "title": "ブラジル大統領選はルラ氏が勝利し通算4期目へ 日本政府は再選に祝意", "what": "朝日新聞は、ブラジル大統領選の決選投票で現職のルラ氏が再選され、米トランプ政権と距離を置く姿勢だと26日に伝えた。The Guardianは、80歳のルラ氏が、第1回投票で僅差で敗れた数週間後に右派のフラビオ・ボルソナロ氏を破り、4期目の当選を果たしたと報じた。The Japan Timesは、ルラ氏が劇的な逆転で歴史的な4期目を勝ち取り、中南米の右派の選挙勝利の流れに歯止めをかけたと伝えた。日本経済新聞は、投票が2時間延長されたと報じた。朝鮮日報は、AP通信などを引用し、敗れたフラビオ・ボルソナロ氏が結果を認められないと述べ、選挙の無効化を求める考えを示したと伝えた。iJAMPポータルは、日本政府がルラ大統領の再選に祝意を示したと報じた。", "why": "ブラジルは中南米最大の経済で、米国との距離の取り方は通商や外交に影響する。朝日新聞が米トランプ政権と距離を置く姿勢を伝えたとおり、再選は米国との関係の続き方に関わる。敗れた側が結果を認めない姿勢を示しており、手続きの行方は今後の焦点になる。", "me": "ブラジルは資源や食料の主要な輸出国で、為替や穀物価格を通じて日本の暮らしにも関係する。日本政府は再選に祝意を示したと報じられている。", "a": "再選を左派の持ち直しとして見る視点。The Japan Timesは中南米で続いてきた右派の選挙勝利の流れに歯止めをかけたと伝え、The Guardianは第1回投票で敗れた状況からの逆転だと報じた。", "b": "敗れた側の対応と手続きに注目する視点。朝鮮日報はフラビオ・ボルソナロ氏が結果を認められないと述べたと伝え、日本経済新聞は投票が2時間延長されたと報じた。結果の受け入れ方が今後の焦点という見方につながる。", "say": "確認できているのは、複数の報道がルラ氏の勝利を伝えたこと、日本政府が祝意を示したこと、フラビオ・ボルソナロ氏が結果を認められないと述べたと朝鮮日報が伝えたこと。確認できていないのは、最終的な得票率と、選挙無効の請求が実際に出されたかどうか。今日は、敗れた側の対応と、通貨や市場の反応を見たい。", "src": "朝日新聞(再選と米国との距離、10/26) · The Guardian(逆転での4期目、10/26) · The Japan Times(歴史的な4期目、10/26) · iJAMPポータル(日本政府の祝意、10/26) · 朝鮮日報(フラビオ・ボルソナロ氏の発言、10/26) · 日本経済新聞(投票の延長、10/26)"},
+    "s4":{"kick": "経済 · サイバー · ✓ 6媒体 · 会議の結果と被害額の総額は未確認", "title": "GMO代表が「社内で事前に指摘」と明かす 不正アクセスで政府は26日夕にサイバー関係閣僚会議", "what": "ITmediaは、GMOインターネットグループの熊谷正寿代表が、社内のホワイトハッカーから事前に課題の指摘があったものの対策が遅れたと明らかにしたと報じた。同記事は、課題を解消できなかった理由を、サービスの可用性への影響や他の対処事項との優先順位を考慮しながら慎重に対応を進めた結果だと伝えた。NHKは、熊谷氏がブログで能動的サイバー防御の適用可能性の検討を求めたと報じた。毎日新聞は、政府がサイバーセキュリティー関係閣僚会議を26日夕に開くと伝えた。ロイターは午後6時開催と報じ、日本経済新聞は高市首相が緊急対策の策定を指示する見通しだと伝えた。The Japan Timesは、FX自動売買向けサーバーへの不正アクセスを報じた。", "why": "能動的サイバー防御は、被害が出る前に政府が攻撃元のサーバーへ対応できる仕組みで、毎日新聞が伝えたとおり、発動は政府が判断する。企業の被害が国の対策づくりを動かす形になっており、官民で責任をどう分けるかが問われている。", "me": "FXなどの金融サービスを使っている人は、利用先のサービスの注意喚起を確認し、パスワードの使い回しを避けるといった自分でできる対策が意味を持つ。日本経済新聞は、会社が利用者に注意を呼びかけたと報じている。", "a": "企業の対応の遅れを問う視点。ITmediaは社内の指摘があったのに対策が遅れたと伝え、SNSで「責任転嫁では」との批判があると報じた。事前に指摘があった点が、この見方の根拠になる。", "b": "国の対策の枠組みを整えるべきだとする視点。熊谷氏は国民生活への影響を踏まえた能動的サイバー防御の検討を求め、毎日新聞は発動を政府が判断すると伝えた。政府が閣僚会議を開くことで、国全体の備えの議論が進むという見方になる。", "say": "確認できているのは、社内の事前指摘があったと代表が述べたこと、関係閣僚会議が26日夕に開かれること。確認できていないのは、会議での決定内容と、被害額の総額。今日は、緊急対策に能動的サイバー防御の扱いが入るかを見たい。", "src": "ITmedia(代表の説明、10/26) · 毎日新聞(閣僚会議の開催、10/26) · NHK(ブログでの発言、10/25) · 日本経済新聞(首相の指示、10/26) · ロイター(会議の時刻、10/26) · The Japan Times(不正アクセスの公表、10/25)"},
+    "s5":{"kick": "国際 · 邦人 · ✓ 3媒体 · 容疑の詳細・健康状態・日本語での氏名表記は未確認", "title": "ロシアで拘束された日本人記者、解放への協議に進展なし 政府は働きかけを続け、ロシアは態度を変えず", "what": "The Japan Timesは26日、ロシアで拘束されている日本人記者をめぐる協議に進展の兆しはなく、日本政府はロシア側に解決を求め続ける方針だが、ロシアは姿勢を軟化させていないと報じた。フィリピンのInquirer.netは25日、「Yuki Imai」と表記された記者が10月14日にロシア極東サハリン島のユジノサハリンスクでFSBに拘束されたと伝えた。同紙は、スパイの疑いがかけられていると報じた。同紙は、日本の外務省の職員がモスクワを訪れ、本人との接触を試みたと伝えた。東洋経済オンラインは24日、サハリンでのロシア当局による北海道新聞記者の拘束事件を取り上げ、日本政府に求められるのは記者の安全確保と早期帰国だと論じた。", "why": "拘束された人物に容疑がかかっている場合、外交ルートでの解決は国家間の関係に左右されやすい。The Japan Timesが伝えたとおりロシア側の姿勢が変わっていない状況では、日本政府ができるのは接触の確保と働きかけの継続に限られる。", "me": "海外に取材や出張で滞在する人にとって、現地当局が外国人に厳しい姿勢を取る国では、滞在先の情報を家族や職場と共有しておくことが重要になる。報道の自由に関わる事件として、私たちが国外の情報を得る環境にも関係する。", "a": "静かな外交を重く見る視点。東洋経済オンラインは、日本政府に求められるのは記者の安全確保と早期帰国だと論じた。本人の安全確保を優先すべきだという見方につながる。", "b": "報道の自由への影響を重く見る視点。東洋経済オンラインは、この事件が報道の自由と国家間の信頼を揺るがす重大な問題だと位置づけた。拘束が長引けば、現地取材そのものが難しくなるという見方になる。", "say": "確認できているのは、10月14日に拘束されたとInquirer.netが伝えたこと、協議に進展の兆しがないとThe Japan Timesが報じたこと。確認できていないのは、容疑の詳細と本人の健康状態。今日は、外務省が追加の面会や協議を発表するかを見たい。", "src": "The Japan Times(協議の現状、10/26) · Inquirer.net(拘束の経緯と外務省の動き、10/25) · 東洋経済オンライン(記者拘束事件の論評、10/24)"},
+    "i1":{"kick": "政治 · ✓ 2媒体", "title": "自民の議連が安保3文書の改定に向け、防衛装備品の生産強化へ独立行政法人の新設を提言", "what": "NHKは26日、安全保障関連3文書の改定に向け、自民党の議員連盟が、防衛装備品の生産力強化や移転を推進する司令塔として、新たな独立行政法人を2027年秋を念頭に早期に設置することなどを小泉防衛大臣に提言したと伝えた。毎日新聞は、自民党の2つの議連が安保3文書の改定をめぐって防衛相に提言し、無人機への対応なども含まれていたと報じた。NHKは、提言の相手が小泉防衛大臣だったと伝えた。毎日新聞は、提言を出したのが2議連だったと見出しで示した。", "why": "安保3文書は国の防衛の方向を決める基本の文書で、改定の議論では装備をどう作り、どう他国へ移すかが争点になる。独立行政法人は国が出資や監督を担う組織で、司令塔の設置は民間企業との役割分担を変えうる。", "me": "防衛装備の生産や移転の仕組みが変わると、関連企業の仕事や、国の予算の使い方に影響が出る。税金の使い道として、防衛関連の議論を見る際の入り口になる。", "a": "生産力の強化を急ぐ視点。NHKは、議連が生産力強化と移転の推進のための司令塔を求めたと伝えた。早期に設置することで装備の供給体制を整えるという見方になる。", "b": "新組織の設置に慎重な視点。毎日新聞は提言が無人機への対応など幅広い内容だと伝えており、組織を増やす場合の費用や監督の仕組みが問われる。実際の設計は今後の議論に委ねられる。", "say": "確認できているのは、議連が防衛相に提言したこと、2027年秋を念頭に新法人の設置を求めたこと。確認できていないのは、防衛省が提言をどう扱うか。今日は、小泉防衛相が提言への受け止めを示すかを見たい。", "src": "NHK(議連の提言、10/26) · 毎日新聞(2議連の提言と無人機、10/26)"},
+    "i2":{"kick": "社会 · ✓ 1媒体", "title": "沖縄の聖域をめぐる高額ツアー計画、地元の反対で見送りとジャパンタイムズが報道", "what": "The Japan Timesは26日、沖縄の聖域(sanctuary)を訪れるプレミアムツアーの計画が、地元の反対を受けて見送られたと報じた。同紙は、論争の中心は高額な価格だけでなく、参加者が神聖な場所に立ち入ることを認める計画にもあったと伝えた。同紙は、見送りの理由として地元の反対があったと報じた。同紙は、計画の内容が高価格のツアーだったと伝えた。見送りの発表者や参加料金の具体額は、同紙の紹介文には記されていない。", "why": "信仰の対象となる場所は、観光の収益と、地域の人々が守ってきた意味とが衝突しやすい。高額の商品として売り出す計画は、場所への立ち入りを商品化する点で、地元の反発を招きやすい。", "me": "旅行先で聖地や神域を訪れるとき、立ち入りの可否やルールを自治体や地元の案内で確かめることが、地域への配慮になる。観光客として、高額ツアーの宣伝を見たときも同じ視点で確認できる。", "a": "地域の信仰を守る視点。ジャパンタイムズは、神聖な場所への立ち入りを認める計画が論争の中心だったと伝えた。地元の反対で計画が止まったことは、この見方の根拠になる。", "b": "観光の価値づくりを重く見る視点。高価格のプレミアムツアーは、少人数で地域に収益をもたらす狙いがありうる。ただし今回は、ジャパンタイムズが伝えたとおり、立ち入り計画が批判の的になった。", "say": "確認できているのは、計画が見送られたこと、価格と立ち入りが論争の的だったこと。確認できていないのは、計画の主催者と具体的な料金。今日は、他の報道で計画の詳細が明らかになるかを見たい。", "src": "The Japan Times(ツアー計画の見送り、10/26)"},
+    "i3":{"kick": "経済 · ✓ 1媒体", "title": "第一生命の豪州部門による44億ドルの買収提案を、チャレンジャーが拒否とジャパンタイムズが報道", "what": "The Japan Timesは26日、チャレンジャーが、第一生命の豪州部門による44億ドルの買収提案を拒否したと報じた。同紙は、第一生命の豪州部門が先週、残る79.5％を1株11.80豪ドルで買い取る提案をしたと伝えた。同紙は、金額を44億ドルと表記した。同紙は、提案の対象が残りの株式だったと報じた。同紙の紹介文には、チャレンジャー側が拒否した具体的な理由は記されていない。", "why": "買収提案を受けた側が拒否するのは、提示価格が会社の価値に見合わないと取締役会が判断する場合などがある。提案する側は価格を引き上げるか、提案を取り下げるかを選ぶことになる。", "me": "買収の動きは、株主や取引先、従業員に影響する。日本の保険会社が海外で事業を広げる動きとして、国内の保険契約者にも間接的に関係する。", "a": "提示価格を争点とみる視点。拒否の理由は伝えられていない。ジャパンタイムズは1株11.80豪ドルという価格を伝えた。", "b": "交渉が続くとみる視点。提案は先週に出たばかりで、拒否後に価格を引き上げる、条件を変えるといった対応がありうる。ジャパンタイムズの紹介文は、その後の動きに触れていない。", "say": "確認できているのは、提案が拒否されたこと、1株11.80豪ドルで残る79.5％の取得を提案したこと。確認できていないのは、拒否の理由と第一生命側の次の対応。今日は、第一生命が提案を引き上げるか、取り下げるかの発表を見たい。", "src": "The Japan Times(買収提案の拒否、10/26)"},
+    "i4":{"kick": "社会 · ✓ 3媒体", "title": "イオンモール熊本の爆発事故、亡くなった7人全員が施設の南側で見つかる", "what": "産経ニュースは25日、イオンモール熊本（熊本県嘉島町）の爆発事故で亡くなった7人全員が、施設の南側で犠牲になったと報じた。同社は、2階で見つかった遺体には衝撃波に由来する傷があったと伝えた。福井新聞社が配信した共同通信の記事は、犠牲者7人全員が施設の南側で、発見場所が判明したと報じた。FNNプライムオンラインは、爆発から3カ月が過ぎ、買い物や雇用に影響が続いていると伝えた。", "why": "犠牲者の発見場所が一方の側に集中していたことは、爆発の発生源や被害の広がり方を調べる手がかりになる。衝撃波による傷は、爆発の力が建物内の離れた階にも及んだことを示す。", "me": "大型商業施設は日常的に利用する場所で、非常口の位置や避難経路を普段から確かめておくことが、万一の際の行動につながる。地域の商業施設が止まると、近隣の買い物や雇用にも影響が出る。", "a": "原因の究明を急ぐ視点。産経ニュースと共同通信が発見場所を詳しく伝えたことで、爆発の状況を調べる材料が増えた。責任の所在を明らかにするには、原因の特定が必要だという見方になる。", "b": "地域への影響を重く見る視点。FNNプライムオンラインは、爆発から3カ月が過ぎても買い物や雇用に影響が続いていると伝えた。施設の再開や雇用の維持が課題だという見方につながる。", "say": "確認できているのは、7人全員が南側で見つかったこと、2階の遺体に衝撃波に由来する傷があったこと。確認できていないのは、爆発の原因と施設の再開時期。今日は、警察や消防の調べに新しい発表があるかを見たい。", "src": "産経ニュース(発見場所と遺体の傷、10/25) · 共同通信(福井新聞社配信、犠牲者の発見場所、10/26) · FNNプライムオンライン(爆発から3カ月の影響、10/25)"},
+    "i5":{"kick": "文化 · ✓ 1媒体", "title": "毎日新聞によると、日本音コンのバイオリン部門は大学生の的場桃さん、ピアノ部門は菊野さんが1位", "what": "毎日新聞は25日、日本音コンの本選バイオリン部門で、大学生の的場桃さんが1位になったと報じた。毎日新聞は26日、1位となった的場さんの喜びの声を伝えた。毎日新聞は25日、ピアノ部門の1位は菊野さんだったと伝えた。同紙は、菊野さんが「100点満点」と喜んだと報じた。両部門とも、毎日新聞の速報として掲載された。", "why": "日本音コンは若手の演奏家が入賞を足がかりに活動の場を広げる大会として知られ、1位は注目される。バイオリンとピアノの両部門で1位が決まった。", "me": "クラシックに詳しくなくても、入賞者の演奏を聞く機会が演奏会や放送で増える。身近な大学生が国内の大会で1位を取る例として、音楽を学ぶ人への励みにもなる。", "a": "若い才能の出現を歓迎する視点。毎日新聞は、バイオリン部門で大学生が1位になったと伝えた。大会が新しい演奏家を見出す場として働いているという見方になる。", "b": "結果の評価を慎重に見る視点。報じられているのは入賞者のコメントが中心で、審査の詳しい内容は伝えられていない。入賞後に演奏家としてどう活動するかは、これからの実績で判断される。", "say": "確認できているのは、バイオリン部門の1位が的場桃さん、ピアノ部門の1位が菊野さんであること。確認できていないのは、審査員の評価の詳細と他の入賞者。今日は、受賞者の演奏会や放送の予定が発表されるかを見たい。", "src": "毎日新聞(バイオリン部門とピアノ部門の1位、10/25〜26)"}
+  };
+  const G = {
+    "能動的サイバー防御":{"f": "情報セキュリティ", "d": "被害が出る前に、政府が攻撃元のサーバーなどを特定して無害化する仕組み。通信の監視を伴うため、国民生活への影響が論点になる。", "w": "GMOが適用を政府に求め、発動は政府が判断するとされた"},
+    "ホワイトハッカー":{"f": "情報セキュリティ", "d": "セキュリティの弱点を調べて、持ち主に知らせて修正につなげる技術者。悪用する攻撃者とは区別される。", "w": "GMO社内の技術者が事前に課題を指摘していた"},
+    "関係閣僚会議":{"f": "行政制度", "d": "特定の課題について、関係する大臣が官邸などに集まって方針を話し合う会議。", "w": "政府がサイバーセキュリティーで26日夕に開催"},
+    "安保3文書":{"f": "国家安全保障", "d": "国家安全保障戦略、国家防衛戦略、防衛力整備計画の3つ。国の安全保障と防衛力整備の基本方針を定める。", "w": "改定に向けて自民党の議連が提言"},
+    "独立行政法人":{"f": "行政制度", "d": "国の事業を、国の組織とは別の法人が担う仕組み。国が目標を示して監督する。", "w": "議連が防衛装備品の司令塔として新設を提言"},
+    "議員連盟":{"f": "政治", "d": "特定の政策課題について、党内の議員が集まって作る勉強会や活動団体。略して議連。", "w": "自民党の議連が防衛相に提言"},
+    "フリークラス":{"f": "将棋制度", "d": "将棋の棋士の資格のうち、順位戦のクラスに入らない区分。編入や特別な枠で棋士になる人が入る。", "w": "西山女流四冠がこの区分の棋士に編入"},
+    "白玲":{"f": "将棋制度", "d": "女流棋士のタイトルの一つ。通算5期の獲得で棋士になる資格を得られる新制度が昨年導入された。", "w": "通算5期の獲得で棋士の資格を得た"},
+    "女流棋士":{"f": "将棋制度", "d": "女性のプロ将棋の資格。男女の棋士が戦う棋士とは別の枠で、女流棋戦を中心に活動する。", "w": "女流棋士第1号の蛸島女流六段が喜びを語った"},
+    "決選投票":{"f": "選挙制度", "d": "第1回投票で誰も過半数に届かないときに、上位2人で行う投票。", "w": "ブラジル大統領選で現職が勝利"},
+    "官房長官":{"f": "行政制度", "d": "内閣官房を取りまとめる閣僚。政府の報道官として記者会見を行い、政策の調整も担う。", "w": "福田氏が小泉政権で長く務めた"},
+    "大連立":{"f": "政治", "d": "対立する主要政党が協力して政権を作ること。", "w": "福田氏が模索したことに朝日新聞が触れた"},
+    "戦略的互恵関係":{"f": "外交", "d": "日本と中国が、共通の利益を広げて協力する関係として掲げた外交上の枠組み。", "w": "福田氏が深化を訴えたとTBSが報じた"},
+    "FSB":{"f": "安全保障", "d": "ロシアの連邦保安局。国内の治安維持や防諜を担う情報機関。", "w": "サハリンで日本人記者を拘束したとInquirer.netが伝えた"},
+    "買収提案":{"f": "企業金融", "d": "他社の株式を買い取って経営権を得ようとする申し出。受ける側が同意しなければ成立しない。", "w": "第一生命の豪州部門の提案をチャレンジャーが拒否"},
+    "洞爺湖サミット":{"f": "外交", "d": "2008年に北海道洞爺湖町で開かれた主要国首脳会議。", "w": "福田氏が議長を務めたと毎日新聞が伝えた"},
+    "衝撃波":{"f": "物理・災害", "d": "爆発などで急に膨らんだ空気が音速を超えて伝わる圧力の波。建物や人体に傷を与えることがある。", "w": "2階の遺体に衝撃波に由来する傷があった"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
