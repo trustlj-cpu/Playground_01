@@ -12,7 +12,7 @@ const NAV_CSS = `<style>.dd-nav .dd-r{display:flex;align-items:center;gap:10px;f
 
 // 공통 스크립트(모든 페이지, 메뉴 바로 뒤): 로그인 상태(dd_in 힌트 쿠키가 있을 때만 /api/me, 탭마다 sessionStorage 10분 캐시) → 메뉴 '로그인'을 '마이페이지'로.
 // 앱(Capacitor) 감지 → 계정 칸·북마크 숨김, 비콘 client='app'. 방문 비콘은 DNT/GPC·자동화 브라우저면 보내지 않는다.
-const NAV_JS = `<script>(function(){if(window.__ddAcct)return;window.__ddAcct=1;var d=document,nav=d.querySelector('.dd-nav'),a=d.querySelector('.dd-acct');
+const NAV_JS = `<script>(function(){if(window.__ddAcct)return;window.__ddAcct=1;var d=document,nav=d.querySelector('.dd-nav'),a=d.querySelector('.dd-acct');try{if(nav&&!nav.hasAttribute('data-keep')&&nav.getAttribute('data-r'))localStorage.setItem('dd_lr',nav.getAttribute('data-r'));}catch(e){}
 function isApp(){try{if(window.Capacitor||/DailyDropApp/.test(navigator.userAgent))return true;if(window.parent!==window&&window.parent.Capacitor)return true;}catch(e){}return !/^https?:$/.test(location.protocol);}
 var APP=isApp();window.__ddApp=APP;
 try{if(nav&&!nav.hasAttribute('data-keep')&&d.documentElement.lang)localStorage.setItem('dd_lang',d.documentElement.lang);}catch(e){}
@@ -104,7 +104,10 @@ const pick = (I18N, l) => ({ ...I18N.en.account, ...(I18N[l] || {}).account });
 const RUNTIME = (I18N, NAVLBL, regions) => `<script>var DDA=(function(){var S=${js(Object.fromEntries(ACC_LANGS.map(l => [l, pick(I18N, l)])))},N=${js(NAVLBL)},RG=${js(regions)};
 function choose(){var q=new URLSearchParams(location.search).get('lang');if(q&&S[q])return q;try{var s=localStorage.getItem('dd_lang');if(s&&S[s])return s;if(s&&S[s.split('-')[0]])return s.split('-')[0];}catch(e){}var ls=navigator.languages||[navigator.language||'ko'];for(var i=0;i<ls.length;i++){var l=String(ls[i]);if(/^zh-(TW|HK|Hant)/i.test(l))return 'zh-TW';l=l.split('-')[0];if(S[l])return l;}return 'ko';}
 var L=choose(),T=S[L];try{if(new URLSearchParams(location.search).get('lang'))localStorage.setItem('dd_lang',L);}catch(e){}
-var m=document.cookie.match(/(?:^|;\\s*)dd_region=([A-Z]{2})/),R=m&&RG[m[1]]?m[1]:'KR',pre=RG[R]?RG[R].p:'';
+var m=document.cookie.match(/(?:^|;\\s*)dd_region=([A-Z]{2})/),R=m&&RG[m[1]]?m[1]:'',pre;
+if(!R){try{var lr=localStorage.getItem('dd_lr');if(lr&&RG[lr])R=lr;}catch(e){}}
+if(!R)R='KR';pre=RG[R]?RG[R].p:'';
+(function(){var nv=document.querySelector('.dd-nav'),mn=nv&&nv.querySelector('.dd-cty-menu'),sm=nv&&nv.querySelector('.dd-cty summary img');if(!mn||!sm||nv.getAttribute('data-r')===R)return;nv.setAttribute('data-r',R);var fl=function(c){return '/brand/flags/'+c.toLowerCase()+'.svg';};var cur=null;[].forEach.call(mn.children,function(el){var im=el.querySelector('img'),mm=im&&/flags\\/([a-z]{2})\\.svg/.exec(im.getAttribute('src')||''),c=mm&&mm[1].toUpperCase();if(!c||!RG[c])return;if(c===R){cur=el;}var on=c===R,n=document.createElement(on?'span':'a');while(el.firstChild)n.appendChild(el.firstChild);if(on)n.setAttribute('aria-current','true');else{n.setAttribute('role','menuitem');n.href='/'+RG[c].p+'?r='+c;}mn.replaceChild(n,el);if(on)sm.src=fl(c);});})();
 document.documentElement.lang=L;
 [].forEach.call(document.querySelectorAll('[data-t]'),function(el){var k=el.getAttribute('data-t');if(T[k]!=null)el.textContent=T[k];});
 [].forEach.call(document.querySelectorAll('[data-tp]'),function(el){var k=el.getAttribute('data-tp');if(T[k]!=null)el.setAttribute('placeholder',T[k]);});
