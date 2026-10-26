@@ -1,0 +1,339 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,469.47</b>KOSPI · 10/26 終値 · 前日比1.46%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>727.21</b>KOSDAQ · 10/26 終値 · 前日比3.26%下落</div>
+    </div>
+    <div class="dateline"><span>第22号 · 夕刊</span><b>2026年10月26日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="nec">
+      <div class="kick">政治 · 選挙<span>✓ 4社 · 検証結果と特検の捜査の結論は未確認</span></div>
+      <h2 class="hl">選管特検、28日にオリンピック公園で地方選挙の投票用紙247万枚を任意検証…発足50日「拘束令状請求0件」</h2>
+      <p class="deck">東亜日報は、選管特検が26日の告知で、28日午前9時からオリンピック公園ハンドボール競技場に保管されているソンパ区の投票用紙約247万枚とCCTVなどを任意検証すると明らかにしたと伝えた。</p>
+      <div class="body">
+        <p>東亜日報は、中央選挙管理委員会をめぐる疑惑を捜査する選管特検(特別検事イ・テハン)が26日にメディアへ告知を出し、28日午前9時からソウル・ソンパ区のオリンピック公園ハンドボール競技場に保管中の6・3地方選挙ソンパ区の投票用紙約247万枚と現場CCTVを含む物品を任意検証すると明らかにしたと伝えた。ソウル警察庁や中央選管など関係機関の協力を受けて進めるもので、当初は29日が有力視されていたが、機関間の協議の末に28日に決まったと東亜日報が報じた。京郷新聞はこの検証を「装備と書類の点検」という見出しで伝え、聯合ニュースは「増減・偽造の確認」を見出しに掲げた。SBSは投票用紙247万枚とCCTVを検証すると報じた。</p>
+        <p>聯合ニュースは、ウィ・チョルファン中央選挙管理委員長職務代行が26日、特検のオリンピック公園での現場検証後に投票用紙が移送され、選管が票の点検の補助を求められたと明らかにしたと伝えた。同じ日、聯合ニュースは、6・3地方選挙の投票用紙不足問題などを捜査してきた特検チームが発足50日を迎えたが、「拘束令状請求0件」など捜査が遅いとする記事を出した。京郷新聞は、捜査を受けていた被疑者が死亡し、押収捜索令状をめぐって裁判所と公然と対立するなど、特検が人手と時間の不足に焦りをのぞかせていると伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="brz">
+      <div class="kick">国際 · 選挙<span>✓ 5社 · 選挙無効の請求の受理と後続の判断は未確認</span></div>
+      <h3 class="hl">ルラ・ブラジル大統領が4選…フラビオ・ボルソナーロ上院議員「結果に不服」、選挙裁判所は「結果に影響なし」</h3>
+      <div class="one">
+        <p>聯合ニュースは、25日(現地時間)のブラジル大統領選決選投票で、現職のルイス・イナシオ・ルラ・ダ・シルバ(80)大統領が当選して通算4選を果たし、南米の右派の波「ブルー・タイド」を食い止めたと伝えた。SBSも、ルラ大統領が初めて4選を果たしたと報じた。京郷新聞は、投票の締め切りが予定されていた午後5時から午後7時へ2時間延長されたと伝えた。朝鮮日報はAP通信などを引用し、敗れたフラビオ・ボルソナーロ上院議員が「投票結果を認めることはできない」とし、「今回の選挙の無効化を求める」と語ったと報じた。聯合ニュースは、選挙裁判所が「結果に影響はない」と明らかにしたとする見出しの記事を出し、韓国経済は、ルラ氏の再選でブラジルETFが夜間取引で19%下落したと見出しで伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="nol"><b>ノルユニバース、旧インターパークツアーの国内宿泊予約の顧客・役職員の個人情報流出を謝罪…「セキュリティ体制を強化」</b><em>ZDNet Koreaは、ノルユニバースが22日午前2時5分ごろ外部からの異常なアクセスを確認したと告知したと伝えた。流出の対象は、今年2月15日から9月8日まで旧インターパークツアーで国内宿泊を予約した顧客だ。</em><span>経済 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="nkn"><b>北朝鮮、国連安保理議長に書簡…DMZの地雷爆発は「韓国の自作自演」、韓国政府の書簡に応酬</b><em>東亜日報は朝鮮中央通信を引用し、北朝鮮の国連常駐代表が25日に安保理議長へ書簡を送ったと伝えた。書簡は、先月21日の地雷爆発の責任を北朝鮮に帰すのは、南部国境の要塞化を阻む妨害策動だと主張した。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="trm"><b>トランプ大統領「原油価格は予想ほど上がらず…イランの核阻止のための小さな代価」、NYTはイランとの全面戦争の危険を警告</b><em>京郷新聞はAP通信を引用し、トランプ大統領が25日、ミシガン州ポートヒューロンでの中間選挙の遊説で、戦争を始めたことを後悔していないと語ったと伝えた。東亜日報は、ニューヨーク・タイムズが25日、米国とイランが再び全面戦争に突入する危険が高まっていると報じたと伝えた。</em><span>国際 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="cgs"><b>チェ・ギルス特別監察官が初出勤「政治的中立・独立性を最後まで堅持」…「法上の監察対象でなければ参考人」</b><em>東亜日報は、チェ特別監察官が26日、ソウル・鍾路区の事務所に初出勤し、予防的監察を強化すると語ったと伝えた。チェ特別監察官は、大統領の最側近でも法に監察対象と定められていない人は監察できないと明らかにした。</em><span>政治 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="mdl"><b>故ユン・ドンジュ、キム・ナムジョ両詩人に金冠文化勲章を追贈…文化体育観光部、36人を表彰</b><em>東亜日報は、文化体育観光部が26日の文化芸術功労の授賞式で、両詩人に文化芸術分野の政府褒賞で最高等級の金冠文化勲章を追贈したと伝えた。ZDNet Koreaは、文化勲章17人、大韓民国文化芸術賞6人など36人が表彰対象だと報じた。</em><span>文化 · ✓ 報道4件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="mkt">
+      <div class="kick">経済 · 株式<span>✓ 5社 · 外国人の売り越し額はソウル新聞の見出し一か所でのみ確認された</span></div>
+      <h3 class="hl">KOSPI 1.46%↓ 5469.47で引け、4月以降で最安…KOSDAQ 3.26%↓ 727.21</h3>
+      <div class="body">
+        <p>電子新聞は韓国取引所の資料を引用し、26日にKOSPIが前営業日より1.46%下げた5469.47で取引を終えたと伝えた。終値ベースで4月6日に記録した5450.33以来の低水準で、米連邦公開市場委員会(FOMC)と主要企業の決算発表を控え、5500ラインを割り込んだと説明した。同紙は、KOSDAQが3.26%下落した727.21で引けて7月31日以来の最低の終値を記録したと報じ、聯合ニュースもKOSDAQが24.48ポイント(3.26%)安の727.21で取引を終えたと伝えた。</p>
+        <p>ソウル新聞は「外国人6955億ウォン売り越し」を見出しで伝え、亜洲経済は外国人の売りとAI投資への懸念の中での5500ライン割れを見出しで知らせた。聯合ニュースは、KOSDAQが高値から38%下落するなか、SK証券が「底固めの最中」と分析したと伝えた。韓国経済は、「借金投資」が急減すれば株価は底だというKOSDAQ反発の公式が今回も通じるかを探った。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="osh2">
+      <div class="kick">政治 · 司法<span>✓ 4社 · 弾劾推進の有無と上告の日程は未確認</span></div>
+      <h3 class="hl">オ・セフン無罪の余波…キム・ミンソク氏「裁判所の政治化を懸念」、チェ・ミンヒ氏「AI裁判官導入」、法院行政処長は「行き過ぎた司法府の貶め」</h3>
+      <div class="body">
+        <p>電子新聞は、キム・ミンソク共に民主党代表が26日の最高委員会議で、オ・セフン・ソウル市長の政治資金法違反事件の控訴審無罪判決をめぐり、「裁判所の政治化」が懸念されると語ったと伝えた。同紙によると、キム代表は、裁判部が世論調査の実施と側近の後援者による費用支払いの事実を認めながらも、オ市長の関与は立証されていないと判断した点を指摘し、民主党はミョン・テギュン関連の疑惑とソウル市政の違法疑惑の責任を問うと明らかにした。京郷新聞は、党指導部の一部から「AI裁判官を導入しよう」という主張まで出たと伝え、東亜日報はチェ・ミンヒ議員の「AI裁判官を導入しよう」発言を見出しで報じた。</p>
+        <p>京郷新聞は、ノ・ギョンピル法院行政処長が26日の国会法制司法委員会の総合監査で、一部の与党議員がオ市長の控訴審無罪判決などを挙げたことに対し、チョ・ヒデ司法府がどうしたと言うのは適切でないという趣旨で答えたと伝えた。東亜日報は、キム・ヨンミン議員が「大法院長1人に司法府のすべての権力が集中している」と主張すると、ノ処長が「世界的水準に達するわが司法府への行き過ぎた貶め」と反論したと報じた。聯合ニュースは、与党から「チョ・ヒデ弾劾が答え」という主張が出て、国民の力が「正気か」と応酬したとする見出しの記事を出した。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="koj">
+      <div class="kick">社会 · 裁判<span>✓ 6社 · 宣告期日は未確認</span></div>
+      <h3 class="hl">特検、「尹政権の官邸移転優遇」でキム・オジン元国土次官に懲役5年を求刑…ファン元行政官に5年、21グラム代表に3年</h3>
+      <div class="body">
+        <p>東亜日報は、キム・ゴンヒ特検チーム(特別検事ミン・ジュンギ)が26日、ソウル中央地裁刑事合議24部(部長判事イ・ヨンソン)の審理で開かれた結審公判で、尹錫悦政権の大統領官邸移転優遇疑惑で起訴されたキム・オジン元国土交通部第1次官に懲役5年を求刑したと伝えた。容疑は特定経済犯罪加重処罰等に関する法律違反(詐欺)などだ。東亜日報によると、共に起訴されたファン某元大統領秘書室行政官には懲役5年、官邸工事業者21グラムのキム・テヨン代表には懲役3年が求刑された。</p>
+        <p>韓国日報は、無資格の業者に官邸工事を任せて16億ウォンをだまし取った容疑で同じ求刑があったと伝え、亜洲経済は「官邸工事の名義貸し・虚偽契約を主導」という見出しで報じた。大田日報は、キム元次官が官邸工事費の支払いのための予算不正流用の容疑で別に起訴され、16日に懲役3年6か月を求刑されたと伝えた。聯合ニュースと韓国経済は求刑の事実を速報で伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>懲役5年</b><span>キム・オジン元次官に特検が求刑した刑期(東亜日報)</span></div>
+        <div><b>懲役3年</b><span>21グラムのキム・テヨン代表に求刑した刑期(東亜日報)</span></div>
+        <div><b>3年6か月</b><span>別の予算流用容疑の事件で求刑された刑期(大田日報)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>ブラジル大統領選の結果が無効になりうるという主張</b> <span>朝鮮日報は、フラビオ・ボルソナーロ上院議員が選挙の無効化を求めると語ったと伝え、聯合ニュースは、選挙裁判所が「結果に影響はない」と明らかにしたとする見出しの記事を出した。選挙無効の請求が実際に受理されたかと、裁判所の判断は未確認だ。</span></div>
+        <div><b>KOSPIの急落はサムスン電子・SKハイニックスの決算発表の結果のせいだという主張</b> <span>電子新聞は、KOSPIが米FOMCと主要企業の決算発表を控えて5500ラインを割り込んだと伝え、亜洲経済は外国人の売りとAI投資への懸念を見出しに掲げた。決算発表の結果で下落したとする報道は確認されていない。</span></div>
+        <div><b>チェ・ギルス特別監察官が大統領側近のキム・ヒョンジの監察に乗り出すという主張</b> <span>東亜日報は、チェ特別監察官が26日、大統領の最側近でも法に監察対象と定められていなければ監察できないと明らかにしたと伝えた。朝鮮日報は「チェ・ギルス、法に違反して監察すれば私が処罰される…キム・ヒョンジ監察に線を引く」という見出しで報じた。監察着手を確認した報道はない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>あす · 火 10月27日</b><span>ブラジル選挙裁判所がボルソナーロ上院議員の選挙無効の要請をどう扱うか、オ・セフン市長の事件をめぐる与野党の攻防が国政監査で続くかは、見ておく価値がある。</span><b>今週</b><span>28日午前9時、オリンピック公園ハンドボール競技場で、選管特検による投票用紙247万枚の任意検証が始まる予定だ。29日は梨泰院惨事から4年になる。</span><b>その先</b><span>京郷新聞が「スーパーウィーク」と呼んだ今週のサムスン電子・SKハイニックスの決算と主要国の金利決定の後、KOSPIが下げ幅を取り戻すかは、見ておく価値がある。</span><b>読者へ</b><span>投票用紙の検証、選挙への不服、株価急落のように結果がすぐには確定しないニュースは、確認された事実と当事者の主張を分けて読める。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "nec":{"kick": "政治 · 選挙 · ✓ 4社 · 検証結果と特検の捜査の結論は未確認", "title": "選管特検、28日にオリンピック公園で地方選挙の投票用紙247万枚を任意検証…発足50日「拘束令状請求0件」", "what": "東亜日報は、選管特検(特別検事イ・テハン)が26日の告知で、28日午前9時からソウル・ソンパ区のオリンピック公園ハンドボール競技場に保管中の6・3地方選挙ソンパ区の投票用紙約247万枚と現場CCTVを含む物品を任意検証すると明らかにしたと伝えた。ソウル警察庁や中央選管など関係機関の協力を受けて進めるもので、当初は29日が有力視されていたが、協議の末に28日に決まったと東亜日報が報じた。京郷新聞は「装備と書類の点検」という見出しでこの検証を伝え、聯合ニュースは「増減・偽造の確認」を見出しに掲げた。聯合ニュースは、ウィ・チョルファン中央選挙管理委員長職務代行が、特検の現場検証後に投票用紙が移送され、選管が票の点検の補助を求められたと明らかにしたと伝えた。聯合ニュースは発足50日を迎えた特検の「拘束令状請求0件」の捜査を、京郷新聞は被疑者の死亡と押収捜索令状をめぐる裁判所との対立を伝えた。", "why": "任意検証は、強制力なく、保管機関の協力を得て行う検証だ。投票用紙不足問題の実態を明らかにするには、投票用紙の数量と保管状態、CCTVの記録を突き合わせる作業が核心の証拠になる。特検が押収捜索令状をめぐって裁判所と対立しただけに、協力で可能なこの検証が捜査の成果を示す場として取り上げられる。", "me": "6・3地方選挙の投票管理疑惑の真相に関心があるなら、28日の検証後に特検が結果をどう発表するかを確認すればよい。選管の業務に対する後続の捜査の知らせも続く可能性がある。", "a": "公開検証で疑惑を明らかにしようとする見方だ。聯合ニュースは、特検が「増減・偽造の確認」を掲げたと伝え、京郷新聞は、特検が装備と書類を点検すると明らかにしたと報じた。この見方では、投票用紙の数量と保管状態を直接確認する手続きそのものに意味がある。", "b": "捜査の速度と成果を問う見方だ。聯合ニュースは、発足50日で拘束令状の請求が0件である点を指摘し、京郷新聞は、人手と時間が足りず特検が焦っていると伝えた。この見方では、今回の検証が捜査の成果につながるかが焦点だ。", "say": "確認されたのは、28日午前9時の任意検証の予定、対象(ソンパ区の投票用紙約247万枚とCCTVなど)、選管の票の点検の補助要請だ。確認されていないのは、検証の結果と特検の捜査の結論だ。きょうは、28日の検証の人員と立会いの範囲が追加で公開されるかを見ておく価値がある。", "src": "東亜日報(検証日程と対象、10/26) · 聯合ニュース(捜査50日と票の点検の補助要請、10/26) · 京郷新聞(任意検証の告知と捜査へのプレッシャー、10/26) · SBS(247万枚とCCTVの検証、10/26)"},
+    "brz":{"kick": "国際 · 選挙 · ✓ 5社 · 選挙無効の請求の受理と後続の判断は未確認", "title": "ルラ・ブラジル大統領が4選…フラビオ・ボルソナーロ上院議員「結果に不服」、選挙裁判所は「結果に影響なし」", "what": "聯合ニュースは、25日(現地時間)のブラジル大統領選決選投票で、現職のルイス・イナシオ・ルラ・ダ・シルバ(80)大統領が当選して通算4選を果たし、南米の右派の波「ブルー・タイド」を食い止めたと伝えた。SBSも、ルラ大統領が初めて4選を果たしたと報じた。京郷新聞は、投票の締め切りが午後5時から午後7時へ2時間延長されたと伝えた。朝鮮日報はAP通信などを引用し、フラビオ・ボルソナーロ上院議員が投票結果を認められないとして選挙の無効化を求めると語ったと報じた。聯合ニュースは、選挙裁判所が「結果に影響はない」と明らかにしたとする見出しの記事を出し、韓国経済は、ブラジルETFが夜間取引で19%下落したと見出しで伝えた。", "why": "ボルソナーロ上院議員が選挙の無効化を求めると明らかにしただけに、選挙裁判所の判断が以後の手続きの出発点になる。韓国経済が伝えたブラジルETFの下げ幅のように、投資家が持つブラジル資産の価格も選挙結果にすぐ反応した。", "me": "ブラジルETFや債券に投資しているなら、選挙裁判所の後続の判断とブラジル資産の価格の報道を確認しておける。中南米情勢は、韓国企業の現地事業ともつながりうる。", "a": "結果を受け入れるべきだという見方だ。聯合ニュースは、選挙裁判所が「結果に影響はない」と明らかにしたとする見出しの記事を出し、イ・ジェミョン大統領がルラ大統領の当選を祝ったと伝えた。この見方では、開票結果と公式な確定手続きが判断の基準だ。", "b": "手続きの公正性を問題にする見方だ。朝鮮日報は、ボルソナーロ上院議員が選挙の無効化を求めると語ったと伝え、京郷新聞は、投票の締め切りが2時間延長されたと報じた。この見方では、選挙手続き全般の公正性への問題提起が焦点だ。", "say": "確認されたのは、ルラ大統領の4選、投票締め切りの2時間延長、ボルソナーロ上院議員の不服の発言と選挙裁判所の「影響なし」の立場だ。確認されていないのは、選挙無効の請求の受理の有無と、選挙裁判所の立場がその要請への答えかどうかだ。きょうは、ブラジル選挙裁判所の後続の発表を見ておく価値がある。", "src": "聯合ニュース(当選と選挙裁判所の立場、10/26) · 京郷新聞(投票締め切りの延長、10/26) · 朝鮮日報(不服の発言、10/26) · SBS(初の4選、10/26) · 韓国経済(ブラジルETFの下げ幅、10/26)"},
+    "mkt":{"kick": "経済 · 株式 · ✓ 5社 · 外国人の売り越し額はソウル新聞の見出し一か所でのみ確認された", "title": "KOSPI 1.46%↓ 5469.47で引け、4月以降で最安…KOSDAQ 3.26%↓ 727.21", "what": "電子新聞は韓国取引所の資料を引用し、26日にKOSPIが前営業日より1.46%下げた5469.47で取引を終えたと伝えた。終値ベースで4月6日に記録した5450.33以来の低水準で、米連邦公開市場委員会(FOMC)と主要企業の決算発表を控え、5500ラインを割り込んだと同紙が説明した。電子新聞は、KOSDAQが3.26%下落した727.21で引けて7月31日以来の最低の終値を記録したと報じ、聯合ニュースは24.48ポイント(3.26%)安の727.21で取引を終えたと伝えた。ソウル新聞は「外国人6955億ウォン売り越し」を見出しで伝え、亜洲経済は外国人の売りとAI投資への懸念の中での5500ライン割れを見出しで知らせた。聯合ニュースは、KOSDAQが高値から38%下落し、SK証券が「底固めの最中」と分析したと伝えた。", "why": "外国人の売り越しとFOMC・決算発表前の様子見が重なると、大型株中心のKOSPIがまず押され、個人の比重が大きいKOSDAQは下げ幅がさらに大きくなる傾向がある。韓国経済が指摘した「借金投資」の減少は、KOSDAQで反発のシグナルとされる指標だ。", "me": "株式やファンドを持っているなら、FOMCの結果と主要企業の決算発表後の指数の動きを確認できる。外国人の売り越し規模はソウル新聞一社の報道なので、韓国取引所の公示もあわせて見るとよい。", "a": "短期の調整とみる見方だ。聯合ニュースは、SK証券がKOSDAQは底固めの最中だと分析したと伝え、韓国経済は、借金投資が急減すれば株価は底だという公式を取り上げた。この見方では、イベント通過後の反発の可能性が核心だ。", "b": "外国人の売りとAI投資への懸念を警戒する見方だ。亜洲経済は、外国人の売りとAI投資への懸念を下落要因として見出しに掲げ、ソウル新聞は「外国人6955億ウォン売り越し」を見出しで伝えた。この見方では、需給が反転するまで変動性が続きうる点が焦点だ。", "say": "確認されたのは、26日のKOSPI 5469.47(-1.46%)とKOSDAQ 727.21(-3.26%)の終値、4月以降で最低の水準という点だ。確認されていないのは、下落の単一の原因と、外国人の売り越し額のクロスチェックだ。きょうは、FOMCと主要企業の決算発表の日程が出るか見ておく価値がある。", "src": "電子新聞(終値と安値の記録、10/26) · 聯合ニュース(KOSDAQの終値と高値比38%、10/26) · 韓国経済(引け後の市況と借金投資、10/26) · ソウル新聞(外国人の売り越し、10/26) · 亜洲経済(下落要因、10/26)"},
+    "osh2":{"kick": "政治 · 司法 · ✓ 4社 · 弾劾推進の有無と上告の日程は未確認", "title": "オ・セフン無罪の余波…キム・ミンソク氏「裁判所の政治化を懸念」、チェ・ミンヒ氏「AI裁判官導入」、法院行政処長は「行き過ぎた司法府の貶め」", "what": "電子新聞は、キム・ミンソク共に民主党代表が26日の最高委員会議で、オ・セフン・ソウル市長の政治資金法違反(ミョン・テギュンの世論調査費用の肩代わり疑惑)事件の控訴審無罪判決をめぐり、「裁判所の政治化」が懸念されると語ったと伝えた。同紙によると、キム代表は、裁判部が世論調査の実施と側近の後援者による費用支払いの事実を認めながらも、オ市長の関与は立証されていないと判断した点を指摘し、民主党は関連疑惑の責任を問うと明らかにした。京郷新聞は、党指導部の一部から「AI裁判官を導入しよう」という主張まで出たと伝え、東亜日報はチェ・ミンヒ議員の「AI裁判官を導入しよう」発言を見出しで報じた。京郷新聞は、ノ・ギョンピル法院行政処長が26日の国会法制司法委員会の総合監査で、チョ・ヒデ司法府がどうしたと言うのは適切でないという趣旨で答えたと伝えた。東亜日報は、ノ処長がキム・ヨンミン議員の「大法院長1人にすべての権力が集中している」との主張を「行き過ぎた司法府の貶め」と反論したと報じた。聯合ニュースは、与党の「チョ・ヒデ弾劾が答え」という主張と国民の力の「正気か」という反応を見出しで伝えた。", "why": "控訴審の無罪判決の後、事件について大法院の判断が出るかどうかが残るなか、与党が裁判の結果を司法府の構造の問題に結びつけ、法院行政処がこれに直接答える局面になった。法制司法委員会の総合監査という場が重なり、発言が政治的な攻防につながった。", "me": "オ市長の事件の上告の有無や国会の司法府への対応が気になるなら、今週の法制司法委員会と最高委員会議の発言を確認すればよい。オ市長の事件をめぐる与野党の後続の発言も見られる。", "a": "裁判の結果を司法府の問題とみる見方だ。電子新聞は、キム代表が「裁判所の政治化」を語ったと伝え、京郷新聞は、一部の指導部の人物がAI裁判官の導入まで挙げたと報じた。この見方では、判決過程への信頼が焦点だ。", "b": "司法の独立を強調する見方だ。東亜日報は、ノ・ギョンピル処長が「行き過ぎた司法府の貶め」と反論したと伝え、京郷新聞は、チョ・ヒデ司法府のせいにするのは適切でないとする答弁を報じた。この見方では、裁判の結果と裁判所の構造改編の要求を切り分けなければならない点が核心だ。", "say": "確認されたのは、キム・ミンソク代表の「裁判所の政治化」発言、一部議員のAI裁判官の主張、法院行政処長の反論の答弁だ。確認されていないのは、民主党の弾劾・国政調査の推進の有無と、検察の上告の有無だ。きょうは、国政監査でチョ・ヒデ大法院長をめぐる攻防が続くか見ておく価値がある。", "src": "電子新聞(キム・ミンソク代表の発言、10/26) · 京郷新聞(AI裁判官の主張と法院行政処長の答弁、10/26) · 東亜日報(キム・ヨンミン議員の質疑と反論、10/26) · 聯合ニュース(与野党の弾劾攻防の見出し、10/26)"},
+    "koj":{"kick": "社会 · 裁判 · ✓ 6社 · 宣告期日は未確認", "title": "特検、「尹政権の官邸移転優遇」でキム・オジン元国土次官に懲役5年を求刑…ファン元行政官に5年、21グラム代表に3年", "what": "東亜日報は、キム・ゴンヒ特検チーム(特別検事ミン・ジュンギ)が26日、ソウル中央地裁刑事合議24部(部長判事イ・ヨンソン)の結審公判で、キム・オジン元国土交通部第1次官に懲役5年を求刑したと伝えた。容疑は特定経済犯罪加重処罰等に関する法律違反(詐欺)などで、尹錫悦政権の大統領官邸移転優遇疑惑で起訴されたと東亜日報が報じた。同紙によると、ファン某元大統領秘書室行政官に懲役5年、官邸工事業者21グラムのキム・テヨン代表に懲役3年が求刑された。韓国日報は、無資格の業者に工事を任せて16億ウォンをだまし取った容疑を伝え、亜洲経済は「官邸工事の名義貸し・虚偽契約を主導」という見出しで報じた。大田日報は、キム元次官が予算の不正流用の容疑で別に起訴され、16日に懲役3年6か月を求刑されたと伝えた。聯合ニュースと韓国経済は求刑の知らせを速報で伝えた。", "why": "求刑は検事が裁判部に求める刑期で、宣告の刑期は裁判部が決める。官邸移転疑惑は工事業者の選定過程と契約方式をめぐる事件であり、同じ工事に関する別の起訴事件も進行中だ。", "me": "尹錫悦政権関連の特検裁判の進行を追っているなら、宣告期日の告知を確認すればよい。公共工事の契約と監督手続きに関心があるなら、裁判で扱われた虚偽契約の争点が参考になる。", "a": "特検の見方だ。韓国日報は、無資格の業者に官邸工事を任せて16億ウォンをだまし取った容疑を伝え、亜洲経済は「官邸工事の名義貸し・虚偽契約を主導」を見出しに掲げた。この見方では、実務責任者の責任が焦点だ。", "b": "刑期の積み重ねを見る見方だ。大田日報は、同じ人物が別の事件で16日に懲役3年6か月を求刑されたと伝えた。この見方では、別の事件の宣告がこの事件とどうかみ合うかが焦点だ。", "say": "確認されたのは、26日の結審公判での懲役5年の求刑と共同被告人らの求刑量、別の事件の16日の求刑(大田日報)だ。確認されていないのは、宣告期日と宣告結果だ。きょうは、裁判所が宣告期日を告知するか見ておく価値がある。", "src": "東亜日報(求刑の内容と容疑、10/26) · 聯合ニュース(求刑速報、10/26) · 韓国経済(求刑速報、10/26) · 韓国日報(詐取の容疑、10/26) · 亜洲経済(工事を主導した容疑、10/26) · 大田日報(別の事件の求刑、10/26)"},
+    "nol":{"kick": "経済 · ✓ 報道4件", "title": "ノルユニバース、旧インターパークツアーの国内宿泊予約の顧客・役職員の個人情報流出を謝罪…「セキュリティ体制を強化」", "what": "ZDNet Koreaは、ノルユニバースが26日の告知で、22日午前2時5分ごろ外部からの異常なアクセスにより顧客の個人情報が流出した事実を確認したと明らかにしたと伝えた。ZDNet Koreaによると、外部の攻撃者がシステムのセキュリティ上の脆弱性を突き、旧インターパークツアーの国内宿泊の予約者情報の照会機能に異常にアクセスしており、流出の対象は今年2月15日から9月8日までに予約した顧客だ。聯合ニュースは、ノルユニバースがハッキングで一部の顧客と役職員の個人情報が流出したことを謝罪し、セキュリティ体制を強化したと伝えた。SBSは「宿泊の予約履歴が盗まれた」という見出しで同じ謝罪を報じた。韓国経済の報道によると、先立つ19日午前2時40分ごろには役職員情報の照会機能に異常なアクセスがあり、一部の役職員の名前、電話番号、会社のメール、社員番号、暗号化されたパスワードが流出した。", "why": "予約情報には予約者の名前と連絡先、利用履歴が含まれ、なりすましの文面や電話に使われうる。SBSが「宿泊の予約履歴が盗まれた」と見出しで伝えたように、予約・払い戻し情報を扱うサービスでは、流出項目がそのまま詐欺の手口の材料になる。", "me": "旧インターパークツアーで2月15日から9月8日の間に国内宿泊を予約したなら、会社の案内を確認できる。予約変更や払い戻しを案内する文面は、リンクではなく公式アプリとカスタマーセンターで確認する方法がある。", "a": "会社の初動対応に注目する見方だ。聯合ニュースは、ノルユニバースが謝罪し、セキュリティ体制を強化したと伝え、ZDNet Koreaは、会社が告知で流出の事実を明らかにしたと報じた。この見方では、告知の迅速さと範囲が基準だ。", "b": "被害範囲の不確実性を見る見方だ。SBSは、顧客に続いて役職員の情報まで流出したと伝え、韓国経済は、役職員情報の流出が別の時点にあったと報じた。この見方では、流出の時点と対象が確定していない点が焦点だ。", "say": "確認されたのは、22日午前2時5分ごろのアクセスの確認、対象期間(2月15日~9月8日)、役職員情報の流出の別の報道だ。確認されていないのは、被害を受けた顧客数と、二つの事故の時点の関係だ。きょうは、会社の個別案内と当局の調査着手の有無を見ておく価値がある。", "src": "ZDNet Korea(告知の内容と対象期間、10/26) · 聯合ニュース(謝罪とセキュリティ強化、10/26) · SBS(ハッキングの謝罪、10/26) · 韓国経済(役職員情報、10/26)"},
+    "nkn":{"kick": "国際 · ✓ 報道3件", "title": "北朝鮮、国連安保理議長に書簡…DMZの地雷爆発は「韓国の自作自演」、韓国政府の書簡に応酬", "what": "東亜日報は朝鮮中央通信を引用し、北朝鮮の国連常駐代表が25日、国連安全保障理事会の議長に書簡を送ったと26日に伝えた。東亜日報によると、北朝鮮は書簡で、先月21日に発生した地雷爆発の責任を北朝鮮に帰すのは、南部国境の要塞化作業を軍事的侵犯に仕立てて阻もうとする妨害策動だと主張し、韓国の「自作自演」だと非難した。京郷新聞は、韓国政府が22日(現地時間)に北朝鮮の謝罪と責任ある措置を求める書簡を送ったことに、北朝鮮が書簡で応酬したと伝えた。聯合ニュースは、韓国政府がDMZでの北朝鮮軍の地雷爆発は停戦協定違反だと指摘する書簡を安保理議長に送ったと伝えた。京郷新聞は、国連総会で両国が少なくとも9回の攻防を繰り広げたと見出しで伝えた。", "why": "地雷爆発の責任をめぐって双方が安保理に相反する書簡を送ったことで、事件は軍事的な事実確認から国際世論の攻防へと移った。北朝鮮が南部国境の要塞化を争点に掲げた点は、境界地域の緊張に直結する。", "me": "境界地域の安全や朝鮮半島情勢のニュースに関心があるなら、安保理の議論の日程と韓国政府の追加対応の発表を確認できる。軍当局のDMZ関連の公式発表もあわせて見られる。", "a": "韓国政府の責任追及の見方だ。聯合ニュースは、韓国政府が停戦協定違反を指摘する書簡を送ったと伝え、京郷新聞は、謝罪と責任ある措置を求めたと報じた。この見方では、事件の原因究明と北朝鮮の責任が核心だ。", "b": "北朝鮮の反論の見方だ。東亜日報は、北朝鮮が韓国の自作自演だとして、要塞化作業を阻む妨害策動だと主張したと伝えた。この見方では、事件を軍事的侵犯の枠組みにしようとしているという北朝鮮側の論理が前提だ。", "say": "確認されたのは、北朝鮮の25日の安保理議長宛て書簡と韓国政府の22日の書簡、双方の相反する主張だ。確認されていないのは、地雷爆発の原因についての独立した検証結果だ。きょうは、安保理議長国の反応や軍当局の追加発表が出るか見ておく価値がある。", "src": "東亜日報(北朝鮮の書簡の内容、10/26) · 京郷新聞(韓国政府の書簡と攻防、10/26) · 聯合ニュース(安保理議長宛て書簡、10/26)"},
+    "trm":{"kick": "国際 · ✓ 報道4件", "title": "トランプ大統領「原油価格は予想ほど上がらず…イランの核阻止のための小さな代価」、NYTはイランとの全面戦争の危険を警告", "what": "京郷新聞はAP通信を引用し、ドナルド・トランプ大統領が25日(現地時間)、ミシガン州ポートヒューロンでの中間選挙の遊説で、イランとの戦争による物価上昇は予想より深刻でなく、戦争を始めたことを後悔していないと語ったと伝えた。聯合ニュースとSBSは「原油価格は予想ほど上がらず…イランの核阻止のための小さな代価」という見出しで同じ発言を伝えた。東亜日報は、ニューヨーク・タイムズが25日、米国とイランが再び全面戦争に突入する危険が高まっていると報じたと伝えた。東亜日報によると、ニューヨーク・タイムズは、トランプ政権内部でイランが米当局者への攻撃を計画する「進んだ」段階に入ったとの懸念が出ていると伝えた。東亜日報は、米中間選挙とイスラエル総選挙の前後に双方が軍事行動の口実を探る可能性が取り沙汰されていると報じた。", "why": "原油価格はガソリンや暖房費を経て物価に反映されて中間選挙の争点となり、戦争の危険が高まれば原油価格の変動も大きくなる。韓国は原油の輸入依存度が高く、国際原油価格の報道が為替と株式のニュースにつながる。", "me": "ガソリン価格と為替、KOSPIの動きの報道をあわせて見れば、中東情勢が家計に及ぼす影響を推し量れる。米中間選挙とイスラエル総選挙に関する知らせを確認できる。", "a": "戦争のコストは耐えられるという見方だ。京郷新聞は、トランプ大統領が原油価格の上昇は予想ほどでなく後悔していないと語ったと伝え、聯合ニュースは、これをイランの核阻止のための小さな代価という見出しで報じた。この見方では、安全保障上の目標がコストより大きい点が前提だ。", "b": "衝突の危険を警告する見方だ。東亜日報は、ニューヨーク・タイムズが、選挙を控えた両国が軍事行動の口実を探る可能性を提起したと伝えた。この見方では、政治日程が全面戦争の危険を高める点が焦点だ。", "say": "確認されたのは、トランプ大統領の25日の遊説での発言と、ニューヨーク・タイムズの危険分析の報道だ。確認されていないのは、実際の軍事行動の計画と時期だ。きょうは、国際原油価格とイラン関連の米政府の追加発表を見ておく価値がある。", "src": "京郷新聞(25日の遊説での発言、10/26) · 東亜日報(ニューヨーク・タイムズの報道、10/26) · 聯合ニュース(原油価格の発言、10/26) · SBS(原油価格の発言、10/26)"},
+    "cgs":{"kick": "政治 · ✓ 報道3件", "title": "チェ・ギルス特別監察官が初出勤「政治的中立・独立性を最後まで堅持」…「法上の監察対象でなければ参考人」", "what": "東亜日報は、チェ・ギルス特別監察官が26日の初出勤の際に、「特別監察官室が両目を見開いて監察対象者を監視できるパノプティコンのような存在になりたい」と明らかにしたと伝えた。東亜日報によると、チェ特別監察官はソウル・鍾路区の事務所に出勤し、10年ぶりに任命されて無限の責任感を覚えると語り、特監の空白は2016年9月のイ・ソクス特監の辞任以後続いた。京郷新聞は、チェ特別監察官が政治的中立と業務遂行の独立性を最後まで堅持するとして、予防的監察を強化すると語ったと伝えた。東亜日報は、チェ特別監察官が、大統領の最側近でも法に監察対象と定められていない人は監察できないと明らかにしたと報じた。聯合ニュースは「中立性・独立性を堅持…両目を見開く」という発言を速報で伝えた。", "why": "特別監察官は、大統領の配偶者と親族、大統領秘書室の高位職の不正を監視する職で、空白が長かっただけに、最初の発言が監察範囲の基準線として読まれる。法に定められた対象だけを監察できるという説明は、権限の限界もあわせて示している。", "me": "高位公職者の不正を監視する制度に関心があるなら、特別監察官室の最初の監察着手や法改正の議論を確認できる。監察対象の範囲をめぐる与野党の攻防は、国政監査の日程とともに続きうる。", "a": "監察の意志を強調する見方だ。東亜日報は、チェ特別監察官がパノプティコンのような存在になると明らかにしたと伝え、京郷新聞は、予防的監察を強化すると報じた。この見方では、制度が10年ぶりに作動する点が核心だ。", "b": "法定の限界を指摘する見方だ。東亜日報は、チェ特別監察官が、大統領の最側近でも法に監察対象と定められていなければ監察できないと明らかにしたと伝えた。この見方では、監察対象の拡大の可否が焦点だ。", "say": "確認されたのは、チェ特別監察官の26日の初出勤の発言と予防的監察の強化、法定の監察対象の限界への言及だ。確認されていないのは、具体的な最初の監察対象と日程だ。きょうは、特別監察官室の人員構成と最初の業務の発表が出るか見ておく価値がある。", "src": "東亜日報(初出勤の発言、10/26) · 京郷新聞(予防的監察、10/26) · 聯合ニュース(中立性と独立性、10/26)"},
+    "mdl":{"kick": "文化 · ✓ 報道4件", "title": "故ユン・ドンジュ、キム・ナムジョ両詩人に金冠文化勲章を追贈…文化体育観光部、36人を表彰", "what": "東亜日報は、文化体育観光部が26日、文化芸術発展功労の授賞式を開き、詩人のユン・ドンジュ(1917~1945)とキム・ナムジョ(1927~2023)に、文化芸術分野の政府褒賞で最高等級の金冠文化勲章を追贈したと伝えた。東亜日報によると、文体部は、ユン詩人が叙情と自己省察を土台に日本統治時代の民族の痛みと抵抗意識を朝鮮語の詩に残した代表的な詩人であり、キム詩人が70年余りにわたり1000編を超える詩と随筆を書いたと理由を明らかにした。文体部はこの日、文化勲章17人をはじめ大韓民国文化芸術賞など36人を表彰した。ZDNet Koreaは、授賞式がソウル・西大門区のモドゥ芸術劇場で開かれ、表彰対象が文化勲章17人、大韓民国文化芸術賞6人、今日の若い芸術家賞8人、芸術家の誇らしい親賞5人だと報じた。聯合ニュースと韓国経済も金冠文化勲章の追贈を伝えた。", "why": "故人となった文学者に最高等級の勲章を追贈することは、政府が文化芸術の功労を公式に評価する方式だ。ユン・ドンジュ詩人は日本統治時代に朝鮮語の詩で知られており、勲章の理由にも抵抗意識が言及された。", "me": "ユン・ドンジュとキム・ナムジョの作品を読む予定があるなら、今回の追贈を機に書店や図書館の関連コーナーを探してみられる。文体部の授賞内訳は報道資料とメディアの報道で確認できる。", "a": "文学的成果を評価する見方だ。東亜日報は、文体部が、ユン詩人を叙情と自己省察の代表的な詩人、キム詩人を70年余りにわたり1000編超の詩と随筆を書いた作家と評価したと伝えた。この見方では、作品世界が勲章の根拠だ。", "b": "表彰の範囲を見る見方だ。ZDNet Koreaは、表彰対象が文化勲章17人を含め多様な部門の36人だと伝えた。この見方では、芸術家とその家族まで含めた表彰の構成が特徴だ。", "say": "確認されたのは、26日の授賞式、両詩人への金冠文化勲章の追贈、文化勲章17人を含む36人の表彰だ。確認されていないのは、文化勲章の受勲者17人全員の名簿だ。きょうは、受賞者の感想や文体部の追加発表があるか見ておく価値がある。", "src": "東亜日報(金冠文化勲章の追贈と理由、10/26) · ZDNet Korea(表彰内訳、10/26) · 聯合ニュース(文化勲章17人、10/26) · 韓国経済(金冠文化勲章の追贈、10/26)"}
+  };
+  const G = {
+    "任意検証":{"f": "法律", "d": "強制力なく、証拠物を保管する機関の協力と同意を得て調べる検証。", "w": "28日の投票用紙とCCTVの検証方式"},
+    "拘束令状":{"f": "法律", "d": "被疑者を身柄拘束するために裁判所が発付する令状。", "w": "選管特検の請求0件という報道"},
+    "押収捜索":{"f": "法律", "d": "捜査機関が証拠物を確保するため、令状を得て場所や物を調べ、持ち去る強制捜査。", "w": "特検と裁判所が令状をめぐり公然と対立"},
+    "特別検事":{"f": "法律", "d": "特定の事件を独立して捜査するよう任命される検事(特検)。", "w": "選管特検とキム・ゴンヒ特検"},
+    "結審公判":{"f": "法律", "d": "証拠調べを終え、検事の求刑と被告人の最終陳述を聞く最後の裁判。", "w": "キム・オジン元次官の事件で求刑が出た裁判"},
+    "求刑":{"f": "法律", "d": "検事が裁判部に求める刑期。宣告の刑期は裁判部が決める。", "w": "キム・オジン元次官に懲役5年"},
+    "特定経済犯罪加重処罰":{"f": "法律", "d": "詐欺など一定額以上の経済犯罪の刑を重くする法。", "w": "キム・オジン元次官に適用された法"},
+    "政治資金法":{"f": "法律", "d": "政治活動に使う資金の収入と支出を規律する法。", "w": "オ・セフン市長の事件に適用された法"},
+    "控訴審":{"f": "法律", "d": "1審判決を不服として改めて裁判する2審。", "w": "オ・セフン市長に無罪が言い渡された段階"},
+    "弾劾":{"f": "政治", "d": "高位公職者の重大な違法を国会が訴追し、憲法裁判所が罷免するかを判断する手続き。", "w": "与党の一部のチョ・ヒデ大法院長弾劾の主張"},
+    "法院行政処":{"f": "法律", "d": "大法院所属で司法行政の事務を担う機関。", "w": "ノ・ギョンピル処長が国政監査で答弁"},
+    "連邦公開市場委員会":{"f": "経済", "d": "米国の中央銀行の政策金利を決める会議体(FOMC)。", "w": "KOSPIが決定を控えて下落"},
+    "売り越し":{"f": "経済", "d": "一定期間に売った金額が買った金額より多い状態。", "w": "外国人のKOSPI売り越しの報道"},
+    "決選投票":{"f": "政治", "d": "1回目の投票で過半数の得票者がいないとき、上位の候補同士で再び行う投票。", "w": "ルラ氏とボルソナーロ上院議員の対決"},
+    "選挙裁判所":{"f": "法律", "d": "ブラジルで選挙の管理と紛争の判断を担う裁判所。", "w": "「結果に影響なし」との立場が報じられた"},
+    "特別監察官":{"f": "法律", "d": "大統領の配偶者・親族と大統領秘書室の高位職の不正を監察する独立機関。", "w": "チェ・ギルス監察官の初出勤の発言"},
+    "予防的監察":{"f": "法律", "d": "不正が起きる前に点検と警告で問題を防ぐ監察の方式。", "w": "チェ特別監察官が強化すると明らかにした"},
+    "安保理":{"f": "外交・安保", "d": "国連安全保障理事会。国際の平和と安全の問題を扱う国連機関。", "w": "南北が相反する書簡を送った先"},
+    "追贈":{"f": "制度", "d": "すでに亡くなった人に勲章や官職を授けること。", "w": "ユン・ドンジュ、キム・ナムジョ両詩人の金冠文化勲章"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
