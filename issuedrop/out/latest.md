@@ -1,553 +1,549 @@
-# 데일리드롭 이슈 수집 — 2026-10-27 18:01 KST
+# 데일리드롭 이슈 수집 — 2026-10-28 06:01 KST
 
-소스 136개 중 111개 성공 · 항목 2321개 · 이슈 묶음 1197개 · 최근 36시간
+소스 136개 중 110개 성공 · 항목 2274개 · 이슈 묶음 1223개 · 최근 36시간
 
 ## 1. 여러 소스가 동시에 다루는 이슈 (독립 소스 수 순)
 
-### [예측] Who will succeed Netanyahu as Prime Minister of Israel? (Elections)
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 61개: aljazeera, anthropic_news, ap_top, arxiv_ai, bbc_world, bbg_markets, chosun_all, cnbc_top, dw, ecb_press, etnews, fc_newstof, fc_snopes, financialjuice, ft_home, geeknews, gnews_cn_top, gnews_eu_top, gnews_kr_biz, gnews_kr_tech, gnews_kr_top, gnews_us_top, guardian_world, hankyung_all, hankyung_econ, hn_front, jp_itmedia, jp_japantimes, jp_yahoo_it, kalshi, marketwatch, mk_econ, mk_stock, nikkei_asia, nyt_world, polymarket, producthunt, reddit_worldnews, reuters_top, sbs_econ, scmp, techcrunch, us_abc, us_axios, us_cbs, us_fox, us_guardian_us, us_latimes, us_nbc, us_npr_top, us_nyt_biz, us_nyt_home, us_nyt_tech, us_nyt_us, us_pbs, us_politico, us_thehill, us_usatoday, verge, yt_bloomberg, zdnet_kr
-- 키워드: trump, election, anthropic, brazil, financialjuice, lula
-  - [A] Kalshi 이벤트: [[예측] Who will succeed Netanyahu as Prime Minister of Israel? (Elections)](https://kalshi.com/markets/kxnextisraelpm-45jan01)
-  - [A] Kalshi 이벤트: [[예측] Will Ramp or Brex IPO first? (Financials)](https://kalshi.com/markets/kxrampbrex-40)
-  - [A] Kalshi 이벤트: [[예측] Will OpenAI or Anthropic IPO first? (Financials)](https://kalshi.com/markets/kxoaianth-40)
-  - [A] AP Top (구글뉴스 경유): [Iran says messages are still being passed to the US amid war concerns, and other Mideast news - AP News](https://news.google.com/rss/articles/CBMikgFBVV95cUxQeDUtVElsazdRYlBXZDhiR2lBRF9VMVFCaEVDSTQ2THNuTlpGM1BOUkF1amNpbE12eHBkNTBlV1IwMmlYRWJLWE5RcEF2Zm0yTXJnazVsV1pMbERNNl8tekRrOHdVNlBUSEVYRURPQXhpakw2aTVtX3VUSnc2aXdndVZyREsxZGF6TUdDdHhrZEQ4UQ?oc=5)
-  - [A] Reuters (구글뉴스 경유): [Anthropic's Claude accessed Georgia state vote count data behind paywall - Reuters](https://news.google.com/rss/articles/CBMiuwFBVV95cUxNX1p1a2NSeGhUY0p3Q2JMNzRPTmN6SjNWRFRNNlE0bXlnYzFxYWFWdTlfM2xPX0FTZlNWUlF6TUVOakxlMEhSUzhsQi0xWG9TVUhaWlVvbDVkbWVXOV9vLTZ1d2xGRFNWTWQtNi13MzhqTDBYSlVjb2pZQVJCS1hUTUZTR1U4U0JSUGctdGlsR21XVHlYaWxLWThLa19QQ3BGSTlYZGR1c3l1aldIbjE0M1IzY1NZeXNSazRR?oc=5)
-  - [A] NBC News Top Stories: [No risk of ammonia contamination, officials say, after fire at Oregon seafood plant](https://www.nbcnews.com/news/us-news/newport-oregon-pacific-seafood-fire-ammonia-rcna605603)
-
-### HD현대마린솔루션 3분기 매출 6501억...전년比 27% 증가
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 26개: chosun_all, donga_all, etnews, fc_newstof, geeknews, gnews_cpi, gnews_fx, gnews_kr_biz, gnews_kr_ent, gnews_kr_pol, gnews_kr_tech, gnews_kr_top, gnews_rate, hankyung_all, hankyung_econ, jp_nhk_econ, khan_all, korea_kr, mk_econ, mk_stock, sbs_econ, sbs_headline, yna_econ, yna_top, yt_sampro, zdnet_kr
-- 키워드: 달러, 환율, 분기, 코스피, 10, 만에
-  - [A] 뉴스톱: [HD현대마린솔루션 3분기 매출 6501억...전년比 27% 증가](https://www.newstopkorea.com/news/articleView.html?idxno=48476)
-  - [A] NHK 経済: [きょうのおはBiz 10月26日(月) 企業が直面 膨れ上がるAIコスト](https://news.web.nhk/newsweb/na/nd-20261026de65498)
-  - [A] 뉴스톱: [BNK금융, 올 3분기 누적 당기순이익 6223억원…전년比 19.2%↓](https://www.newstopkorea.com/news/articleView.html?idxno=48488)
-  - [A] 뉴스톱: [뉴욕증시, 앤트로픽 IPO에 AI 투자심리 회복...3대 지수 동반 상승](https://www.newstopkorea.com/news/articleView.html?idxno=48494)
-  - [A] 뉴스톱: [삼성생명, 첫 ‘해외 신종자본증권’ 발행 완료…2조 규모](https://www.newstopkorea.com/news/articleView.html?idxno=48505)
-  - [A] 뉴스톱: [신한금융, 올 3분기 누적 순이익 5조 돌파…역대 최대 갱신](https://www.newstopkorea.com/news/articleView.html?idxno=48511)
-
-### 韓총리 "구룡마을 화재 진압 최선…2차사고 방지도 유의" 지시
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 9개: chosun_all, donga_all, gnews_kr_pol, gnews_kr_top, hankyung_all, khan_all, korea_kr, sbs_headline, yna_top
-- 키워드: 구룡마을, 화재, 강남, 화재에, 소방, 서울
-  - [A] 연합뉴스 최신: [韓총리 "구룡마을 화재 진압 최선…2차사고 방지도 유의" 지시](https://www.yna.co.kr/view/AKR20261027165100001)
-  - [A] 연합뉴스 최신: [석굴암서 불국사 가던 버스 도로 옆 구조물과 충돌…10여명 부상](https://www.yna.co.kr/view/AKR20261027167400053)
-  - [A] 연합뉴스 최신: [오세훈, 구룡마을 화재에 "가용 자원 총동원해 주민안전 확보"](https://www.yna.co.kr/view/AKR20261027168300004)
-  - [A] 연합뉴스 최신: [[속보] 구룡마을 화재로 39명 대피…현재까지 인명피해 없어](https://www.yna.co.kr/view/AKR20261027170800004)
-  - [B] 조선일보 전체: [‘강남 판자촌’ 구룡마을 화재… 소방차 51대 투입](https://www.chosun.com/national/national_general/2026/10/27/7CQPX457BZA27GOCASAPQ4IJBA/)
-  - [B] 구글뉴스 한국 정치: [[속보] 서울 강남 구룡마을서 불‥소방, 대응 1단계 발령 - MBC 뉴스](https://news.google.com/rss/articles/CBMid0FVX3lxTE9DN01EQVhtYS1wQUdLaEhYWHJTQ3pzUjNTbE1kdWtpXzgxX0JvOTlSOWlSdzBSdXNNaTBqVmpBMzZGZTBTWkxmV2t6c3BlblN1NTBjN3ZMcGJJeEhRb2xwR0pzRktqekZfX281MFZUd3psZTBjN3hz0gF3QVVfeXFMTnY0MTgzRURzbVk4VHRRSTA2Q3J1VzNHU0ZOQjNtYVMtV3NESVJ2ekVnRTJnTk5UaGc5NnNYdWtnbC1NRmZDTDNBeHNqUFRieDBVUXdnaElsVnpzcGpWczBsTmIxbTZZdHZldjFwaHRDM2tQTEhzRFU?oc=5)
-
-### 음주운전 말리던 시민 차로 밀친 40대 만취 운전자 입건
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 7개: donga_all, gnews_kr_pol, gnews_kr_tech, hankyung_all, khan_all, korea_kr, yna_top
-- 키워드: 허가, 호기, 고리, 계속운전, 원전, 연장
-  - [A] 연합뉴스 최신: [음주운전 말리던 시민 차로 밀친 40대 만취 운전자 입건](https://www.yna.co.kr/view/AKR20261027167100061)
-  - [B] 구글뉴스 한국 정치: [고리 원전 3·4호기 계속운전 허가‥설계수명 10년 연장 - MBC 뉴스](https://news.google.com/rss/articles/CBMidEFVX3lxTE1zUHR6SEMxNGZLYjVrZXVtWkZaYm5qMzBpdDZhZk5TSllzaklnS0w5WmR5NUg2Z3RfWUNrUUtPN3RieHQwbU9lU0l0bWtYTDZReEZUa29hNkg4dkZDOUotbkphbDVjU2FpakduUTZ4NUhsbzZx0gF0QVVfeXFMUEVrNW51Z0xQOG9PeWZ2YmM3YU9kSVdRSmp2V1dheC1IaW9Yc0ZKMWJYdEtoQjAtLXdQb0tBRFpQNm5aZGZwWGZBcHdTRGdNUDRLaDlLcVY0eG5ibUFsSWRZcDNSVFVDb3h4UDZrTnNDdnNyam8?oc=5)
-  - [B] 구글뉴스 한국 과학기술: [원자력안전위, 고리 3·4호기 수명 10년 연장 허가 - 조선일보](https://news.google.com/rss/articles/CBMigwFBVV95cUxQMDZIbDYwM1dNd0hoRXFVeEZwT3ViTW41UmJMVHlqUGVKcFlUd19MaG9EVVpzSG1PeVpvYllKY3hYeWJoVXdkcVcyRmxpUmgtbzJYWUN5azBWcFd0bVpZMzItQmZ5UGJyODFLQ2pPWlEweFN1LW5jc3FpdmZCNzdmWmdlRQ?oc=5)
-  - [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [원안위, 고리3·4호기 계속운전 허가 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMikgFBVV95cUxQYkNtb1cwdDQtNGtZQnFQZTVSdnFyOHR4X2Zaam1oMkpYSEhSSlR2ZmxzVlFiMHhGWWxHYzJ4Z3RoU0ZJbmUzWmJQUkJUR1lObzJucXFhaFN5OXNCMVhzRFR2QldXaFdKckpNanA5VFN0ekFFVlBqRGJ1S1BGbmNYU1Y1RjJvc0w3NTc2aDlWaU85QQ?oc=5)
-  - [B] 경향신문 전체: [[속보] 원자력안전위원회, 고리 원전 3·4호기 계속운전 허가](https://www.khan.co.kr/article/202610271629001/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
-  - [B] 한국경제 전체: [[속보] 고리 원전 3·4호기 계속…원자력안전위원회, 운전 허가](https://www.hankyung.com/article/2026102784397)
-
-### 삼성전자, '게임 성능 제한' 고지 누락에 과징금 201억 원 - 인벤
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 6개: donga_all, gnews_kr_biz, gnews_kr_tech, hankyung_all, mk_stock, sbs_econ
-- 키워드: 삼성전자, 공정위, 과징금, 대응, 법적, 불복
-  - [B] 구글뉴스 한국 과학기술: [삼성전자, '게임 성능 제한' 고지 누락에 과징금 201억 원 - 인벤](https://news.google.com/rss/articles/CBMiXkFVX3lxTFBSODdMNThocVIta1BRZDREb1ZJZVh2YVBRRmhzUTRCenFWWkJGdDVuWWh0b0VnZW9LdnRONFVGbjYxRDFWaFpHSXluWU5UZFFab19SUjVNUmxCRHlYN0E?oc=5)
-  - [B] 구글뉴스 한국 경제: [삼성전자, ‘기만 광고’ 공정위 판단에 불복…“소송 등 법적 대응” - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE1NNk9TOTlMczQwcU1iUTZnNDhUMFBMQXVaWlh1dGZIZE9IRk9aTm9mMjRpSlJfTzF6dTlnNndzcWdod01Ca1BwTmpEeXRGQThYNnYxQ3lCR3oxWDQ?oc=5)
-  - [B] 매일경제 증권: [삼성전자, 공정위 200억 과징금 불복…‘성능제한 과장광고’ 뭐길래](https://www.mk.co.kr/news/stock/12186867)
-  - [B] SBS 경제: [삼성전자, GOS 200억 과징금 불복…"소송 등 법적 대응"](https://news.sbs.co.kr/news/endPage.do?news_id=N1008816945&plink=RSSLINK&cooper=RSSREADER)
-  - [B] 동아일보 전체: [공정위, ‘고사양 게임 성능 제한’ 삼성에 201억 과징금… 삼성 “성능 최적화 소명할 것”](https://www.donga.com/news/Economy/article/all/20261027/134916579/1)
-  - [B] 한국경제 전체: [국내 1호 프로파일러도 당했다…권일용 "AI 무단 합성, 법적 대응"](https://www.hankyung.com/article/2026102784537)
-
-### [속보] 구로구 주택가 시신 유기 혐의로 80대 남성 등 2명 긴급체포
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 6개: chosun_all, donga_all, gnews_kr_biz, gnews_kr_pol, khan_all, yna_top
-- 키워드: 시신, 발견, 80, 구로구, 주택가, 60
-  - [A] 연합뉴스 최신: [[속보] 구로구 주택가 시신 유기 혐의로 80대 남성 등 2명 긴급체포](https://www.yna.co.kr/view/AKR20261027170500004)
-  - [B] 구글뉴스 한국 경제: [한국서 첫 IAEA 원자력 장관회의 개막‥60개국 800여명 집결 - MBC 뉴스](https://news.google.com/rss/articles/CBMidEFVX3lxTE96SmtxWE53eU94ZjROaTU2MGlwRVlQVV8zWDRIcEd4T1RwQlRHZ2FEVWtmQzlfRjdQc0RzOGJvMEJWbFFwM1czMl9VSUhwT2RScWZSdFAteDBMNHl1elgzTlFNaTJiTUxIVTk2RHpCdklzQUZJ0gF0QVVfeXFMTTNwVXNORTZzOWVXQ2xqSThrSWMwR3dQR3ZKcEtmLUw0Yy1hWVBSZFlPQkxRYzczVDRKUlJDclNIaGhUcHR2bnFPd0RBbHFVV1hmRmZvQ2wza1FYcDJ6TTZqVUhoNjhEMVhhR29xYTRxY2lPMUg?oc=5)
-  - [B] 구글뉴스 한국 정치: [서울 구로구 주택가 쓰레기 더미서 미라화된 시신 발견 - MBC 뉴스](https://news.google.com/rss/articles/CBMid0FVX3lxTE1tYmRqdXRscXhtX0FUT3JKd3FXX0ZKa3VxZUZ4WFBtdDYtNzlKMFZ2RlludkYycGpqcU80N3ZGOS00R3VzQWJ1THBaTWhHaER6TEpmS19rckR2N2VsV001cl9iSkI0X0FCT0dpblpzRGNlNTZkNDhz0gF3QVVfeXFMTWlNWU9mSnh5VzVjUFFVZFdBcGVpTjhxRjctc3ZzMVJkVXNOX1JqU3AtRFFUOElqZFhjTHFKY0czQkNXNV9PTWdhRDd6U2ZaUVZoMG9fOWFVN0pnb3F3NVlGYjkyVGFfTTg2NTZKakxJbnZ5WHNZNlE?oc=5)
-  - [B] 조선일보 전체: [주택가 쓰레기 더미서 ‘미라’ 상태 시신 발견...경찰 용의자 검거](https://www.chosun.com/national/national_general/2026/10/27/N5BHLTWXH5H6LGFTG2W6BCKWVM/)
-  - [B] 동아일보 전체: [구로 주택가서 ‘미라화’ 시신 발견…60대·80대 남성 2명 체포](https://www.donga.com/news/Society/article/all/20261027/134919388/1)
-  - [B] 경향신문 전체: [구로구 주택가에서 ‘미라화’ 시신 발견…시체 유기한 60·80대 긴급체포](https://www.khan.co.kr/article/202610271747001/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
-
-### 해킹 발표 24일 만에…KB국민은행 정보유출 119→2천210명(종합) - 연합뉴스
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 5개: donga_all, gnews_kr_biz, hankyung_econ, mk_econ, sbs_econ
-- 키워드: 만에, 100, 국민은행, 시속, 10, 119
-  - [B] 구글뉴스 한국 경제: [해킹 발표 24일 만에…KB국민은행 정보유출 119→2천210명(종합) - 연합뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTFA2eWNPclRQSldJdVUtRkN5SFdWSHM2aEZuQkpCUDdia3BmY3k2SnZhRVRlZVdMT01UQ1VaYU1yUkhOZDN3NWdMSHNXQzN5cXA0MUlNb0hDYmRjeW_SAWBBVV95cUxQMVlpekFrUFlUaGdQRGlkYnExaFJhelpwY0IyNDRhX19NVmFEbEltX01LYVRwUERkVnliTTkwRmVEYThvY2ExTHZqcUpzY010NTgxYURHR1FkVmxzU0RHdjM?oc=5)
-  - [B] SBS 경제: [숙소 예약 내역 털렸다…놀유니버스, 고객·임직원 '개인정보 유출' 사태 사과](https://news.sbs.co.kr/news/endPage.do?news_id=N1008815398&plink=RSSLINK&cooper=RSSREADER)
-  - [B] SBS 경제: ['2천 명' 이상 더 털렸다…KB국민은행 "해킹 피해 추가 확인…고객에 송구"](https://news.sbs.co.kr/news/endPage.do?news_id=N1008815745&plink=RSSLINK&cooper=RSSREADER)
-  - [B] 매일경제 경제: [해킹피해 발표는 119명, 실제 2210명…KB국민은행, 예금잔액·대출내역도 샜다](https://www.mk.co.kr/news/economy/12186713)
-  - [B] 매일경제 경제: [“원금 보장되는 줄 알고 샀는데”…2년 만에 10배 폭증 ‘이 상품’ 착시 경보](https://www.mk.co.kr/news/economy/12186864)
-  - [B] 한국경제 경제: [더 강력한 듀얼모터 '씨라이언 6 DM-i'…5초 만에 시속 100㎞](https://www.hankyung.com/article/2026102772511)
-
-### WATCH: Man arrested near film set
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 5개: cnbc_top, us_abc, us_latimes, us_thehill, us_usatoday
-- 키워드: man, film, set, charged, apollo, abu
-  - [A] ABC News Top Stories: [WATCH: Man arrested near film set](https://abcnews.com/video/137559310/)
-  - [A] USA Today (Google News 경유): [GA man charged after 'Molotov cocktail' thrown at Atlanta ICE office - USA Today](https://news.google.com/rss/articles/CBMi5gFBVV95cUxPdFhXMUpIWTR5TmMyTjNPQnI2WlRrMG5qcFR4cktvQTBWbDVzaVRuUkE3WDBPaXdLSkp2UXRBcGZXLXZSNWNFaktwSHBRdlZOeDl6cVpEUGZHWkZDczB6RG10X1FaczV2NVZlczJoeGl4WE8zUXNfTzNRLW1tcEV5V2VQUDQ0aHY0cDgtdU5CVjBhTnpyeGJwNUZiUnRpMllWaV85S1pCS2dZTFpvZF9vc1M1WGlTUXUtTzlMR1hFY3J3VGhuTUZFUTFVcndvd3NvZEZySHVSRG5KclVBeTJWTWxHSVpYQQ?oc=5)
-  - [A] Los Angeles Times: [Real-life violence encroaches on 'Miami Vice '85' film set. Video shows man pull out hefty knife](https://www.latimes.com/entertainment-arts/story/2026-10-26/real-life-violence-encroaches-on-miami-vice-85-film-set)
-  - [B] CNBC Top News: [Apollo to buy nearly 10% stake in Abu Dhabi-backed alternative asset manager Mubadala Capital](https://www.cnbc.com/2026/10/26/apollo-mubadala-capital-stake.html)
-  - [B] The Hill: [Man charged with sending white substance to 4 lawmakers](https://thehill.com/regulation/court-battles/6173379-illinois-man-congress-white-substance-mail/)
-
-### 민주당, '조희대 국정조사' 추진 논의...대법관 제청 갈등 쟁점
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 5개: donga_all, fc_newstof, gnews_kr_pol, khan_all, yna_top
-- 키워드: 조희대, 국정조사, 민주당, 추진, 국조, 탄핵
-  - [A] 뉴스톱: [민주당, '조희대 국정조사' 추진 논의...대법관 제청 갈등 쟁점](https://www.newstopkorea.com/news/articleView.html?idxno=48520)
-  - [A] 연합뉴스 최신: [혁신당, 與 '조희대 국조' 방침에 "탄핵 동시 추진해야"](https://www.yna.co.kr/view/AKR20261027160900001)
-  - [B] 구글뉴스 한국 정치: [[속보]민주당, 의총서 ‘조희대 국정조사 추진’ 결론 - 경향신문](https://news.google.com/rss/articles/CBMiWkFVX3lxTE92X3hVWDd6SFRGSFdKT09hNWhsSVJNNmtwM0hndU1ZUVVCXzRtMlo4cVpjTVdQRWliNmFCc1NLRWFROUhQNGlqYldvRWdPdXA2ZkFnTjdaUWhCQdIBX0FVX3lxTE1HU2Y3UWdWMnEzRTZoaGRGYVJMdjR4cE13bF8zdE9Bd1lpdGVJMFpyOE55VlR2OVU4N0lGTEJ0Yy05Sk5nR29FTTRCN0p1b2JLNDdFblJhbjNKVkV2Z2tR?oc=5)
-  - [B] 동아일보 전체: [與강경파 “국조 말고 탄핵 의결해야 조희대 직무정지”](https://www.donga.com/news/Politics/article/all/20261027/134918120/1)
-  - [B] 경향신문 전체: [민주당, 조희대 대법원장 국정조사 추진…당내 “사법부와 싸워서 얻을 이익이 뭔가” 우려도](https://www.khan.co.kr/article/202610271730001/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
-
-### Walter Koenig, Ensign Chekov on the original 'Star Trek' series, dies at 90
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 5개: ap_top, nikkei_asia, us_latimes, us_nyt_home, us_pbs
-- 키워드: dies, 90, chekov, koenig, walter, trek
-  - [A] PBS NewsHour: [Walter Koenig, Ensign Chekov on the original 'Star Trek' series, dies at 90](https://www.pbs.org/newshour/arts/walter-koenig-ensign-chekov-on-the-original-star-trek-series-dies-at-90)
-  - [A] AP Top (구글뉴스 경유): [Walter Koenig, Ensign Chekov on the original ‘Star Trek’ series, dies at 90 - AP News](https://news.google.com/rss/articles/CBMihAFBVV95cUxOMS1BeGw4NUJxU3p5YnFWUlB3aEE4QlZrbFBQVE9xNGx4eTc3aUpfZWxmUEhlVlV4OGt6Z2h6V3d2ZWkzSm5abzlpM216cWQ2NDI4eHJBMFlTU2ZnM0lEVTdweTZLRlB2UF9rck1SdlN0cEtQOHp0XzN3cFg0Sk5BTmNSUzI?oc=5)
-  - [A] Los Angeles Times: [Walter Koenig, 'Star Trek' franchise's original Chekov, dies at 90](https://www.latimes.com/entertainment-arts/story/2026-10-26/walter-koenig-star-trek-original-chekov-dies-at-90)
-  - [A] New York Times Home: [Walter Koenig, Chekov From ‘Star Trek,’ Has Died](https://www.nytimes.com/2026/10/26/arts/television/walter-koenig-chekov-star-trek-dead.html)
-  - [B] Nikkei Asia: [Former Japan Prime Minister Yasuo Fukuda dies at 90](https://asia.nikkei.com/life-arts/obituaries/former-japan-prime-minister-yasuo-fukuda-dies-at-90)
-
-### [예측] Will Elon Musk visit Mars in his lifetime? (Science and Technology)
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 예측시장 · 소스 4개: cnbc_top, kalshi, polymarket, us_nyt_biz
-- 키워드: musk, elon, 2027, october, death, guppy-level
-  - [A] Kalshi 이벤트: [[예측] Will Elon Musk visit Mars in his lifetime? (Science and Technology)](https://kalshi.com/markets/kxelonmars-99)
-  - [A] New York Times Business: [Musk Is Predicting ‘Guppy-level Death’ for Scores of A.I. Companies](https://www.nytimes.com/2026/10/26/business/dealbook/musk-ai-credit-shakeout.html)
-  - [A] Polymarket 상위 이벤트: [[예측] NBA: 2027 Champion — 24h 거래량 $725,190](https://polymarket.com/event/nba-2027-champion)
-  - [A] Polymarket 상위 이벤트: [[예측] What price will Bitcoin hit in October? — 24h 거래량 $658,520](https://polymarket.com/event/what-price-will-bitcoin-hit-in-october-2026)
-  - [A] Polymarket 상위 이벤트: [[예측] UEFA Champions League: 2027 Champion — 24h 거래량 $523,379](https://polymarket.com/event/uefa-champions-league-2027-champion-20260701202025549)
-  - [A] Polymarket 상위 이벤트: [[예측] Bitcoin above ___ on October 27? — 24h 거래량 $514,444](https://polymarket.com/event/bitcoin-above-on-october-27-2026)
-
-### 高市首相動静 2026年10月23日～25日
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 일본뉴스 · 소스 4개: hatena_hot, jp_nhk_politics, jp_nhk_society, us_cbs
-- 키워드: 10, 26, news, 2026, pickup, 25
-  - [A] NHK 政治: [高市首相動静 2026年10月23日～25日](https://news.web.nhk/newsweb/na/nd-20261026de65458)
-  - [A] CBS News: [10/26: The Takeout with Major Garrett](https://www.cbsnews.com/video/102626-the-takeout-with-major-garrett/)
-  - [A] CBS News: [10/26: CBS Evening News](https://www.cbsnews.com/video/102626-cbs-evening-news/)
-  - [A] NHK 社会: [【動画】Pickup NEWS（10月26日）](https://news.web.nhk/newsweb/na/nd-20261025de65309)
-  - [A] NHK 政治: [高市首相動静 2026年10月26日](https://news.web.nhk/newsweb/na/nd-20261027de66090)
-  - [A] NHK 社会: [【動画】Pickup NEWS（10月27日）](https://news.web.nhk/newsweb/na/nd-20261026de65958)
-
-### SoCal coast hit by widespread flooding as record-breaking tides move in
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 4개: us_cbs, us_guardian_us, us_latimes, us_usatoday
-- 키워드: tides, flooding, coasts, flood, coast, record-breaking
-  - [A] Los Angeles Times: [SoCal coast hit by widespread flooding as record-breaking tides move in](https://www.latimes.com/california/story/2026-10-26/socal-coast-faces-flood-risk-from-days-of-extreme-sea-levels)
-  - [A] USA Today (Google News 경유): [King tides bring major flood warning to South Florida's coast - USA Today](https://news.google.com/rss/articles/CBMiwgFBVV95cUxPYUxfS3c4MklNN0NtbmtFUldOZWltOUktbGVBY3hEc0c4TDlxcUhxZ0twVHI0WDhTVEpVMmhlWmJsQ3prNXVQQk9IZVNqT19PTzJGQUlWQUZERFBkRlpGdG5JLUpLUmdoZ1JWNlAtLThzZUs3Z2pwb2o0Y0NEOHM1NDcxdG5VbFRoVHh0Q3JPSlNGYkpsMGVjc0gyYjJ6Z1gxWEVaSDBPWFFXOXo0VU9mQlFTdGpxbUpmVmFaR3V2LTR5UQ?oc=5)
-  - [A] USA Today (Google News 경유): [Flood warnings active after heavy rain devastates Four Corners region - USA Today](https://news.google.com/rss/articles/CBMipAFBVV95cUxNV3ctZjZfN200S3hCT1lJVGJqcmdBWVFnZXkzNWF3UWFyTHBOZUY5R1FPQi03MW5YcnhVcUF0Sl9FcGxfRlFDMThiOFh2OXFtcm9IdmRSd01rOEs0dUhiaGFKX2VQWmwyZTBVOXZpSzJURGtpR1UxSTFGVC03UC1MN0E1Z2RaNDdNQi01cE1IUGdraHlVNWlYV3h2eFdlV0FMZzI3TQ?oc=5)
-  - [A] CBS News: [Flooding hits both coasts](https://www.cbsnews.com/video/flooding-hits-both-coasts/)
-  - [A] USA Today (Google News 경유): [Record high tides slam US coasts. Here’s what’s driving them - USA Today](https://news.google.com/rss/articles/CBMiowFBVV95cUxQMldEcWxkb3VFejV5VWN0cWc3MFpXNFM4d1FTellWM01FTkFjUzhONF9ZNWhDLVFTSU90VFB6SGQxTHdCdWNIdFhKcVloeGlRNWpFSGpId3daZUVUVmpCLXlqV1B5TlhHOWJFaDdGdnMtRl8tZEp6ZzF1aXk2WjBqV0RkbW1xX3NwajdTRkppOXg4WE95bGVQd2t4M09QRFdMdUdr?oc=5)
-  - [A] Guardian US: [Coastal California braces for flooding amid forecast of ‘record-breaking tides’](https://www.theguardian.com/us-news/2026/oct/26/southern-california-flooding-tides)
-
-### 케이엠엠아이, 포항에 3000억 투자…영구자석 생산 확대
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 4개: gnews_kr_biz, hankyung_econ, mk_econ, yna_econ
-- 키워드: 토스뱅크, 본격화, 투자, 주담대, 출시, 경쟁
-  - [A] 연합뉴스 경제: [케이엠엠아이, 포항에 3000억 투자…영구자석 생산 확대](https://www.yna.co.kr/view/AKR20261027136400053)
-  - [B] 구글뉴스 한국 경제: [바로팜, 코스닥 상장 본격화…공모자금 AI 기술·해외 진출·생산시설에 투자 - MEDI:GATE NEWS](https://news.google.com/rss/articles/CBMiV0FVX3lxTFA3aHV0cVJRUmRrWDdVT01sSmtEb3YxcE9mY2JOY1FscWZUbXNyeG0tejhGVFdubzQ0RmFKLWlxbl9fTThFUWQzSFhqUWlVQmRHRkpQeHNfdw?oc=5)
-  - [B] 매일경제 경제: [주택담보대출 시장 첫 진출 토스뱅크…인뱅 경쟁 본격화](https://www.mk.co.kr/news/economy/12186947)
-  - [B] 매일경제 경제: [토스뱅크 주담대 출시 … 인뱅 대출 경쟁 본격화](https://www.mk.co.kr/news/economy/12187307)
-  - [B] 한국경제 경제: [토스뱅크, 주담대 첫 출시…최대 10억까지 빌려준다](https://www.hankyung.com/article/2026102787501)
-
-### [오라클 AI 월드 2026]오라클, '일하는 AI'로 기업 혁신…보안·통제로 신뢰 뒷받침
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 4개: etnews, geeknews, hn_front, zdnet_kr
-- 키워드: type, protocol, server, 분석, 기업, 오라클
-  - [B] 전자신문: [[오라클 AI 월드 2026]오라클, '일하는 AI'로 기업 혁신…보안·통제로 신뢰 뒷받침](https://www.etnews.com/20261027000264)
-  - [B] ZDNet Korea: [오라클, AI에 기업 업무 맥락 입힌다…데이터 분석·관리 고도화](https://zdnet.co.kr/view/?no=20261027153104)
-  - [B] 전자신문: [[AI 막는 AI] 쿼드마이너, 맥락데이터 기반 AI 보안 강화 해법 제시](https://www.etnews.com/20261026000436)
-  - [C] Hacker News 프론트: [Type Server Protocol](https://github.com/microsoft/pylance-release/blob/main/docs/tsp/type-server-protocol.md)
-  - [C] GeekNews: [Type Server Protocol - Python 타입 분석 데이터를 조회하는 JSON-RPC 프로토콜](https://news.hada.io/topic?id=36068)
-
-### 한국씨티은행, 김경호 신임 은행장 선임…3년 임기
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 4개: gnews_kr_biz, hankyung_econ, mk_econ, yna_econ
-- 키워드: 선임, 김경호, 한국씨티은행, 신임, 부행장, 은행장
-  - [A] 연합뉴스 경제: [한국씨티은행, 김경호 신임 은행장 선임…3년 임기](https://www.yna.co.kr/view/AKR20261027113800002)
-  - [B] 구글뉴스 한국 경제: [한국씨티은행, ’새 수장’에 김경호 기업그룹경영 부행장 선임 - 연합뉴스TV](https://news.google.com/rss/articles/CBMiZ0FVX3lxTFBYbUtkLTlIeV9heWZSdWxpdXpqRkh1enhSZ1pmclJ0b3Y1WU4xS2EzRmNwLXRwbWpIQlMwcktqS0YyN1hIeW1zQjBSYkJxakUyZ19iOWU1MHlkTjdXTnZrM0ZxSzBRRTQ?oc=5)
-  - [B] 매일경제 경제: [한국씨티은행 신임 행장에…김경호 기업금융그룹장 선임](https://www.mk.co.kr/news/economy/12187171)
-  - [B] 한국경제 경제: [한국씨티은행장에 김경호 부행장 선임](https://www.hankyung.com/article/2026102787471)
-
-### Minimum Description Length Unsupervisedly Separates Law-Grade from Statistical-Grade Knowledge in a Self-Improving Science Agent - and Reveals 86% of Its Own Discoveries Are Statistical
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 4개: aljazeera, arxiv_ai, hn_front, verge
-- 키워드: discoveries, science, physics, computer, mathematics, openai
-  - [A] arXiv cs.AI 신규: [Minimum Description Length Unsupervisedly Separates Law-Grade from Statistical-Grade Knowledge in a Self-Improving Science Agent - and Reveals 86% of Its Own Discoveries Are Statistical](https://arxiv.org/abs/2610.32245)
-  - [B] The Verge: [OpenAI announces three big science discoveries and a new way to work with academics](https://www.theverge.com/ai-artificial-intelligence/1019143/openai-eth-kaseya-science-math-physics)
-  - [B] Al Jazeera: [AI makes discoveries in mathematics, computer science, physics, OpenAI says](https://www.aljazeera.com/economy/2026/10/27/ai-makes-discoveries-in-mathematics-computer-science-physics-openai-says?traffic_source=rss)
-  - [C] Hacker News 프론트: [Three new discoveries in mathematics, computer science, and physics](https://openai.com/index/building-scientific-understanding-with-academic-communities/)
-
-### Eagles’ nightmare season deepens as Cowboys hand Philadelphia fifth straight loss
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 4개: gnews_us_top, jp_japantimes, us_fox, us_guardian_us
-- 키워드: cowboys, eagles, 21, 38, win, prescott
-  - [A] Guardian US: [Eagles’ nightmare season deepens as Cowboys hand Philadelphia fifth straight loss](https://www.theguardian.com/sport/2026/oct/27/cowboys-eagles-dak-prescott-javonte-williams-nfl-monday-night-football)
-  - [A] The Japan Times: [Prescott fires Cowboys to 38-21 win over plummeting Eagles](https://www.japantimes.co.jp/sports/2026/10/27/more-sports/cowboys-eagles-prescott/)
-  - [B] Fox News Latest: [Cowboys, Dak Prescott get back on track at the expense of reeling Eagles in key NFC East win](https://www.foxnews.com/outkick-sports/cowboys-dak-prescott-back-on-track-expense-reeling-eagles-key-nfc-east-win)
-  - [B] 구글뉴스 미국 헤드라인: [Cowboys 38-21 Eagles (Oct 26, 2026) Game Recap - ESPN](https://news.google.com/rss/articles/CBMiW0FVX3lxTE1rcFc5Nl9PRFpqelhuVmhqemg4TGM1RHp6ZzUzUGJIcGNRZDhhY0VKaE13ZUJqY2ptSnp0TGpEVk1DUUk3dzh2dk5FYURwV3Zpak5IZnltN1U1N0U?oc=5)
-
-### ‘검은 10월’ 공포…PHP 취약점 노린 해킹 확산 - 조선일보
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 3개: etnews, gnews_kr_tech, zdnet_kr
-- 키워드: 해킹, 취약점, 확산, php, 대응, 차단까지
-  - [B] 구글뉴스 한국 과학기술: [‘검은 10월’ 공포…PHP 취약점 노린 해킹 확산 - 조선일보](https://news.google.com/rss/articles/CBMigwFBVV95cUxQT2loRkstMS1ZR3ROTXFSa1h3ZTRGQk1RTzlGT0daSGZNMVJJVHJrTzRPWkdiR085XzVCQ2pnNlZiRmI0R19aTnJyeS1NZWlKX1BYSWN2RTE1bl9oejhjYWdaLUxkbk5YWGRxWGV1LXhRNzFpSlFfSHhqYjlmV0c1WGF0SQ?oc=5)
-  - [B] 전자신문: [국내 보안기업, 'PHP2Shell' 긴급 대응…무료 점검부터 해킹 차단까지](https://www.etnews.com/20261027000277)
-  - [B] ZDNet Korea: [쿤텍 "공격보다 빠른 탐지·대응 도울 것"](https://zdnet.co.kr/view/?no=20261027125748)
-  - [B] ZDNet Korea: [박세준 티오리 대표 "PHP 취약점 공개 이후 많은 공격 시도 관측"](https://zdnet.co.kr/view/?no=20261027104307)
-  - [B] 전자신문: [[AI 막는 AI] 파이오링크, AI로 취약점 검증부터 해킹 차단까지](https://www.etnews.com/20261027000376)
-  - [B] 전자신문: [[AI 막는 AI] 일루미오, 마이크로세그멘테이션으로 AI 해킹 '내부 확산' 끊는다](https://www.etnews.com/20261026000435)
-
-### 與, 가상자산 과세 의견 추가 수렴키로…"빠른 시일 내 결정"
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: donga_all, gnews_kr_biz, yna_econ
-- 키워드: 과세, 가상자산, 시일, 결정, 빠른, 재경위
-  - [A] 연합뉴스 경제: [與, 가상자산 과세 의견 추가 수렴키로…"빠른 시일 내 결정"](https://www.yna.co.kr/view/AKR20261027135900001)
-  - [A] 연합뉴스 경제: [與, 의총서 가상자산 과세 유예론 잇따라…내일 재경위 당정협의(종합)](https://www.yna.co.kr/view/AKR20261027135951001)
-  - [B] 구글뉴스 한국 경제: [민주 "가상자산 과세 시행 여부, 빠른 시일 내 결정" - MBC 뉴스](https://news.google.com/rss/articles/CBMieEFVX3lxTE1FbVhadHBwaU1IR3hmaG56VVpRMTZBVXVuUjFOYVAtajQ1MmREZE9IejdrQXhoT0treVZfT1E2cGRUVmdhNzJxdzNoZzNrNmMwdHU5d1c4bEV3dVZxS2FHVFRwc1ZyamdiYmFUVU80eHdScWgyNTJ5VtIBeEFVX3lxTE9RbEd3dUJqR3lUVGZWUlhyVnh4TnZvdEV0VDdZYUVmWEFCY3NEZm5tNGpQOExFYXk5N0w0anBLTlpoOWtiZGtGc2dnRk5vTWJaN1laTWxheTZKTnpDODhneWdzUUdGaVd5Ul9mSlNCano1dFRtc3BYaA?oc=5)
-  - [B] 동아일보 전체: [與 ‘가상자산 과세 유예’ 공감대…“코인시장 제도 정비 먼저”](https://www.donga.com/news/Politics/article/all/20261027/134918240/1)
-
-### "거래소 산업분류 개편에 63개 지수 영향…교체 종목 늘어날듯"
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: hankyung_all, sbs_econ, yna_econ
-- 키워드: 20, 종목, 만에, 아이폰, 접는, 개편에
-  - [A] 연합뉴스 경제: ["거래소 산업분류 개편에 63개 지수 영향…교체 종목 늘어날듯"](https://www.yna.co.kr/view/AKR20261027147700008)
-  - [B] SBS 경제: [첫 접는 아이폰, "20번 접었더니 액정이 쩍"](https://news.sbs.co.kr/news/endPage.do?news_id=N1008815973&plink=RSSLINK&cooper=RSSREADER)
-  - [B] SBS 경제: ["20번도 안 돼 금이 쩍"…'접는 아이폰' 출시 4일 만에 '발칵'](https://news.sbs.co.kr/news/endPage.do?news_id=N1008815710&plink=RSSLINK&cooper=RSSREADER)
-  - [B] 한국경제 전체: [20년 만에 바뀐 업종 분류…섹터 ETF 뒤흔드는 '이 종목'](https://www.hankyung.com/article/202610278497i)
-
-### How Fanatics and OpenAI streamline the fan experience
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 3개: arxiv_ai, openai_blog, techcrunch
-- 키워드: how, openai, tools, dots, assistant, turned
-  - [A] OpenAI 블로그: [How Fanatics and OpenAI streamline the fan experience](https://openai.com/index/fanatics-streamline-fan-experience)
-  - [A] OpenAI 블로그: [How Ultrafast cut incident investigation from hours to minutes at OpenAI](https://openai.com/index/openai-cut-incident-investigation)
-  - [A] arXiv cs.AI 신규: [Who Verifies the Tools? How Warped Formatters Mislead Agents and Their Verifiers](https://arxiv.org/abs/2610.32110)
-  - [B] TechCrunch: [How OpenAI turned its coding tools into dots, an always-on personal assistant](https://techcrunch.com/2026/10/26/how-openai-turned-its-coding-tools-into-dots-an-always-on-personal-assistant/)
-
-### 고흥 우주발사체 국가산단 조성 속도…내년 보상 착수
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: gnews_kr_biz, korea_kr, yna_econ
-- 키워드: 위성, 내년, 현실로, 점검, 우주쓰레기, 능동제어
-  - [A] 연합뉴스 경제: [고흥 우주발사체 국가산단 조성 속도…내년 보상 착수](https://www.yna.co.kr/view/AKR20261027069300003)
-  - [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): ['우주쓰레기 청소선 '승리호'가 현실로' 우주물체 능동제어 위성 조립 전 최종상태 점검 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMidEFVX3lxTFA5b1RRN1o3czVoWHhKOHNDN0FPVTRyV1pncG5Pc2tJX3VWMTRiQW1UNjRCenBBQU5ncTc5U29ibTEybTJ2OHlfZTNLbmQ0ejZvUkRDYVFYYVBCQ25VdWJ2SXV4NS1LQ1NCN2dBNHdTRGkxNnNp?oc=5)
-  - [B] 구글뉴스 한국 경제: [국내 첫 우주 쓰레기 제거 위성, 내년 누리호로 발사 - YTN 사이언스](https://news.google.com/rss/articles/CBMijAFBVV95cUxQOFRXMUFfV2FEQ0lpSm9BVzBjYlA0NC1odzJRUUIyN2VTejVzY3N5RndmZjlURlRhTzRfOU44bmdZbWFJQXRQUU5UV25qUnBfZzh0YUU3MUxqWTI2VmhYanFMZlF6ZnNzQVIxR253OVlyMzdIdGlJRDFRUGczaGJ5VzlYR0lPTXhaRGs0Zg?oc=5)
-
-### 여야없이 '소아응급실 압색' 사과 요구…경찰 "안타깝다" 말아껴
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: chosun_all, khan_all, yna_top
-- 키워드: 안타깝다, 사과, 소아응급실, 경찰, 압수수색, 여야없이
-  - [A] 연합뉴스 최신: [여야없이 '소아응급실 압색' 사과 요구…경찰 "안타깝다" 말아껴](https://www.yna.co.kr/view/AKR20261027166000530)
-  - [B] 조선일보 전체: [소아응급센터 압수수색 여야 질타…경찰은 사과 대신 “안타깝다” 반복](https://www.chosun.com/economy/science/2026/10/27/HA3TOOBVGA4TCZLDGIZTMMLGMM/)
-  - [B] 경향신문 전체: [소아응급실 압수수색 경찰 책임자, 국감서 “안타깝다”는 말만···끝내 사과는 안 해](https://www.khan.co.kr/article/202610271741001/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
-
-### 춘천시, 바이오·창업 엑스포 통합 개최…120개 기업·기관 참여
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: chosun_all, yna_econ, yna_top
-- 키워드: 개최, 참여, 초중고, 경남교육청, 여명, 모의의회
-  - [A] 연합뉴스 경제: [춘천시, 바이오·창업 엑스포 통합 개최…120개 기업·기관 참여](https://www.yna.co.kr/view/AKR20261027142100062)
-  - [A] 연합뉴스 최신: [경남교육청, 청소년 모의의회 개최…초중고 학생 40여명 참여](https://www.yna.co.kr/view/AKR20261027169800052)
-  - [B] 조선일보 전체: [직원 둘이 매출 2조에 師弟 창업까지...쑥쑥 크는 ‘AI 네이티브’ 기업들](https://www.chosun.com/special/2026/10/27/PBZKPKK6RBHYFDEMW3GRB6N6F4/)
-
-### 앤더블의 자신감…"무대 보고 나면 관심에서 끌림으로 바뀔 것"
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: gnews_kr_ent, hankyung_all, yna_top
-- 키워드: 끌림으로, 앤더블의, 자신감, 나면, 무대, 보고
-  - [A] 연합뉴스 최신: [앤더블의 자신감…"무대 보고 나면 관심에서 끌림으로 바뀔 것"](https://www.yna.co.kr/view/AKR20261027165300005)
-  - [B] 구글뉴스 한국 연예: [앤더블의 자신감…“무대 보고 나면 관심에서 끌림으로 바뀔 것” - KBS 뉴스](https://news.google.com/rss/articles/CBMiZkFVX3lxTE5xb041XzFOclV4OTNYc1pJZDFhMUtHV2JGdUhQdkpfN2RMQ05jUzZlNUFrdmgyVXBkcW1kQzFwX0xfODlCcWJpdXVwWmVzWlFZQnUwd2JJdzEya1RNd1I1NFVWVWpaZw?oc=5)
-  - [B] 한국경제 전체: ["관심을 끌림으로…앤더블의 해 됐으면" [종합]](https://www.hankyung.com/article/202610278499H)
-
-### 네이버, 브룩필드와 12조원 AI인프라 계약…AI팩토리 본격 공략
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: etnews, hankyung_all, yna_econ
-- 키워드: 네이버, 팩토리, 본격, 브룩필드와, 인프라, 계약
-  - [A] 연합뉴스 경제: [네이버, 브룩필드와 12조원 AI인프라 계약…AI팩토리 본격 공략](https://www.yna.co.kr/view/AKR20261027150700017)
-  - [B] 전자신문: [네이버, 브룩필드와 90억달러 AI 인프라 계약…AI 팩토리 본격 추진](https://www.etnews.com/20261027000413)
-  - [B] 한국경제 전체: [본궤도 오른 네이버 글로벌 AI팩토리…본격 실행](https://www.hankyung.com/article/202610278549i)
-
-### '김건희 운명' 결정할 대법관들 4명은 누구? - OhmyNews
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: gnews_kr_top, hankyung_all, khan_all
-- 키워드: 김건희, 나가서, 싶다, 치료받고, 특검, 도주
-  - [B] 구글뉴스 한국 헤드라인: ['김건희 운명' 결정할 대법관들 4명은 누구? - OhmyNews](https://news.google.com/rss/articles/CBMid0FVX3lxTE5IN0F3V0s2aFJFblUwaWdERmpHUHpVZGlidTd2NEg3QUJ6ekJ3anB2VGNpQjF4aFR2RDQ1eTU4QjAtTXR1RngwLVRnSnVyRFZsWmd1OENtSFBCNzhFZW1oNDN5ZjVpTFJiaWFzRWZ1T1YyMWdOYXVj?oc=5)
-  - [B] 한국경제 전체: [김건희 "나가서 치료받고 싶다"…특검 "도주·증거인멸 우려"](https://www.hankyung.com/article/2026102784347)
-  - [B] 경향신문 전체: [대법, 김건희 추가 구속 심문 종료…김건희 “나가서 치료받고 싶다”](https://www.khan.co.kr/article/202610271651001/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
-
-### 정계 떠난 홍준표, 측근 구속 위기에 변호사로 법정 등장 - 연합뉴스
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: chosun_all, gnews_kr_pol, sbs_headline
-- 키워드: 측근, 홍준표, 떠난, 정계, 구속, 위기에
-  - [B] 구글뉴스 한국 정치: [정계 떠난 홍준표, 측근 구속 위기에 변호사로 법정 등장 - 연합뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE1uWGtMWG4xamJCM0FyYkNsVjRZaWYwM0pwX21CNzVOVTE2RU9QRG9SVi1DUVREUEliVDJweFBZY2ZoNmVRTHlKSW1KbGdyTUZpcERjR3ZYa3psVzjSAWBBVV95cUxPNmN4cUZIdVl1Uk93bjU4SlR6VFZ5ME9qZmdHdVhjUm1xdGhwYWdzdUc1cjduUTcwZ3lBWThZeGtSdEVLMTdNY24zOG1scFNfTUtuc3Y1QjA3TEpEYnR6MnY?oc=5)
-  - [B] 조선일보 전체: [홍준표, ‘대구시장 선거 캠프’ 측근 구속 위기에 직접 변호](https://www.chosun.com/national/incident/2026/10/27/EI2MROWKQFC5ZM7W2ADUUUH2EI/)
-  - [B] SBS 이 시각 이슈: [정계 떠난 홍준표, 측근 변호인 됐다…법원 앞서 꺼낸 말](https://news.sbs.co.kr/news/endPage.do?news_id=N1008816673&plink=RSSLINK&cooper=RSSREADER)
-
-### Mbappe dropped by Chinese brands for ‘offending national sentiments’
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 3개: bbc_world, jp_japantimes, nikkei_asia
-- 키워드: brands, chinese, drop, mbappe, offending, grows
-  - [A] The Japan Times: [Mbappe dropped by Chinese brands for ‘offending national sentiments’](https://www.japantimes.co.jp/sports/2026/10/27/soccer/mbappe-china-brands/)
-  - [B] Nikkei Asia: [Chinese brands drop soccer star Kylian Mbappe for 'offending' nation](https://asia.nikkei.com/spotlight/sports/chinese-brands-drop-soccer-star-kylian-mbappe-for-offending-nation)
-  - [B] BBC World: [Major Chinese brands drop Mbappé as backlash grows over Mao joke](https://www.bbc.co.uk/news/articles/cv62yg0erp8zo?at_medium=RSS&at_campaign=rss)
-
-### Australia to host USS Colorado as first US nuclear submarine under Aukus pact
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 3개: bbc_world, gnews_eu_top, scmp
-- 키워드: australia, junior, masterchef, co-host, meghan, submarine
-  - [B] SCMP: [Australia to host USS Colorado as first US nuclear submarine under Aukus pact](https://www.scmp.com/news/asia/australasia/article/3372225/australia-host-uss-colorado-first-us-nuclear-submarine-under-aukus-pact)
-  - [B] 구글뉴스 영국/유럽 헤드라인: [Meghan, Duchess of Sussex, to co-host Junior MasterChef Australia: ‘It was an easy yes’ - The Guardian](https://news.google.com/rss/articles/CBMirwFBVV95cUxQeTBtbjJ0MUxKME9KOVdmWlFDRFhTY0FUQTJpX1JUMVo5QXhfZ3pPX0xkV2NyYVdlbzBDVmJrcGdEaDA3M2w3cElSNGxnZXNLY1RTRkdRWXNJWWlYZVgtQi02Rzc5bWRyMkJ5em1XR0RzalZnQXFSZXNVSElKOG5meVBrUHpXSWRyNi0wc19JV2YzMGVyci1iUGtOejJmZi1JVDhHN1RFZ1FfbXhKQk8w?oc=5)
-  - [B] BBC World: [Meghan to co-host Junior MasterChef Australia](https://www.bbc.co.uk/news/articles/crgqwg3ll1v1o?at_medium=RSS&at_campaign=rss)
-
-### Macklemore launches ‘Free Palestine Tour’ after Ed Sheeran fallout
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 3개: aljazeera, gnews_us_top, scmp
-- 키워드: tour, palestine, free, macklemore, dublin, opens
-  - [B] SCMP: [Macklemore launches ‘Free Palestine Tour’ after Ed Sheeran fallout](https://www.scmp.com/news/world/europe/article/3372221/us-rapper-macklemore-launches-free-palestine-tour-ireland-after-ed-sheeran-rift)
-  - [B] 구글뉴스 미국 헤드라인: [Macklemore’s ‘Free Palestine’ tour gets massive welcome in Dublin, where pro-Palestinian support runs deep - NBC News](https://news.google.com/rss/articles/CBMipgFBVV95cUxOeFhCaVlkaFhfQ01pUmFxUENiVzRCLUhVZld4OEFJZW5aay1OSHFJbmRyZjlOTkVWRFFrRldtM3p4ME02WGVtMGVmSG5EbzFBZnIzbG92em10SkpPY2NXMWpPc3JGUnFKelliVXhsNWFuRGVWanBWa1VqUS0tZW8xaEZTbTZvNWFBbWNlTWpUM0tjNUQwRnhWTlFQdGQxUU05SGFDNmpR?oc=5)
-  - [B] Al Jazeera: [Macklemore opens ‘Free Palestine’ tour in Dublin](https://www.aljazeera.com/video/newsfeed/2026/10/27/macklemore-opens-free-palestine-tour-in-dublin?traffic_source=rss)
-
-### Eric Bauza, voice of Bugs Bunny, Daffy Duck and Porky Pig, dies at 46
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 3개: us_cbs, us_latimes, us_nbc
-- 키워드: eric, dies, bauza, 46, daffy, actor
-  - [A] NBC News Top Stories: [Eric Bauza, voice of Bugs Bunny, Daffy Duck and Porky Pig, dies at 46](https://www.nbcnews.com/pop-culture/pop-culture-news/eric-bauza-voice-bugs-bunny-daffy-duck-porky-pig-dies-46-rcna605663)
-  - [A] Los Angeles Times: ['Generational talent': Eric Bauza, versatile voice actor known for modern take on 'Looney Tunes' characters, dies at 46](https://www.latimes.com/entertainment-arts/story/2026-10-26/eric-bauza-dead-voice-actor-looney-tunes)
-  - [A] CBS News: [Eric Bauza, actor who voiced Bugs Bunny and Daffy Duck, dies at 46](https://www.cbsnews.com/news/eric-bauza-death-at-46-bugs-bunny-daffy-duck-looney-tunes/)
-
-### When an invasive fish is also tasty, Maryland schoolkids can help 'eat the problem'
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 2개: arxiv_ai, us_npr_top
-- 키워드: agent, what, workflows, llm, problem, when
-  - [A] NPR Top Stories: [When an invasive fish is also tasty, Maryland schoolkids can help 'eat the problem'](https://www.npr.org/2026/10/26/nx-s1-5954211/invasive-blue-catfish-solution-schools-chesapeake-bay)
-  - [A] arXiv cs.AI 신규: [Don't Forget What You Just Learned: Self-Directed Repair Turns Agent Mistakes Into Lasting Lessons](https://arxiv.org/abs/2610.31846)
-  - [A] arXiv cs.AI 신규: [Permission to Retry: A Study of Authorization and Recovery in AI Agent Workflows](https://arxiv.org/abs/2610.31916)
-  - [A] arXiv cs.AI 신규: [Beyond On-Policy vs. Off-Policy: At What Level Should LLM Agent Distillation Follow the Student?](https://arxiv.org/abs/2610.31918)
-  - [A] arXiv cs.AI 신규: [The Helpful Agent Problem: When Emergent Cooperation Among LLM Agents Bypasses Intended Workflows](https://arxiv.org/abs/2610.31985)
-
-### 반도체 신화의 첫 도면 되살렸다 '최초 4메가 디램(DRAM) 설계도면' 복원 - 대한민국 정책브리핑
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 2개: etnews, korea_kr
-- 키워드: 메가, 복원, 설계도면, 반도체, 디램, 도면
-  - [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [반도체 신화의 첫 도면 되살렸다 '최초 4메가 디램(DRAM) 설계도면' 복원 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMi7wFBVV95cUxQaFgzLTN2UHBCTE5oejRGbkFzR0tLU1RhNWN3VWhWYnRqSDA3cEtSV3l5QjdaLWhITW8zT0hJTnBfMDA2ZTByUC1ISjh1dWRfRnRGM25vQ05JZExBcGNLcmJhYjNDeWNtM3YwemZ5aktfNXZDRFByeGdiaVpnQ0FVRFNfU1VkYVdXa05kOWFlbWhsM2xvTEI4LVdJSjNDd1NtQmdTbk5IeUFmd1Q1U09MN3pjQXJwdURkdHI2dEFXWHNWdGJ5M0NENUFZTGNrdVlkWXZXZUpLeVBaZDh1R01pRzlLY1lzejBfUjU5UGUwWQ?oc=5)
-  - [B] 전자신문: [은행권, 차세대 핵심전산부터 '복원력' 설계…KB·농협 장애 대응 강화](https://www.etnews.com/20261027000219)
-  - [B] 전자신문: [韓 반도체 신화 출발점 4메가 D램 설계도면 복원](https://www.etnews.com/20261027000352)
-  - [B] 전자신문: [[대학 AI 콜로키움] ① 폭넓은 AI 활용 고려한 강의·평가 재설계…기초교육 강화해야](https://www.etnews.com/20261027000327)
-
-### Sebastian Raschka's from-scratch video course on building reasoning models
-- 상태: 🟠 분석/블로그 — 1차 자료 대조 필요 · 분야: 테크 · 소스 2개: geeknews, hn_front
-- 키워드: gpt-6, terra, sebastian, raschka, video, building
-  - [C] Hacker News 프론트: [Sebastian Raschka's from-scratch video course on building reasoning models](https://magazine.sebastianraschka.com/p/building-reasoning-models)
-  - [C] Hacker News 프론트: [GPT-6.1 Terra](https://openai.com/index/introducing-gpt-6-1-terra/)
-  - [C] GeekNews: [Sebastian Raschka의 추론 모델을 밑바닥부터 만드는 동영상 강좌](https://news.hada.io/topic?id=36052)
-  - [C] GeekNews: [GPT-6.1 Terra - 시각적 추론과 컴퓨터 사용을 결합한 고속 모델](https://news.hada.io/topic?id=36059)
-
 ### [예측] Will Zohran Mamdani become President of the United States before Jan 22, 2045? (Politics)
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 예측시장 · 소스 2개: ap_top, kalshi
-- 키워드: become, united, states, president, 2045, zohran
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 45개: aljazeera, anthropic_news, ap_top, arxiv_ai, bbc_world, bbg_markets, cnbc_top, dw, fc_snopes, financialjuice, ft_home, geeknews, gnews_eu_top, gnews_us_top, guardian_world, hn_front, jp_itmedia, jp_japantimes, kalshi, marketwatch, nikkei_asia, nyt_world, polymarket, reddit_worldnews, reuters_top, scmp, techcrunch, us_abc, us_axios, us_cbs, us_fox, us_guardian_us, us_latimes, us_nbc, us_npr_top, us_nyt_biz, us_nyt_home, us_nyt_tech, us_nyt_us, us_pbs, us_politico, us_thehill, us_usatoday, verge, yt_bloomberg
+- 키워드: trump, election, israel, brazil, netanyahu, financialjuice
   - [A] Kalshi 이벤트: [[예측] Will Zohran Mamdani become President of the United States before Jan 22, 2045? (Politics)](https://kalshi.com/markets/kxpersonpresmam-45)
   - [A] Kalshi 이벤트: [[예측] Will Nick Fuentes become President of the United States before 2045? (Elections)](https://kalshi.com/markets/kxpersonpresfuentes-45)
-  - [A] AP Top (구글뉴스 경유): [The SS United States is scheduled for sinking to become the world’s largest artificial reef - AP News](https://news.google.com/rss/articles/CBMiggFBVV95cUxPUTJvNC03dm00QTd5WGZ6SzBrS2tLaTZjV1pXVm1NSlVYa2l1VlVHa0ctT0pSOU5EdTVzbnkwX0pCbEY4OUx0VGZoWEhKMEpJQ1FHRGxicUZkSFcyS3B5NmRsM1dKZllKNnUzbmlEcHJ2bTQyRWdEanlveXE3WnFYbzZB?oc=5)
+  - [A] Kalshi 이벤트: [[예측] Who will succeed Netanyahu as Prime Minister of Israel? (Elections)](https://kalshi.com/markets/kxnextisraelpm-45jan01)
+  - [A] ABC News Top Stories: [WATCH: Man arrested near film set](https://abcnews.com/video/137559310/)
+  - [A] New York Times Technology: [Darline Graham Gets Help From the Data Center Industry in South Carolina Senate Race](https://www.nytimes.com/2026/10/26/us/politics/darline-graham-data-centers-south-carolina.html)
+  - [A] ABC News Top Stories: [WATCH: Homeowners go all out with Halloween decorations](https://abcnews.com/video/137559574/)
 
-### 앤더블 "첫 컴백? 데뷔 앨범만큼 열심히 준비, 성장한 모습 보여줄 것"
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 2개: chosun_all, hankyung_all
-- 키워드: 앤더블, 절제된, 프렌치, 키싱, 컴백, 섹시
-  - [B] 조선일보 전체: [앤더블 "첫 컴백? 데뷔 앨범만큼 열심히 준비, 성장한 모습 보여줄 것"](https://www.chosun.com/entertainments/music/2026/10/27/HFRTMODFHEYTAYLGGEYTQMBSMI/)
-  - [B] 조선일보 전체: [앤더블 "신곡 '프렌치 키싱', 두 입술 겹치는 안무가 포인트…성숙하고 절제된 섹시미"](https://www.chosun.com/entertainments/music/2026/10/27/MUZDOZJWHEZDEOJTHA3DOOLDGQ/)
-  - [B] 한국경제 전체: ['컴백' 앤더블 "'프렌치 키싱'으로 절제된 섹시 보여드릴 것"](https://www.hankyung.com/article/202610278324H)
+### 삼성전자, 귀막지 않는 이어폰 '갤럭시 버즈 온' 출시
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 24개: chosun_all, donga_all, fc_newstof, gnews_cpi, gnews_fx, gnews_kr_biz, gnews_kr_pol, gnews_kr_tech, gnews_kr_top, gnews_rate, hankyung_all, hankyung_econ, khan_all, korea_kr, mk_econ, mk_stock, moef, sbs_econ, sbs_headline, techcrunch, yna_econ, yna_top, yt_sampro, zdnet_kr
+- 키워드: 10, 달러, 만에, 환율, 구룡마을, 분기
+  - [A] 뉴스톱: [삼성전자, 귀막지 않는 이어폰 '갤럭시 버즈 온' 출시](https://www.newstopkorea.com/news/articleView.html?idxno=48472)
+  - [A] 뉴스톱: [HD현대마린솔루션 3분기 매출 6501억...전년比 27% 증가](https://www.newstopkorea.com/news/articleView.html?idxno=48476)
+  - [A] 뉴스톱: [BNK금융, 올 3분기 누적 당기순이익 6223억원…전년比 19.2%↓](https://www.newstopkorea.com/news/articleView.html?idxno=48488)
+  - [A] 뉴스톱: [삼성생명, 첫 ‘해외 신종자본증권’ 발행 완료…2조 규모](https://www.newstopkorea.com/news/articleView.html?idxno=48505)
+  - [A] 뉴스톱: [신한금융, 올 3분기 누적 순이익 5조 돌파…역대 최대 갱신](https://www.newstopkorea.com/news/articleView.html?idxno=48511)
+  - [A] 뉴스톱: [삼성카드, 3분기 이자비용만 2000억원…순이익 13.5%↓](https://www.newstopkorea.com/news/articleView.html?idxno=48513)
 
-### 국내외서 4천9백억 원대 도박 사이트 운영한 조직 검거 - KBS 뉴스
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 2개: chosun_all, gnews_kr_pol
-- 키워드: 조직, 운영한, 도박, 지원, 워크숍에, 적발
-  - [B] 구글뉴스 한국 정치: [국내외서 4천9백억 원대 도박 사이트 운영한 조직 검거 - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE9TVWd5cDBMLVhKamhrYl9KZ19aV1ZEQnZGQTVoSmpXR29CeEcyRThNdzJjaF9oeDNPVlRyNGwwbFp4MHcyR3JaRUJSdlRFUlR0SW5lYmUzdGg4WHc?oc=5)
-  - [B] 조선일보 전체: [도박 자금 5900억 세탁한 조직원 등 80명 송치](https://www.chosun.com/national/incident/2026/10/27/OGNAZHV2KFE2HIX3B5RRIHFJ7A/)
-  - [B] 조선일보 전체: [워크숍에 해외 여행도 지원...기업처럼 운영한 4900억 도박사이트 조직 적발](https://www.chosun.com/national/regional/2026/10/27/LIENDL3NNFCFVH6UGRSDJ3AJFI/)
+### Eagles’ nightmare season deepens as Cowboys hand Philadelphia fifth straight loss
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 10개: bbc_world, gnews_eu_top, gnews_us_top, scmp, us_cbs, us_fox, us_guardian_us, us_nbc, us_nyt_home, us_nyt_us
+- 키워드: years, trafficking, sex, alexander, sentenced, brothers
+  - [A] Guardian US: [Eagles’ nightmare season deepens as Cowboys hand Philadelphia fifth straight loss](https://www.theguardian.com/sport/2026/oct/27/cowboys-eagles-dak-prescott-javonte-williams-nfl-monday-night-football)
+  - [A] NBC News Top Stories: [Alexander brothers, ex-luxury real estate brokers, sentenced to 30 years in prison for sex trafficking](https://www.nbcnews.com/news/us-news/ex-luxury-real-estate-brokers-brother-sentenced-federal-sex-traffickin-rcna605818)
+  - [A] CBS News: [Alexander brothers sentenced to 30 years in prison for sex trafficking](https://www.cbsnews.com/news/alexander-brothers-sentenced-sex-trafficking/)
+  - [A] New York Times U.S.: [Nanotyrannus Skeleton ‘Jodi’ Is Auctioned for $47.3 Million](https://www.nytimes.com/2026/10/27/us/jodi-dinosaur-skeleton-auction-sothebys.html)
+  - [A] New York Times Home: [Alexander Brothers Sentenced to 30 Years Each for Sex Trafficking](https://www.nytimes.com/2026/10/27/nyregion/alexander-brothers-sentencing-sex-trafficking.html)
+  - [B] 구글뉴스 미국 헤드라인: [Fossils from brickworks reveal new dinosaur species that roamed England's wetlands 125 million years ago - Phys.org](https://news.google.com/rss/articles/CBMigwFBVV95cUxQNFp1ek02WnFoMWJpa3R1TkdNMklab1VhRFowdGVubl94OUdnVUVoQkxORlN3ejRseWFraUtURnNRaG1IZWM0VDF1bTJ1Znk0WHluY0FqMzRPNFBPMG92VDItWmRKbVFGLTdGWHdsSGhqcmFDWkpFLVRJaVA4b1FTVmdBSQ?oc=5)
 
-### 50연승 안세영 "우승 기쁨 즐길 겨를이 없어" - YTN
-- 상태: ✅ 확인(독립 소스 2+) · 분야: 스포츠 · 소스 2개: donga_all, gnews_kr_sports
-- 키워드: 연승, 밀워키, 창단, 우승, 우승까지, 탬파베이
-  - [B] 구글뉴스 한국 스포츠: [50연승 안세영 "우승 기쁨 즐길 겨를이 없어" - YTN](https://news.google.com/rss/articles/CBMiXkFVX3lxTE5Nanhjd01LcjVmaUxEWDdKWFJLQjJuTDRXZ0trVTlaYVNUb1pJZk83dUdKZ2NaeUxteUxGTWJadmN2eW43M195OVhiMTU0cGw4SlI5MXpHcFFqRXZfSGc?oc=5)
-  - [B] 구글뉴스 한국 스포츠: [‘창단 첫 우승 보인다’ MLB 밀워키, 월드시리즈 3연승 질주 - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE5HTGx4MlNfek1KcnllQVJSZ3R5R0NSd3hQVnNPN1I4VlZIM2ZWSVpnZmQzRHBpUENiTGpfd3UwTHJXczV6dDBWbUxxR3UzY0dacHRLWEtTa2V6c0k?oc=5)
-  - [B] 동아일보 전체: [밀워키, 탬파베이 WS 3연승…창단 첫 우승까지 1승](https://www.donga.com/news/Sports/article/all/20261027/134917188/1)
+### 노동장관, '주52시간 예외는 위헌' 지적에 "그런 주장 가능"(종합)
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 7개: donga_all, geeknews, gnews_kr_pol, gnews_kr_tech, khan_all, sbs_headline, yna_econ
+- 키워드: 52, 시간, 예외, 시간제, 메가특구, 예외는
+  - [A] 연합뉴스 경제: [노동장관, '주52시간 예외는 위헌' 지적에 "그런 주장 가능"(종합)](https://www.yna.co.kr/view/AKR20261027096151530)
+  - [B] 구글뉴스 한국 과학기술: [‘52시간 예외’ 매번 인가 필요… “KTX 직행 못하고 역마다 서는 셈” - 동아일보](https://news.google.com/rss/articles/CBMid0FVX3lxTE80U2p2S0NTcG1NWVR4RE1vM0VaZl84c0FxRjhIN1cxRFRiUnVnS3lGeEpORzNwV3ozSzBVWGVmUmFGeC1ENzBoQ2tyV3JDWXpjV2Y5cUIzVmJuYTVMX0x2VllkbTNoZGo1dDZZclM5cmZFSGcxX1hZ0gFmQVVfeXFMTXdzMEhteVZCaEk3bDlmTTlLaFptNC1jQlZ6WjRVV0FwUmI5UEZLel9YTEpvVnNYelZOLUQzajNaSl9vTDcyWmpSUDRSamVJY3JBWUlNRUlHSzAySnpkNEdSTkNTWWxn?oc=5)
+  - [B] 구글뉴스 한국 정치: [반도체 주52시간제 예외… 시행령 땜질한다는 정부 - 동아일보](https://news.google.com/rss/articles/CBMid0FVX3lxTE9rQktVajd0SzNSWXotT3BwQ0h3Yk9OM25YdVo0WE1BN1VMQi0wMTYzWklMQ3BmdS1ENUYyQWgzdmZwSVhvb1VRamY5a1EwZG5sblJxN21DXzFNLXBGcENBNlA2cWxubFVraC1fdUFGdGdTLXNNSGdJ0gFmQVVfeXFMUENLR0Y4Smw1UFNDNmFmNHdIYTEyQkM2YmI5dnFFeG90M0MwMURmb3pFZmVNSmVWV0dYWmxwZjJ5M3BCSmxnel9kRF9rMFlDelRnT1p5WHZBVjN1M3pFYnpVNHRoVDh3?oc=5)
+  - [B] 경향신문 전체: [메가특구 52시간제, ‘특례’ 대신 연장근로 손보나](https://www.khan.co.kr/article/202610272131005/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] SBS 이 시각 이슈: ["고소득자는 인간이 아닌가"…주 52시간 예외 두고 '고심'](https://news.sbs.co.kr/news/endPage.do?news_id=N1008817661&plink=RSSLINK&cooper=RSSREADER)
+  - [B] 동아일보 전체: [김영훈, 메가특구 52시간 예외에 “사회적 대화로 해법 찾아야”](https://www.donga.com/news/Society/article/all/20261028/134921187/2)
+
+### 애플, M6칩 탑재로 AI성능 높인 신형 맥북프로·아이맥 공개
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 6개: geeknews, gnews_eu_top, gnews_kr_top, jp_itmedia, producthunt, yna_top
+- 키워드: 애플, mini, ipad, oled, 공개, 탑재
+  - [A] 연합뉴스 최신: [애플, M6칩 탑재로 AI성능 높인 신형 맥북프로·아이맥 공개](https://www.yna.co.kr/view/AKR20261028002500091)
+  - [B] 구글뉴스 영국/유럽 헤드라인: [Apple's pitching its all-new iPad Mini as the perfect tablet for cinephiles - What Hi-Fi?](https://news.google.com/rss/articles/CBMixgFBVV95cUxNanlxZTd2MjQxbzBPbVpVbjZ1MHJtMklFQmV1dGxTVEJaOXU3cGtQQUM3SHBVWE45M1FJNExwbmRiRXhQYk9kV19WUVVnTWFvaTllc1M5elktenJJRC1JZGJ3UmdPWU9JbHFFOGZfTFhMaWhVQlE2cmJBQmhrcUxHbGdkY1c2M3djM2JDa3lES2tSZ3VtRktMRHNzVV9rU3kyY0UxWjZoSUduSDVBV1R4cGNha1dSeEJ1MEg2bFJsbHFHMVVuSWc?oc=5)
+  - [B] ITmedia NEWS: [Apple、「iPad mini」を大幅刷新 8.5インチOLEDとA20 Pro搭載、防水にも対応 11万9800円から](https://www.itmedia.co.jp/news/article/2610/27/2000002607/)
+  - [B] 구글뉴스 한국 헤드라인: [애플 아이패드 미니, 마침내 OLED 및 방수 기능 탑재 - Hypebeast.KR](https://news.google.com/rss/articles/CBMigAFBVV95cUxPOWd5U1V1NWtXOC1BUTJWUDBBSGtBM09ib3VucnpERkpSOXdqQm5ZRzhSazkyV2tkcXpueU9ORndOUG1uekpTaXhoM1czenI3ZHNIUGdtRmMtb0lKd1ZxUVdrRVVBMkJPMzBPS1Z4VGZHa3FLa2NiX0dHMmdlaEY3bQ?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [애플, 창작앱 전반에 AI 확대…로직 프로·키노트에 어시스턴트 - 이데일리](https://news.google.com/rss/articles/CBMigAFBVV95cUxNYVpxc3Y0Q3hJeVZaRWYwZVdRSjNKcUsyeHhUWl9aZFdwY05YenlQam5lb215UzQtSWVGNzQyXzEwS0t0ZXpScTMxYXotRnF4RWVaR2lqNGxRamVtQXNSdkd2cHdVdnVhTTZiZzFqcXotNFRPM0J1U0FFN2F4VW5WMg?oc=5)
+  - [C] Product Hunt: [iPad mini 8](https://www.producthunt.com/products/apple)
+
+### [속보] 원자력안전위원회, 고리 원전 3·4호기 계속운전 허가 - 매일경제
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 6개: donga_all, gnews_kr_pol, gnews_kr_tech, hankyung_econ, khan_all, zdnet_kr
+- 키워드: 고리, 호기, 원전, 계속운전, 허가, 10
+  - [B] 구글뉴스 한국 정치: [[속보] 원자력안전위원회, 고리 원전 3·4호기 계속운전 허가 - 매일경제](https://news.google.com/rss/articles/CBMiVEFVX3lxTE13RzlselJqSUxfVGozXzhtbUZaOG1YbEtmNmhHb201M2pjWG50MmxZTUhYWmlGS2wwZllIMksxeF93cmdBVHkzZ0I0b2o0OXRZbkVaWQ?oc=5)
+  - [B] 구글뉴스 한국 과학기술: [원자력안전위, 고리 3·4호기 수명 10년 연장 허가 - 조선일보](https://news.google.com/rss/articles/CBMigwFBVV95cUxQMDZIbDYwM1dNd0hoRXFVeEZwT3ViTW41UmJMVHlqUGVKcFlUd19MaG9EVVpzSG1PeVpvYllKY3hYeWJoVXdkcVcyRmxpUmgtbzJYWUN5azBWcFd0bVpZMzItQmZ5UGJyODFLQ2pPWlEweFN1LW5jc3FpdmZCNzdmWmdlRQ?oc=5)
+  - [B] ZDNet Korea: [고리 3·4호기 2027년 재가동…원안위, 계속운전 운영변경허가 동시 승인](https://zdnet.co.kr/view/?no=20261027181934)
+  - [B] 한국경제 경제: [고리 원전 3·4호기, 내년 초 다시 가동](https://www.hankyung.com/article/2026102788101)
+  - [B] 경향신문 전체: [원안위, 고리 3·4호기 10년 연장 허가…“계속운전 심의 형해화”](https://www.khan.co.kr/article/202610272132015/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] 동아일보 전체: [고리 원전 3·4호기 수명 10년 연장… 내년 재가동](https://www.donga.com/news/Economy/article/all/20261028/134921164/2)
+
+### Sudan paramilitary drone strikes cause mass power cuts in eastern states
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 5개: aljazeera, bbc_world, dw, guardian_world, nyt_world
+- 키워드: syria, jordan, deadly, islamic, church, attack
+  - [B] Guardian World: [Sudan paramilitary drone strikes cause mass power cuts in eastern states](https://www.theguardian.com/world/2026/oct/26/sudan-paramilitary-drone-strikes-rapid-support-forces-power-cuts-eastern-states)
+  - [B] Guardian World: [UK sanctions Sudanese military leaders implicated in El Fasher ‘campaign of rape’](https://www.theguardian.com/global-development/2026/oct/26/uk-sanctions-sudanese-military-leaders-implicated-in-el-fasher-campaign-of)
+  - [B] Guardian World: [Jordan attacks militants in Syria in retaliation for church attack](https://www.theguardian.com/world/2026/oct/26/jordan-attacks-militants-syria-retaliation-for-last-week-church-attack)
+  - [B] DW English: [Jordan says its military struck 'militant hideouts' in Syria after deadly church attack](https://www.dw.com/en/jordan-says-its-military-struck-militant-hideouts-in-syria-after-deadly-church-attack/a-79760441?maca=en-rss-en-all-1573-rdf)
+  - [B] BBC World: [Jordan carries out deadly strike in Syria in retaliation for church attack](https://www.bbc.co.uk/news/articles/cq8ezg6dy6xlo?at_medium=RSS&at_campaign=rss)
+  - [B] DW English: [Jordan acknowledges civilian casualties in Syria airstrike against 'Islamic State'](https://www.dw.com/en/jordan-acknowledges-civilian-casualties-in-syria-airstrike-against-islamic-state/a-79775653?maca=en-rss-en-all-1573-rdf)
+
+### 베네수, 연말까지 새 대법원·선관위 구성 추진…내년 대선 실시
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 5개: donga_all, gnews_kr_pol, khan_all, sbs_headline, yna_top
+- 키워드: 구속, 우려, 도주, 연말까지, 대법원, 40
+  - [A] 연합뉴스 최신: [베네수, 연말까지 새 대법원·선관위 구성 추진…내년 대선 실시](https://www.yna.co.kr/view/AKR20261028000400071)
+  - [B] 구글뉴스 한국 정치: [교제 여성 살해·도주한 40대 구속…"도주 우려" - 연합뉴스TV](https://news.google.com/rss/articles/CBMiZ0FVX3lxTE1QZk5vMGhFZUI5OGtqQkt0XzBFelFyN2dVVWk4Zjd4aXRJM3YxOUdnQTF1LVNKNlB5enkyeHFqVHk0T3BfV2MtZkRteHdVc3ZQR3RRNTlJNktwS1JGUGtCdnVGWDVqd0U?oc=5)
+  - [B] 경향신문 전체: [대법원 “증거 인멸·도주 우려”…김건희 구속 기한 2개월 연장](https://www.khan.co.kr/article/202610272123025/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] SBS 이 시각 이슈: [유심칩 빼고 택시 환승 "계획적"…전 연인 살해 40대 구속](https://news.sbs.co.kr/news/endPage.do?news_id=N1008817664&plink=RSSLINK&cooper=RSSREADER)
+  - [B] 경향신문 전체: [‘5·18 왜곡’ 지만원 구속···“도주·증거인멸 우려”](https://www.khan.co.kr/article/202610272318001/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] 동아일보 전체: [김건희 연말까지 구속 2개월 연장… 대법 “증거인멸 우려” 추가영장 발부](https://www.donga.com/news/Society/article/all/20261028/134921467/2)
+
+### 민주당, '조희대 국정조사' 추진 논의...대법관 제청 갈등 쟁점
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 5개: chosun_all, donga_all, fc_newstof, gnews_kr_top, khan_all
+- 키워드: 조희대, 내달, 국정조사, 민주당, 추진, 국조
+  - [A] 뉴스톱: [민주당, '조희대 국정조사' 추진 논의...대법관 제청 갈등 쟁점](https://www.newstopkorea.com/news/articleView.html?idxno=48520)
+  - [B] 구글뉴스 한국 헤드라인: [혁신당, 여당 '조희대 국정조사'에 "탄핵도 동시 추진해야" - MBC 뉴스](https://news.google.com/rss/articles/CBMieEFVX3lxTE5SS2M5dmx5SUs0N1owTm9qR3VzcDk2WDFuUDJLWF9IRWpRaTctazlja2xmNDhhYThLN29YcFZxT3JYVWpSNVBPNU9IbkxGN2RUQTBVUVJqeWRxb2xIT3NtN0RreUN5WkxXX2ViY3hFMWlaejhaVnVxMtIBeEFVX3lxTE5tTTN3X1JqR3VtQkxGMWdGSFl5NHIyYjBzZ1k0bU5tTHNHZUZsTUw3M3FIQnJ5TnpNaUtJeEd5ZWtQMDk5YmZxTS1YSGpSODBZNC1rdU96S2RMRGRKOGo1eVI1bTRKMXczaHFxUHpNcnRJS2xzRDhodw?oc=5)
+  - [B] 조선일보 전체: [초유의 대법원장 국조… 민주당, 내달 강행 예고](https://www.chosun.com/politics/assembly/2026/10/28/CB74HWDLEFAWTB63LYZT64NAQ4/)
+  - [B] 경향신문 전체: [민주당, 조희대 국정조사 내달 추진](https://www.khan.co.kr/article/202610272157015/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] 동아일보 전체: [與 “조희대 국조 실시… 내달 5일 본회의 상정”](https://www.donga.com/news/Politics/article/all/20261028/134921352/2)
+  - [B] 동아일보 전체: [曺 겨눈 與, 대법관 재제청 거부 경위-계엄당시 회의 조사 거론](https://www.donga.com/news/Politics/article/all/20261028/134921370/2)
+
+### 중수청 "담합자진신고 접수권한은 수사기관에"…공소청과 충돌
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 4개: donga_all, khan_all, sbs_headline, yna_econ
+- 키워드: 논란에, 중수청, 정상화, 비정상의, 참석, 중수청장
+  - [A] 연합뉴스 경제: [중수청 "담합자진신고 접수권한은 수사기관에"…공소청과 충돌](https://www.yna.co.kr/view/AKR20261027153200004)
+  - [A] 연합뉴스 경제: [공소청-중수청 권한다툼 수면위로…리니언시 접수권 어디에(종합)](https://www.yna.co.kr/view/AKR20261027153251004)
+  - [A] 연합뉴스 경제: [김경협 청장, 재외동포협력센터 해직자 논란에 "우선채용 협의"](https://www.yna.co.kr/view/AKR20261027187900371)
+  - [B] 경향신문 전체: [김지용, 국무회의 두 번째 참석…중수청 내부서도 “수사 신뢰 저하”](https://www.khan.co.kr/article/202610272139005/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] 경향신문 전체: [“중수청장 참석, 비정상의 정상화” 이 대통령, 배석 논란에 재차 반박](https://www.khan.co.kr/article/202610272139025/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] SBS 이 시각 이슈: ["비정상의 정상화…한 달에 한 번쯤은 오세요"](https://news.sbs.co.kr/news/endPage.do?news_id=N1008817670&plink=RSSLINK&cooper=RSSREADER)
+
+### $\Psi$-0.6: Adaptive Streams of Thought in a Unified Vision-Language World Model
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 테크 · 소스 4개: arxiv_ai, google_blog, techcrunch, verge
+- 키워드: model, genie, world, vision-language, realistic, real-time
+  - [A] arXiv cs.AI 신규: [$\Psi$-0.6: Adaptive Streams of Thought in a Unified Vision-Language World Model](https://arxiv.org/abs/2610.32177)
+  - [A] arXiv cs.AI 신규: [PEAR: Adaptive Advantage Reshaping for Perception and Exploration in Large Vision-Language Models](https://arxiv.org/abs/2610.32216)
+  - [A] arXiv cs.AI 신규: [RxnExBench: Benchmarking Vision-Language Models for Structured Chemical Reaction Extraction from Scientific Literature](https://arxiv.org/abs/2610.32221)
+  - [A] Google 블로그: [8 examples of Gemini 4 Argon in action](https://blog.google/products-and-platforms/products/gemini/gemini-4-argon-in-action/)
+  - [A] Google 블로그: [We’re announcing Genie 4, our new world model for real-time interactive simulation.](https://blog.google/innovation-and-ai/models-and-research/google-deepmind/introducing-genie-4/)
+  - [B] The Verge: [Google’s next Genie AI model generates more realistic experiences](https://www.theverge.com/tech/1019076/google-genie-4-ai-model)
+
+### 전국 곳곳 아침 영하권 '초겨울 추위'…낮과 밤 기온차 15도
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 4개: gnews_kr_top, khan_all, sbs_headline, yna_top
+- 키워드: 아침, 가장, 올가을, 추워, 영하권, 기온
+  - [A] 연합뉴스 최신: [전국 곳곳 아침 영하권 '초겨울 추위'…낮과 밤 기온차 15도](https://www.yna.co.kr/view/AKR20261028006500034)
+  - [A] 연합뉴스 최신: [전남광주 아침 기온 뚝…올가을 들어 가장 추워](https://www.yna.co.kr/view/AKR20261028007600054)
+  - [A] 연합뉴스 최신: [경북 내륙 아침 영하권…대구·경북 올가을 가장 추워](https://www.yna.co.kr/view/AKR20261028008200053)
+  - [B] 구글뉴스 한국 헤드라인: [[날씨] '올 가을 가장 추운 날' 아침 기온 뚝↓ ...강풍.한파특보 발효지역은? - 헤드라인제주](https://news.google.com/rss/articles/CBMic0FVX3lxTE9rdzVCRF9hcW53SXRjbG9YREFDS2hOVDZGbTFDZDNyemF5NWE3d1hpY1RjeDJza2x4dzNiczJROTMxWl9UZzUzSURZdThiNk8xZ1pQTEhRaEZzSmRDY28yS2NkOFVHRzRRbUlBTHFlcDd4cWs?oc=5)
+  - [B] 경향신문 전체: [[2026년 10월 28일 날씨]하루아침에 ‘빙점’…강풍에 더 춥다](https://www.khan.co.kr/article/202610272120035/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] SBS 이 시각 이슈: ['가장 추운 아침' 온다…전국 대부분 한파 특보](https://news.sbs.co.kr/news/endPage.do?news_id=N1008817663&plink=RSSLINK&cooper=RSSREADER)
+
+### Apple’s foldable iPhone Duo draws early complaints of screen cracking
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 4개: ft_home, gnews_cn_top, gnews_us_top, jp_japantimes
+- 키워드: iphone, duo, apple, screen, problems, outcry
+  - [A] The Japan Times: [Apple’s foldable iPhone Duo draws early complaints of screen cracking](https://www.japantimes.co.jp/business/2026/10/27/tech/iphone-duo-cracks/)
+  - [B] 구글뉴스 중국(홍콩) 헤드라인: [iPhone Duo 內螢幕出現裂紋 蘋果承認少數裝置有問題 會提供更換 - unwire](https://news.google.com/rss/articles/CBMihwFBVV95cUxQLVZ5Ujl5WElHYXE1TXNDWW5val9CWE5kWVlaYlprOTV6RWhnX2dTNUQzdklnc2hhcl9ETXNSUjVOS3dkMjZsaF8wZDRCZ0lOQlhoRDJLZVZ6Tmg1VzRad1RjRFNYelhOdDE1M0s5a3RnWWREXzdkTkhFQmJENTdtQ0J2SWd1NXM?oc=5)
+  - [B] 구글뉴스 미국 헤드라인: [Apple's New iPhone Duo Breaks After 75,000 Folds in Real-Life Test - Gizmodo](https://news.google.com/rss/articles/CBMiiwFBVV95cUxNWThmbDk0MzVWeWZ3ZnRZM2N4UlE4Ylluc2NJZ25tdlZkb3BVanFfT05KNDVOZ0VuQ0daR00wbVcxSUs3MGVWempfRWhTMkVFT3pheExaSVlJV1VERzktc2ZsTk5xcVlpb2k5SXN6MHhyLVdmOEYwbkVJX2FTRTBaWlRkTzRrcjR3eTlz?oc=5)
+  - [B] FT (헤드라인만, 유료): [Apple hit by ‘Crackgate’ outcry over iPhone Duo screen problems](https://www.ft.com/content/324875fb-8631-4339-8516-6057de9ac085?syn-25a6b1a6=1)
+
+### 與, 의총서 가상자산 과세 유예론 잇따라…내일 재경위 당정협의(종합)
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 4개: donga_all, gnews_kr_top, yna_econ, yna_top
+- 키워드: 가상자산, 유예, 과세, 논의, 오늘, 당정협의
+  - [A] 연합뉴스 경제: [與, 의총서 가상자산 과세 유예론 잇따라…내일 재경위 당정협의(종합)](https://www.yna.co.kr/view/AKR20261027135951001)
+  - [A] 연합뉴스 최신: [與, 오늘 가상자산 과세 당정협의…유예 여부 논의](https://www.yna.co.kr/view/AKR20261027167000001)
+  - [B] 구글뉴스 한국 헤드라인: [민주당, 오늘 당정 협의서 가상자산 과세 ‘유예’ 논의 - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE1PZy1MMXVoS0plU2JVZEtCZ3RqTVBnNElCZzd3T1FDcm9ScGFPaUhaSjNDRVR4LTNDR1FoU2FheDFjc0swWlhGcGcyUV9OSzdUNndQZFlhekw2clU?oc=5)
+  - [B] 동아일보 전체: [與도 시행 두달 남은 ‘코인과세’ 유예 의견 모아](https://www.donga.com/news/Politics/article/all/20261028/134921068/2)
+
+### 고흥 우주발사체 국가산단 조성 속도…내년 보상 착수
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 4개: gnews_kr_biz, gnews_kr_top, hankyung_all, yna_econ
+- 키워드: 내년, 승리, 국가산단, 속도, 조성, 우주발사체
+  - [A] 연합뉴스 경제: [고흥 우주발사체 국가산단 조성 속도…내년 보상 착수](https://www.yna.co.kr/view/AKR20261027069300003)
+  - [B] 구글뉴스 한국 경제: [우주판 '승리호' 뜬다‥내년 누리호로 우주쓰레기 포획위성 발사 - MBC 뉴스](https://news.google.com/rss/articles/CBMidEFVX3lxTE1kc2cxbWFJZVlNRTM2Z2dZQmZPVXhPUWZxYkZQYTRSa1VzT255R3laS1JlVVBrNldvbUk4MmQzbjdQNnV4MU5GWEVvUmdhWTNiN0NRZklDMGgtYW9GRDlETzBIN0xVVTdveElOcFNHRmJMOThS0gF0QVVfeXFMTXd3R28ySjRhZWh2enFGck5zYzdlOXpSTURKOFpXVExSVU44RG8xZmcydHB4MXlZdy1fLU9HbUk1OTgyU1FUWUhZamRIWmk4T01FNHRRY0JfaEM2OEhEV2s2Ylc5RHVMNXFWaDNUdVJmWXF6Tkg?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [승리, 내년 1월 아빠된다...20대 일반인 여성과 강남 신혼집 준비 中 - SPOTV NEWS](https://news.google.com/rss/articles/CBMicEFVX3lxTE9XTU5JUVpPUlQ1Uk5SNHJ2TkkyOW1NcG51TUtPX3phMndVSHNNYUNlRWdLVlBudXVSUWROdlM2emhGY2VadEVCN1VsNnlhRWs3SjlDV0tEX1lkbE5iR2tEV2JNdDktcWZvQWllRnFKNjk?oc=5)
+  - [B] 한국경제 전체: ['연예계 퇴출' 승리, 아빠 되나…특수폭행혐의 피소 중 알려져](https://www.hankyung.com/article/2026102790747)
+
+### “개미들 다시 웃을까”…실적발표 앞둔 삼전닉스 주주환원에 쏠린 눈
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 4개: hankyung_econ, mk_stock, sbs_econ, sbs_headline
+- 키워드: 환원, 삼전닉스, 얼마나, 210, 주주에, 푼다
+  - [B] 매일경제 증권: [“개미들 다시 웃을까”…실적발표 앞둔 삼전닉스 주주환원에 쏠린 눈](https://www.mk.co.kr/news/stock/12186761)
+  - [B] 한국경제 경제: [[단독] 삼전닉스, 역대급 환원 주주에 '210조+α' 푼다](https://www.hankyung.com/article/2026102787811)
+  - [B] SBS 이 시각 이슈: ['3백만 닉스'에 발등 찍혔는데…'주주환원' 얼마나?](https://news.sbs.co.kr/news/endPage.do?news_id=N1008817654&plink=RSSLINK&cooper=RSSREADER)
+  - [B] SBS 경제: ['하이닉스' 샀다가 손해 봤는데…주주 환원 얼마나?](https://news.sbs.co.kr/news/endPage.do?news_id=N1008817870&plink=RSSLINK&cooper=RSSREADER)
+
+### 코스피 4%대 급등에 매수 사이드카 발동 - MBC 뉴스
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 인플루언서 · 소스 3개: gnews_kr_biz, mk_stock, yt_sampro
+- 키워드: 코스피, 매수, 사이드카, 발동, 급등, 서수진
+  - [B] 구글뉴스 한국 경제: [코스피 4%대 급등에 매수 사이드카 발동 - MBC 뉴스](https://news.google.com/rss/articles/CBMidEFVX3lxTE9wemIzZXBhd3REU3dpRjc5bndPbjVRdlU4cHptRkdIWFdOUmZNNG8zX09fV1pxWDlfSFNRSHE0b19oMzl1LUFhQ0RsdExXenY4d0NpdmJWVG1YN2xMTkRMbkdDVkJfSS1IXzFldFdrbEdDeXcw0gF0QVVfeXFMTzhDSlhkeEJKQTF2a0MyWkg1cUtVelA1NHBrSHk1S0VCVVFqTVc1SjZSS255MXZEYTFRanQwRl90VjdYLTNEOXZHVWw2dk1hSnEwTUpiOXpkVGkxWVZNZ3JiSHhybmpDbl8wbUpacjBSQlhwNDA?oc=5)
+  - [B] 구글뉴스 한국 경제: [속보 코스피 4%대 급등...매수 사이드카 발동 - YTN](https://news.google.com/rss/articles/CBMiY0FVX3lxTE96SGJRNDhhTEJ5REVNczRYRFNVTHVpX1ppZ2FldnVmc2ZxSlBNQUxfalgxaWgyekFoOEZKTmtZTlJPcDR3US14SzhNcnJFUXBfQnZIUEtMdVA1RkxraWhzOXVMZw?oc=5)
+  - [B] 매일경제 증권: [[속보] 코스피 4%대 급등…‘매수 사이드카’ 발동](https://www.mk.co.kr/news/stock/12186725)
+  - [C] YouTube: 삼프로TV: [코스피 '매수 사이드카'…SK하이닉스, 키옥시아 '16조 특별배당' 나올까 | 박지훈 NH투자증권 부장, 김종문 NH투자증권 부장 [아침N투자]](https://www.youtube.com/watch?v=ZCXo5sjfzEg)
+  - [C] YouTube: 삼프로TV: [삼전닉스 조정받아도 버티는 장비주는 따로 있다…강한 소부장의 공통점ㅣ권다영, 이재규 SK증권 WM1 영업본부 차장 [2시 마켓워치]](https://www.youtube.com/watch?v=Zlhsfvdr4Ds)
+  - [C] YouTube: 삼프로TV: [대형주는 아직 쉬어갈 시간…연말까지 코스닥에서 트레이딩 기회를 보자ㅣ명민준, 서수진, 황유현 [주린이 구조대]](https://www.youtube.com/watch?v=YNXt2JE0QqM)
+
+### '네일 헤드샷 퇴장'에도 흔들리지 않은 KIA...이범호 감독 "불펜이 승리 주역" - KBC광주방송
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: chosun_all, gnews_kr_sports, gnews_kr_top
+- 키워드: 이범호, kia, 감독, 시라카와, 퇴장, 차전은
+  - [B] 구글뉴스 한국 스포츠: ['네일 헤드샷 퇴장'에도 흔들리지 않은 KIA...이범호 감독 "불펜이 승리 주역" - KBC광주방송](https://news.google.com/rss/articles/CBMiYkFVX3lxTE9pNjFfS3NVM1UxYmNIbUpoUGhQY2lqYjZVa2tVUzhYY1ROeGswVnZLSjA5QnJQcFR1RjdkZkl3LTlTYjl2T01Rb0puNXBVZjhWOEV3cnRQU3plQ0RVTWVrbHhR?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [박진만 감독의 간단명료 정리 "이의리 무너뜨려야 우리가 이긴다" [PO2 현장] - 조선일보](https://news.google.com/rss/articles/CBMigwFBVV95cUxOTEtqRk45YVQxSzhOa2dsa0pKS3NhR0paWGNYakdoSHBTb2ZyYlA3OWh2azllWjlvcXV5RTd3VVo0cFFkcjV5OExITEgta0FuM19BMDU1UWM0bTZWUTBKYWYwazV4eGdSSm1GQkFtcEdzRDhEYkJNdXR6WEJrSmU1bTc2OA?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [한숨 고른 KIA 이범호 감독 "1승 1패면 만족, 3차전은 日 시라카와 선발 등판" - 노컷뉴스](https://news.google.com/rss/articles/CBMiUkFVX3lxTE51X3hrbExpaU9sZVdRdjRFTXdQeThlVVZkazA2UTdteFN3ODlUVFJfNjhsd2hvemRacmpCS0NtS0JxVG5qNDlEekFrLVlwc0RoNVE?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [박진만 삼성 감독 "확실히 잡으려고 원태인 5점 차에도 등판" - 연합뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE9lSEQ1dzUtRHpDemlZX0FJTHhDTnlidlRjbUwwanN6X09MazRUdFZBOTRnRmdNZjF2UWlpbXRhT01Wano1NjRDZjZrN1J1NE9UZ0VlZlNDY2Q1YzTSAWBBVV95cUxPTUxza254S08zRXh6dXRDb2F5Z1RpTmlnU2xOamNwangzbjZwNmpyV3pqc2Zad1RZRXNQOE9oYmJhUWNqQVJkX3ZLVTBoSGFXNmZ4QWs1WURDeEN4d2dlcXg?oc=5)
+  - [B] 조선일보 전체: ["감독님께 전화 드려야겠다" 이제는 '엄살'이 됐다…8년 만에 낀 글러브, 삼성 도파민 제대로 터졌다 [PO]](https://www.chosun.com/sports/baseball/2026/10/28/G4ZWMMRXHA4WKMLDMMYGCN3BHE/)
+  - [B] 조선일보 전체: [‘1승 1패 허용’ KIA, 3차전 선발은 시라카와…4차전은 ‘헤드샷 퇴장’ 네일 투입할까, 이범호 "3차전 이기면 고민"](https://www.chosun.com/sports/baseball/2026/10/28/MZRGKZDFHFRDSZDCMNSGMYRXGI/)
+
+### Tom Jones postpones L.A. and San Diego shows because of 'bad case of the flu'
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 3개: us_fox, us_latimes, us_nyt_home
+- 키워드: susan, 80, kate, james, saint, dies
+  - [A] Los Angeles Times: [Tom Jones postpones L.A. and San Diego shows because of 'bad case of the flu'](https://www.latimes.com/entertainment-arts/music/story/2026-10-27/tom-jones-reschedules-la-san-diego-shows-flu)
+  - [A] Los Angeles Times: [Immigrant detainee dies at Otay Mesa Detention Center in San Diego](https://www.latimes.com/california/story/2026-10-27/immigrant-detainee-dies-at-san-diego-ice-detention-center)
+  - [A] Los Angeles Times: [Susan Saint James, activist and TV star of 'Kate & Allie' and 'McMillan & Wife,' dies at 80](https://www.latimes.com/entertainment-arts/story/2026-10-27/susan-saint-james-dead-kate-allie-mcmillan-wife-star-80)
+  - [A] New York Times Home: [Susan Saint James, Emmy Winner Who Starred in ‘Kate & Allie,’ Dies at 80](https://www.nytimes.com/2026/10/27/arts/television/susan-st-james-dead-kate-and-allie.html)
+  - [B] Fox News Latest: [‘Kate & Allie’ star Susan Saint James dead at 80](https://www.foxnews.com/entertainment/kate-allie-star-susan-saint-james-dead-80)
+
+### 은행 전산장애 약 5년간 554건…배상 고객 11만명
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: gnews_kr_biz, mk_econ, yna_top
+- 키워드: 고객, 국민은행, 년간, 554, 전산장애, 배상
+  - [A] 연합뉴스 최신: [은행 전산장애 약 5년간 554건…배상 고객 11만명](https://www.yna.co.kr/view/AKR20261027159800002)
+  - [B] 구글뉴스 한국 경제: [[속보] KB국민은행 “해킹 정보유출 2091명 추가 확인” - 매일경제](https://news.google.com/rss/articles/CBMiVEFVX3lxTFBvVnZXOV9kMFlBeVJiYm1yTUpRNlFNaFZqWktCa1E4emhFejVpd2J3N240UzQ0S3FGRFlocmtpbWJoUEo2M21qQXFIakVFc3Zjc3JGTA?oc=5)
+  - [B] 매일경제 경제: [해킹피해 발표는 119명, 실제 2210명…KB국민은행, 예금잔액·대출내역도 샜다](https://www.mk.co.kr/news/economy/12186713)
+  - [B] 매일경제 경제: [“환전하면 경품까지”…외화예금 최대에 은행권 고객 쟁탈전](https://www.mk.co.kr/news/economy/12186716)
+
+### OpenAI expands partnership with Oracle to bring its apps to ChatGPT
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 금융경제 · 소스 3개: cnbc_top, financialjuice, openai_blog
+- 키워드: oracle, apps, expands, chatgpt, cloud, codex
+  - [A] OpenAI 블로그: [OpenAI expands partnership with Oracle to bring its apps to ChatGPT](https://openai.com/index/oracle-apps-in-chatgpt)
+  - [B] FinancialJuice 헤드라인 (Codex 확인 URL): [FinancialJuice: Oracle: Plan to expand multicloud AI database services to the US government $ORCL](https://www.financialjuice.com/News/9823657/Oracle-Plan-to-expand-multicloud-AI-database-services-to-the-US-government-ORCL.aspx?xy=rss)
+  - [B] CNBC Top News: [Oracle integrates ChatGPT, Codex into apps and expands cloud chip lineup](https://www.cnbc.com/2026/10/27/oracle-openai-chatgpt-codex-google-tpus.html)
+
+### RTX 30 그래픽카드 ‘잠금 해제’ 도구 등장…AI 이미지·영상 처리량 최대 60% 증가 - AI타임스
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: gnews_kr_tech, gnews_kr_top, mk_stock
+- 키워드: rtx, 장벽, 노하우에, 20, 결합, 감각
+  - [B] 구글뉴스 한국 과학기술: [RTX 30 그래픽카드 ‘잠금 해제’ 도구 등장…AI 이미지·영상 처리량 최대 60% 증가 - AI타임스](https://news.google.com/rss/articles/CBMiakFVX3lxTE1pSFVGV3c0dElvemt6VldKSUdnLUZfT0xCcktCVVdueUV2SWxVUGtLNnkwQ2hRMjhXaW01RmI5eUxvMzd0LTJoN01mQWhmVkJnaS1WdjVGMk5keVVoWVlheHZldXd2OEdmNVE?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [그래픽 카드 제조업체들은 더 이상 NVIDIA로부터 RTX 5090용 GB202 칩을 주문할 수 없습니다. - GameGPU](https://news.google.com/rss/articles/CBMiugFBVV95cUxQNkwyOU01ZGhxaHFTZ1lsWVVFUno2THFGNWhZV0xsVkpQUFNIR05qOUxtRU1MYmxqeVVjR1FlcDU2a004OHJfYkUzZndkUlNzVDJZeTRNRFRfR0hVLXhBdjVCdl9TbHV2ZDkzSTBRMFR2VWJVZl9WeDlnVzQ0WXg0RHQtWlFCbEV2LXlzR09nLXdxZU9NQWZYTUZDUXpBZjRiTk1uTzBzRGNzc213SFoyM1RzMWd3OHJkWVE?oc=5)
+  - [B] 매일경제 증권: [50대 노하우에 20대 감각 결합…AI가 깬 사내 장벽](https://www.mk.co.kr/news/stock/12187238)
+
+### 이재용, 삼성 미래 먹거리 로봇 사업 챙긴다…RX사업추진실 방문 - 전자신문
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: gnews_kr_biz, gnews_kr_tech, sbs_econ
+- 키워드: 이재용, 취임, 사업, 로봇, 주년, 미래사업에
+  - [B] 구글뉴스 한국 경제: [이재용, 삼성 미래 먹거리 로봇 사업 챙긴다…RX사업추진실 방문 - 전자신문](https://news.google.com/rss/articles/CBMiTkFVX3lxTFBjRmxSZjU5WnRDZC1qb3ctd3hYTHF5SElxUHlRY29iYVZqOEtHMnRQSkxJVFRLYTNZcnpSTWt2NFN2cVJJVzVQTThlZWljZw?oc=5)
+  - [B] 구글뉴스 한국 과학기술: [이재용, 취임 4주년에 로봇 사업 핵심 거점 찾았다 - 조선일보](https://news.google.com/rss/articles/CBMijwFBVV95cUxPZ0hvMG9uak5RT1FhUEVhMUxaOGM2UzB0dkh6dmI3bkZLWDdBUjQxVE9jRHNtQm9Vd1lHd2lsdzRxQXdOWi1KNFBYRWxOMHFJcFBGWFVTMzZFaEJnS3RUZUV6R0xPY0pScXNHODZmY193VUVqbk9VSkZHNndDYkRiRWFVMjdJb3Uyel9kS2liQQ?oc=5)
+  - [B] SBS 경제: [취임 4주년 이재용, 로봇사업 현장 점검…미래사업에 방점](https://news.sbs.co.kr/news/endPage.do?news_id=N1008817558&plink=RSSLINK&cooper=RSSREADER)
+
+### 李대통령 "2Q 경상흑자 세계 2위…자만 말고 내수 개선에 총력"(종합) - 연합인포맥스
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: gnews_kr_biz, gnews_kr_pol, khan_all
+- 키워드: 대통령, 내수, 총력, 개선, 시위, 유럽
+  - [B] 구글뉴스 한국 경제: [李대통령 "2Q 경상흑자 세계 2위…자만 말고 내수 개선에 총력"(종합) - 연합인포맥스](https://news.google.com/rss/articles/CBMicEFVX3lxTE9kOHkzaWZrclhwN0JON3lEMm5rc3BFazJ4ZFoyeW8xNi1aSzNLRGJqLW9ZSVdhUVFwdWx1cmVIZERiOVpTNXN2MjlrSFNubUNCZ0swckpyczlkajlHWnJNNDVSdmRRSGxoQy14WTViWFY?oc=5)
+  - [B] 구글뉴스 한국 정치: [이 대통령 "지속가능한 성장 중요…내수 활성화에 정부 역량 모아야" - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMibEFVX3lxTE5SQ25IWVFBR3ozaVpyU0oxMFd0aGxIZ3BXQ1ZBbWRDdHh5VTd0TG5tRUg0aS1nTHFiX28zVTJMRWpHTDdTMTBiUDBzYXpxbkhsMGlhNk5DOERuSkxDVVd4ZnVwMXhlVWpEczZFRA?oc=5)
+  - [B] 경향신문 전체: [이 대통령 “유럽 시위 원인은 저성장…‘내수 개선’ 총력 다해야”](https://www.khan.co.kr/article/202610272139015/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+
+### 조현 “미, 북미대화에 한국이 너무 앞서가지 않길 바라는 입장” - 한겨레
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: donga_all, gnews_kr_pol, khan_all
+- 키워드: 않길, 조현, 너무, 한국이, 앞서가지, 바라
+  - [B] 구글뉴스 한국 정치: [조현 “미, 북미대화에 한국이 너무 앞서가지 않길 바라는 입장” - 한겨레](https://news.google.com/rss/articles/CBMidEFVX3lxTE5aNXQyemYxSE9KLWE3UHRCRmNnblY2RTc4RDY3c0MxbVNRMS0tYm4xalowS2dXZkRsSXQ3Nm5wODliWXJkUGcxZUYzRXZFc2ZHTGZQZDBQRXFCWHlaRFByNHlaNl9GZ3RzdS05S2NOY2tfZmxl?oc=5)
+  - [B] 경향신문 전체: [조현, 북·미 대화에 “미, 한국 너무 앞서나가지 않길 바라”](https://www.khan.co.kr/article/202610272136015/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] 동아일보 전체: [조현 “루비오 美국무, 북미대화 기대 관련 한국이 너무 앞서가지 않길 바란다고 해”](https://www.donga.com/news/Politics/article/all/20261028/134921362/2)
+
+### '재판 집단퇴정' 수원지검 검사들 징계 면했다 - MBC 뉴스
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: donga_all, gnews_kr_pol, khan_all
+- 키워드: 징계, 재판, 이화영, 검사, 집단퇴정, 피했다
+  - [B] 구글뉴스 한국 정치: ['재판 집단퇴정' 수원지검 검사들 징계 면했다 - MBC 뉴스](https://news.google.com/rss/articles/CBMid0FVX3lxTE5CbXpLYW1tOGZrVTNiSjRwVnl1QXpNY0RnTEx4LUZDNzNJSjdVRlUyeEZhenpQYlZyQzV3UzBOSUVFWFc0ZTh6VXlrejR5VlhlV0dQQ1dvcWROMTk5LVdudGRxTlBNSTJaSGZ0N05FOUFOY2t0ZVQ40gF3QVVfeXFMTXp0X0J4SDBOT0hCQXlDOUg5c3hkUnltR2RfZEswak1kNkFVZE9HV1pMX3FXX0dka3dpMGlfLW9oMFUxZXhZcnpQZ2lHbnRkc0lYR1lfbmV3U0MtUEpEUUwxNGE1TFU4Z05ibV9zTGJZNnpGQXJGLVk?oc=5)
+  - [B] 경향신문 전체: [‘이화영 재판 퇴정’ 검사 2명, 징계 피했다](https://www.khan.co.kr/article/202610272120025/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] 동아일보 전체: [이화영 재판중 집단퇴정 검사 2명 징계 안한다](https://www.donga.com/news/Society/article/all/20261028/134921465/2)
+
+### 중국산 자율주행 장치를 테슬라에···FSD 기능 불법 활성화한 80명 검거 - 경향신문
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: donga_all, gnews_kr_tech, khan_all
+- 키워드: 자율주행, 80, 중국산, 테슬라, 불법, 적발
+  - [B] 구글뉴스 한국 과학기술: [중국산 자율주행 장치를 테슬라에···FSD 기능 불법 활성화한 80명 검거 - 경향신문](https://news.google.com/rss/articles/CBMiWkFVX3lxTE1sbGtjRXRCVjZqb2NSQ09KZUNJNzRhNmYzbEhvVV93RVk4UHB3d1NIdEFJMnhUY1dwdW1YS3BHZ0FKdjdCQ21Nd3RxX2hYQllVd3lVU0FRdTIzd9IBX0FVX3lxTE9YOUNzOFZSU19FVHk2ZF9WUDRiaHB3WHJjdUswNHJMb09lcU5uUTlzVjduZHNyZ2wwcm9OeWNzWGFJU19yeEJrd0ZEa3ZoZnVjYVowSmVnLUt5MXo3eHow?oc=5)
+  - [B] 경향신문 전체: [테슬라 자율주행, 중국산 장치로 ‘꼼수 활성화’…80명 적발](https://www.khan.co.kr/article/202610272120015/?utm_source=khan_rss&utm_medium=rss&utm_campaign=total_news)
+  - [B] 동아일보 전체: [자율주행 막힌 중국산 테슬라, 불법 ‘탈옥’해 달린 80명 송치](https://www.donga.com/news/Society/article/all/20261028/134921469/2)
+
+### 구로구 주택가에서 ‘미라화’ 시신 발견…시체 유기한 60·80대 긴급체포 - 경향신문
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 3개: donga_all, gnews_kr_pol, gnews_kr_top
+- 키워드: 시신, 체포, 80, 구로구, 유기한, 상태
+  - [B] 구글뉴스 한국 정치: [구로구 주택가에서 ‘미라화’ 시신 발견…시체 유기한 60·80대 긴급체포 - 경향신문](https://news.google.com/rss/articles/CBMiWkFVX3lxTE04Sl8zOEtpSXZWSC1GYmg1NmlIaVczNE43bkM2RlhoektpV3U3TGRTdksyX3pqeUxVQ2pHN2Y2QXhjQTU2MTNrekZndTYxTXlPT1RRV3EtdWtCQdIBX0FVX3lxTFBLQWItTHcwelhhbnJlTi1Jd1F3VXc1Mkh6NjMxcEw3VEVONXpHWUF6dTNoZnhjX2RqNjJnSWRWcFU4VkJsWWNjV2Eteks1OTB5TmJHM1F5dmtKZEtpWk5z?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [구로구 주택가 시신 유기한 남성 2명 체포…빌라주인 등(종합) - 연합뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE9OSWtwRFc1eUxrNlRRU1FMSGhuTFpPMDE5eExUZEJpTlBlcThveE8xTTBVUWZTR3gwSEMtblFncVdBVmFNNWRnM0pSS2tBV21nWGc4U010YzJxZzjSAWBBVV95cUxOWkdDS2FLNF90QlJpNmRrX3ZieDhrcUc0MzVydUhLYmZzT2pkN1ROTHdBRjVXem92Z1YwZi1XdEJxZUd5REJfTFZoZ2NsTDBqSGlrS2h1UjhoSllIMFJzdkM?oc=5)
+  - [B] 동아일보 전체: [구로 주택가에 미라 상태 시신… 80대 등 2명 체포](https://www.donga.com/news/Society/article/all/20261028/134921463/2)
+
+### Zookeeper dies after being attacked by leopard, safari park says
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 3개: bbc_world, gnews_us_top, us_cbs
+- 키워드: leopard, zookeeper, dies, enclosure, dutch, being
+  - [A] CBS News: [Zookeeper dies after being attacked by leopard, safari park says](https://www.cbsnews.com/news/zookeeper-dies-leopard-attack-dutch-safari-park/)
+  - [B] 구글뉴스 미국 헤드라인: [Zookeeper dies after she was attacked in leopard enclosure, Dutch safari park says - CBS News](https://news.google.com/rss/articles/CBMigwFBVV95cUxNR29fMlctdkF1aGFxdVZNRjJsTWpmWExlb0lDckkycVVsQm9Takx3R185SWpnbU1iNGxlc2JPaVViX2xCbXhxYXNtX0d4OFRUdE00YWNWRF9MQUlaRWEzNkpnRGNrdThvWXNtX1Vya2VDWWhUcTM1QUFUT0lvODQ1ZEh4bw?oc=5)
+  - [B] BBC World: [Dutch zookeeper dies after being mauled in leopard enclosure](https://www.bbc.co.uk/news/articles/crwyq90gwg8jo?at_medium=RSS&at_campaign=rss)
+
+### Artiva to discontinue cell therapy after two patient deaths, cut workforce by 94% - Reuters
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 3개: aljazeera, bbc_world, reuters_top
+- 키워드: deaths, nigeria, detention, preventable, entirely, inquiry
+  - [A] Reuters (구글뉴스 경유): [Artiva to discontinue cell therapy after two patient deaths, cut workforce by 94% - Reuters](https://news.google.com/rss/articles/CBMiywFBVV95cUxQdWt5UTMxcXVTanBGbVVhZDZyam43Q3VVRk1mUUFtaGkzcVR3aXZzN1NJajhMcWVuNVpLZVF3YlYtVjVGUks4MXlnNmlHUXJnY3VEQXEtem81eFJ5Y2pVZ3h1OWtDS3V4MUZJQkp0RUZiQkE1SUxzUkthNmJ1OUQ1WkRJMEZaYVpFWDE2YlpmQTN2SVRId0hndlJlWHB1dWxsWUJqdWNUVzdNUWpzX2RsMVdfM25uQURWRFlIam83YnJyTVF2UEhpcTdHYw?oc=5)
+  - [B] Al Jazeera: [Death toll from attack by gunmen in northeastern Nigeria rises to 62](https://www.aljazeera.com/news/2026/10/27/death-toll-from-attack-by-gunmen-in-northeastern-nigeria-rises-to-62?traffic_source=rss)
+  - [B] BBC World: [Deaths in detention cells in Nigeria were entirely preventable, inquiry finds](https://www.bbc.co.uk/news/articles/cmgel8pqj5rwo?at_medium=RSS&at_campaign=rss)
+
+### Discursive Verses: Jay-Z, the Super Bowl and playing with house money
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 3개: bbc_world, gnews_eu_top, us_npr_top
+- 키워드: super, bowl, jay-z, show, half-time, perform
+  - [A] NPR Top Stories: [Discursive Verses: Jay-Z, the Super Bowl and playing with house money](https://www.npr.org/2026/10/27/nx-s1-6019093/the-week-in-hip-hop-jay-z-super-bowl)
+  - [B] BBC World: [Jay-Z to perform at Super Bowl half-time show](https://www.bbc.co.uk/news/articles/cq8ezg4364epo?at_medium=RSS&at_campaign=rss)
+  - [B] 구글뉴스 영국/유럽 헤드라인: [Jay-Z picks headliner for 2027 Super Bowl half-time show … Jay-Z - The Guardian](https://news.google.com/rss/articles/CBMimgFBVV95cUxQMVB4OUpLNk1UX3AzWXg2UzgtcnlFM0hIaGhNZlc2WW1xSm5sSnlHZDM4blhsRFpoVXo0bnItZ0tHRnBwMnRvMkFWTVJXY1dLOGRoTWJIWUFpdVNJOVNzdlk3QjVERzk0SVdGckpGQVBJU0ZaZkx0QXlYdks5M2dwelBjU3JVX1dxM2NVeU92QzlkYzFPQkRHelFR?oc=5)
+
+### High-stakes standoff between GMO and hacker group escalates with first data leak
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 일본뉴스 · 소스 3개: jp_japantimes, nikkei_asia, techcrunch
+- 키워드: gmo, customer, internet, japan, data, computers
+  - [A] The Japan Times: [High-stakes standoff between GMO and hacker group escalates with first data leak](https://www.japantimes.co.jp/news/2026/10/27/japan/crime-legal/gmo-computer-shutdown/)
+  - [B] Nikkei Asia: [Cyberattack on Japan internet provider GMO threatens customer computers](https://asia.nikkei.com/spotlight/cybersecurity/cyberattack-on-japan-internet-provider-gmo-threatens-customer-computers)
+  - [B] TechCrunch: [Japan internet giant GMO says hackers posted stolen customer data](https://techcrunch.com/2026/10/27/japan-internet-giant-gmo-says-hackers-posted-stolen-customer-data/)
+
+### Trump-appointed CDC deputy director to resign after six months on the job
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 미국뉴스 · 소스 3개: us_guardian_us, us_nbc, us_thehill
+- 키워드: cdc, months, deputy, director, depart, four
+  - [A] Guardian US: [Trump-appointed CDC deputy director to resign after six months on the job](https://www.theguardian.com/us-news/2026/oct/27/cdc-deputy-director-resigns-jennifer-shuford)
+  - [A] NBC News Top Stories: [CDC’s deputy director to depart after four months in the role](https://www.nbcnews.com/health/health-news/cdc-deputy-director-resigns-rcna605982)
+  - [B] The Hill: [CDC deputy director to leave administration after 4 months](https://thehill.com/policy/healthcare/6175616-shuford-to-exit-cdc-november/)
+
+### Skadden taps two Weil partners as exits mount - Reuters
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 2개: ft_home, reuters_top
+- 키워드: weil, firm, law, exits, prepares, deepens
+  - [A] Reuters (구글뉴스 경유): [Skadden taps two Weil partners as exits mount - Reuters](https://news.google.com/rss/articles/CBMimwFBVV95cUxNZmswUkplamVOdTQ4S0MzUW82aVpCRWJYWDJGYXhpU3hkYWFfTElSSEJNNmJtNTNOQXRlU21nMmhuVFdLTDVjTHgzZGNsM0wwOW0zWXZBSUVoVDFNOFp1Y2VpbF9abTl0Yk5wZG53T0xobGJPbDNUT0NxR3Z1R29USVpuMFRpWWlhaE1pQ2tZZjN0U29fdHNwcjNNcw?oc=5)
+  - [A] Reuters (구글뉴스 경유): [Law firm Weil hires restructuring counsel amid mounting partner exits - Reuters](https://news.google.com/rss/articles/CBMivwFBVV95cUxNT1FkYnktbTUyNHZpd1NHcFlmNHdqNzhjSnQ5NFlPU3pvWUpRMV9IR3YtX2pVMnEyUHRyU0h1azA4ek9LMWdmVlRiY3RtOHVnTkZvZG9RRWdZTy1vRE4wREtrSVZmT0Rpc0Z6eVJuS2hIWFNUMm9hT2VsdUhyWUxadWhZdHF2eEtUc1Zrd0VucjJFSDM3Z210N0dHSURQUk9TcTY0U3ZCaHlRUGNibTZBS2pxeWFlTEZNeGRPd2hTNA?oc=5)
+  - [B] FT (헤드라인만, 유료): [Law firm Weil prepares for possible wind-down as crisis deepens](https://www.ft.com/content/69ccfcb0-3f5e-4b77-9e04-a386e827b872?syn-25a6b1a6=1)
+
+### 우리 아이들이 사용하는 칠판, 더 안전해진다 - 대한민국 정책브리핑
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국공식 · 소스 2개: kdca, korea_kr
+- 키워드: 우리, 식품, 알레르기, 않는, 낫지, 안전해진다
+  - [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [우리 아이들이 사용하는 칠판, 더 안전해진다 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMikgFBVV95cUxNakhRVkRHeVRjdld2d0VjTXJtVy02RVNuS1hTNkQtMmRick9vb1lkOFltYUxXSmZyR0IzMko1RXlGZEhTX3c5M1poMURrdVZ2WHdtNmtrNmlYMXhsTl9SVjJQc3RDSzdsTVBOeXJhZFNpYWtuVVV2Sk5ka3M5Zlp4RGlIMHF1NVQtZkwxc1BxSngtdw?oc=5)
+  - [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [쉽게 낫지 않는 소아 식품 알레르기, 태반의 유전자 조절 변화와 관련 - 한국공공정책신문](https://news.google.com/rss/articles/CBMiQ0FVX3lxTFBQVVZYSVU4NEdIeklnbnlJQ2puMUM3dmxSTFZWNWtnMEJkMWlMS3RSMHM3M0ZvMXJhc08wT1RkZ3FIWjg?oc=5)
+  - [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [역대급 고통, 낫지 않는 우리 아이 '식품 알레르기' 원인은 엄마 뱃속에? 태반 유전자의 충격적 비밀! - 유스연합](https://news.google.com/rss/articles/CBMiU0FVX3lxTE13bDcwYjFWNWpmRjJqZHotZ0NpUEhwck96QUJBZV9rMVZoNlhIOTJDaDBSVmtJRUdjTjlZc2NXamI5WE02MENjZ0lXTWhjRHNjdl9z?oc=5)
+
+### [단독] 보스턴다이내믹스, 아틀라스 1만대분 부품 발주…나무가·씨티알 등 참여 - 한국경제
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 2개: gnews_kr_tech, hankyung_econ
+- 키워드: 부품, 발주, 아틀라스, 씨티알, 아틀라스가, 소집한
+  - [B] 구글뉴스 한국 과학기술: [[단독] 보스턴다이내믹스, 아틀라스 1만대분 부품 발주…나무가·씨티알 등 참여 - 한국경제](https://news.google.com/rss/articles/CBMiWkFVX3lxTE43dTVFNXFnbXU5RVRubklIb0E5N19fNjFVWm5Lb2tBa0VtMHpiVzB0SlFLcV9DUndUeDJCZkRfcDVMMUZsWGZrM3VIVmFXd2Z6Xy1VcTJSRHFzdw?oc=5)
+  - [B] 한국경제 경제: [씨티알·비에이치 등에 아틀라스 1만대 부품 발주](https://www.hankyung.com/article/2026102787761)
+  - [B] 한국경제 경제: [[단독] 원가절감·기술 보안·탈중국…아틀라스가 소집한 'K부품 군단'](https://www.hankyung.com/article/2026102786921)
+
+### [단독]이택근 롯데 신임 단장의 첫 승부수…허문회 전 감독 코치 영입·박승민 2군 감독 내정 - 문화일보
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 한국뉴스 · 소스 2개: chosun_all, gnews_kr_sports
+- 키워드: 이택근, 허문회, 내정, 위팀, 삼진, 전역
+  - [B] 구글뉴스 한국 스포츠: [[단독]이택근 롯데 신임 단장의 첫 승부수…허문회 전 감독 코치 영입·박승민 2군 감독 내정 - 문화일보](https://news.google.com/rss/articles/CBMiUEFVX3lxTE5UN3c3NENUWm1sODNsUmJ1RkJjLTFqYmZyTmNPYXZyV216UUZHekliTnJJNTQ3d3dQejRRT1Y2MVRGZXNBZncwcVZDc2s3bEVX?oc=5)
+  - [B] 조선일보 전체: [5년 전 쫓겨났던 감독의 컴백…이동욱호 수석코치 허문회 내정, 15년 만에 의기투합+타선 개혁까지 동시에](https://www.chosun.com/sports/baseball/2026/10/28/MM4DGMLCMY2DMNLBMM2DSYTBGQ/)
+  - [B] 조선일보 전체: [‘이택근 단장님-이동욱 감독님 보셨나요’ 롯데에 이런 필승조가, 1위팀 삼진-삼진-뜬공 퍼펙트 압도→11월 전역 설렌다](https://www.chosun.com/sports/baseball/2026/10/28/HE2WMZLDGEYDSZDGHE4DKZBQME/)
+
+### 보폭 넓히는 오세훈… 연이틀 野의원들과 만찬 회동 - 조선일보
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 정치 · 소스 2개: gnews_kr_pol, gnews_kr_top
+- 키워드: 오세훈, 윤상현, 건배사, 비행기, 축하연서, 뚝이처럼
+  - [B] 구글뉴스 한국 정치: [보폭 넓히는 오세훈… 연이틀 野의원들과 만찬 회동 - 조선일보](https://news.google.com/rss/articles/CBMihgFBVV95cUxQeHNyZTdaRjk0dXc3WVJoRUxQU3ZDNzFUN2VTUzI0UG14SDFCVnJZeHNiME43ZEpZRDV6bDB0ZmJhcEFzYkxKVk8zOWlDVHE4aVNtd1QzNDREbDI1ZFZfdTBkT2hZc2pnRmhMWS1jcmlhYVNNOXh5NFd6ekhuZDhEcWZ3Wmphdw?oc=5)
+  - [B] 구글뉴스 한국 정치: [오세훈 무죄 축하 만찬서 윤상현 ‘비·행·기’ 건배사···이준석이 띄운 ‘오·세·훈’ 삼행시는? - 경향신문](https://news.google.com/rss/articles/CBMiWkFVX3lxTFAxV28tRkt5dEItUmg3dE5ZOEdueXd3WUJmZGpkYUFVVnVEMXNGR28yOEhBZ0FpZTBoS0NucjUxYmN5d3VOTm8yNHRKRjFpTTZzcHNTQ3NrRTJ0QdIBX0FVX3lxTE55bGFfTDdFV01zLUE3dDNORDU2WFVreVViMWVna3ltSDRoSnNGaERsN3dGbUh3RjYzcEVGNUM5TWt2N1ZpNUduWVlidENjcFRkWDJFYkYxaXVBNzRKTXhF?oc=5)
+  - [B] 구글뉴스 한국 헤드라인: [오세훈 축하연서 이준석 “‘오’뚝이처럼” 삼행시…윤상현 “비행기” 건배사 - 한겨레](https://news.google.com/rss/articles/CBMidEFVX3lxTE41MllEcUJ0MGRBQWFHd09uZmxvYXRKeEZibmxRemJzamt3VGtmMjFXcE12U2w0NHB2YWpjaENlMnJhVmJxTElpcl9uRnkxcVNsVDRROUJfVTI2RFhObWh5cFNUbUtrdnRKdnpjUFpHOXYxYXlf?oc=5)
+
+### Japan mulls registration of foreign agents under new anti-espionage law
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 2개: jp_japantimes, nikkei_asia
+- 키워드: foreign, japan, staffing, attract, struggles, crunch
+  - [A] The Japan Times: [Japan mulls registration of foreign agents under new anti-espionage law](https://www.japantimes.co.jp/news/2026/10/27/japan/politics/anti-espionage-law-proposal/)
+  - [B] Nikkei Asia: [Japan struggles to attract foreign nurses amid staffing crunch](https://asia.nikkei.com/business/health-care/japan-struggles-to-attract-foreign-nurses-amid-staffing-crunch)
+  - [B] Nikkei Asia: [Japan weighs foreign agent registry for lobbyists to curb interference](https://asia.nikkei.com/politics/japan-weighs-foreign-agent-registry-for-lobbyists-to-curb-interference)
+
+### ロシアとウクライナ局地停戦合意 日本時間27日午前10時発効へ
+- 상태: ✅ 확인(독립 소스 2+) · 분야: 국제 · 소스 2개: gnews_cn_top, jp_nhk_world
+- 키워드: 10, 27, minecraft, switch
+  - [A] NHK 国際: [ロシアとウクライナ局地停戦合意 日本時間27日午前10時発効へ](https://news.web.nhk/newsweb/na/nd-20261027de66070)
+  - [A] NHK 国際: [【随時更新】ロシア ウクライナに軍事侵攻（10月27日の動き）](https://news.web.nhk/newsweb/na/nd-20260930de53360)
+  - [B] 구글뉴스 중국(홍콩) 헤드라인: [《Minecraft》Switch 2 版已於10 月 27 日登場，數碼版舊玩家可免費升級| 遊戲情報站 - GANK 電玩誌](https://news.google.com/rss/articles/CBMi2wJBVV95cUxPaVFpTm1qTUczZHNTWVo0MTdHNkpXbFliSlI3QmVHbHR5OEQ4VDk3WVI3Qzk3N052bXo1NjViald4Qk1tTFNibU9JbmZLUmx6aUhlR1p5R0tjakx3YjllX0pKVFZEdU9QVE9IWHNpaXdMTXhad0l4Nl9qOXFxd1h2Zk1nYTlEVGNuVGhnOWZYRWJ6dzBfaFlvVnZlVVI0di11bnczRTZXZUR0d0NtOFVseTNHelVJdjNvNEVXLWpyZUNkWUdsZEdOSFVPU3JlbDc1SDFnMVBoTnVxci1FSjBTbGdtcFU3cTh2Y19NOWtERTZyMHVGT2p5dmJxS2N5UEh6VVdwZzVDMGZnMzFSdFFsQzg2T2RfRERPT09KVldvUHFGY1gtVm9fVXl5ZEN0Q1JOOVVaQUQ5TnV2V1YxTkNHSGoybG1scVpYUVZfYWdSY1VQSVVmUjhWbW5pSQ?oc=5)
 
 ## 2. 분야별 단일 소스 헤드라인 (상위 8개씩)
 
 ### 국제
-- [B] Nikkei Asia: [Twenty Years On: Stephen Schwarzman (26)](https://asia.nikkei.com/spotlight/my-personal-history/twenty-years-on-stephen-schwarzman-26)
-- [B] 구글뉴스 미국 헤드라인: [As Elon Musk’s SpaceX and Jeff Bezos’ Blue Origin get ready to build a Moon base, NASA administrator Jare - The Times of India](https://news.google.com/rss/articles/CBMigwNBVV95cUxPTmVLOHhNNGVzOXlWQTg4ZzFpMG1UNU9SVmlfb01HYk5lc1k4bkdjX3lnT3JJZ0Voek5oT1pScmJHWHlOS0U1UWFGQ0stOUxwQVZheDNLd2JUTnRTbHVSSURjdVhBTF9VUDhRell1UTlxZUxXNjNoQlZIeS1JM3pJRDN2U0drZ01wT25DNHc0bjZBekZjdDhXUm8tcloxUUpNTjdPbkRBckdTbXlCZnFCdTVTbERQV0tpWEdFbzdkWm9RZEcxaXBBWGNtZ0JfaEJ2amY2NDczdDlzVnVzT0F1RFVmN3dUYmlRMmdwb0lMRWRyeTVvckJyelBIUHUwTXAzSkZWZVRZbkVPMGpqQ2FJcVRuYkJkQVhxUkpnU3VPTXpSSVg0Q05wN1ZiNHFCLWw4Z1RiV1B2dVR1ZUNtdHk3NUZGdU8tNDdnT0xDM0xzMHVCT0tSVm9ZNk9tZlJQclBvbjhzdW0tdzk5Zkc4R0hPUFdCakNzd2p0eTRibXdiY3gxS2PSAYgDQVVfeXFMT2tNZUZGMFV4SzZnNFVhdUhRNW9SNFpKZHh1XzFTQVVVTDhIWmMydDdFQkJGZ1ppajVGVk1RQ0JmZ24wZWRGUTNFMmdZMHk4eS1XOFBmdnYwSTFLYVhxMG1GaF9VQmdDWG05SFRXMklEWDRQQng2M1d2aHpfOVNUN2ZEVkxBTjBnUXZDeVJTODBnTEF6WHRub0RkNW1MMFZvOXkydV9FdU53ZndEUm4wdVlyQVJteTJiVUphMGQ2SnVIekhBbGJKMFZFNHJsVnNhRk9udzFLdXAwRmxnQzJkd3VySVBzRmgxRXVTNjRPbnc2eE5GbnNDZ1ZSd20ycU1mbHJEY0wyMW52NGxSamtKLTE4YjVtYVVLeWhkeEp3R3g5LVZvenI3a1FPSHY1ekNSTGd2MFU5U0JrTWhxV29aTURsbGlhZXJrZk9EQ1hEdGphTlFTSk5HUEhRRkc0aDN5bVZEY2tndXlOTVF6Vm9DWW8yTkJHbkJNeTNQQXI3TzlXc3hia1N4M3Y?oc=5)
-- [A] NHK 国際: [ロシアとウクライナ局地停戦合意 日本時間27日午前10時発効へ](https://news.web.nhk/newsweb/na/nd-20261027de66070)
-- [B] BBC World: [Five ways Trump has changed immigration in the US](https://www.bbc.co.uk/news/articles/c9203k1jrmpvo?at_medium=RSS&at_campaign=rss)
-- [B] BBC World: [Stunning photos capture October's Hunter's Moon around the world](https://www.bbc.co.uk/weather/articles/c6zjxgj83n80o?at_medium=RSS&at_campaign=rss)
-- [B] Guardian World: [US forces accused of ‘weaponising’ Somalia’s floods by trapping women and children in the path of El Niño](https://www.theguardian.com/global-development/2026/oct/26/us-forces-accused-of-weaponising-somalia-flood-el-nino)
+- [B] BBC World: [Sydney's new $5bn airport has one big problem: Getting there is tough](https://www.bbc.co.uk/news/videos/c64g1wy4mdwmo?at_medium=RSS&at_campaign=rss)
+- [B] Nikkei Asia: [Japan life insurers eye purchases of higher-yielding JGBs](https://asia.nikkei.com/business/insurance/japan-life-insurers-eye-purchases-of-higher-yielding-jgbs)
+- [B] BBC World: [Ballon d'Or ceremony raises case of French sports journalist jailed in Algeria](https://www.bbc.co.uk/news/articles/c6x2qgyqr79wo?at_medium=RSS&at_campaign=rss)
+- [B] BBC World: [Netherlands pulls out of Eurovision again over Israel participation](https://www.bbc.co.uk/news/articles/cmr4y5dvlzneo?at_medium=RSS&at_campaign=rss)
 - [B] Guardian World: [Chinese markets lose trillions as race for AI supremacy with US takes its toll](https://www.theguardian.com/world/2026/oct/27/chinese-markets-lose-trillions-ai-race-beijing)
-- [B] Guardian World: [Japanese prosecutors charge US marine suspected of robbing and killing woman](https://www.theguardian.com/world/2026/oct/26/japanese-prosecuters-charge-marine-killing)
+- [B] Guardian World: [‘Zero-energy companionship’: bizarre hobby takes seed among China’s stressed young adults](https://www.theguardian.com/world/2026/oct/26/zero-energy-companionship-bizarre-hobby-takes-seed-among-chinas-stressed-young-adults)
+- [B] Guardian World: [Greens push for human override in aged care assessment after ombudsman’s scathing report into algorithm tool](https://www.theguardian.com/australia-news/2026/oct/28/greens-push-for-human-overridge-in-aged-care-assessment-after-ombudsmans-scathing-report-into-algorithm-tool)
+- [B] Guardian World: [Slovenia mourns loss of glacier on its highest peak after scorching summer](https://www.theguardian.com/environment/2026/oct/27/slovenia-mourns-loss-glacier-highest-peak-scorching-summer)
 
 ### 금융경제
-- [B] FinancialJuice 헤드라인 (Codex 확인 URL): [FinancialJuice: 30-Day Correlation Matrix](https://www.financialjuice.com/News/9822513/30-Day-Correlation-Matrix.aspx?xy=rss)
-- [A] ECB 보도자료: [Frank Elderson: Taking action for nature – investing in economic resilience and prosperity](https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp261026~d903d7ad85.en.html)
-- [B] MarketWatch Top: [The impressive real estate portfolio of sitcom producer Chuck Lorre of ‘Big Bang Theory’ and ‘Two and a Half Men’ fame](https://www.marketwatch.com/story/the-impressive-real-estate-portfolio-of-sitcom-producer-chuck-lorre-of-big-bang-theory-and-two-and-a-half-men-fame-f8e43ed4?mod=mw_rss_topstories)
-- [B] MarketWatch Top: [Options traders are seizing control of the S&P 500](https://www.marketwatch.com/story/options-traders-are-seizing-control-of-the-s-p-500-1add94ca?mod=mw_rss_topstories)
-- [B] MarketWatch Top: [TikTok parent ByteDance’s chatbot is now giving travel-booking sites a run for their money. And yours.](https://www.marketwatch.com/story/tiktok-parent-bytedances-chatbot-is-now-giving-travel-booking-sites-a-run-for-their-money-and-yours-028e4aa0?mod=mw_rss_topstories)
-- [B] MarketWatch Top: [Over 40% of Americans are heading toward retirement ‘blind’ — with no plan](https://www.marketwatch.com/story/over-40-of-americans-are-heading-toward-retirement-blind-with-no-plan-e49b502f?mod=mw_rss_topstories)
-- [B] CNBC Top News: [The 'stablecoin sandwich': Why speeding up payments isn't so simple, according to Mastercard](https://www.cnbc.com/2026/10/27/mastcard-stablecoin-bvnk-.html)
-- [B] CNBC Top News: [Oil prices seesaw amid renewed diplomatic efforts to end Mideast conflict](https://www.cnbc.com/2026/10/27/oil-today-iran-us-crude-wti-brent-trump.html)
+- [B] CNBC Top News: [A 'canary in the coal mine': Measles resurgence exposes weaknesses in U.S. public health, experts say](https://www.cnbc.com/2026/10/27/us-measles-public-health.html)
+- [B] Bloomberg Markets (헤드라인만): [Bloomberg Invest Dallas, Premium Sports, Zombie Firms](https://www.bloomberg.com/news/videos/2026-10-27/bloomberg-deals-10-27-2026-video)
+- [B] 구글뉴스: 기준금리: [은행 | 금리 인상에도 순이자마진 하락, 2027년 수익성 회복의 조건 - 네이버 프리미엄콘텐츠](https://news.google.com/rss/articles/CBMiiAFBVV95cUxQOW1BemJXV0lZMHVWdC1Wd1ZTN1Z2QVNST3Qtdk1TNDd0VHpCYklRREtYa253MVlFZ1FLc3pZb0loQ2NEb292ZVlzMzM0aThuYkNhZG50UDY5SERaUjM5NURFRlhLdEFlMFZXbXhVOWxKaVZwUUR5SFh2QW14TWFrZVpHSV84a1pQ?oc=5)
+- [A] ECB 보도자료: [October 2026 euro area bank lending survey](https://www.ecb.europa.eu//press/pr/date/2026/html/ecb.pr261027~506ef03145.en.html)
+- [B] MarketWatch Top: [We stopped helping our neighbors with free home repairs and our friendship cooled. Who’s to blame?](https://www.marketwatch.com/story/we-stopped-helping-our-neighbors-with-free-home-repairs-and-our-friendship-cooled-whos-to-blame-d20b0720?mod=mw_rss_topstories)
+- [B] MarketWatch Top: [Is that used EV worth the price? This checklist could save you thousands of dollars.](https://www.marketwatch.com/story/is-that-used-ev-worth-the-price-this-checklist-could-save-you-thousands-of-dollars-2e1ab876?mod=mw_rss_topstories)
+- [B] MarketWatch Top: [My wife cried when I found out she had only $80,000 in her 401(k). I have $2.2 million. Am I wrong to be shocked?](https://www.marketwatch.com/story/my-wife-has-only-80-000-saved-for-retirement-i-have-2-2-million-am-i-wrong-to-be-shocked-3e27b490?mod=mw_rss_topstories)
+- [B] MarketWatch Top: [‘CryptoDad’ on stablecoins, bitcoin’s role in a portfolio and why he does not directly own any crypto](https://www.marketwatch.com/story/cryptodad-on-stablecoins-bitcoins-role-in-a-portfolio-and-why-he-does-not-directly-own-any-crypto-72472bc1?mod=mw_rss_topstories)
 
 ### 문화
-- [B] 구글뉴스 한국 연예: [[속보] 김지원 ‘닥터X’ 518 버스정류장, 도로법 위반 의혹 살펴 본다 - 스포츠경향](https://news.google.com/rss/articles/CBMiXkFVX3lxTE1UclluMDVWUzlzYTNURHZORWNJRzZmT1hINW1vTHhuazRfbVFzNUhzeE9zc0lMTGEwN2JSMXo5WHc0N3Yyb0RtUTJoLTFaZEx0V0ZVYUZHSGZ6N29HTUHSAWNBVV95cUxOcjYtTzUzYTlhenEza3NIWjJ5VnRNRDduT1cwcEcwUnAxeDhvNTZnNEwtN1BXc2xfODZOQkF0X2RwTHUwQS1ZelBvY01zRlZDQmZNRENNY2QzR0pBLVVCMEdOY0E?oc=5)
-- [B] 구글뉴스 한국 연예: [[ET포토] 아이브 장원영, '역대급 바비인형' - 전자신문](https://news.google.com/rss/articles/CBMiS0FVX3lxTE1Ma3VjbW9wUklyWWZUY2swNW1MOGh3d0NYWUxVTVRFU284dE1ZdUMyRF9IRDhpLUdiWVRFSlBib0VfOU9jZmZJTWFKMA?oc=5)
-- [B] 구글뉴스 한국 연예: ['나는 자연인' 재방료 얼마길래 부동산 샀다..윤택 "하루 80회 재방송"(라스) - 조선일보](https://news.google.com/rss/articles/CBMijwFBVV95cUxQbzJIblRBOG0wSkpWWTJLRlhEOVBmbWZRT3dUYXpqblp5RW1mdUZZX25hSENkcnNXekMwZENqVjJjdjh6Uk5ybmZFUDRHRFk3SWNiblQtcW1WRGpmYlBLS0NKZWxIR1BINmUzTWQyQVd6dVQzV3daTTl3cTF1akpuTHFZODdsQ2NWYXF4VkxDZw?oc=5)
-- [B] 구글뉴스 한국 연예: [아일릿, 여경 의상 논란에 "깜짝 놀라…어떤 관심이든 감사" - 한국경제](https://news.google.com/rss/articles/CBMiWkFVX3lxTE9KOTBjRFc2eUxqNzRDMDByc3gxR3prejZFNnlaMDBsUnE2SDNMc2Rncl9GdEw1Vm55NG9yT0lqckl6ZzVXNDBpX04zV29NU1FJbDdwQlNhV3B5Zw?oc=5)
-- [B] 구글뉴스 한국 연예: [이승기, 13년 만의 단독콘서트 '3분 매진' 알고 보니…객석 10% 이상 줄였다 [SC이슈] - 스포츠조선](https://news.google.com/rss/articles/CBMihAFBVV95cUxQUU9uOXJ6STNYOVY0RkJlMVJsbVpzb1lFTTBIbnBWNnhIamtnRTd0TnRWalhmVFNudGp1RHRqRFRhQkdaVWhlM0dxQnc0dUVpcm4xZW96cmxjWFAzam9aYmNPaVdVYnJNbUtmNmcwdm0wMDRZdGtfNHNRRWpzcXdiQ3VOQ1c?oc=5)
-- [B] 구글뉴스 한국 연예: [“임신해버릴까” 고은아, ♥남친과 2세부터? 母 “능력 돼?” (방가네) - 동아일보](https://news.google.com/rss/articles/CBMibEFVX3lxTE1IU1dmZjJGbHNuRS12NzN6V0lPeWR1Qm5yZ2RUZDgyaXVXeDlRdWtPZDRRRnM0Mm1NT1lMem4zdHp5Y0IxZHFLc2U1ZmltV25mUjVMcW5Icy1aN3pIZWJOZU9jZ0lQYVVlNy1yRdIBYkFVX3lxTE9tYzFKWGJYTTBTYTNmQWxEOG5QaEdWYldQRmRUUm90WmZFdXByQ2tZU0cwazZSQm5RQldUaHZiWWhxQ21iMGw3ZHRDc1J4OXp0cWItaXNqdURCSS16eTdwY1VR?oc=5)
-- [B] 구글뉴스 한국 연예: [임창정, ♥서하얀이 전한 뜻밖의 근황…"5kg 증량 중" 달라진 모습? - Chosunbiz](https://news.google.com/rss/articles/CBMikwFBVV95cUxQRi1wN3prVHVGTm1uWFRSTF9DRGtUVWV2Nkc1cXI3blZDTDFzSUs4d3lxRU9udG9WUHhiaVZnS0NPN0xOb2NJdE14M0RwQmxEaU1LNGtRcU1Lc2xIUi1jTnBWNjAzblMydWpKOUJLNVh1Y2RiV1VGVTVGeENYaHZ6aW1TbElVdUZiNkhYY2dEVE0zWWPSAacBQVVfeXFMT0VjTHZvdmJhalB2YlhrV2ZCX185N1JJSTBTTkg2bnpsWlZlcVdsN2ZkakVsbEN6b1J0V2FRYTBzSnhjamxaQzN4YUVBeVY1TmR3RkZkczR4VFBheGFZRzdhbEZCSkk1RUdDZ1dzNmVzdm9DV2pNMzZsUEp1S0M0LUt1ZVREZUVHZHFMZ05MUnYwaDNCX1d5S09jRkN0SGo1Y242VERZN0U?oc=5)
+- [B] 구글뉴스 한국 연예: [김수현 '미성년 교제' 누명 벗었다 … 故김새론 母·변호인·유튜버 송치 - 뉴데일리](https://news.google.com/rss/articles/CBMie0FVX3lxTE1KSWc4eVlxaUpJM3I5SFVnbFZUVkpqcHF2VEhBSlk4SFVVaGJnTlRwVEtjVnVrWGx1RU5PMXkxZXItV0s5S1lRS080Ymw3R0JYd2xndXBhTDZKRVNKWF9iNThBanlyc19HblhnTU9IZzNtb1dNbGw2MUN4SdIBgAFBVV95cUxONFh2RXFrYXZCd1BYakRTUjJfRlo0ZVFjMWNZS0hIMktRbkVOQjR5TlZxcElsdzE4bm1GUjJJTmk4MUtaX0ZqVXJkeDhlU3lVX0ZickI4WUc5bkt4YllIRWIwX20zRWs0alFnMVhMaEVoSnVSa0Z4S2FGbVJSTkdobA?oc=5)
 - [B] 구글뉴스 한국 연예: [정민아, 김나은 갑질에도 단호한 대응 ‘팽팽 신경전’(엄마가미쳤어요’) - 조선일보](https://news.google.com/rss/articles/CBMijwFBVV95cUxQSlVxM3g3czVQYW9mSU5aN3dyZng1Z1JmLVdMOWRXWUU0RUVfeTRwWS1YZGVfb1QwYXdjblg2ck9qZkpCc214dUZYczdRcGs5R3VlTC1LeTF4N04zQ0J0Mms3ekt1MjdjRTJfT2tweFNmRUMwRGdNQmsyVzVwa2taajEzaE9HRGhVZ0ZRUUZCNA?oc=5)
+- [B] 구글뉴스 한국 연예: [[핌 포커스] A2O 라이트 '니온'에 내가 등장?…SNS서 번지는 AI 영상 놀이 - 뉴스핌](https://news.google.com/rss/articles/CBMiWkFVX3lxTFBPQURocTBEdkdlejkwclgzOGJsN2RDSk5sOW1HeVVyaWVzd0M4a3B0cjY1ZnFNclY3WTdGdXg5SnVucm5WZUE1TGZHLWt3Y1NJYXhNY0tYcjZfUQ?oc=5)
+- [B] 구글뉴스 한국 연예: [브래드 피트 '하트 오브 비스트', 동시기 개봉작 예매율 1위 - 뉴스핌](https://news.google.com/rss/articles/CBMiXEFVX3lxTE9yX19lRHBCLVNscTRPWGIxQXo1dFdzdGprX3ZFSnVzOHo4UXB3bkxnTjZmTWhzT3c4YjdNYkN6TTl3V0FnYS1PSzNoWDlOUG81Zi1XTl8yTnJveF9J?oc=5)
+- [B] 구글뉴스 한국 연예: [KBS 단막극 음악 입혀 명맥 잇는다…'사운드:트랙' - 한국경제](https://news.google.com/rss/articles/CBMiWkFVX3lxTE1xSjAyNnhldjhadGlOb1AzMEc3RVVxM2kwWWxvejU1WG93NkRSOUhSVzduaFh5UkxCM3NHLXc5TEZPNE1nSkpSYUZSVXl5b01ycmFVLTRJQnMyZw?oc=5)
+- [B] 구글뉴스 한국 연예: [[ET포토] 앤더블, '몰입 시키는 퍼포먼스' - 전자신문](https://news.google.com/rss/articles/CBMiTkFVX3lxTE9KdldlSVJ1ZnU1dnh2bkc3NkVOMUJEbldrTTlxRmJIN2gwTEV4S1g4WHdyQWxDSzZXQ1A5aHd0amFLQmE2R3RCcXpXSWVIdw?oc=5)
+- [B] 구글뉴스 한국 연예: [아일릿의 마음을 훔쳐간 범인은 누구? 지금 바로 ‘체포하겠어’! - 마리끌레르 코리아](https://news.google.com/rss/articles/CBMia0FVX3lxTE11ZUZuTVJrdnRkdHV2RWxLa2dQU2UtbDNYMWZ2S3ZHdFNnNEVNTE1jQU53NW10V3E0NWliTGFWSGpHV2xMSEVYeHE0US1LZkU0OXliS1RYUHhpSnlzZXJpcnFwamQwUmtkMElz?oc=5)
+- [B] 구글뉴스 한국 연예: [“약 때문에 정신 나가”…‘양홍원 불륜 의혹’ 폭로자, 돌연 사과 카톡 공개 - 스포츠경향](https://news.google.com/rss/articles/CBMiXkFVX3lxTE10WEZEc21sbUI2QWpPZ2pFTjFERnJWYTNCTnZXdGo4OUFKTDdRcU9EUFQyWnJMM0t4WVdWYndaWUxOaGdXWEMtOGtwS2t2cDU2QWhqeThhQWZRV1p4VFHSAWNBVV95cUxPLWRBSUpVMktuZHozeENMWnFrMmdmb1NXajJuZGNnZV9CRFJvVUFoUTVxWWVNVGl3NVdEU0NfdXMzYzlXZUNVM3AzMUJEclp2VVJibjcwSWtxR2lid2VqbVNJNFU?oc=5)
 
 ### 미국뉴스
-- [A] Politico (Google News 경유): [The Epstein election? - Politico](https://news.google.com/rss/articles/CBMiekFVX3lxTE5KTWpNTUxlb3I3QkQ1cGxYZjNkWElRb2RzYWwtclVoa0UyWUNaUV9CT2RKaDhGMVp1TjFiRmR5Uk81X0tiQWNLeXVXWGVESF9QemxiNXZ2b2dJZW81Z3lZcEJGaGJYMmVPRE95eHZoYU1OODc4TDRvSVB3?oc=5)
-- [A] New York Times Home: [Ken Paxton’s State-Funded Jet-Setting Draws Campaign Scrutiny](https://www.nytimes.com/2026/10/26/us/politics/ken-paxton-texas-trips.html)
-- [A] New York Times Home: [Bob Woodward Criticizes Jeff Bezos in New Memoir](https://www.nytimes.com/2026/10/26/us/politics/bob-woodward-memoir-jeff-bezos.html)
-- [A] New York Times Home: [Book Review: ‘Princes and Thieves,’ by Matthew Cole](https://www.nytimes.com/2026/10/26/books/review/princes-and-thieves-matthew-cole.html)
-- [A] New York Times Home: [What It Will Take to Defeat the Houthis](https://www.nytimes.com/2026/10/27/opinion/houthis-yemen-saudi-arabia.html)
-- [A] New York Times U.S.: [El-Sayed Campaign Distances Itself From Group’s Ad Critical of Israel](https://www.nytimes.com/2026/10/26/us/michigan-senate-el-sayed-stevens-ad.html)
-- [A] New York Times U.S.: [Ohio State Professor Who Tackled a Filmmaker on Campus Resigns](https://www.nytimes.com/2026/10/26/us/ohio-state-professor-tackled-filmmaker-resignation.html)
-- [A] New York Times U.S.: [Bridges Still Destroyed Years After Hurricane](https://www.nytimes.com/video/us/100000011153947/north-carolina-bridges-destroyed-hurricane-helene.html)
+- [A] Politico (Google News 경유): [Mamdani is using NYPD gym to host pickup basketball games with friends - Politico](https://news.google.com/rss/articles/CBMitwFBVV95cUxQSndFaHVickxWMS1XQ1NGOERFS3hEX0Q2aUFtdlNhdUZ3U0ZPSEs4ZzRvMGR2NG5qcmVJaEw5Y3FCaU5wZjl0NVdvdTdtUVJMd2pnWHpHalZyYTBwbXV5SllNU0pGcnFObDJkVmphLUYyZjFzNXhTbnV5czMxbEJhbU5XdVIyWXNYYmV5aXVrRWZla2R5LU1TNUJyS2dXRmV2VDRFZHdIZjhzZ0NhOWp0b1pFY2FiTlk?oc=5)
+- [A] Politico (Google News 경유): [‘Everyday people’ vs the 1%: Australian Greens push to raise the tax-free threshold - Politico](https://news.google.com/rss/articles/CBMiyAFBVV95cUxQRVZPcUFTYWJTTFhpdkIxM2d0c2x0RE1EQ01aNGlGcXkxX0pBQVBoNTNmNHdsUWxrbGVsRHExM0Y4c3BTaE81dk1LQTJQSldNQkhwZ2Y1VG93NkpGVEpncU1oT0xTeVVhdUM2dExoeG5WV2VrdUVrYUM3WFIyb01BMWlxV3k2ZlhuckpvNjg3eGVtSHN1S3I4NW1Bbm9Vc1RkR1B0X0lWUHdSUUsxTEpxU2hDTFJQQmV1dUZYdjN5ZXZGN2ttY29ZXw?oc=5)
+- [B] The Hill: [Sanders, Wyden press insurers on Trump ACA coverage terminations](https://thehill.com/policy/healthcare/6175216-wyden-sanders-target-trump-insurance/)
+- [A] New York Times Home: [ChatGPT’s Advice to Cut Her Seizure Drug Led to Devastating Consequences](https://www.nytimes.com/2026/10/27/well/ai-chatgpt-medication-epilepsy-death.html)
+- [A] New York Times Home: [‘Event Horizon’: The Cosmic Horror Flop That Rose From the Void](https://www.nytimes.com/2026/10/27/movies/event-horizon-good-bad.html)
+- [A] New York Times Home: [Nithya Raman Is Not L.A.’s Mamdani. But She Might Become Mayor, Too.](https://www.nytimes.com/2026/10/27/us/politics/los-angeles-mayor-nithya-raman-democratic-socialist.html)
+- [A] New York Times U.S.: [Spy Chief Tries to Restore Order After Upheaval at Intelligence Office](https://www.nytimes.com/2026/10/27/us/politics/jay-clayton-odni.html)
+- [A] New York Times U.S.: [Joe Redner, the ‘Strip Club King’ of Tampa, Has Died](https://www.nytimes.com/2026/10/27/us/joe-redner-dead.html)
 
 ### 사회
-- [B] 구글뉴스 한국 건강: [하루 5000보 미만 걸으면…치매 등 뇌질환 진단율 ‘거의 두 배’ [바디플랜] - 동아일보](https://news.google.com/rss/articles/CBMib0FVX3lxTE52NnVGZHpFNC1DX0h5aXl2bzRQbFBXSXNTRS01eXk0MXdlZ3ZQOGRMX1BvR00zR1N0Y0NhRmhNLVpRY2NSZzl4aVIxTFZ4TnpnQlZGc1BSbEczVEsyOGFmQmQ2bDNISXU2T1MtSml3Y9IBZkFVX3lxTE5PODRHaDlYd2F5MFhaeGJaTkpHRW15bGpFT3lIWmFwaHlMODhiSENCQmJfRlZBVE56SkktZEJwSVpiQ3A5NU9qSldfUzA5bnYyOWlaYjBZd3pwVVZwYWtqSHFFM0ZZQQ?oc=5)
-- [B] 구글뉴스 한국 건강: [서울대학교·이화여대·하버드 공동연구팀, 유전자 회로로 난치성 연골육종 면역치료 가능성 열어 - 한국강사신문](https://news.google.com/rss/articles/CBMicEFVX3lxTE0wTmgtWmhPNE5KdDhLaElKUUQ4R09jeWNlM0ZfMDcwSTlBakRuVkhySmVDWlh3SWdndzNybkxGVlVQNUZaMHo1QnJNWTZfZ2w0TEZPa2hxay1Temw0bWV0Xy1GQ0dDSVJvQUJxbjlIb3o?oc=5)
+- [B] 구글뉴스 한국 건강: [허리·무릎 아파 걷기 힘든 노인, ‘기억력’까지 살펴야 하는 이유 - 디지틀조선일보](https://news.google.com/rss/articles/CBMihwFBVV95cUxPRUc1OHpQQ2VGQk9FT1ZpaEN3YUdKX2dWNG10amFkOHRDcS05ZjZKbmlKWl9xclE3ckV5ajBTdnNoUk52dEJTZ25UeDRjbHRHdjdEMDZBVmk1SzRwOGRHMUxydmhLcVBtaUtBQmZjaE5US2FtZDdGSXBKYWRXWmUxamd1SmozU2vSAXtBVV95cUxNWVl1eXlTOGI0TGNkU2xHSVB1a1ZWU3IzN3pJRU9ZUi1GSGladmM0d0RMQ00xTFhaUFRGZ1ZhWGZPN2dDaWVGa3VLbG1pNFQzbXNhSWFMMUk0bXMxUkVSclBLamxhUVFxUHZGblZDUE5LTS1YUzJyd0llS2s?oc=5)
+- [B] 구글뉴스 한국 건강: [‘뼈말라’ 되려다 망한다…젊은 골다공증 ‘위험수위’ - 동아일보](https://news.google.com/rss/articles/CBMib0FVX3lxTE04S0k3SzdjYzVoNlJlS3pKaUdkSVhlMnRlWk5yZzJncjQ3NmZVS3NCdzk1dGRqRnozVnNDeVpzMjdWbmROUmhFaHRLaDB1QlR5c2RRVS1IbE15b3FtblpQNEJXa29GUnRrOTNURHN2MNIBZkFVX3lxTFB5eGRKdmhUQkhEc1NZWjE4cUk4bURsYzVNbjk3TDNvMi13Vl9fQWNnT2ZuTjh1RDVkOUd5TXVGczV5NUJUN3V3NGNkQXhfSDBfY3A2dlRySWlNcmxhY0RUMktSMFVLdw?oc=5)
 - [B] 구글뉴스 한국 건강: [운동 ’시간’이냐, ’강도’냐…성인 9만 6,000여 명 분석해보니 - 연합뉴스TV](https://news.google.com/rss/articles/CBMiZ0FVX3lxTE9WSEVvNkxnNnkzTmZlMkllMUs5YmVPYlpsMUlwT29HdHRpUlFNbEh0dTFfa1k5TEViY2ZHTUZOSy1LYjl5VzFOZ2RiMG0zaEsxNEZoQnJ5UkgzOFBFN05kcnd2Zmx5WkE?oc=5)
-- [B] 구글뉴스 한국 건강: ['뼈말라' 좇다 뼈 상한다…젊은 층 골다공증 경고 - 콜뉴스24](https://news.google.com/rss/articles/CBMibEFVX3lxTE5mbnVfTGdfTXpjZVlES1pvcFRxdVM2QUl5SXc4bUkxbWVXRHA0dUU3UXp3ZVQyQkM2RW5DejB6TUNrRGR1dlc0RV9kXzF3SGZlQ3lVSUpOWHlfNTBmdVppMDJjaktUYzZIV1pzdQ?oc=5)
-- [B] 구글뉴스 한국 건강: [[김길원의 헬스노트] 피 한 방울로 치매 진행 정도 알 수 있다 - 연합뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE93bUlwS3V3V3Fnd2RBTG40dnJyMWlpUnk4bWoxeHp3Ylgtb3BnM09nOWdSWHpqMWRWSnRvdnV1Wl9EcEJwR3FhSTd0NTk1S0FwQjNqZFhLNmpVRHPSAWBBVV95cUxNZUpRWFBrUFhJTFQzS0tDaFBVRGdWU1hRR2lacmlfYk8zdG1GVHdxM1gzS3B6RTNOYUZSTWs4XzlkcHFMZV9iZ0RJM041aVlIeENScXYxalI2Z1VFdGdsc00?oc=5)
-- [B] 구글뉴스 한국 건강: ["해외선 전립선암에 플루빅토 적기 고민…한국은 접근 장벽" - 코리아헬스로그](https://news.google.com/rss/articles/CBMickFVX3lxTE54MmVvOWxGYzcxUkxyY3l2YkhQQUNhWUJhb2FWaEdNVng4NDE0d0x4cUVBZElITzdYN1k1c3Y0YURTZVliMlhUSWMwaUt1NnlCQ3hoMDdfa1Z5a01xZEFScUgyQjVtNnFTMXNid0VvQlpPZw?oc=5)
+- [B] 구글뉴스 한국 건강: [KAIST, 뇌 속 약물 반응 실시간 측정 무선 신경칩 개발 - 충청뉴스](https://news.google.com/rss/articles/CBMia0FVX3lxTE5YV2ZaQndlbjQ2RFkydmpFUlU2WTI1LUxwdXFsb2ZZaTAzSUpnRGZPNHN5N1FHWVI4MGpReFZ0N1dFeFZydTRzVDg0emJQanl6akhMZklRYlZOQUhPZGQtOVBmTTM1c2RIOFNn?oc=5)
+- [B] 구글뉴스 한국 건강: [뇌 신경세포 골라 껐다 켰다… 암흑 같던 신경회로 밝힌 ‘빛의 스위치’[이진형의 뇌, 우리 속의 우주] - 동아일보](https://news.google.com/rss/articles/CBMidkFVX3lxTE9BbnF4UjFod2VjSUFhZzE4NThEcEJaNDZkYXF2MnJUT3RzVXJWZ25HS0lRM0UtWEh6YWcxbzdoX2pyWC1HWUQtWFBFeXA1U2V2dktwcXgwN0VyZ3hsNjgtQ20zWTFubXd3SWtxa1hUeHBCQWxFNXfSAWZBVV95cUxNS0VqUnpSbk5MZFBOaFFqc3M4WTZIWXZETWVLdWFiYlVCUDRMa0JPYWpweVd0ODVHanZlTlRlRFZJSFpERE9WUHAtT2Fqdnl5cjBsZ0dmb29oaWU5bHZraXQzanJEWlE?oc=5)
+- [B] 구글뉴스 한국 건강: [“간 혹사하는 습관”… 간 이식하는 의사가 지적한 ‘4가지’ - 헬스조선](https://news.google.com/rss/articles/CBMif0FVX3lxTFB5Nnp4Yk05U2tvZ1JObmtpUzNENUNYVUY2dk5mWUxtREdoMnFYZGpZWnA2RDNLSHpLZ0Q1WmJyV09WWHdsLWxqS0daTE9VaktnU3drb0t5Y0o2MklCd05pUl83UUtWdnhMUDMxZkVoMWtaYmpUQkt1UEEtSlFORjg?oc=5)
+- [B] 구글뉴스 한국 건강: [‘첫째 낳고 바로 둘째 임신’이 여성 노화 가속화… 24개월 간격 둬라 - 헬스조선](https://news.google.com/rss/articles/CBMif0FVX3lxTE92NVZpZ0NTdndfWlJXYk8ta3lKSW8tTWlKdzk3Zi0yRzlDaFFBMmNBNnhSSTJ5eU9icFBEUHFnNE1ZNFFmNEVEWTJTbU5xQnBJQ1RVQ1J6Q1Fvd05nNzIxOXZVUFBYT2JVV3RPRVRTNHR3MkV3MUdzdDV4NXNLaDg?oc=5)
 - [B] 구글뉴스 한국 건강: [[인터뷰] RSV 입원환자 절반이 65세 이상…“고위험군 백신 지원해야” - Chosunbiz](https://news.google.com/rss/articles/CBMilwFBVV95cUxPR2xxZHVqcGtucmVGZmtxM0lEMFpXMzRSMWJMekt6dW1PbkJJZ050MlJpcXJpSWZ3eWxEYjQyWHA1WS15QjM1aGZzVzc3WGNyZG9oRTdzVWp3eEo4MkdWSndacFllRjdpejR5UldPemRfd3UwYWxSQVRzN05hMzNWbXBONjdwWGVhdHNUS3NvbC0yRThUUzlr0gGrAUFVX3lxTE12YjBKeno3OFViRklFMkJ6MTF3WmtZQXFoRUZlSGF1WWh6eXhNbnFMczRzWEpRdzB1NEg2MTh0cXdmQzdOWmUxdHZKTzVGb19mRDBDQlkzNzN0QXlfV2NhOWdYTUZEeTJOOVlSZ1JCSi1zRXRKWFBrNjdaWURYQXp6ZTFrVVZmdy1xNzUtN2NOUS1qY2hNWi1GajdkSktsRmZYRUFWbnRKZ0kwUQ?oc=5)
-- [B] 구글뉴스 한국 건강: [“마른 몸매 비결”… 하주연, 거창한 다이어트 대신 ‘매일 실천하는 것’ - 헬스조선](https://news.google.com/rss/articles/CBMif0FVX3lxTE95UU4wbEUzWDRweS1LWDBKTDhzc2J3OXZiYTVNVkZJMEluMS0wZ1RlbDB6UExOaTl6SHI4X0l5YnBQcTZDMG02R1NCdkM5OVEtVVMzdmZuVGQwdE8yZ1c0d2tQWkg1YUlmU3o2UDRRY09fWk1VNjBXWTJ3TE9fOWc?oc=5)
 
 ### 스포츠
-- [B] 구글뉴스 한국 스포츠: [롯데 자이언츠 신임 감독 이동욱·단장 이택근(종합) - 국제신문](https://news.google.com/rss/articles/CBMijgFBVV95cUxNcnM1NUZSNlFxclhNSXkwazlvM2RJSmhrMks4OXRUc190YzFFWGZPb0E2aXhROU4wT2FvTlZKdGVQM1ZiRnR6cDFmZXlyY2UwcEZLaDBrOVAtZURubzZUNTNDcUprcUJfamxTbzNueFpUaE5kT295aUZBY1cwYUE2LTdtbUNlbU51Q1VuUG5B?oc=5)
-- [B] 구글뉴스 한국 스포츠: [[영상] 천재성을 또 보여준 김도영…천재가 혼난 이유는? - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE9CdVdGVm1NdkN0bEdEUDdGTXdHcHZhWTM1cm5LNXRoQkdjWVFLb21ZZFhPTUJaOXp0ZHJ0dEdNc2wzV1Q2YmJTOVE5c205X3ZUOU5IWTlldXVKZDg?oc=5)
-- [B] 구글뉴스 한국 스포츠: [조규성·오현규·오세훈·이영준, 11월 A매치 생존 경쟁의 승자는? - 스포츠경향](https://news.google.com/rss/articles/CBMiXkFVX3lxTE4tVXFiak40dkNrajVlY2ZBYTBRaTBzY0ttT0ZOd0FXeUtZSzJMRTQ0ci1NemFnWDZGNGlWSlZDLW9nRXQ1RTAzWDdrTVJvaVJUb2YwTjhiUFJzcVozRlHSAWNBVV95cUxPV2pzelBHSmRnYjNpTUl0aDZYVGZWbnR2Q2xKU19vYVlaSW9kUktnWmJhZ0FCdUdQbnoyQy1yeFB1bElqbU9YZjdBUGNRMXllczJmMFYycWpwV1B6Q0FGUGNXR28?oc=5)
-- [B] 구글뉴스 한국 스포츠: [PO 2차전 삼성, PS 첫 승 도전 후라도···상대는 라팍에 약한 올러 - 대구MBC](https://news.google.com/rss/articles/CBMiTEFVX3lxTE9zTlJyX29STFVDSUYxZ0hjVjdGNEdBSkhNWG5YZHVtZDJLcERTMDBjWWdUQ2I5dWExdE9fWkVZUEtMTFhXNUY2bHlEcGU?oc=5)
-- [B] 구글뉴스 한국 스포츠: [프로축구 K리그2 준PO, 12월 2일 개최 확정 - 기호일보](https://news.google.com/rss/articles/CBMib0FVX3lxTE5QMXczOGFwVkNGS1Nmd3U5SFJTVG1xVzExRXl4ajEwY1YxX3VWcVRYU2V2RnpfaENGYTdwdWV3MDFMUHNfc3BteW9Kb3QzSGdtcFcyaEl0NE1hZHJHSkRfaEhuUUtGcE02Y3lFZXZQcw?oc=5)
-- [B] 구글뉴스 한국 스포츠: [세계 무대서 빛난 나주배…LPGA 대회서 ‘글로벌 홍보’ - 대한뉴스통신](https://news.google.com/rss/articles/CBMiV0FVX3lxTE5zU1plRFFJVUgwQ20weGxyeVhSb1BFdDIzWmJrbmthcTZxNUotWmtId2lobGs3ZzNubnk5UWhKZnVoNUsxY2pkVmFOQ1QzdENjYjgxYy1jVQ?oc=5)
-- [B] 구글뉴스 한국 스포츠: [끊이지 않는 인종차별…손흥민 향해 “니하오” - 강원일보](https://news.google.com/rss/articles/CBMiW0FVX3lxTE1yR0RZV1JxXzgySk41MkZFdzc3LXhXemNaeHFZbDB1SjJJeXN5RnZ4VlhUOVdUdldkQkVyWEhCZG9YcnFjSkxXNk1ENVRzUjNRTF92MUdfajdIeWM?oc=5)
-- [B] 구글뉴스 한국 스포츠: [허구연 총재, 3연임 가닥…KBO 이사회서 후보 추천 - 연합뉴스TV](https://news.google.com/rss/articles/CBMiZ0FVX3lxTE1KbVZKYTM4RU5uMjRpaG9kanhoeU5kNHV3QnFYc0hjcGNINFJuZzE1MEIyOTlVRFpzbkVPSnZ6N0wxeUJrMVJxTnhLcUlXcWo1N2NxZmQ3X0lBTWlydHFsdzAzQWdXNm8?oc=5)
+- [B] 구글뉴스 한국 스포츠: [금메달 동료에서 라이벌로…여자농구 AG 영웅들 WKBL 개막 출사표 - SBS 뉴스](https://news.google.com/rss/articles/CBMiakFVX3lxTE9kTXRybVRuSHdRM3Q1d2o3eG1IZ1dmQWc5c0FDbllLN2pwa19LcWotY2VOSk1yZWsxVlR3Q3RzX242VTZSWmJYMUx2LS1VNWI1UmFzNWZyZFYtYXdla0hhSHJGMmhWWHlTREE?oc=5)
+- [B] 구글뉴스 한국 스포츠: [포항스틸러스, 제주전으로 파이널B 시작…7위 도약 도전 - 경북일보](https://news.google.com/rss/articles/CBMib0FVX3lxTE5YblBKZzdTUHV2bE16b1A1ajhPaERYRmpfdWswcTR6Y1FsNmlDSDZvUk5BQ3hFN0UzTlF6eXM2Yjc5ZjRNeHJVZkd2cERyVnp1WGpNU2VQVkhPV1BhbExZd2Rya2RUUHRUNkJ4dEdhOA?oc=5)
+- [B] 구글뉴스 한국 스포츠: [‘무관의 제왕’ 해리 케인, 발롱도르 주인공으로 우뚝! - KBS 뉴스](https://news.google.com/rss/articles/CBMiZkFVX3lxTFAzTm95Z3ZqaURMay1EdGptMGZ6RVh6bEVmNC1tLXJjV1RHd1Faa3ZpMWN5djRpbmxpQUJKN1JNRjFvQ3k4LVFNUXA3TGlPZWlIUlBLaFY3Z25LM2N4c3NIUmx5Rnh6UQ?oc=5)
+- [B] 구글뉴스 한국 스포츠: [경남개발공사, 신인 3명 조은율·김태연·하지현 뽑았다 - 경남일보](https://news.google.com/rss/articles/CBMia0FVX3lxTE54SjJwV18tUXBDdlkxSzlzZ20ySUJhVjJwdm1qaHZuN0xwN2VEMHJVMEE3MXI3MkgwTkRIM1dFd3VZWXhhNWdXbGtOcVhRVG43d3YtLTEtVTk4dUxnSzdrRGJoakpJU1RoX3RR?oc=5)
+- [B] 구글뉴스 한국 스포츠: [허구연 KBO 총재, 3연임 사실상 성공 - 국제신문](https://news.google.com/rss/articles/CBMiiwFBVV95cUxQTWxnc1lOV3lBOHhDM3pRa0tNcTJ5TXlUVVV5dmVMdXV5OGE2SThTSzNEd1hYOFl5WUoydmgxMWU4N0s4TUN6N09BMnZ5OU5SMDhBYWlLM04zTWtyVmhWOFRIQTVFZGxNVGtFWUpSdGZCVGx1S0ZCWV9GQ3RFLW83WjAxWkVQbVBTVW44?oc=5)
+- [B] 구글뉴스 한국 스포츠: [MLB 밀워키, 탬파베이에 파죽의 3연승...첫 월드시리즈 우승까지 1승 - YTN](https://news.google.com/rss/articles/CBMiXkFVX3lxTFA5MU52WHd5MXBIUE0zaGphVlQzQXhvOTIxM1NxaWpYWDRzXzBqVHpIY0duOFJyMWFuZWRxekVVcU5LYTcxaUxMZnh4Rm4yZGFCR2RyTXNpd212anV6N3c?oc=5)
+- [B] 구글뉴스 한국 스포츠: [아시안컵 67년 만의 정상 도전 일정 발표…‘안전’은 숙제 - 강원일보](https://news.google.com/rss/articles/CBMiW0FVX3lxTE1mOFNwM3BVWndvX3ZKS3U0aW92MlVWV2RUTGNVQnZna0JMWklEUGg2S2U2UURrZk1XNXBYdHZLSWxUQV83NDFLZlJkMlAyRXJPVHk2eUx1cTcyaEE?oc=5)
+- [B] 구글뉴스 한국 스포츠: [음바페, 마오쩌둥 '독재자' 발언에 中 발칵, 멍뉴 등 대기업들 전면 광고 해지 - 뉴스핌](https://news.google.com/rss/articles/CBMiXEFVX3lxTE1uRFktU1ZDNHRTdjZsb1VwSXdya1ZWbzIxQ0xscVhERGo3UHo2cUpFcFJYTlVUdEZvampuVGZCWjVNZVRvMHdtOWZhbFlMMktrcG9INFdMalcwYTdp?oc=5)
 
 ### 예측시장
 - [A] Kalshi 이벤트: [[예측] Which Millennium Prize Problem will be solved next? (Science and Technology)](https://kalshi.com/markets/kxmillenniumnext-45)
 - [A] Kalshi 이벤트: [[예측] Derrick Henry Career Regular Season Rushing Yards (Sports)](https://kalshi.com/markets/kxnflcareerrshyds-dhenry)
+- [A] Polymarket 상위 이벤트: [[예측] Ballon d'Or Winner 2026 — 24h 거래량 $9,218,851](https://polymarket.com/event/ballon-dor-winner-2026)
 - [A] Kalshi 이벤트: [[예측] Who will be the next Secretary General of NATO? (Elections)](https://kalshi.com/markets/kxnextnatosecgen-99)
-- [A] Polymarket 상위 이벤트: [[예측] US-Iran ceasefire continues through...? — 24h 거래량 $552,417](https://polymarket.com/event/us-iran-ceasefire-continues-throughptptpt)
-- [A] Polymarket 상위 이벤트: [[예측] Counter-Strike: Nemiga vs DENDELE CS (BO3) - PGL Masters Bucharest Group Stage — 24h 거래량 $463,301](https://polymarket.com/event/cs2-nemi1-dendel-2026-10-27)
+- [A] Polymarket 상위 이벤트: [[예측] Counter-Strike: FURIA vs TYLOO (BO3) - PGL Masters Bucharest Group Stage — 24h 거래량 $712,123](https://polymarket.com/event/cs2-furia-tyloo-2026-10-27)
+- [A] Polymarket 상위 이벤트: [[예측] UEFA Champions League: 2027 Champion — 24h 거래량 $534,075](https://polymarket.com/event/uefa-champions-league-2027-champion-20260701202025549)
 - [A] Kalshi 이벤트: [[예측] Will a human land on Mars before California starts high-speed rail? (Science and Technology)](https://kalshi.com/markets/kxmarsvrail-50)
-- [A] Polymarket 상위 이벤트: [[예측] Fed Decision in October? — 24h 거래량 $7,538,876](https://polymarket.com/event/fed-decision-in-october-20260617190323537)
-- [A] Polymarket 상위 이벤트: [[예측] Guangzhou Open: Dayana Yastremska vs Katie Volynets — 24h 거래량 $1,838,248](https://polymarket.com/event/wta-yastrem-volynet-2026-10-26)
+- [A] Kalshi 이벤트: [[예측] Will Ramp or Brex IPO first? (Financials)](https://kalshi.com/markets/kxrampbrex-40)
 
 ### 인플루언서
+- [B] YouTube: Bloomberg Television: [People Are 'Wound Up' Over Data Centers, Perot Jr. Says](https://www.youtube.com/watch?v=ehj3ETqqDmI)
 - [C] YouTube: 삼프로TV: [AI 기술 발전으로 무너진 비트코인 신뢰...추가 하락 가능성은? | 서동주, 김동환, 함지현 블록미디어 기자 [크립토 PLUS]](https://www.youtube.com/watch?v=zPOlWTdk7YQ)
-- [B] YouTube: Bloomberg Television: [Johannesburg’s Infrastructure Decay Risks Driving Multinationals Out, Busi Mavuso Warns](https://www.youtube.com/watch?v=kcJBUfO9rqs)
-- [B] YouTube: Bloomberg Television: [Jackdaw Gas Field Gets UK Approval After Years of Debate](https://www.youtube.com/shorts/GKchi58GNXI)
-- [B] YouTube: Bloomberg Television: [BlackRock's Rieder on Global Bonds, AI](https://www.youtube.com/watch?v=ndm6oNJrmEY)
-- [B] YouTube: Bloomberg Television: [BNY CFO on AI Strategy, Business Growth](https://www.youtube.com/watch?v=sL8iuQhBbBc)
-- [B] YouTube: Bloomberg Television: [Bottoms Says Georgia Needs Pause on New Data Centers](https://www.youtube.com/watch?v=u1Ik2Uktr5w)
-- [C] YouTube: 삼프로TV: ["그냥 관망해라" 그다음 언제 움직이냐면... | 김민수 레몬리서치 대표 [더블 업]](https://www.youtube.com/shorts/VdprAeB1rhQ)
-- [C] YouTube: 삼프로TV: [프랑스가 난리 난 이유](https://www.youtube.com/shorts/3wFUdXOpUXQ)
+- [B] YouTube: Bloomberg Television: [Can the S&P 500 Outgrow the Megacaps? | Presented by CME Group](https://www.youtube.com/watch?v=Sfc0ly3ob7E)
+- [B] YouTube: Bloomberg Television: [GM to Leave NYSE for Stock Listing on Tech-Focused Nasdaq](https://www.youtube.com/watch?v=gWBdCy1h7v8)
+- [B] YouTube: Bloomberg Television: [Important That GOP Appeals to Black Voters in GA, Says McCormick](https://www.youtube.com/watch?v=8TF8F6MPvGY)
+- [B] YouTube: Bloomberg Television: [DoorDash Is Said to Near $17B Takeover of Instacart](https://www.youtube.com/watch?v=o6UrObFCvG0)
+- [B] YouTube: Bloomberg Television: [Eliud Kipchoge: The future of running is bright](https://www.youtube.com/shorts/CpgGWjvZAAc)
+- [B] YouTube: Bloomberg Television: [Anduril’s Luckey Sees Arms Spending Stable Even With ‘Blue Wave’](https://www.youtube.com/shorts/zo9GVdsOQKI)
 
 ### 일본뉴스
-- [A] The Japan Times: [Climate-threatened Fijian utopia rejects calls to relocate](https://www.japantimes.co.jp/environment/2026/10/27/climate-change/fiji-island-climate-threat/)
-- [A] The Japan Times: [On nuclear policy, Koizumi agrees with Finnish defense chief: Japan ‘must not be naive’](https://www.japantimes.co.jp/news/2026/10/27/japan/japan-koizumi-finland-nuclear-weapons/)
 - [A] The Japan Times: [Manga artist sues government over revised Imperial House Law](https://www.japantimes.co.jp/news/2026/10/27/japan/crime-legal/manga-artist-lawsuit-imperial-family/)
-- [A] NHK ニュース 主要: [GMO ハッカー集団“会社交渉応じなかった”1人の個人情報公開](https://news.web.nhk/newsweb/na/nd-20261027de66048)
-- [A] NHK ニュース 主要: [北朝鮮軍が韓国の対岸1.4キロの近距離に自走砲を配置](https://news.web.nhk/newsweb/na/nd-20261027de66516)
-- [A] NHK ニュース 主要: [大分大学の元教授 背任容疑で逮捕 大学に約3400万円損害か](https://news.web.nhk/newsweb/na/nd-20261027de66485)
-- [A] NHK ニュース 主要: [武部農相 運動員登録のカメラマン“報告書の訂正を依頼”](https://news.web.nhk/newsweb/na/nd-20261027de66416)
-- [A] NHK ニュース 主要: [浜岡原発 運転差し止めの訴え退ける判決 静岡地裁](https://news.web.nhk/newsweb/na/nd-20261027de66188)
+- [A] The Japan Times: [Climate-threatened Fijian utopia rejects calls to relocate](https://www.japantimes.co.jp/environment/2026/10/27/climate-change/fiji-island-climate-threat/)
+- [A] NHK ニュース 主要: [GMO“懸賞金支払い”で脅迫に対抗も不安続く](https://news.web.nhk/newsweb/na/nd-20261028de66716)
+- [A] NHK ニュース 主要: [フラビオ・ボルソナロ氏 ブラジルを出国か 現地メディア報道](https://news.web.nhk/newsweb/na/nd-20261028de66719)
+- [A] NHK ニュース 主要: [きょう日独首脳会談 サプライチェーン強じん化など確認へ](https://news.web.nhk/newsweb/na/nd-20261028de66709)
+- [A] NHK ニュース 主要: [定数31議席削減案 各党が賛否表明へ 国民 総合的に判断へ](https://news.web.nhk/newsweb/na/nd-20261028de66708)
+- [A] NHK ニュース 主要: [フィンランドとノルウェーの首脳がプーチン大統領と電話会談](https://news.web.nhk/newsweb/na/nd-20261028de66723)
+- [A] NHK ニュース 主要: [熊本地震3か月 住まいの確保と在宅避難者への継続支援が課題](https://news.web.nhk/newsweb/na/nd-20261028de66706)
 
 ### 정치
-- [B] 구글뉴스 한국 정치: [선관위 특검, 올림픽공원 보관 서류·CCTV 압수수색…"현장 검증 전 자료 확보" - 연합뉴스TV](https://news.google.com/rss/articles/CBMiZ0FVX3lxTE5uRDVHcllyMjBSZi1RQXN1cVBXUmJfUjdGd2I3TlpTTVhJekJTQnZiVXEzTmI3Mm9sbEQtNHp3UjJDNjJWMGhzMVBGZmhwUHJtWGtfUEt4M25XbURCV0h3bGIzNTl2ams?oc=5)
-- [B] 구글뉴스 한국 정치: [농지조사 장관 제안 아닌데... 대통령에 말 못하는 농식품부 - 조선일보](https://news.google.com/rss/articles/CBMijgFBVV95cUxQd1FpZUJfWnhwcUVPb3J5NEpUOTkwbV94Wnd6a080SGlidndvN3VCYmUxSUloQ2w0dXF2dFhBZmhITkx5YUNTelJ4TTlQTXRkSk40OU1yNzdIOEpDNWVEM1liNm50VE1XRC1sYy1ZYzQzNF9RTjJWZFBhVzdicGRwTUdPSTItZ1hvcEFKdnBB?oc=5)
-- [B] 구글뉴스 한국 정치: [경찰, ‘역삼 연쇄방화’ 70대 신상 공개 이번주 중 결정 - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTFBkMmlPc3BuMmtaMGt2bU5DcjRvNG0wZFlQQ2c1dTZFdlNaNi0yb1Uwb0hFZFlERXZocjBHZkYydkNkVFhQLUxYbU5qR0F6Mks4S2YyTXJjYWJaU1U?oc=5)
-- [B] 구글뉴스 한국 정치: [‘채 상병 순직’ 임성근 전 사단장 징역 3년 확정 - 한겨레](https://news.google.com/rss/articles/CBMickFVX3lxTE9pU2JKY2VSNjRydTdSczYybGFLMVFkVWw1XzVGQ0lnMlJaZ3VBUXo5U2tINTJRaG8ydU1sMFZDU0dPVU9ZWGVpd2VrVUVKdFljZVlkZWxhU1RRaUlidlJsTUR0YTVMSk5jMFVTMHk3eW42QQ?oc=5)
-- [B] 구글뉴스 한국 정치: [[단독] 박장범 KBS 사장, 尹 탄핵 가결·파면 뒤 휴대전화 두 차례 교체 - MBC 뉴스](https://news.google.com/rss/articles/CBMid0FVX3lxTFB2VmE0ckJyVUN4X01qZTBWSlBnbUZHZkxzZ0JGWGI0OGdHWGdvRm5Xazd0eEhjOWc1TzNTdGgtTjlES3RPR2hrS2tDZjVWa3FfTHJ3c3dsbnJOWXIwbk5ISGM2RzJHWHdHQ210NEY3cm44UUE0NXJr0gF3QVVfeXFMTWhmM2dwYThQaWlvMTctV3doQm9ON2F6cUs2Mk9hSWh4SE1tNWJSVlVUNjlhdlotZDM3WjR1WEdUbFNuYTQ3OGpQRkpQZ1FXWVJZME9jSDRaMEZhRGxxOHIxRkxkcTF1NWJmRW44T0EzVEM0MUVVeTg?oc=5)
-- [B] 구글뉴스 한국 정치: [[단독] ’인천 흉기난동’ 최충락, 자해로 응급실행…피해 여성 입원한 병원 - 연합뉴스TV](https://news.google.com/rss/articles/CBMiZ0FVX3lxTE00OUF4UXVscUNDdWxZT3lHb2syTzU2dVE1b3lrUVNoQ1owYkdsY09zb3hld2k0TC10ck5UM2pxbU9HNWx0MXQ0VnZtMUxOeU1qZ0N1NnBYQVN6Z3BLTUxkU0dDNTJLSVk?oc=5)
-- [B] 구글뉴스 한국 정치: [해경, 2억 원대 마약 유통·투약 혐의 외국인 10명 구속 - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTFA3UjVPWVJOeURzZ3dKYmRsXzJoZ09ScUJTUllVQ3N1WWt1UGpIMnRtQkNVQUI1Ty1yNVBOT2d6ZGlES0dFWlRtTWJlTUpTVmNKRUFETWxLSVV1UkE?oc=5)
-- [B] 구글뉴스 한국 정치: [경기 지역 소나무재선충병 36%↑…“기후변화로 급증” - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTFBUWHBPSXhRSlRlTjhHV2Jkb0djR1d2SGVuMk01a1cwelhTWndDSHMtOGpfMnlaNUdiNEkzWkRwbm1UN3cwSG1xNUlObnIxdDQzNjZkREl0aTFXWHc?oc=5)
+- [B] 구글뉴스 한국 정치: [조현 "美대사 불러 주한미군 사령관 발언에 항의" - 조선일보](https://news.google.com/rss/articles/CBMikgFBVV95cUxPRENLc0RwaXJEV3pfNU5ZUndWZlYycnV3WnFfM2h2ZFB0c3duWUNxaXZzd3duZHNzUlJNZ005eEx3X3dlY3FXVG1TRENCNnhPNzktNHZXbHVEVjdiVWpHT3d1cVdYVVM3M19aV0FrWnkzTGkzckl5Um00VkV0Znhrbk85dWoxbTFwMGF5NjRFQXE1QQ?oc=5)
+- [B] 구글뉴스 한국 정치: [영하도 아닌데 한파주의보?…전주·대전은 발효, 서울은 빠진 이유 - 뉴스1](https://news.google.com/rss/articles/CBMiXEFVX3lxTE5CZENFRV94eXZ4RDRyYmJjTDh0Si1PRkVuN014UXFxMkhYcDhzaVljY0ZjZWUzYXlSdWxLMW9qcFhSYTc0eHg2SVZRR1h6RVhTUmVrOEtMV3g3OUNW?oc=5)
+- [B] 구글뉴스 한국 정치: [[속보] 與 “조희대 대법원장 의혹 국정조사 실시”…의총 결론 - 매일경제](https://news.google.com/rss/articles/CBMiVkFVX3lxTE16UkJZMHdreDJKMXNCOUFnMU5ibUM3eXRFV1dSNGNPaGJ2SWJJTTBZVkpxNHlIRlJRTlVfZVVQaC1MX2dTRHAyTU5FXzJWa0JpemU0azlB?oc=5)
+- [B] 구글뉴스 한국 정치: [김포 카페서 북한 자주포 관망?…조작 이미지로 '공포감 조성'[뉴스럽다] - 노컷뉴스](https://news.google.com/rss/articles/CBMiUkFVX3lxTFBaT2lIakR5aXRrMXZiS1VaeExiSmVLTjJIRndDMjhKWkNyZk80VG5MNE83cGRhWTBiVG1CSnYxajlVYms2MXlOWjRFX0huRFBWMUE?oc=5)
+- [B] 구글뉴스 한국 정치: [‘붉게 물든’ 욕지도, 한려해상 소나무도 재선충 비상 - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE1YaDBMOFFCbDJHX2k5dHNGUVoxemFnSE1SdjNWcHdpSEV6NmFvUzk5OTNwX054OTRGZTRTcWd6VVpNNEVubnNiYWYzLVYwa1MzWC1HSDM1Vjc3ejQ?oc=5)
+- [B] 구글뉴스 한국 정치: [압수수색 사과 거부에 소아응급의학회 분노…"진료 방해 없었다는 주장도 기만" - MEDI:GATE NEWS](https://news.google.com/rss/articles/CBMiV0FVX3lxTFBweS1MTFNrOUxBZlJpTk9tWGFONGVYUkRFSWEwbGF0a2xobFI3TldldGdtaUhLeVZMQTNTaUJVY09xRTB6SzNuNlhnX3hFa3psNDhkS2RBaw?oc=5)
+- [B] 구글뉴스 한국 정치: [도박 자금 5900억 세탁한 조직원 등 80명 송치 - 조선일보](https://news.google.com/rss/articles/CBMihgFBVV95cUxPSG1TaXhMOWtIS1dFQ2FmSzlvVmdfZGFUR0pnd1dDN3E2MkhmUU1rUzlJR3JtOFhKVE9MXzVZcWx5Q0pvYUs3SFZRbWI5LVZKbU5NZzA3QXJSLU1qRzF4OG1nWTROX0hWTDk4QVdteVM5RENvZjU1MVN6QUdqRjg4c29BOGhYUQ?oc=5)
+- [B] 구글뉴스 한국 정치: [[단독] “마약 주며 범행 꼬드겨”…학교 1분 거리 아파트서 마약 제조도 - KBS 뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTE00cXRSci1NN3RCTXR1TDNLX1Y0NWU2NDZEdkNORDZGa1gxbUtldHR3eGw2UzBCQUFON2RFVTNfT2hMU012d3hOc1c5T1p0VU42cDQ5LVo0Z0U1MEU?oc=5)
 
 ### 커뮤니티
-- [D] はてなブックマーク 人気エントリー: [【速報】GMO、パソコン電源落とすよう呼びかけ](https://www.47news.jp/15143807.html)
-- [D] はてなブックマーク 人気エントリー: [年齢差恋愛問題、潜在的に炎上する漫画三銃士を連れてきたよ（鈴木先生、PとJK、女子校のこひー先生） - INVISIBLE Dojo. ーQUIET & COLORFUL PLACE-](https://m-dojo.hatenadiary.com/entry/2026/10/27/032211)
-- [D] はてなブックマーク 人気エントリー: [「業者が間に合わなかった」「朝の身支度に3〜4時間」…高市早苗首相の1年を振り返って気付いた“論点すり替え”の共通項 | 文春オンライン](https://bunshun.jp/articles/-/93207)
-- [D] はてなブックマーク 人気エントリー: [細野大臣 全国民に「緊急要請」 食料・水・トイレの備えを｜FNNプライムオンライン](https://www.fnn.jp/articles/-/1140337)
-- [D] はてなブックマーク 人気エントリー: [相続税は理不尽・おかしい・廃止すべき？デメリットを回避する生前対策｜相続大辞典｜【相続税】専門の税理士90名以上｜税理士法人チェスター](https://chester-tax.com/encyclopedia/36258.html)
-- [D] はてなブックマーク 人気エントリー: [トランプ氏、ノルウェーを「外便所のような国」と罵倒 ノーベル平和賞逃し](https://www.afpbb.com/articles/-/3659475)
-- [D] はてなブックマーク 人気エントリー: [外国人が「よう日本人、我が国でエボリューションしたこの寿司はどう？」って見せてくるヤツ、いまんところ、全部食べたい。食わせろ](https://togetter.com/li/2763303)
-- [D] はてなブックマーク 人気エントリー: [「ヨーロッパでは💦という絵文字を使わないようにしましょう」日本同様ちょいちょい使っていたけど理由を今知って顔が死にました…結構生々しい性的興奮を意味するらしい](https://togetter.com/li/2763373)
+- [D] はてなブックマーク 人気エントリー: [「犯人は○○。本当に、そうでしょうか？」堀井雄二氏が『続ポートピア連続殺人事件:忘却の埋葬』に意味深コメント。タイトルに「続」が付いた理由もプレイすれば納得できる | Game*Spark - 国内・海外ゲーム情報サイト](https://www.gamespark.jp/article/2026/10/27/174143.html)
+- [D] はてなブックマーク 人気エントリー: [高市首相の「欠席理由」変えました G7オンライン首脳会合 設備の問題ではなく「発言1回きり」だから：東京新聞デジタル](https://www.tokyo-np.co.jp/article/524324)
+- [D] はてなブックマーク 人気エントリー: [でも自炊でも別に安くないよね](https://anond.hatelabo.jp/20261027125650)
+- [D] はてなブックマーク 人気エントリー: [GMO、なんでそんなに嫌われているの？→ダークパターン、対応の悪さ、同業者からの悪評と集まった反応がまるでGMOのWikiのよう](https://togetter.com/li/2763425)
+- [D] はてなブックマーク 人気エントリー: [「成年向け漫画家は一般誌に来るな」という言葉を見た…日本は世界一有名レベルな成年向け漫画家の絵がお札になっており、国語の教科書に官能小説が載っている国なのだが](https://togetter.com/li/2763474)
+- [D] はてなブックマーク 人気エントリー: [公開された情報と氏名など同一の人物、ＧＭＯクラウドサービスの利用「一度もない」](https://www.yomiuri.co.jp/national/20261027-GYT1T00367/)
+- [D] はてなブックマーク 人気エントリー: [外国人「日本人！！！本当に理解できないんだけど…日本人って生卵をそのままご飯にかけて食べるよね？卵かけご飯ってそんなにおいしいの？？？」](https://togetter.com/li/2763420)
+- [D] はてなブックマーク 人気エントリー: [スライド作成入門_2024.indd](https://home.riise.hiroshima-u.ac.jp/~ten/slide_20240328.pdf?utm_source=chatgpt.com)
 
 ### 테크
 - [A] arXiv cs.AI 신규: [Phronix: The Capability-Centric Learning Paradigm for Agents](https://arxiv.org/abs/2610.31789)
-- [B] 구글뉴스 한국 과학기술: [역전파 없는 AI 학습 실험, 열흘 만에 4000배 빨라져…1.76시간→1.6초 - AI타임스](https://news.google.com/rss/articles/CBMiakFVX3lxTE1PX1lHenRFTXkyaXJtWmFkaGlMYld3Vk0xYUJfTW04X2ZqTW9nZUtkU2Jlb0U1dGxtaGdyOVEtb2duSjFLYkZpQUkzQm1zRXBHcnlEODVrWnRUckQ0dVhYYmtPWm5ZNzJ1aHc?oc=5)
-- [C] GeekNews: [Show GN: 호보코드 - 다시 간 장소에서 메모를 알려주는 아이폰 앱](https://news.hada.io/topic?id=36086)
 - [A] arXiv cs.AI 신규: [Reproducible Evaluation as the Substrate for Safe Prompt Compression in Production Agents](https://arxiv.org/abs/2610.31972)
-- [B] ZDNet Korea: [AI 에이전트 운영비 68% 줄일 열쇠는 '데이터 통합'…디노도, 연구 결과 공개](https://zdnet.co.kr/view/?no=20261027143845)
+- [C] GeekNews: [CorridorKey 2.0 - 영상 전체를 분석하는 로컬 신경망 그린/블루 스크린 키잉 도구](https://news.hada.io/topic?id=36077)
+- [B] TechCrunch: [General Compute raises $100 million Series A, countering the neocloud disaster narrative](https://techcrunch.com/2026/10/27/general-compute-raises-100-million-series-a-countering-the-neocloud-disaster-narrative/)
+- [B] TechCrunch: [X is nudging users to promote their posts with a pointing hand, and people are confused](https://techcrunch.com/2026/10/26/x-is-nudging-users-to-promote-their-posts-with-a-pointing-hand-and-people-are-confused/)
 - [A] arXiv cs.AI 신규: [Tradeoff-Aware Territory Design: A Multi-Objective Decision System for Enterprise Customer-to-Seller Allocation](https://arxiv.org/abs/2610.31701)
 - [A] arXiv cs.AI 신규: [Knowing Whom to Trust is not Enough: The Trust--Agreement Gap in Repeated Multi-Party LLM Negotiation](https://arxiv.org/abs/2610.31971)
 - [A] arXiv cs.AI 신규: [CEMIR vs. FISER: a comparative study of reasoning-based and enrichment-based approaches to pragmatic intent recognition](https://arxiv.org/abs/2610.32022)
 
 ### 트렌드
-- [D] r/worldnews (2026-11-13 RSS 종료 예정): [More Than 50 Air Defense Turrets Built Around Putin’s Residence](https://www.reddit.com/r/worldnews/comments/1xfsma3/more_than_50_air_defense_turrets_built_around/)
-- [D] 구글 트렌드 급상승 KR: [고려대](https://trends.google.com/trending/rss?geo=KR)
-- [D] 구글 트렌드 급상승 US: [pak vs sl](https://trends.google.com/trending/rss?geo=US)
-- [D] 구글 트렌드 급상승 JP: [今日は満月?](https://trends.google.com/trending/rss?geo=JP)
-- [D] r/worldnews (2026-11-13 RSS 종료 예정): [US encourages Viktor Orbán to run for UN secretary-general as joint US, Russia, and China pick - report](https://www.reddit.com/r/worldnews/comments/1xfrr7o/us_encourages_viktor_orbán_to_run_for_un/)
-- [D] r/worldnews (2026-11-13 RSS 종료 예정): [Toronto re-elects Olivia Chow as mayor](https://www.reddit.com/r/worldnews/comments/1xggcnh/toronto_reelects_olivia_chow_as_mayor/)
+- [D] 구글 트렌드 급상승 KR: [며느리](https://trends.google.com/trending/rss?geo=KR)
+- [D] 구글 트렌드 급상승 US: [arsenal vs](https://trends.google.com/trending/rss?geo=US)
+- [D] 구글 트렌드 급상승 JP: [ライブドアニュース](https://trends.google.com/trending/rss?geo=JP)
 - [D] r/worldnews (2026-11-13 RSS 종료 예정): [Russian Missiles Hit Kyiv University](https://www.reddit.com/r/worldnews/comments/1xgjlxz/russian_missiles_hit_kyiv_university/)
-- [D] r/worldnews (2026-11-13 RSS 종료 예정): [Denmark to ban mink farming in government U-turn](https://www.reddit.com/r/worldnews/comments/1xfuxho/denmark_to_ban_mink_farming_in_government_uturn/)
+- [D] r/worldnews (2026-11-13 RSS 종료 예정): [Satellites show some of the strongest evidence the AMOC is weakening](https://www.reddit.com/r/worldnews/comments/1xgvlq5/satellites_show_some_of_the_strongest_evidence/)
+- [D] r/worldnews (2026-11-13 RSS 종료 예정): [Moscow to Restrict Mobile Internet for 3 Days During Putin’s Summits](https://www.reddit.com/r/worldnews/comments/1xgp764/moscow_to_restrict_mobile_internet_for_3_days/)
+- [D] r/worldnews (2026-11-13 RSS 종료 예정): [PM Carney says U.S. is ‘coming closer to our position’ in trade war as talks gain momentum](https://www.reddit.com/r/worldnews/comments/1xg9tq7/pm_carney_says_us_is_coming_closer_to_our/)
+- [D] r/worldnews (2026-11-13 RSS 종료 예정): [PM Carney says it’s time to move beyond Indian Act](https://www.reddit.com/r/worldnews/comments/1xg9l6v/pm_carney_says_its_time_to_move_beyond_indian_act/)
 
 ### 팩트체크
 - [A] 뉴스톱: [제이앤PE, 군공·우본 '간택'..3호 블라인드 펀드 조성 탄력](https://www.newstopkorea.com/news/articleView.html?idxno=48469)
+- [A] Full Fact: [Video shows police attending a protest not seizing ‘immodest’ mannequin over complaints from Pakistani community](https://fullfact.org/culture-and-society/video-does-not-show-police-seizing-mannequin-over-Pakistani-complaints-repeat/)
+- [A] 뉴스톱: [아시아증시, AI 기대에 韓·日 반등...中·홍콩은 기술주 약세](https://www.newstopkorea.com/news/articleView.html?idxno=48523)
+- [A] 뉴스톱: [직접 발로 뛰는 백종원, TBK소스 시연회 '성료'](https://www.newstopkorea.com/news/articleView.html?idxno=48522)
 - [A] 뉴스톱: [김슬기 바로팜 대표 "올해 흑자 전환, 플랫폼 기반한 헬스케어AX로 이익 300억 목표"](https://www.newstopkorea.com/news/articleView.html?idxno=48515)
 - [A] 뉴스톱: [이노폴리스파트너스, 씨엠원 2대 주주 올랐다](https://www.newstopkorea.com/news/articleView.html?idxno=48508)
 - [A] 뉴스톱: [한국벤처투자 LP 성장펀드, GP 10곳 도전장...경쟁률 5대 1](https://www.newstopkorea.com/news/articleView.html?idxno=48514)
 - [A] 뉴스톱: [넷마블 '스톤에이지 키우기', 펫 육성 새 판 짠다...서버 이주도 도입](https://www.newstopkorea.com/news/articleView.html?idxno=48512)
-- [A] 뉴스톱: [‘트리플에스’ 소속사 모드하우스, 후속 투자유치 추진...2000억 몸값 주목](https://www.newstopkorea.com/news/articleView.html?idxno=48502)
-- [A] 뉴스톱: [신한은행, 지주에 1조 중간배당…롯데손보 인수에 쓰일까](https://www.newstopkorea.com/news/articleView.html?idxno=48507)
-- [A] 뉴스톱: [반도건설, 계양신도시 첫 민간분양 출격](https://www.newstopkorea.com/news/articleView.html?idxno=48510)
 
 ### 한국공식
-- [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [[단독]폐 굳는 고령자, 희귀질환 '진단 지연'…복지부 "관리방안 담는다" - 머니투데이 - 머니투데이](https://news.google.com/rss/articles/CBMiakFVX3lxTE1zejdXVGdERTFqMFhIMEloazJmLXBwUDZqQW51dFE5Y0xiYUJBNFk3dERVbTdqQnFfZGl6WUM1Z1RFSVVWaEkzRjlWal9GLTdISmRIajNoSEJ3ekNhNk1vX2xNTXpkdHo2eHfSAW9BVV95cUxPVi10Z1VzMlVzb1A3QUR2T0ZKVVRDTEdaVVVOM3VrZVdOY29sWjdQSnhna09Fck4wMlRHUWE0dzlLeUJGdkc2ZHQzRGRXek1RY2s2QTlJTFozZmw2QktaZ0JodFRoX1djTDFKQy1NUlk?oc=5)
-- [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [질병청, '항생제 적정사용 관리 시범사업' 참여기관 모집 - 뉴시스](https://news.google.com/rss/articles/CBMiYEFVX3lxTE9WMHFzM2wyY0xnX05BU2VRNDFEREhUZWhIZjloVFRXLTF0UV9yNWRfZmhrZ1VmVmtSRi01RFRtQllRcU9wR2tIWVRPei1XRDc3a0xKUDIxYUE1Z2RLRndJMdIBeEFVX3lxTE9GS3Z6QXVBUkNDVERVS3pHODJ2N2NfNDZWNlJWdW9SVXFTOFZTamIxa3gxS2RUSVhUSmktR3l5T3ROVVhLdGpKTWxEYWhxakhxc0xlOHZ3Smg1SmpaR3k0X2JsY3BvaVNhRHItVUd3a20yVHBBdXU5Tw?oc=5)
-- [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [질병관리청, 코로나19 예방접종 피해보상 ‘특례 이의신청’, 내일(23일) 마감! - 경기종합뉴스](https://news.google.com/rss/articles/CBMidEFVX3lxTE5wVHc1NHN5RmFOcHJKLU9SQ21PMzJmV1NVRlFDLTRmTm9pMjVYdjdxcnF6QXlTbUxRSHNoX2JnQTFhVkVkVkRiZ2NKekZTN2lBNjFMbWd5SE5BMkw4QWVEZE1ya1FtMWJYSWt5VDFzcl9Yam1F?oc=5)
-- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): ['26년 노후 산업단지 재생사업 공모 착수 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMikgFBVV95cUxQUHN2ZGNmWFRoSDFNcUNNNE5RR1NwMjEyMklNSjgtMTNrbXlGYVV2NUVVbWpSQ0g2bV9QMlFmeFRQQ1czSEpMU3M2NWM2VDhYMXRwVXlocjJSNWFPNFNURkYzemFJUEhIcm1VLUxiM095UUVtd1FvV19TVmFmcXNhQ2lPTDY4ck5lWjNtQm9XZ25tZw?oc=5)
+- [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [보건복지위원회 보건복지부-질병관리-식품의약품안전처 종합 국정감사 - 뉴시스](https://news.google.com/rss/articles/CBMiYEFVX3lxTE9SZUVSQW5FR0xVREljbkNUaGpHU0k4SHJjZ1dEMDdZcm1raUJqQnhpVS1GSjA4SGJ4cVBDWXFhWWhidm05Njhfc2RuNzgtd2plWnJtczhrcTBSckMtcVl2ZA?oc=5)
+- [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [질병관리청, 병원기반 인간 마이크로바이옴 연구 후속사업 공청회 개최 - MEDI:GATE NEWS](https://news.google.com/rss/articles/CBMiVkFVX3lxTE94Q2J6VFVRUkQyN2FGc1JENEQ2bnNiSWdMRklsSndjYlpldk5VZVdzSWdJek9uNXRpcU9MUTRDR3AyLVpZMDg1cWIzWlA5dVpvR3hYTmVB?oc=5)
+- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [방한 외국인 관광객 수, 역대 최고치 기록 두 달 앞당겨 경신 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMikgFBVV95cUxNYWVKdlBxUDc3bXRlOGllMTE1NG94engtX1puNFNfRjVPeGdVNzFaZzBPUTdObGRSYXQ0VkVCT1F6dDBKbVo3TUJKeHFEbzUzZjA1ZnFwSVBiUXV3V0xmODFycTR0VExZNndOUDE0NGo5MUJxcG5oamNpNXZLN2puY002cnRvLVRmWmhTWlF4R2FyZw?oc=5)
+- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): ['26년 노후 산업단지 재생사업 공모 착수 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMikgFBVV95cUxQdjJES1NkSWxBV1BqeXRKLVROM1FBdU1mVFJHSnlkNEZjRC1FcDd4WkwtWWdVT0RDQ3NMUzB0UDMwdnNCSnFFQTVSLTBOaUMzSGg3dkJOYjhkZkNsR2VlMHVPSWZ0dW9wR3lfeHBrSFRtalI4cDE2WFE1SHc1ckw2M2tSYkc0RmszSmRQZWE4am9KZw?oc=5)
+- [B] 질병관리청 관련 보도(구글뉴스 경유·원문 아님): [코로나 최전선 질병관리청 8인의 '코로나 대응 3년의 기록' - 머니투데이 - 머니투데이](https://news.google.com/rss/articles/CBMia0FVX3lxTFAxRkpMT0x0NEVUc1pyNGd2RVhxQTBOT25uYkFnU05uazhXLTdJc2lfTlJtZEdRUWVWYTl1WXpmQmU0QkpfUGxBaURsbnctRk5MZlc1bG80MTIxbDBvU0JCQ20xLVdDZWJzOF9v0gFwQVVfeXFMTXVfbGF6YmE3MzZHVWZJdnhhX2ZfZ0hCdkNidC1JRXh0VkU2OC1wRnVLUkVBS3p0UG9ZeTdvUTBVcXBuZnZic1V1Rzc1WVdtRzNkZWNPZ0NScHFPc1lhYmpqWUdTb2tWMEJwdi1PZDYtOQ?oc=5)
 - [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [[보도자료] 국무조정실장 주재 2026년 공직복무관리유공 포상 수여식 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMikgFBVV95cUxQVmJJM3p6eUJoNFo2WHgzWmVzTUE5cnZzZjAwcmM2bWtnRmk0SllaLWNIY1M1ZUpuNXp2TWw4Mlhjb295dllSRF9VYU51RldnVDN0VVBDaDJucVFrbUNGdWhOTFZCY1NXUWRPNDJPbHNnaVVEaDdWNmJoT1NXVnF4ZVpYb3hxX3FmVFlNVnJoSldyZw?oc=5)
-- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [2025년 기준 경제총조사 최우수 응답사업체 현판 전달 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMi7wFBVV95cUxNQU5HVXdlSDBydU1ORm1sdWxIb09HYzNYbkNacjBJTFlpcmNVZ1oyZ19nVGtIWG5qM2JieHUtNklTX2pqSmRTaEVmQXRIQ2tCMkl6UHh5QXBXbzlQRF82Y3QwM2Nmd21JYVBocks3bG8tYXBFUkFCdGhWVzRkTVpxWHV6TW02cXE3OHpES0pKZG1NSFp2MTRlZ25vVDlLZ2w0ZmxEalVfTzhvcV9SMzY0eERSUU5fcXE4MjdTX3BIZ25fbGhxOGZYRFZSc2tnVjlvSVV6NXR0eU1Va3Z4OTdVNDFTYzAzRmh0aWpPLUVSbw?oc=5)
-- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [재정집행 관리를 '실집행 중심'으로 전환 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMilAFBVV95cUxNRUM4eTI5SEZmeFpxZ191MDNGdXd3azByUHFBX1FwNFVTQTlNeE81TEtjWWpBbWJnM3poYXVVeXphcFQwLUhRWjBkbDk0TGxuUDBQZjVHNUwzOXk3SUItanVlc1FEVllpTkhkZFlINjZoWl9wLVRYa1JzTUk3R1VTTUZfR1BoYmNMa1RYSFl4bVdFTnVB?oc=5)
-- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [관세청, 해외직구 성수기 대비 민원 상담창구 현장 점검 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMilAFBVV95cUxQZzhmd2Vsa2xGLVh2aUtScnM5VnQxSFVMeGZ0eFRfMmxGR1VWZFd0eGkybE5xeUg5eUJuUnZIOVh5MWkzQU1KeUZBMHdzX3VKYXBkbkd6UlNLUVBMMHdteVFoc0VLeTh1THhfY1VyT3ZOSXRHZjJmajNFblV1U3E2ZGF0ejJIQmlucHpmQnlaRmtuX3F1?oc=5)
+- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [재정집행 관리를 '실집행 중심'으로 전환 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMiiwFBVV95cUxOTmdrdGtfV2J2UXBiNGZQNkp3UkpKdUcwOW5fRFh2bGg3dkoxRjJyTkVIbmV6Mll3eFJ5WVNVTkNCYUJiY244VE1CaS11N2t4RGdEbks1RllLTFNLMjVMbnFlX0ZEWnl1ZnVnaFRYWFRseVJxUTB2Sy1zaW9wU3lXemdxekZueXhrV3pn?oc=5)
+- [B] 정책브리핑 관련 보도(구글뉴스 경유·원문 아님): [[보도자료] 국제개발협력본부, 인재양성 ODA 현장 간담회 개최 - 대한민국 정책브리핑](https://news.google.com/rss/articles/CBMikgFBVV95cUxPdTZNLVBBUDkwY25WR2hhNlV5dWZpS3MxVnJ1WDg5TUZVZURVOFhuRWFVRWhMTV9OYnIyNmJoSzh6XzIwSTkzQkJ1Tks4V25Hbk5QVno3bFE4TG9VVEp0Z3RjRGFIcGVoTzNSLUJfZ0ozRU1wVk9zakRDR0JJZ2otMnFYeVBSZUpTejBhYTZMN3RuZw?oc=5)
 
 ### 한국뉴스
-- [A] 연합뉴스 최신: ["박정희 추모식 때 李대통령 화환 훼손 시도 있어 이동조치"](https://www.yna.co.kr/view/AKR20261027149600504)
-- [A] 연합뉴스 최신: [日방위상 "아세안 회의서 美·韓장관과 회담…日평화공헌 설명"](https://www.yna.co.kr/view/AKR20261027165200009)
-- [A] 연합뉴스 최신: [대전 '스토킹 신고' 전 연인 살해 40대 구속…질문엔 묵묵부답(종합)](https://www.yna.co.kr/view/AKR20261027054451063)
-- [B] 매일경제 경제: [美 부모가 등 떠미는 연금투자 … MZ들, 비트코인보다 테크株라는데](https://www.mk.co.kr/news/economy/12186108)
-- [B] 구글뉴스 한국 헤드라인: [트럼프·네타냐후 동반 시험대…선거 후폭풍에 국제사회 긴장 - 연합뉴스](https://news.google.com/rss/articles/CBMiW0FVX3lxTFBaaTlqYzdJZ2RGREpTWUVHRnZGbmJaNDVXMEVaNUU3eWt5emdxVmtRVVZZRUlJMVZKNDFoUTFFNVc5ckdMN21UempPeGdvejlTOXN5b2VTYnpiWUXSAWBBVV95cUxQWjVpbjd4ZmU0M1I2Y18xOHgtWUo3VHZTZU9VTDhMUHNtZk5NM1dTdXdlT2FYWlZpTDUxSHVGenVydmo5YkcxbmJhY3F3UEZOTGtyV3Ixa3NGU2ZBZzhmeGc?oc=5)
-- [A] 연합뉴스 최신: [젤렌스키 "방공미사일 공급, 인위적 지연…러 돕는 일"](https://www.yna.co.kr/view/AKR20261027170900108)
-- [A] 연합뉴스 최신: [연일 장타 때리는 KIA 한준수, "포수로 팀 승리 이끌고파"](https://www.yna.co.kr/view/AKR20261027170400007)
-- [A] 연합뉴스 최신: [조의장 "이태원참사는 사회적 재난…진실 밝혀질 때까지 함께"](https://www.yna.co.kr/view/AKR20261027168500001)
+- [A] 연합뉴스 최신: [푸틴과 '깜짝 통화' 노르웨이·핀란드 정상…유럽 일각 '떨떠름'](https://www.yna.co.kr/view/AKR20261028000900098)
+- [B] 매일경제 경제: [이형일 “올해 국민소득 4만불 진입 전망…성과를 국민 삶으로 넓힐 것”](https://www.mk.co.kr/news/economy/12186973)
+- [B] 매일경제 증권: ['단일종목 레버리지' 외국인은 싹 털었네](https://www.mk.co.kr/news/stock/12187382)
+- [A] 연합뉴스 최신: [루센트블록 반발에도 당국 '신중'…공정위 변수 눈길](https://www.yna.co.kr/view/AKR20261027183500002)
+- [A] 연합뉴스 최신: [생후 12일 아르헨 갓난아기, 낙과 아보카도에 머리 맞아 사망](https://www.yna.co.kr/view/AKR20261028007200009)
+- [A] 연합뉴스 최신: [여야, 정보위·성평등위 등 겸임 상임위 국감 시작](https://www.yna.co.kr/view/AKR20261027128000001)
+- [A] 연합뉴스 최신: [장동혁, 올공行…선관위 특검 '투표지 공개검증' 현장 방문](https://www.yna.co.kr/view/AKR20261027162000001)
+- [A] 연합뉴스 최신: [美선거 일주일앞 3천200만명 사전투표…경합지 투표율 대거 상승](https://www.yna.co.kr/view/AKR20261028005800071)
 
 ## 3. 커뮤니티·트렌드 신호 (전부 🔴 미확인 — 1·2절과 대조 후 사용)
 
-- 구글 트렌드 급상승 KR: [고려대](https://trends.google.com/trending/rss?geo=KR)
-- 구글 트렌드 급상승 US: [pak vs sl](https://trends.google.com/trending/rss?geo=US)
-- 구글 트렌드 급상승 JP: [今日は満月?](https://trends.google.com/trending/rss?geo=JP)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Brazil: Flavio Bolsonaro, who lost the presidential election, ordered to surrender his passport](https://www.reddit.com/r/worldnews/comments/1xg84lc/brazil_flavio_bolsonaro_who_lost_the_presidential/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Norway Fires Back After Trump Calls It a “Shithouse” Country](https://www.reddit.com/r/worldnews/comments/1xg7fpc/norway_fires_back_after_trump_calls_it_a/)
+- 구글 트렌드 급상승 KR: [며느리](https://trends.google.com/trending/rss?geo=KR)
+- 구글 트렌드 급상승 US: [arsenal vs](https://trends.google.com/trending/rss?geo=US)
+- 구글 트렌드 급상승 JP: [ライブドアニュース](https://trends.google.com/trending/rss?geo=JP)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Flavio Bolsonaro Reportedly Flees Brazil After Passport Revocation](https://www.reddit.com/r/worldnews/comments/1xgscb5/flavio_bolsonaro_reportedly_flees_brazil_after/)
 - r/worldnews (2026-11-13 RSS 종료 예정): [Bolsonaro effectively concedes in Brazil after Trump suggests he won’t help](https://www.reddit.com/r/worldnews/comments/1xgc8ht/bolsonaro_effectively_concedes_in_brazil_after/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [US encourages Viktor Orbán to run for UN secretary-general as joint US, Russia, and China pick - report](https://www.reddit.com/r/worldnews/comments/1xfrr7o/us_encourages_viktor_orbán_to_run_for_un/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Brazil markets crater, some stocks sink 50% after Lula victory](https://www.reddit.com/r/worldnews/comments/1xg6iyb/brazil_markets_crater_some_stocks_sink_50_after/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [UN panel says Russia is committing crimes against humanity by targeting civilians in Ukraine](https://www.reddit.com/r/worldnews/comments/1xfz7r4/un_panel_says_russia_is_committing_crimes_against/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Russia may seek NATO troop withdrawal from Poland in Ukraine talks: report](https://www.reddit.com/r/worldnews/comments/1xfxxpj/russia_may_seek_nato_troop_withdrawal_from_poland/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [More Than 50 Air Defense Turrets Built Around Putin’s Residence](https://www.reddit.com/r/worldnews/comments/1xfsma3/more_than_50_air_defense_turrets_built_around/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Only 34,300 Votes Were Cast After Initial Voting Deadline in Brazil's Election; Lula Won by 4.43 Million](https://www.reddit.com/r/worldnews/comments/1xg7ptk/only_34300_votes_were_cast_after_initial_voting/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Brexit has not “played out” like it was promised to the public, has weakened the economy and the current deal is not good enough, says Andy Burnham](https://www.reddit.com/r/worldnews/comments/1xg4bug/brexit_has_not_played_out_like_it_was_promised_to/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [US holding up air defense missiles for Ukraine for nearly a month, Zelensky says](https://www.reddit.com/r/worldnews/comments/1xfvhn5/us_holding_up_air_defense_missiles_for_ukraine/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Toronto re-elects Olivia Chow as mayor](https://www.reddit.com/r/worldnews/comments/1xggcnh/toronto_reelects_olivia_chow_as_mayor/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Flavio Bolsonaro ‘leaves Brazil for US with family days after losing election’](https://www.reddit.com/r/worldnews/comments/1xgz6j0/flavio_bolsonaro_leaves_brazil_for_us_with_family/)
 - r/worldnews (2026-11-13 RSS 종료 예정): [Russian Missiles Hit Kyiv University](https://www.reddit.com/r/worldnews/comments/1xgjlxz/russian_missiles_hit_kyiv_university/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Denmark to ban mink farming in government U-turn](https://www.reddit.com/r/worldnews/comments/1xfuxho/denmark_to_ban_mink_farming_in_government_uturn/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Norwegian MP Smuggled Thermal Drones to Ukraine, Then Helped Change the Law](https://www.reddit.com/r/worldnews/comments/1xfzxss/norwegian_mp_smuggled_thermal_drones_to_ukraine/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Zelenskyy says U.S. fully resumes warnings on ballistic strikes](https://www.reddit.com/r/worldnews/comments/1xfs40h/zelenskyy_says_us_fully_resumes_warnings_on/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Russia's assault on Ukraine's energy grid is a war crime, UN says](https://www.reddit.com/r/worldnews/comments/1xgmvq8/russias_assault_on_ukraines_energy_grid_is_a_war/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [German Ambassador: Russia has at no time in the past four and a half years negotiated in a serious way](https://www.reddit.com/r/worldnews/comments/1xgslde/german_ambassador_russia_has_at_no_time_in_the/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Toronto re-elects Olivia Chow as mayor](https://www.reddit.com/r/worldnews/comments/1xggcnh/toronto_reelects_olivia_chow_as_mayor/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Photos show Ukraine's Starlink was throttled during Russian strike that killed 5 in park](https://www.reddit.com/r/worldnews/comments/1xgtmee/photos_show_ukraines_starlink_was_throttled/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Satellites show some of the strongest evidence the AMOC is weakening](https://www.reddit.com/r/worldnews/comments/1xgvlq5/satellites_show_some_of_the_strongest_evidence/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Netanyahu reportedly pressured military to attack Iran in run-up to election](https://www.reddit.com/r/worldnews/comments/1xgalww/netanyahu_reportedly_pressured_military_to_attack/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Moscow to Restrict Mobile Internet for 3 Days During Putin’s Summits](https://www.reddit.com/r/worldnews/comments/1xgp764/moscow_to_restrict_mobile_internet_for_3_days/)
 - r/worldnews (2026-11-13 RSS 종료 예정): [Russia’s Hybrid Attacks in Europe Are Growing More Dangerous, 54 Incidents Identified in Six Months](https://www.reddit.com/r/worldnews/comments/1xgeslq/russias_hybrid_attacks_in_europe_are_growing_more/)
 - r/worldnews (2026-11-13 RSS 종료 예정): [PM Carney says U.S. is ‘coming closer to our position’ in trade war as talks gain momentum](https://www.reddit.com/r/worldnews/comments/1xg9tq7/pm_carney_says_us_is_coming_closer_to_our/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Lithuania Sends Troops to Kaliningrad Border to Guard Against Russian Deserters](https://www.reddit.com/r/worldnews/comments/1xfys11/lithuania_sends_troops_to_kaliningrad_border_to/)
 - r/worldnews (2026-11-13 RSS 종료 예정): [PM Carney says it’s time to move beyond Indian Act](https://www.reddit.com/r/worldnews/comments/1xg9l6v/pm_carney_says_its_time_to_move_beyond_indian_act/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Russia And Iran Expand Nuclear Cooperation As International Oversight Weakens](https://www.reddit.com/r/worldnews/comments/1xg3h9t/russia_and_iran_expand_nuclear_cooperation_as/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [India clears $2.1 billion deal to buy 335 more K-9 Howitzers from South Korea for deployment along China and Pakistan borders.](https://www.reddit.com/r/worldnews/comments/1xg44ib/india_clears_21_billion_deal_to_buy_335_more_k9/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [South Korea’s president urged to play Call of Duty as war wake-up call](https://www.reddit.com/r/worldnews/comments/1xglnsf/south_koreas_president_urged_to_play_call_of_duty/)
 - r/worldnews (2026-11-13 RSS 종료 예정): [Italy's stance on Ukraine cannot change, says defense minister](https://www.reddit.com/r/worldnews/comments/1xgel4v/italys_stance_on_ukraine_cannot_change_says/)
-- r/worldnews (2026-11-13 RSS 종료 예정): [Netanyahu touts Trump endorsement on eve of vote, suggests they may restart war on Iran](https://www.reddit.com/r/worldnews/comments/1xg8ezq/netanyahu_touts_trump_endorsement_on_eve_of_vote/)
-- はてなブックマーク 人気エントリー: [【速報】GMO、パソコン電源落とすよう呼びかけ](https://www.47news.jp/15143807.html)
-- はてなブックマーク 人気エントリー: [年齢差恋愛問題、潜在的に炎上する漫画三銃士を連れてきたよ（鈴木先生、PとJK、女子校のこひー先生） - INVISIBLE Dojo. ーQUIET & COLORFUL PLACE-](https://m-dojo.hatenadiary.com/entry/2026/10/27/032211)
-- はてなブックマーク 人気エントリー: [「業者が間に合わなかった」「朝の身支度に3〜4時間」…高市早苗首相の1年を振り返って気付いた“論点すり替え”の共通項 | 文春オンライン](https://bunshun.jp/articles/-/93207)
-- はてなブックマーク 人気エントリー: [細野大臣 全国民に「緊急要請」 食料・水・トイレの備えを｜FNNプライムオンライン](https://www.fnn.jp/articles/-/1140337)
-- はてなブックマーク 人気エントリー: [相続税は理不尽・おかしい・廃止すべき？デメリットを回避する生前対策｜相続大辞典｜【相続税】専門の税理士90名以上｜税理士法人チェスター](https://chester-tax.com/encyclopedia/36258.html)
-- はてなブックマーク 人気エントリー: [トランプ氏、ノルウェーを「外便所のような国」と罵倒 ノーベル平和賞逃し](https://www.afpbb.com/articles/-/3659475)
-- はてなブックマーク 人気エントリー: [外国人が「よう日本人、我が国でエボリューションしたこの寿司はどう？」って見せてくるヤツ、いまんところ、全部食べたい。食わせろ](https://togetter.com/li/2763303)
-- はてなブックマーク 人気エントリー: [「ヨーロッパでは💦という絵文字を使わないようにしましょう」日本同様ちょいちょい使っていたけど理由を今知って顔が死にました…結構生々しい性的興奮を意味するらしい](https://togetter.com/li/2763373)
-- はてなブックマーク 人気エントリー: [ジョセフ・ヒース「文明を再生産する：リベラリズムと資本主義の擁護はなぜこれほど難しいのか」（2026年10月25日）](https://econ101.jp/reproducing-civilization/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Russia Says Three Tankers With Diesel En Route to US](https://www.reddit.com/r/worldnews/comments/1xh12ax/russia_says_three_tankers_with_diesel_en_route_to/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Two weeks after a Russian supply base burned in Luhansk's Khrustalnyi, Ukrainian drones came back for an ammo depot](https://www.reddit.com/r/worldnews/comments/1xgp5cj/two_weeks_after_a_russian_supply_base_burned_in/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Canada's new relationship with EU will be 'closer to membership' than ever, senior officials say](https://www.reddit.com/r/worldnews/comments/1xgxva1/canadas_new_relationship_with_eu_will_be_closer/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Ukraine Develops Ground Robots That Launch Interceptor Drones](https://www.reddit.com/r/worldnews/comments/1xgtxp9/ukraine_develops_ground_robots_that_launch/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Ukraine reportedly strikes Russian ammunition depot in occupied Luhansk Oblast](https://www.reddit.com/r/worldnews/comments/1xgsi5w/ukraine_reportedly_strikes_russian_ammunition/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Norway's prime minister, Finland's president in phone call with Putin. Western European leaders have mostly shunned contact with Putin since Russia launched its full-scale war in Ukraine in February 2022](https://www.reddit.com/r/worldnews/comments/1xgobze/norways_prime_minister_finlands_president_in/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [Germany’s Helsing Unveils Low-Cost Highspeed Drone Interceptors](https://www.reddit.com/r/worldnews/comments/1xgugf8/germanys_helsing_unveils_lowcost_highspeed_drone/)
+- r/worldnews (2026-11-13 RSS 종료 예정): [/r/WorldNews Live Thread: Russian Invasion of Ukraine Day 1707, Part 1 (Thread #1854)](https://www.reddit.com/r/worldnews/comments/1xgiloc/rworldnews_live_thread_russian_invasion_of/)
+- はてなブックマーク 人気エントリー: [高市首相の「欠席理由」変えました G7オンライン首脳会合 設備の問題ではなく「発言1回きり」だから：東京新聞デジタル](https://www.tokyo-np.co.jp/article/524324)
+- はてなブックマーク 人気エントリー: [でも自炊でも別に安くないよね](https://anond.hatelabo.jp/20261027125650)
+- はてなブックマーク 人気エントリー: [GMO、なんでそんなに嫌われているの？→ダークパターン、対応の悪さ、同業者からの悪評と集まった反応がまるでGMOのWikiのよう](https://togetter.com/li/2763425)
+- はてなブックマーク 人気エントリー: [「成年向け漫画家は一般誌に来るな」という言葉を見た…日本は世界一有名レベルな成年向け漫画家の絵がお札になっており、国語の教科書に官能小説が載っている国なのだが](https://togetter.com/li/2763474)
+- はてなブックマーク 人気エントリー: [公開された情報と氏名など同一の人物、ＧＭＯクラウドサービスの利用「一度もない」](https://www.yomiuri.co.jp/national/20261027-GYT1T00367/)
+- はてなブックマーク 人気エントリー: [外国人「日本人！！！本当に理解できないんだけど…日本人って生卵をそのままご飯にかけて食べるよね？卵かけご飯ってそんなにおいしいの？？？」](https://togetter.com/li/2763420)
+- はてなブックマーク 人気エントリー: [スライド作成入門_2024.indd](https://home.riise.hiroshima-u.ac.jp/~ten/slide_20240328.pdf?utm_source=chatgpt.com)
 - はてなブックマーク 人気エントリー: [【悲報】東京新聞、ロシア侵略賛成派の一水会信者を擁護してしまう【はてなからもそっぽ向かれる】](https://posfie.com/@ide_ozisan/p/KNI0d4V)
-- はてなブックマーク 人気エントリー: [【重要】「お名前.com デスクトップクラウド」への不正アクセスに関する現在の対応について（第8報）（【続報】お客様をお守りするために現在私たちが行っていること） | GMOインターネットグループ株式会社](https://group.gmo/info/alert/20261027/)
-- はてなブックマーク 人気エントリー: [#26 動画を消すつもりが、supercellを作ることになった。｜ryo](https://note.com/ryodayospcl/n/n90f9a0679f7a)
-- はてなブックマーク 人気エントリー: [アメリカではキャンピングカーに住んでる人が珍しくないくらいにはいて、ホームレスではなくそれなりに受け入れられている生活の形らしい](https://togetter.com/li/2763293)
+- はてなブックマーク 人気エントリー: [「Is this bag yours?」を「これはあなたのかばんですか」と訳すのは誤訳なのか問題、英語学習にとっての危険性や「訳す」という言葉の使い方に話が広がる](https://togetter.com/li/2763507)
+- はてなブックマーク 人気エントリー: [レジ袋「一律有料化やめるべき」青山繁晴前環境副大臣、廃止を要求 制度開始から約6年](https://www.sankei.com/article/20261027-D7ZUJQOEDJC2PFSBCYY5SZETDI/)
+- はてなブックマーク 人気エントリー: [【速報】状況把握し、必要な対応を行うと官房長官](https://www.47news.jp/15145974.html)
+- はてなブックマーク 人気エントリー: [コードを読まずにマージするために必要なこと](https://zenn.dev/nrs/articles/c777388530aa84)
+- はてなブックマーク 人気エントリー: [「サイバーパンク: エッジランナーズ2」はなぜ前作と違う作品になったのか？五十嵐海監督＆大塚雅彦氏が語る制作秘話、TRIGGER若手スタッフの挑戦【インタビュー】 | Game*Spark - 国内・海外ゲーム情報サイト](https://www.gamespark.jp/article/2026/10/27/174142.html)
 
 ## 4. 소스 상태
 
 | 소스 | 분야 | 등급 | 상태 | 수집 |
 |---|---|---|---|---|
 | 미 연준 보도자료 | 금융경제 | A | ok | 0 |
-| ECB 보도자료 | 금융경제 | A | ok | 3 |
+| ECB 보도자료 | 금융경제 | A | ok | 1 |
 | 미 노동통계국 | 금융경제 | A | error: HTTPError: HTTP Error 403: Forbidden | 0 |
 | SEC 8-K 공시(실시간) | 금융경제 | A | error: HTTPError: HTTP Error 403: Forbidden | 0 |
 | IMF 뉴스 | 금융경제 | A | error: HTTPError: HTTP Error 404: Not Found | 0 |
@@ -555,22 +551,22 @@
 | CNBC Top News | 금융경제 | B | ok | 30 |
 | Yahoo Finance | 금융경제 | B | error: HTTPError: HTTP Error 404: Not Found | 0 |
 | Economist Finance | 금융경제 | B | ok | 0 |
-| FT (헤드라인만, 유료) | 금융경제 | B | ok | 10 |
+| FT (헤드라인만, 유료) | 금융경제 | B | ok | 11 |
 | Bloomberg Markets (헤드라인만) | 금융경제 | B | ok | 20 |
-| Bloomberg Surveillance 팟캐스트 | 금융경제 | B | ok | 1 |
+| Bloomberg Surveillance 팟캐스트 | 금융경제 | B | ok | 0 |
 | Odd Lots 팟캐스트 | 금융경제 | B | error: HTTPError: HTTP Error 404: Not Found | 0 |
 | FinancialJuice 헤드라인 (Codex 확인 URL) | 금융경제 | B | ok | 40 |
-| 구글뉴스: 환율 원달러 | 금융경제 | B | ok | 36 |
-| 구글뉴스: 기준금리 | 금융경제 | B | ok | 12 |
-| 구글뉴스: 소비자물가 | 금융경제 | B | ok | 10 |
+| 구글뉴스: 환율 원달러 | 금융경제 | B | ok | 25 |
+| 구글뉴스: 기준금리 | 금융경제 | B | ok | 4 |
+| 구글뉴스: 소비자물가 | 금융경제 | B | ok | 8 |
 | Polymarket 상위 이벤트 | 예측시장 | A | ok | 25 |
 | Kalshi 이벤트 | 예측시장 | A | ok | 25 |
 | CoinGecko 시총 상위 10 | 금융경제 | A | ok | 10 |
-| 정책브리핑 관련 보도(구글뉴스 경유·원문 아님) | 한국공식 | B | ok | 39 |
-| 한국은행 보도자료 | 한국공식 | A | ok | 3 |
+| 정책브리핑 관련 보도(구글뉴스 경유·원문 아님) | 한국공식 | B | ok | 24 |
+| 한국은행 보도자료 | 한국공식 | A | ok | 2 |
 | 금융감독원 보도자료 | 한국공식 | A | error: ParseError: mismatched tag: line 124, column 2 | 0 |
-| 기획재정부 관련 보도(구글뉴스 경유·원문 아님) | 한국공식 | B | ok | 1 |
-| 질병관리청 관련 보도(구글뉴스 경유·원문 아님) | 한국공식 | B | ok | 27 |
+| 기획재정부 관련 보도(구글뉴스 경유·원문 아님) | 한국공식 | B | ok | 2 |
+| 질병관리청 관련 보도(구글뉴스 경유·원문 아님) | 한국공식 | B | ok | 24 |
 | 기상청 지진정보 | 재난 | A | error: ParseError: mismatched tag: line 82, column 3 | 0 |
 | 기상청 기상특보 | 재난 | A | error: ParseError: mismatched tag: line 82, column 3 | 0 |
 | DART 최근공시 (API키 필요) | 한국공식 | A | skipped(no key) | 0 |
@@ -584,43 +580,43 @@
 | SBS 경제 | 한국뉴스 | B | ok | 29 |
 | 한겨레 전체 | 한국뉴스 | B | error: HTTPError: HTTP Error 403: Forbidden | 0 |
 | 경향신문 전체 | 한국뉴스 | B | ok | 40 |
-| 조선일보 전체 | 한국뉴스 | B | ok | 39 |
-| 중앙일보 전체 | 한국뉴스 | B | error: ParseError: mismatched tag: line 9, column 2 | 0 |
+| 조선일보 전체 | 한국뉴스 | B | ok | 40 |
+| 중앙일보 전체 | 한국뉴스 | B | error: URLError: <urlopen error timed out> | 0 |
 | 동아일보 전체 | 한국뉴스 | B | ok | 40 |
 | KBS 최신 | 한국뉴스 | B | error: HTTPError: HTTP Error 404: Not Found | 0 |
-| 구글뉴스 한국 헤드라인 | 한국뉴스 | B | ok | 34 |
+| 구글뉴스 한국 헤드라인 | 한국뉴스 | B | ok | 33 |
 | 구글뉴스 한국 경제 | 한국뉴스 | B | ok | 40 |
-| 구글뉴스 한국 과학기술 | 테크 | B | ok | 39 |
-| 구글뉴스 한국 정치 | 정치 | B | ok | 39 |
-| 구글뉴스 한국 연예 | 문화 | B | ok | 38 |
-| 구글뉴스 한국 스포츠 | 스포츠 | B | ok | 28 |
-| 구글뉴스 한국 건강 | 사회 | B | ok | 34 |
-| BBC World | 국제 | B | ok | 27 |
-| Guardian World | 국제 | B | ok | 34 |
+| 구글뉴스 한국 과학기술 | 테크 | B | ok | 34 |
+| 구글뉴스 한국 정치 | 정치 | B | ok | 37 |
+| 구글뉴스 한국 연예 | 문화 | B | ok | 33 |
+| 구글뉴스 한국 스포츠 | 스포츠 | B | ok | 26 |
+| 구글뉴스 한국 건강 | 사회 | B | ok | 25 |
+| BBC World | 국제 | B | ok | 28 |
+| Guardian World | 국제 | B | ok | 33 |
 | Al Jazeera | 국제 | B | ok | 25 |
-| DW English | 국제 | B | ok | 20 |
+| DW English | 국제 | B | ok | 22 |
 | Nikkei Asia | 국제 | B | ok | 40 |
 | SCMP | 국제 | B | ok | 40 |
 | NHK World | 국제 | B | ok | 0 |
-| AP Top (구글뉴스 경유) | 국제 | A | ok | 25 |
-| Reuters (구글뉴스 경유) | 국제 | A | ok | 27 |
-| NYT World | 국제 | B | ok | 39 |
-| 구글뉴스 미국 헤드라인 | 국제 | B | ok | 36 |
-| 구글뉴스 일본 헤드라인 | 국제 | B | ok | 30 |
-| 구글뉴스 중국(홍콩) 헤드라인 | 국제 | B | ok | 27 |
-| 구글뉴스 영국/유럽 헤드라인 | 국제 | B | ok | 38 |
+| AP Top (구글뉴스 경유) | 국제 | A | ok | 22 |
+| Reuters (구글뉴스 경유) | 국제 | A | ok | 40 |
+| NYT World | 국제 | B | ok | 40 |
+| 구글뉴스 미국 헤드라인 | 국제 | B | ok | 37 |
+| 구글뉴스 일본 헤드라인 | 국제 | B | ok | 29 |
+| 구글뉴스 중국(홍콩) 헤드라인 | 국제 | B | ok | 29 |
+| 구글뉴스 영국/유럽 헤드라인 | 국제 | B | ok | 36 |
 | WHO 뉴스 | 사회 | A | ok | 0 |
-| Hacker News 프론트 | 테크 | C | ok | 16 |
+| Hacker News 프론트 | 테크 | C | ok | 18 |
 | GeekNews | 테크 | C | ok | 40 |
-| TechCrunch | 테크 | B | ok | 17 |
+| TechCrunch | 테크 | B | ok | 20 |
 | The Verge | 테크 | B | ok | 10 |
 | arXiv cs.AI 신규 | 테크 | A | ok | 40 |
-| Product Hunt | 테크 | C | ok | 16 |
-| OpenAI 블로그 | 테크 | A | ok | 7 |
-| Anthropic 뉴스(구글뉴스) | 테크 | A | ok | 1 |
-| Google 블로그 | 테크 | A | ok | 5 |
+| Product Hunt | 테크 | C | ok | 11 |
+| OpenAI 블로그 | 테크 | A | ok | 6 |
+| Anthropic 뉴스(구글뉴스) | 테크 | A | ok | 3 |
+| Google 블로그 | 테크 | A | ok | 8 |
 | ZDNet Korea | 테크 | B | ok | 30 |
-| 전자신문 | 테크 | B | ok | 30 |
+| 전자신문 | 테크 | B | error: URLError: <urlopen error timed out> | 0 |
 | 구글 트렌드 급상승 KR | 트렌드 | D | ok | 10 |
 | 구글 트렌드 급상승 US | 트렌드 | D | ok | 10 |
 | 구글 트렌드 급상승 JP | 트렌드 | D | ok | 10 |
@@ -630,29 +626,29 @@
 | 디시 실시간베스트 (RSSHub 경유, 불안정) | 트렌드 | D | error: HTTPError: HTTP Error 403: Forbidden | 0 |
 | 클리앙 모두의공원 (RSSHub 경유) | 트렌드 | D | error: HTTPError: HTTP Error 403: Forbidden | 0 |
 | 뽐뿌 핫딜 (RSSHub 경유) | 트렌드 | D | error: HTTPError: HTTP Error 403: Forbidden | 0 |
-| 위키백과 현재 사건(영문) | 국제 | B | ok | 2 |
+| 위키백과 현재 사건(영문) | 국제 | B | ok | 1 |
 | SNU팩트체크 관련 보도(구글뉴스 경유·원문 아님) | 팩트체크 | B | ok | 0 |
 | 뉴스톱 | 팩트체크 | A | ok | 40 |
-| Snopes | 팩트체크 | A | ok | 8 |
+| Snopes | 팩트체크 | A | ok | 10 |
 | PolitiFact | 팩트체크 | A | error: HTTPError: HTTP Error 404: Not Found | 0 |
-| Full Fact | 팩트체크 | A | ok | 1 |
+| Full Fact | 팩트체크 | A | ok | 5 |
 | AFP Fact Check | 팩트체크 | A | error: HTTPError: HTTP Error 403: Forbidden | 0 |
 | Bluesky 예시(Paul Krugman) | 인플루언서 | C | ok | 0 |
 | YouTube: Bloomberg Television | 인플루언서 | B | ok | 15 |
 | YouTube: 삼프로TV | 인플루언서 | C | ok | 15 |
-| New York Times Home | 미국뉴스 | A | ok | 21 |
-| New York Times U.S. | 미국뉴스 | A | ok | 28 |
-| New York Times Business | 금융경제 | A | ok | 12 |
-| New York Times Technology | 테크 | A | ok | 7 |
+| New York Times Home | 미국뉴스 | A | ok | 17 |
+| New York Times U.S. | 미국뉴스 | A | ok | 31 |
+| New York Times Business | 금융경제 | A | ok | 19 |
+| New York Times Technology | 테크 | A | ok | 11 |
 | Washington Post Politics | 미국뉴스 | A | error: HTTPError: HTTP Error 502: Bad Gateway | 0 |
 | Washington Post National | 미국뉴스 | A | error: HTTPError: HTTP Error 502: Bad Gateway | 0 |
 | Washington Post World | 국제 | A | error: HTTPError: HTTP Error 502: Bad Gateway | 0 |
 | NPR Top Stories | 미국뉴스 | A | ok | 10 |
 | CBS News | 미국뉴스 | A | ok | 29 |
 | NBC News Top Stories | 미국뉴스 | A | ok | 22 |
-| ABC News Top Stories | 미국뉴스 | A | ok | 20 |
+| ABC News Top Stories | 미국뉴스 | A | ok | 23 |
 | Politico (Google News 경유) | 미국뉴스 | A | ok | 40 |
-| Axios | 미국뉴스 | B | ok | 18 |
+| Axios | 미국뉴스 | B | ok | 20 |
 | USA Today (Google News 경유) | 미국뉴스 | A | ok | 40 |
 | WSJ World News | 국제 | A | ok | 0 |
 | WSJ U.S. Business | 금융경제 | A | ok | 0 |
@@ -660,11 +656,11 @@
 | The Hill | 미국뉴스 | B | ok | 40 |
 | Fox News Latest | 미국뉴스 | B | ok | 25 |
 | PBS NewsHour | 미국뉴스 | A | ok | 20 |
-| Guardian US | 미국뉴스 | A | ok | 20 |
+| Guardian US | 미국뉴스 | A | ok | 27 |
 | NHK ニュース 主要 | 일본뉴스 | A | ok | 7 |
-| NHK 社会 | 일본뉴스 | A | ok | 30 |
-| NHK 政治 | 일본뉴스 | A | ok | 31 |
-| NHK 経済 | 금융경제 | A | ok | 29 |
+| NHK 社会 | 일본뉴스 | A | ok | 37 |
+| NHK 政治 | 일본뉴스 | A | ok | 34 |
+| NHK 経済 | 금융경제 | A | ok | 39 |
 | NHK 国際 | 국제 | A | ok | 40 |
 | Yahoo!ニュース トピックス | 일본뉴스 | B | ok | 8 |
 | Yahoo!ニュース 国内 | 일본뉴스 | B | ok | 8 |
@@ -674,13 +670,13 @@
 | 朝日新聞 速報 | 일본뉴스 | A | ok | 39 |
 | 毎日新聞 速報 | 일본뉴스 | A | ok | 20 |
 | 時事通信 ランキング | 일본뉴스 | A | ok | 10 |
-| ITmedia NEWS | 테크 | B | ok | 31 |
+| ITmedia NEWS | 테크 | B | ok | 27 |
 | 東洋経済オンライン | 금융경제 | B | ok | 20 |
 | The Japan Times | 일본뉴스 | A | ok | 30 |
 | Reddit r/news (top, day) | 커뮤니티 | D | error: HTTPError: HTTP Error 429: Too Many Requests | 0 |
 | Reddit r/politics (top, day) | 커뮤니티 | D | error: HTTPError: HTTP Error 429: Too Many Requests | 0 |
 | Reddit r/technology (top, day) | 커뮤니티 | D | error: HTTPError: HTTP Error 429: Too Many Requests | 0 |
-| はてなブックマーク 人気エントリー | 커뮤니티 | D | ok | 40 |
-| はてなブックマーク 世の中 | 커뮤니티 | D | ok | 30 |
+| はてなブックマーク 人気エントリー | 커뮤니티 | D | ok | 38 |
+| はてなブックマーク 世の中 | 커뮤니티 | D | ok | 29 |
 
 > 규칙: 🔴/🟠 항목은 ✅ 항목과 대조되기 전엔 '사실'로 쓰지 않는다. 기사 본문 복사 금지, 요약+출처 링크만.
