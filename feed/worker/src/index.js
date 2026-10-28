@@ -232,7 +232,7 @@ const FEED = {
       for (const r of results) { const t = String(r.title || '').replace(/^\s*[\[［【(（<〈]?\s*(속보|긴급|[123]보|速報|快訊|突發|breaking|just in|eilmeldung|última hora|urgente|ultim'ora|alerte|plantão)\s*[\]］】)）>〉:：]?\s*/i, '').replace(/\s+[-–|]\s+[^-–|]{2,30}$/, '').trim(); const k = t.toLowerCase().replace(/\W+/g, '').slice(0, 40); if (!t || seen.has(k)) continue; seen.add(k); items.push({ t, u: r.link, s: r.source, at: r.published_at, l: r.lang || '', ot: r.title }); if (items.length >= (past ? 12 : 8)) break; }
       await trBreak(env, items, lang).catch(() => {}); // 번역판(영어·일본어 등)이면 속보 제목을 그 언어로(사장님 10/9)
       // 안전장치(사장님 10/9 '국가판별 언어 제대로'): 판 언어와 다른 언어 제목은 번역에 성공한 것만 남긴다
-      { const pl = String(lang || '').toLowerCase().split('-')[0]; if (pl) for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; const src = String(it.l || '').toLowerCase().split('-')[0] || scriptLang(it.o || it.t); const isLatin = !scriptLang(it.o || it.t); const same = src ? src === pl : (isLatin ? !['ko', 'ja', 'zh', 'hi'].includes(pl) : false); if (!same && !it.o) items.splice(i, 1); } }
+      { const pl = String(lang || '').toLowerCase().split('-')[0]; if (pl) for (let i = items.length - 1; i >= 0; i--) { const it = items[i]; const src = (/[\u3040-\u30ff]/.test(it.ot || it.o || it.t) ? 'ja' : String(it.l || '').toLowerCase().split('-')[0]) || scriptLang(it.o || it.t); const isLatin = !scriptLang(it.o || it.t); const same = src ? src === pl : (isLatin ? !['ko', 'ja', 'zh', 'hi'].includes(pl) : false); if (!same && !it.o) items.splice(i, 1); } }
       await brkStore(env, items, lang, region, ctx).catch(() => {});
       for (const it of items) delete it.ot;
       return json({ region, at: new Date().toISOString(), past, items }, 200, { 'cache-control': past ? 'public, max-age=86400' : 'public, max-age=60' });
@@ -365,7 +365,7 @@ async function trBreak(env, items, lang) {
   if (!env.AI || !tl || !items.length) return;
   const todo = [];
   for (const it of items) {
-    const src = (String(it.l || '').toLowerCase().split('-')[0]) || scriptLang(it.t);
+    const src = (/[\u3040-\u30ff]/.test(it.t) ? 'ja' : String(it.l || '').toLowerCase().split('-')[0]) || scriptLang(it.t);
     if (!src || src === tl) continue;
     todo.push({ it, src, k: tl + ':' + src + ':' + it.t.slice(0, 300) });
   }
