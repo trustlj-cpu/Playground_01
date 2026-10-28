@@ -91,6 +91,11 @@ def check(spec):
     body_text = ' '.join(' '.join(s_.get('paras', [])) + ' ' + s_.get('deck', '') for s_ in st) + ' ' + ' '.join((b.get('t', '') + ' ' + b.get('s', '')) for s_ in st for b in s_.get('briefs', []) or [])
     mm = sorted(set(m.group(0) for m in meta.finditer(body_text)))
     if mm: err.append(f'본문에 자료·편집 메타 표현 금지: {mm}')
+    # 문체(사장님 2026-10-29): 본문은 "A는 …전했다. B는 …보도했다" 나열 금지 — 기사 한 편의 본문(paras)에 매체 이름은 4번 이하(초회판 문체: 사실은 우리 목소리로, 매체는 단독·엇갈림·인용 때만)
+    _OUT = _re.compile(r'연합뉴스|조선일보|경향신문|동아일보|한국경제|한겨레|중앙일보|매일경제|문화일보|서울신문|뉴시스|뉴스1|JTBC|채널A|한국일보|이데일리|머니투데이|파이낸셜뉴스|아시아경제|헤럴드경제|전자신문|KBS|SBS|MBC|YTN|共同通信|朝日新聞|読売新聞|毎日新聞|日本経済新聞|日経|時事通信|産経|TBS|テレビ朝日|フジテレビ|日本テレビ|ロイター|ブルームバーグ|NHK|Reuters|Associated Press|\\bAP\\b|Bloomberg|CNBC|NBC|CBS|\\bABC\\b|CNN|Fox News|NPR|PBS|Politico|Axios|The Hill|New York Times|Washington Post|Wall Street Journal|WSJ|Guardian|BBC|\\bNYT\\b')
+    for s_ in st:
+        k_ = len(_OUT.findall(' '.join(s_.get('paras', []))))
+        if k_ > 4: err.append(f'story {s_.get("id")} 본문에 매체 이름 {k_}번 > 4 — "A는 …전했다" 나열 금지, 사실은 우리 목소리로 쓰고 매체는 단독·엇갈림·인용 때만(출처는 verify·팝업 src 에)')
     for s in st:
         for k in ['id', 'cat', 'verify', 'hl', 'paras']:
             if not s.get(k): err.append(f'story {s.get("id")} missing {k}')
