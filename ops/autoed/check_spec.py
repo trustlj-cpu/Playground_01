@@ -99,6 +99,11 @@ def check(spec):
     for x_ in spec.get('index', []) or []: _vis.append((f'index {x_.get("id")}', ' '.join(str(x_.get(k, '')) for k in ('hl', 'em', 'kick'))))
     for i_, p_ in (spec.get('popups') or {}).items(): _vis.append((f'popup {i_}', ' '.join(str(p_.get(k, '')) for k in ('what', 'why', 'me', 'a', 'b', 'say'))))
     for r_ in spec.get('rumor', []) or []: _vis.append(('rumor', str(r_.get('claim', '')) + ' ' + str(r_.get('resp', ''))))
+    for n_ in spec.get('next', []) or []: _vis.append(('next', str(n_.get('text', ''))))
+    for g_, v_ in (spec.get('glossary') or {}).items(): _vis.append((f'glossary {g_}', ' '.join(str(v_.get(k, '')) for k in ('d', 'w'))))
+    for s_ in st:
+        for n_ in s_.get('nums', []) or []: _vis.append((f'story {s_.get("id")} nums', str(n_.get('b', '')) + ' ' + str(n_.get('s', ''))))
+        if s_.get('word'): _vis.append((f'story {s_.get("id")} word', str(s_['word'].get('def', ''))))
     for w_, t_ in _vis:
         f_ = sorted(set(_OUT.findall(t_)))
         if f_: err.append(f'{w_}: 다른 매체 이름 인용 금지 {f_[:4]} — 사실은 우리 목소리로, 인용은 말한 사람·기관만, 출처는 src·extras·verify 에만')
