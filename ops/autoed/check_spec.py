@@ -93,9 +93,15 @@ def check(spec):
     if mm: err.append(f'본문에 자료·편집 메타 표현 금지: {mm}')
     # 문체(사장님 2026-10-29): 본문은 "A는 …전했다. B는 …보도했다" 나열 금지 — 기사 한 편의 본문(paras)에 매체 이름은 4번 이하(초회판 문체: 사실은 우리 목소리로, 매체는 단독·엇갈림·인용 때만)
     _OUT = _re.compile(r'연합뉴스|조선일보|경향신문|동아일보|한국경제|한겨레|중앙일보|매일경제|문화일보|서울신문|뉴시스|뉴스1|JTBC|채널A|한국일보|이데일리|머니투데이|파이낸셜뉴스|아시아경제|헤럴드경제|전자신문|KBS|SBS|MBC|YTN|共同通信|朝日新聞|読売新聞|毎日新聞|日本経済新聞|日経|時事通信|産経|TBS|テレビ朝日|フジテレビ|日本テレビ|ロイター|ブルームバーグ|NHK|Reuters|Associated Press|\\bAP\\b|Bloomberg|CNBC|NBC|CBS|\\bABC\\b|CNN|Fox News|NPR|PBS|Politico|Axios|The Hill|New York Times|Washington Post|Wall Street Journal|WSJ|Guardian|BBC|\\bNYT\\b')
-    for s_ in st:
-        k_ = len(_OUT.findall(' '.join(s_.get('paras', []))))
-        if k_ > 4: err.append(f'story {s_.get("id")} 본문에 매체 이름 {k_}번 > 4 — "A는 …전했다" 나열 금지, 사실은 우리 목소리로 쓰고 매체는 단독·엇갈림·인용 때만(출처는 verify·팝업 src 에)')
+    # 사장님 2026-10-29 재지시: 다른 신문사 이름·기사·평가 인용 금지 — 본문·deck·짧게 보는 오늘·팝업 글(what·why·me·a·b·say)·rumor 어디에도 0번. 출처는 src·extras·verify 에만.
+    _vis = []
+    for s_ in st: _vis.append((f'story {s_.get("id")}', ' '.join(s_.get('paras', [])) + ' ' + s_.get('deck', '') + ' ' + s_.get('hl', '')))
+    for x_ in spec.get('index', []) or []: _vis.append((f'index {x_.get("id")}', ' '.join(str(x_.get(k, '')) for k in ('hl', 'em', 'kick'))))
+    for i_, p_ in (spec.get('popups') or {}).items(): _vis.append((f'popup {i_}', ' '.join(str(p_.get(k, '')) for k in ('what', 'why', 'me', 'a', 'b', 'say'))))
+    for r_ in spec.get('rumor', []) or []: _vis.append(('rumor', str(r_.get('claim', '')) + ' ' + str(r_.get('resp', ''))))
+    for w_, t_ in _vis:
+        f_ = sorted(set(_OUT.findall(t_)))
+        if f_: err.append(f'{w_}: 다른 매체 이름 인용 금지 {f_[:4]} — 사실은 우리 목소리로, 인용은 말한 사람·기관만, 출처는 src·extras·verify 에만')
     for s in st:
         for k in ['id', 'cat', 'verify', 'hl', 'paras']:
             if not s.get(k): err.append(f'story {s.get("id")} missing {k}')
