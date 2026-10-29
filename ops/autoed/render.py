@@ -13,7 +13,8 @@ SITE = os.path.join(ROOT, 'site')
 
 
 def esc(s):
-    return html.escape(str(s), quote=False)
+    # 작성자가 이미 &amp; 같은 엔티티로 쓴 글이 이중 이스케이프되어 화면에 'S&amp;P' 로 보이던 것 방지(10/29)
+    return html.escape(html.unescape(str(s)), quote=False)
 
 
 def find_template(region, date, slot=''):
