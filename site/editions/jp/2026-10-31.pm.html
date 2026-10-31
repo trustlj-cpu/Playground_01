@@ -1,0 +1,334 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>63,290.11</b>日経平均 · 10/30終値 · 前日比 -2.12%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,580.07</b>S&amp;P500 · 10/30終値 · 前日比 -1.82%</div>
+    </div>
+    <div class="dateline"><span>No. 27 · 夕刊</span><b>2026年10月31日(土)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="binance">
+      <div class="kick">国際 · 暗号資産<span>✓ 4媒体 · 実際の損失額・侵入の手口・出金の全面再開の時期は未確認</span></div>
+      <h2 class="hl">バイナンス、影響額は推定約63億ドルと公表 約半分は凍結 北朝鮮系集団の関与を分析会社が指摘</h2>
+      <p class="deck">世界最大の暗号資産取引所が、ハッキングの影響額を推定約63億ドルと公表し、出金を止めた。民間の分析会社2社は、北朝鮮のサイバー集団の関与を指摘している。</p>
+      <div class="body">
+        <p>世界最大の暗号資産取引所バイナンスは10月30日、不正アクセスとみられる問題で、影響を受けた資産が推定約63億ドル(約1兆円)に上ると明らかにし、利用者の出金を止めた。63億ドルはバイナンス自身の推計で、実際に失われた額が確定したわけではない。このうち約30億ドル、およそ半分は凍結されたという。実際の被害がこの規模なら、暗号資産の盗難としては過去最大だ。バイナンスは損失を穴埋めするため、63億4千万ドル超を確保したと説明した。テンCEOは「利用者の資産は安全だ」と述べ、約40時間以内の出金再開を目標に掲げた。</p>
+        <p>ブロックチェーン分析会社のTRM LabsとChainalysisは、北朝鮮のサイバー集団「TraderTraitor」の関与が疑われると指摘した。いずれも民間企業の分析で、政府による特定は確認されていない。バイナンスは、犯人が痕跡を消すために「自壊の仕組み」を使ったと説明している。ビットコインは9月以来の安値まで下げ、事件を茶化したイーロン・マスク氏に、共同創業者のジャオ氏が「今はからかう時ではない」と反発した。実際の損失額、侵入の経路、出金が全面的に再開される時期は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="intel">
+      <div class="kick">市場 · 米国株<span>✓ 3媒体 · 週明けの市場の反応は未確認</span></div>
+      <h3 class="hl">米株は終値で下落 インテルは2割超急落、AI関連株の売りが波及</h3>
+      <div class="one">
+        <p>30日のニューヨーク株式市場で、米半導体大手インテルの株価が2割を超えて急落した。前日の決算発表で、7~9月期の営業利益は前年同期の約3.7倍に増えたが、10~12月期の業績見通しが市場予想を下回った。メモリー価格の上昇でパソコン市場が縮むとの見方が、見通しの悪化の理由とされる。 売りはインテル1社にとどまらず、AI投資への懸念から半導体やハイテク株全体に広がった。S&amp;P500種株価指数は1.82%安の7,580.07で10月の取引を終えた。日経平均株価は同じ30日の東京市場で2.12%安の63,290.11円となっており、週明けの東京市場がこの米国株安をどう織り込むかが次の焦点になる。インテルの下落が一時的な反応か、AI関連株の調整の始まりかは、現時点で確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="sarobetsu"><b>宗谷線の特急がクマを巻き込み脱線 乗客32人が車内で一夜を過ごす</b><em>30日午後10時50分ごろ、乗客32人を乗せた特急が天塩中川と問寒別の間でクマと衝突した。けが人は出ていない。</em><span>社会 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="takaichi"><b>高市首相の国会答弁数は就任1年間で最少 SNS投稿数は最多</b><em>就任後1年間を歴代5人の首相で比べた集計で、答弁数が最も少なかった。SNSへの投稿数は5人の平均を大きく上回った。</em><span>政治 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="fukuda"><b>福田氏の遺族宛てに届いた中国の弔電 官房長官は説明を控える</b><em>福田氏の遺族宛てに中国から弔電が届いていた。官房長官はこの弔電について説明を控えた。</em><span>政治 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="shooting"><b>米カリフォルニア州の商業施設で銃撃 1人死亡、3人以上が大けが</b><em>30日、米西部カリフォルニア州の商業施設で起きた。現地の警察によると、1人が死亡し、少なくとも3人が大けがをした。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="caneu"><b>カナダとEUが「未来への同盟」 中堅国で連携し準加盟国も議論</b><em>カナダとEUが中堅国どうしで連携する「未来への同盟」を打ち出した。EUへの準加盟国という関わり方も議論に上っている。</em><span>国際 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="mofa">
+      <div class="kick">社会 · サイバー被害<span>✓ 4媒体 · 流出した項目の全容と悪用の有無は未確認</span></div>
+      <h3 class="hl">外務省に不正アクセス 約3600件の個人情報が漏えいした可能性</h3>
+      <div class="body">
+        <p>外務省は10月30日、不正アクセスによって約3600件の個人情報が漏えいした可能性があると発表した。流出した可能性があるのはメールアドレスや氏名などで、職員以外の約900人分の情報も含まれる。不正アクセスを受けたのは今年7月で、発表までに3か月余りが過ぎている。</p>
+        <p>悪用された形跡があるか、どのような経路で侵入されたかは、現時点で確認されていない。氏名とメールアドレスの組み合わせは、特定の相手を狙うなりすましメールに使われうる情報だ。7月の侵入から発表までに3か月余りかかった経緯も、詳しくは明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="motegi">
+      <div class="kick">外交 · 日ロ関係<span>✓ 2媒体 · 記者の拘束の経緯とロシア側の回答は未確認</span></div>
+      <h3 class="hl">茂木外相、ラブロフ露外相に北海道新聞記者の即時解放を要求 正式会談は5年ぶり</h3>
+      <div class="body">
+        <p>茂木敏充外相は、ロシアのラブロフ外相との会談で、北海道新聞の記者の即時解放を求めた。日ロの外相が正式に会談するのは5年ぶりで。</p>
+        <p>記者がいつ、どこで、どのような理由で拘束されたのかは、現時点で確認できていない。ロシア側がどう答えたかも明らかになっていない。日ロ関係はウクライナ侵攻後に冷え込んだままで、外相同士が直接向き合う機会は限られてきた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="arctic">
+      <div class="kick">外交 · 経済安全保障<span>✓ 3媒体 · 覚書の具体的な協力項目は未確認</span></div>
+      <h3 class="hl">日米韓外相、北極圏の協力強化へ覚書に署名 北朝鮮のサイバー対処でも連携</h3>
+      <div class="body">
+        <p>日本、米国、韓国の3か国の外相は、米国アトランタで開かれたG20外相会合の機会に会談し、北極圏での協力を強める覚書に署名した。氷が減って航路や資源への関心が高まる北極圏で、3か国が経済安全保障の面で足並みをそろえる狙いがある。会談では、北朝鮮によるサイバー攻撃への対処でも連携することを確認した。</p>
+        <p>北朝鮮のサイバー集団は、暗号資産の窃取で外貨を得ているとして、各国が警戒を強めてきた。30日に明らかになったバイナンスの大規模ハッキングでも、民間の分析会社が北朝鮮系の集団の関与を指摘している。覚書の具体的な協力項目は、現時点で確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>経済安全保障<i>安全保障</i></b><p>食料、エネルギー、半導体、重要な技術などを、他国に握られないよう守る考え方。軍事ではなく経済の面から国の安全を守る。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>バイナンスに預けた資産はすべて消えた</b> <span>バイナンスは利用者の資産は安全だと説明し、損失を補うため63億4千万ドル超を確保したと発表した。63億ドルは同社が推計した影響額で、確定した損失額ではない。出金は止まっており、約40時間以内の再開を目標にしているが、全面再開は確認されていない。</span></div>
+        <div><b>外務省から漏れた個人情報は職員のものだけだ</b> <span>外務省は職員以外の約900人分の情報も含まれる可能性があると発表した。漏えいの可能性があるのは約3600件で、メールアドレスや氏名などが含まれる。</span></div>
+        <div><b>クマと衝突した特急の乗客に死傷者が出た</b> <span>JR北海道は、けが人はいないと説明した。乗客32人は10時間以上、現場の車内で過ごした。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>明日 · 日 11月1日</b><span>バイナンスの出金再開の発表と、凍結された資産の扱いに注目。外務省が影響を受けた人にどう連絡するか、宗谷線の運転再開の見通しも焦点になる。</span><b>来週</b><span>11月3日が米中間選挙の投開票日。週明けの東京市場は、インテル株の急落を受けた米国株安をどう織り込むかが焦点になる。</span><b>今後</b><span>日米韓の覚書でどんな協力項目が具体化するかと、日ロの接触で北海道新聞の記者の解放が進むかを見たい。</span><b>読者へ</b><span>暗号資産を海外の取引所に預けている人は、出金の可否を公式の発表で確かめたい。外務省とメールをやり取りしたことがある人は、不審な添付やリンクを開かないようにしたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "binance":{"kick": "国際 · 暗号資産 · ✓ 4媒体 · 実際の損失額・侵入の手口・出金の全面再開の時期は未確認", "title": "バイナンス、影響額は推定約63億ドルと公表 約半分は凍結 北朝鮮系集団の関与を分析会社が指摘", "what": "バイナンスは10月30日、影響を受けた資産が推定約63億ドル(約1兆円)に上ると明らかにし、利用者の出金を止めた。これはバイナンス自身の推計で、実際に失われた額が確定したものではない。同社はこのうち約30億ドル、およそ半分を凍結したとしている。損失を埋め合わせるため、63億4千万ドル超を確保したとも説明した。テンCEOは「利用者の資産は安全だ」と述べ、約40時間以内の出金再開を目標に挙げた。TRM LabsとChainalysisの民間2社は、北朝鮮のサイバー集団「TraderTraitor」の関与を指摘しているが、政府による特定は確認されていない。バイナンスは、犯人が痕跡を隠すために自壊の仕組みを使ったと説明した。ビットコインは9月以来の安値まで下げた。", "why": "取引所が顧客の資産を預かる仕組みは、1か所が破られると預け入れ全体への信頼が揺らぐ点で銀行に近い。出金停止が長引けば、利用者が一斉に資産を引き出そうとして取引の混乱が広がる。盗まれた資産の凍結は、犯人が現金化するまでの時間との競争になる。", "me": "日本の個人投資家も、海外の取引所を通じてビットコインなどを持っている。取引所に預けたままの資産は、取引所へのハッキングや破綻の影響を直接受ける。資産の置き場所と、出金できなくなった場合の備えを見直すきっかけになる。", "a": "取引所の対応は迅速だったとする見方がある。損失の全額を補う資金をすぐに示し、出金再開の時間目標も打ち出した。凍結の連携も機能し、盗まれた資産の一部は動かせなくなった。", "b": "世界最大の取引所が過去最大の盗難を防げなかった事実は重いとする見方がある。資産を取引所に預ける仕組みの弱さが表れたとして、利用者保護の規制や、預かり資産の分別管理を厳しくすべきだという声につながっている。", "say": "確認できたのは、影響額が推定約63億ドルとバイナンスが公表したこと、約半分が凍結されたこと、出金停止、民間の分析会社による北朝鮮系集団の関与の指摘、損失補填の積み立てだ。実際の損失額、侵入の手口、政府による犯人の特定、出金の全面再開の時期は分かっていない。週明けのビットコイン相場と、出金再開の発表を見たい。", "src": "ITmedia NEWS(北朝鮮系集団の関与の指摘、10月31日) · The Japan Times(資産凍結の動き、10月30日) · Bloomberg Television(影響額約63億ドルの発表、10月30日) · Reuters(損失補填の積み立て、10月30日)"},
+    "intel":{"kick": "市場 · 米国株 · ✓ 3媒体 · 週明けの市場の反応は未確認", "title": "米株は終値で下落 インテルは2割超急落、AI関連株の売りが波及", "what": "30日のニューヨーク株式市場で、インテルの株価は2割を超えて急落した。前日に発表した決算で、7~9月期の営業利益は前年同期の約3.7倍に増えたが、10~12月期の業績見通しが市場予想を下回った。メモリー価格の上昇でパソコン市場が縮むとの見方が背景にある。S&P500種株価指数は1.82%安の7,580.07で取引を終えた。この日の日経平均株価は2.12%安の63,290.11円で終えている。", "why": "インテルは半導体の老舗で、パソコン向けと製造受託の立て直し役として市場の期待を集めてきた。見通しの悪化は、パソコン市場の回復が遅れていることと、巨額の投資が収益に結びつくまで時間がかかることを同時に示す。AI関連株の売りが続く局面で、その悪材料が重なった。", "me": "日本の個人投資家が持つ米国株の投資信託や、半導体関連の日本株は、米国のハイテク株の動きに連動しやすい。米国株の指数に積み立てている人は、週明けの評価額に目に見える変化が出る可能性がある。", "a": "売りは行き過ぎだとする見方がある。インテルの不振は同社固有の事情が大きく、AI向け半導体全体の需要が崩れたわけではないという立場だ。", "b": "AI投資の採算への疑いが広がり始めたとする見方もある。パソコン需要の減少と投資負担の重さは業界に共通する課題で、ほかの半導体株にも波及するという警戒だ。", "say": "確認できたのは、2割を超える下落、10~12月期見通しの悪化、S&P500の1.82%安だ。まだ分からないのは、売りが一過性かどうかである。週明けの東京市場で半導体株がどこまで追随するかを見たい。", "src": "読売新聞(インテル株急落、10月31日) · Yahoo!ニュース(米インテル株急落、10月31日) · Bloomberg Television(引け後の番組、10月30日)"},
+    "mofa":{"kick": "社会 · サイバー被害 · ✓ 4媒体 · 流出した項目の全容と悪用の有無は未確認", "title": "外務省に不正アクセス 約3600件の個人情報が漏えいした可能性", "what": "外務省は10月30日、不正アクセスによって約3600件の個人情報が漏えいした可能性があると発表した。メールアドレスや氏名などが含まれる。職員以外の約900人分の情報も含まれる。不正アクセスを受けたのは今年7月で、発表までに3か月余りが過ぎている。悪用された事実が確認されたかどうかや、侵入の経路は公表されていない。", "why": "外務省は国内外の人々と連絡を取り合う役所で、氏名とメールアドレスは名指しの連絡に使われる。この種の情報は、特定の相手を信用させるなりすましメールの材料になりうる。発表が侵入から3か月余り後になった点は、通知の遅れとして問われやすい。", "me": "外務省の行事や手続きでメールをやり取りした人は、身に覚えのない添付ファイルやリンクを開かないほうがよい。不審な連絡を受けたら、差出人を別の手段で確かめたい。", "a": "迅速な公表を求める立場は、侵入から3か月余りかかった点を重く見る。影響を受けた人が自分で備える時間が失われたという指摘だ。", "b": "調査に時間が必要だったとする立場もある。被害の範囲や項目を確かめる前に発表すれば、かえって混乱を招くという考え方だ。", "say": "確認できたのは、約3600件の可能性、7月の侵入、職員以外の情報が含まれることだ。漏れた項目の全容と悪用の有無は分かっていない。外務省が影響を受けた人にどう連絡するかを見たい。", "src": "時事通信(約3600件の漏えいの可能性、10月30日) · 朝日新聞(メールアドレスなど3600件、10月30日) · 読売新聞(7月の不正アクセス、10月30日) · テレビ朝日(職員以外の情報、10月30日)"},
+    "motegi":{"kick": "外交 · 日ロ関係 · ✓ 2媒体 · 記者の拘束の経緯とロシア側の回答は未確認", "title": "茂木外相、ラブロフ露外相に北海道新聞記者の即時解放を要求 正式会談は5年ぶり", "what": "茂木敏充外相は、ロシアのラブロフ外相との会談で、北海道新聞の記者の即時解放を求めた。日ロの外相が正式に会談するのは5年ぶりとなる。記者の拘束の時期や場所、容疑は報じられていない。ロシア側がどう答えたかも明らかになっていない。", "why": "ウクライナ侵攻後、日本はロシアに制裁を科し、外相の往来は途絶えてきた。そのなかで自国の記者の解放を求めるのは、報道の自由と邦人の保護の両方に関わる要求だ。外相同士が直接話す場が開かれたことで、懸案を扱う窓口が残っていることも分かる。", "me": "海外で取材や仕事をする日本人は、渡航先の情勢次第で突然拘束されるおそれがある。外務省の渡航情報で、行き先の危険度を出発前に確かめておきたい。", "a": "対話の維持を重んじる立場は、制裁下でも外相が会える意味は大きいと考える。邦人の解放のように人の自由に関わる問題は、直接の接触がなければ動かないという見方だ。", "b": "慎重な立場は、会談がロシア側に正当性を与える面を警戒する。解放という具体的な成果が出るまでは、対話の評価を急がないという考え方だ。", "say": "確認できたのは、記者の即時解放の要求と、5年ぶりの正式会談という事実だ。記者の現状とロシア側の回答は分かっていない。今後の日ロ接触と、記者の解放の有無を見たい。", "src": "産経新聞(記者の即時解放の要求、10月31日) · 時事通信(5年ぶりの対面会談、10月31日)"},
+    "arctic":{"kick": "外交 · 経済安全保障 · ✓ 3媒体 · 覚書の具体的な協力項目は未確認", "title": "日米韓外相、北極圏の協力強化へ覚書に署名 北朝鮮のサイバー対処でも連携", "what": "日本、米国、韓国の外相は、米国アトランタでのG20外相会合の機会に会談し、北極圏での協力を強める覚書に署名した。経済安全保障での連携を強める狙いがある。会談では、北朝鮮によるサイバー攻撃への対処でも協力することを確かめた。覚書に盛り込まれた具体的な協力項目は報じられていない。", "why": "北極圏は氷が減って航路や資源に近づきやすくなり、ロシアや中国が関心を強めている。日米韓が足並みをそろえておくことは、航路、海底資源、通信網といった分野の経済安全保障の土台になる。北朝鮮のサイバー攻撃は暗号資産の窃取で外貨を稼ぐ手段にもなっており、対処の連携は制裁の実効性にも関わる。", "me": "北極圏の航路や資源の話は、日本の原油やLNGの調達ルート、物流費にいずれ響く。暗号資産を扱う人にとっては、北朝鮮系の集団による盗難が増えている背景を知る材料になる。", "a": "連携強化を歓迎する立場は、3か国が先に枠組みを作れば、ルール作りの主導権を握れると見る。サイバー対処の情報共有は、民間の被害防止にも役立つという。", "b": "懐疑的な立場は、覚書は法的な拘束力が弱く、具体策が伴わなければ象徴にとどまると指摘する。北極圏に利害を持つ国々との摩擦を招くおそれにも触れる。", "say": "確認できたのは、覚書への署名と、北朝鮮のサイバー対処での連携だ。協力の中身と予算の裏づけは分かっていない。今後の実務協議で何が具体化されるかを見たい。", "src": "毎日新聞(北極圏の覚書への署名、10月31日) · 時事通信(北極圏協力と北朝鮮サイバー対処、10月31日) · Yahoo!ニュース(日米韓外相の協力覚書、10月31日)"},
+    "sarobetsu":{"kick": "社会 · ✓ 4媒体", "title": "宗谷線の特急がクマを巻き込み脱線 乗客32人が車内で一夜を過ごす", "what": "10月30日午後10時50分ごろ、北海道のJR宗谷線の天塩中川と問寒別の間で、旭川発稚内行きの特急サロベツ3号がクマと衝突した。一部の車輪が脱線した。乗客32人にけがはなく、車内で一夜を明かした。列車は10時間以上、現場に停まったままだった。JR北海道は、けが人はいないと説明している。", "why": "線路沿いでのクマとの衝突は、北海道の鉄道で繰り返し起きている。脱線すると、重い車両を元の線路に戻すまでの作業に時間がかかり、道北の幹線である宗谷線の運休が長引く。乗客が深夜の山間部で動けなくなる点も課題になる。", "me": "冬が近づく道北方面の列車は、遅れや運休が起きやすい。長距離の移動では、代わりの交通手段や宿を確保しておく余裕を持ちたい。", "a": "鉄道側の対策を求める立場は、衝突が相次ぐ区間の柵や監視を強めるべきだと考える。長時間の足止めでは、乗客への食料や防寒の備えも必要だという。", "b": "クマの出没が増えた背景に目を向ける立場は、エサ不足と生息域の拡大が根本にあり、鉄道だけで防げる範囲には限りがあると指摘する。", "say": "確認できたのは、衝突、脱線、けが人なし、乗客32人の一夜の足止めだ。運転再開の時期は分かっていない。宗谷線の復旧見通しの発表を見たい。", "src": "読売新聞(クマと衝突し脱線、10月31日) · 毎日新聞(けが人なし、10月31日) · Yahoo!ニュース(衝突したクマの大きさ、10月31日) · TBS NEWS DIG(10時間以上の停車、10月31日)"},
+    "takaichi":{"kick": "政治 · ✓ 3媒体", "title": "高市首相の国会答弁数は就任1年間で最少 SNS投稿数は最多", "what": "首相就任後の1年間を歴代5人の首相で比べた集計で、高市首相の国会での答弁数が最も少なかった。SNSへの投稿数は5人の平均を大きく上回り、最多だった。", "why": "国会での答弁は、首相が政策を野党や国民に直接説明する場だ。答弁が少なくSNSでの発信に偏れば、質問に答える機会を避けているとの批判も、直接届けられる利点があるという評価も出てくる。投稿は一方向で、反論や追加の質問を受ける場がない点が、国会との大きな違いになる。", "me": "首相の考えを知る窓口が国会かSNSかで、有権者が受け取る情報の質が変わる。SNSの短い投稿だけでなく、国会審議の中継や議事録も確かめたい。", "a": "国会での説明を重視する立場は、答弁数が少ないのは説明責任を果たす機会が減っていることだと指摘する。質問に答える形でしか見えない考えがあるという。", "b": "SNSでの発信を評価する立場は、国民に直接語りかけて政策の狙いを伝えられるのは強みだと見る。答弁の数だけで首相の説明姿勢は測れないという考え方だ。", "say": "確認できたのは、答弁数が5人の首相で最少、SNSの投稿数が最多という集計結果だ。具体的な件数や集計の方法は分かっていない。今後の国会審議で、答弁の機会がどう変わるかを見たい。SNSの発信が政策の説明にどこまで踏み込むかも手がかりになる。", "src": "長崎新聞(答弁数が最少、SNSは最多、10月31日) · 福島民報(高市首相の答弁数、10月31日) · 西日本新聞(就任1年間のSNS投稿数、10月31日)"},
+    "fukuda":{"kick": "政治 · ✓ 1媒体", "title": "福田氏の遺族宛てに届いた中国の弔電 官房長官は説明を控える", "what": "福田氏の遺族宛てに、中国から弔電が届いた。官房長官は、この弔電について説明を控えた。", "why": "外交上のやり取りは、相手国との間で内容を公にしない扱いが多い。弔電のような儀礼的な連絡でも、日中関係が微妙なときは、誰がどう送ったかが関心を集める。政府が説明を控えれば、憶測が広がる余地も残る。一方で、弔意を表す文面は外交文書と違い、公表を前提にしない場合が多い。", "me": "日中関係のニュースは、貿易や観光、中国で暮らす日本人の生活に関わる。官房長官の会見のように、政府が何を語り何を語らないかを見ておくと、外交の温度が読み取りやすくなる。", "a": "説明を控えるのは妥当だとする立場は、遺族への弔意は私的な性格も強く、政府が内容に触れるのは適切でないと考える。", "b": "説明を求める立場は、中国のような相手国からの連絡は政府の対外姿勢に関わるため、国民への説明が要ると考える。", "say": "確認できたのは、中国からの弔電が遺族宛てに届いたことと、官房長官が説明を控えたことだけだ。弔電の内容と、送り主の位置づけは分かっていない。政府が今後説明を加えるかを見たい。ほかの国からの弔電の扱いとの違いがあるかも、手がかりになる。", "src": "山陽新聞(中国の弔電への官房長官の対応、10月31日)"},
+    "shooting":{"kick": "国際 · ✓ 1媒体", "title": "米カリフォルニア州の商業施設で銃撃 1人死亡、3人以上が大けが", "what": "10月30日、米西部カリフォルニア州の商業施設で銃撃事件があった。現地の警察によると、これまでに1人が死亡し、少なくとも3人が大けがをした。警察は目撃者から話を聞くなどして調べている。", "why": "米国では商業施設や学校での銃撃が繰り返される。事件のたびに銃規制をめぐる議論が再燃し、11月3日の中間選挙を前にした争点にもなりうる。被害の大きさや容疑者の素性によって、議論の向きが変わることもある。", "me": "米国に出張や旅行で出かける際は、大型の商業施設でも非常口の位置を確かめ、現地の警報や避難の指示に従う準備をしておきたい。日本人が巻き込まれた情報が出ていないかは、在外公館の発表や外務省の海外安全情報で確かめられる。", "a": "規制強化を求める立場は、事件が繰り返される背景に銃の入手しやすさがあるとして、購入時の審査の厳格化を訴える。", "b": "規制に慎重な立場は、自衛の権利を重んじ、犯行を防ぐには警備の強化や精神保健の支援が先だと考える。", "say": "確認できたのは、1人死亡、少なくとも3人が大けがという被害だ。容疑者の特定や動機は分かっていない。警察の続報で死傷者数が変わるか、容疑者の身柄が確保されたかを見たい。", "src": "NHK(商業施設での銃撃、10月31日)"},
+    "caneu":{"kick": "国際 · ✓ 1媒体", "title": "カナダとEUが「未来への同盟」 中堅国で連携し準加盟国も議論", "what": "カナダと欧州連合(EU)は、中堅国どうしで連携する「未来への同盟」を打ち出した。準加盟国という形でEUと関わる案も議論に上っている。同盟の具体的な内容や参加国は報じられていない。", "why": "米中の大国がぶつかる国際秩序のなかで、中堅国が互いに結びつけば、貿易や安全保障で発言力を保ちやすくなる。EUの準加盟国という位置づけは、加盟国でなくても市場や制度に参加できる道を探る発想だ。加盟には全会一致の合意など高い壁があるため、段階的な関わり方が現実的な選択肢になりうる。", "me": "カナダとEUの接近は、関税や貿易ルールの変化を通じて、日本の輸出企業や輸入品の価格にも波及する。日本が中堅国の連携に加わる場面も、いずれ議論になりうる。", "a": "歓迎する立場は、大国の関税や圧力に対抗する受け皿ができ、中堅国の交渉力が増すと見る。", "b": "懐疑的な立場は、準加盟国のような曖昧な制度は、EU内部の合意を得にくく、実際の負担と権利の線引きも難しいと考える。", "say": "確認できたのは、カナダとEUが「未来への同盟」を掲げ、準加盟国も議論されていることだ。参加国と中身は分かっていない。具体的な合意文書が出るか、ほかの中堅国が参加を表明するかを見たい。", "src": "毎日新聞(カナダとEUの未来への同盟、10月31日)"}
+  };
+  const G = {
+    "暗号資産":{"f": "金融", "d": "インターネット上でやり取りされる、国の通貨とは別のお金のような資産。ビットコインなどが代表。", "w": "バイナンスのハッキングで影響を受けたのは暗号資産だった。"},
+    "取引所":{"f": "金融", "d": "暗号資産を売り買いし、利用者の資産を預かる事業者。", "w": "バイナンスは世界最大の取引所とされる。"},
+    "ブロックチェーン":{"f": "技術", "d": "取引の記録を多数のコンピューターで共有して書き換えにくくした仕組み。暗号資産の土台。", "w": "分析会社は取引の記録をたどって関与した集団を特定しようとした。"},
+    "凍結":{"f": "金融", "d": "資産が動かせないよう、取引を止めること。", "w": "バイナンスは約30億ドルを凍結したとしている。"},
+    "ビットコイン":{"f": "金融", "d": "最も知られた暗号資産。価格の変動が大きい。", "w": "事件を受けて9月以来の安値まで下げた。"},
+    "業績見通し":{"f": "経済", "d": "会社が次の期の売上や利益についてあらかじめ示す予想。", "w": "インテルの10~12月期の見通しが市場予想を下回った。"},
+    "株価指数":{"f": "金融", "d": "多くの銘柄の値動きをまとめて表す数字。S&P500は米国の代表的な500社で作る。", "w": "S&P500種株価指数は1.82%安で終えた。"},
+    "半導体":{"f": "技術", "d": "パソコンやスマートフォン、AIなどに欠かせない電子部品。", "w": "インテルは米半導体大手で、売りは半導体全体に広がった。"},
+    "不正アクセス":{"f": "技術", "d": "権限のない人がパスワードの盗用や脆弱性の悪用でシステムに入り込むこと。", "w": "外務省は7月に不正アクセスを受けた。"},
+    "なりすましメール":{"f": "技術", "d": "実在の人や組織を装い、リンクを開かせたり情報を聞き出したりするメール。", "w": "氏名とアドレスは、狙った相手に送るこのメールに使われうる。"},
+    "経済安全保障":{"f": "安全保障", "d": "食料、エネルギー、半導体などを他国に握られないよう守る考え方。", "w": "日米韓が北極圏での協力で経済安全保障の連携を強める。"},
+    "覚書":{"f": "外交", "d": "国や組織の間で協力の方向を確認する文書。法的な拘束力は条約より弱いことが多い。", "w": "日米韓の外相が北極圏の協力を強める覚書に署名した。"},
+    "サイバー攻撃":{"f": "安全保障", "d": "ネットワーク経由で、情報の盗用やシステムの停止を狙う攻撃。", "w": "北朝鮮によるサイバー攻撃への対処で日米韓が連携する。"},
+    "準加盟国":{"f": "外交", "d": "正式な加盟国ではないが、一部の制度や市場に参加できる位置づけ。", "w": "カナダとEUの間で準加盟国の案が議論されている。"},
+    "中堅国":{"f": "外交", "d": "米国や中国のような大国ではないが、国際社会で一定の影響力を持つ国。", "w": "カナダとEUが中堅国の連携を掲げた。"},
+    "答弁":{"f": "政治", "d": "国会で議員の質問に政府側が答えること。", "w": "高市首相の答弁数は5人の首相で最少だった。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
