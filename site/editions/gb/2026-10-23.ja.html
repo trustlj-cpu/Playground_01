@@ -1,0 +1,360 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開する。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>10,725.03</b>FTSE100 · 10月22日（木）の終値、-0.26%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,663.43</b>S&amp;P 500 · 10月22日（木）の終値、-1.21%</div>
+    </div>
+    <div class="dateline"><span>第19号 · 朝刊</span><b>2026年10月23日（金）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">経済 · 銀行<span>報道照合 ✓ 7社 · 対象となる職種や部門は示されていない</span></div>
+      <h2 class="hl">バークレイズ、従業員の約5%にあたる5,000人を削減へ　AI活用で費用を抑える</h2>
+      <p class="deck">同行は人工知能（AI）の活用を広げるとBBCニュースとスカイ・ニュースが報じた。同じ日に、四半期の利益が12%増えたことも発表している。</p>
+      <div class="body">
+        <p>バークレイズは木曜の10月22日、5,000人の雇用を削減すると発表したと、BBCニュースとスカイ・ニュースは報じた。同行は、人工知能の活用を広げて費用を抑え、効率を高めるためだと説明している。スカイ・ニュースは、この削減を従業員の5%と伝え、BBCは、AIの活用拡大で人員が5%減ると伝えた。イブニング・スタンダードによると、同行は全従業員の約5%と示した。従業員は2025年末時点で世界に約93,000人おり、同紙の見出しは、雇用が今年中になくなるとしている。ミラーは、同行の説明として、うち約1,000人分の職は費用削減の一環として2026年の上半期にすでに削られ、残りは下半期に分散すると報じた。フィナンシャル・タイムズ（FT）は、第3四半期の利益が金融街シティの予想に届かなかった中で削減が発表されたと報じ、シティAMは、マイクロソフトの金融サービス部門世界責任者ビル・ボーデン氏が、AIが英国の銀行業の一部の仕事に取って代わると同紙に語ったと伝えた。</p>
+        <p>発表は、9月までの3カ月間の決算とともに出た。ガーディアンによると、バークレイズの7〜9月の税引き前利益は23億ポンドで、利益は12%増え、株主にはさらに5億ポンドが還元される。シティAMは、23億ポンドは、市場予想の平均（コンセンサス）24億ポンドにわずかに届かなかったと伝えた。トレーディング部門が業績を押し上げたものの、投資銀行部門が予想に及ばなかったためだ。ガーディアンはさらに、同行が予算案で英国の銀行向けの課税が引き上げられるとみて身構えていると伝え、イブニング・スタンダードの記事のウェブアドレスには、財務相のジョン・ヒーリー氏と予算案への言及がある。このためガーディアンとシティAMの見出しは、同じ四半期を異なる形で描いている。一方は利益の急増、他方は予想未達だ。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">安全保障 · 緊急時への備え<span>報道照合 ✓ 4社 · 企業に求める対応は報道で示されていない</span></div>
+      <h3 class="hl">政府、家庭と企業に緊急事態への備えを促す　ストリーティング氏はインフラへの国家支援の攻撃を警告</h3>
+      <div class="one">
+        <p>10月22日に公表された政府の更新版の助言は、日常のサービスが一時的に途絶えた場合に備えて、家庭がいくつかの簡単な手順をとるよう促していると、GOV.UKは伝えた。FTによると、閣僚は、自然災害、サイバー攻撃、国家支援テロの危険が高まる中、家庭と企業にいっそうの備えと必需品の買い置きを呼びかけている。ガーディアンは、国防相のウェス・ストリーティング氏が、敵対国が日常のインフラを狙う「国家支援テロ」の脅威に英国は備えるべきだと述べたと報じた。氏はウェスト・ミッドランズで戦車砲身の工場の開所式に臨み、その場で警告したという。GOV.UKが載せた氏の演説の全文によると、テルフォード・ガン・ホールの開所式で氏は、英国の産業と自国での生産能力について語った。開所に関するガーディアンの記事は、ドイツのラインメタルがミッドランズの工場を開いたと伝え、国防相が英国は大規模に製造しなければならないと述べたと引き、この20年間、英国は戦車に砲身を付けるのに海外から買うしかなかったと書いた。AOL.co.ukは、ストリーティング氏がこの警報をめぐって「不安をあおっている」と非難されたと報じ、見出しでは批判する人の「みんなが買い占めに走る！」という言葉を引いている。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>英政府、通信会社への緊急権限と、海底ケーブル保護のための罰則強化を計画</b><em>閣僚が国家安全保障上の緊急事態に通信会社への権限を得る見通しだと、BBCニュースは報じた。スカイ・ニュースは、19世紀の法律を強化して破壊工作者を抑止しなければならないという閣僚の言葉を引いた。</em><span>安全保障 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>エネルギー相ミアッタ・ファンブラ氏、「気まずい」インタビュー発言のあと、移民問題で内務相を支持すると表明</b><em>ファンブラ氏はテレビのインタビューについての発言を「うまく伝えられなかった」と述べたと、BBCニュースは報じた。ガーディアンは、「気まずい」インタビューという言及は、軽い気持ちの自虐だったと氏が説明したと伝えた。</em><span>政治 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>ダウニング街、米特使ウィトコフ氏によるウラジーミル・プーチン氏の「人道主義者」との評を退ける</b><em>ナンバー10は、ロシア大統領は「罪のないウクライナ人も自国民も、数千人を殺してきた」と述べたと、ガーディアンは報じた。ブルームバーグ・テレビジョンは、プーチン氏が人質を解放し、米国から称賛を得たと報じた。</em><span>国際 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>気象庁メット・オフィス、嵐「ボエロ」と命名　24時間以内に英国を襲う2つ目の命名された嵐</b><em>2つ目の嵐は10月22日、最初の嵐から24時間以内に命名されたと、スカイ・ニュースは報じた。デイリー・メールは、嵐「オースティン」と「ボエロ」に最大時速80マイルの突風の警報が出ていると報じ、BBCニュースは、荒天がさらに続く見通しだと伝えた。</em><span>天気 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>ノッティンガム中心部で警察官が足を撃たれ、27歳の女を起訴</b><em>27歳の女が起訴されたと、スカイ・ニュースとミラーは報じた。BBCニュースによると、警察官は中心部のバス停で2人に近づいた後に負傷した。</em><span>事件 · ✓ 3社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">政治 · 公的調査<span>報道照合 ✓ 6社 · キア卿が正式に召喚されるかどうかは確認されていない</span></div>
+      <h3 class="hl">キア・スターマー卿、グルーミング・ギャング調査で証言のため召喚の可能性　審理は12月の予定</h3>
+      <div class="body">
+        <p>キア・スターマー卿は、12月に始まる予定のグルーミング・ギャング調査で証言を求められる可能性があると、スカイ・ニュースは報じた。イブニング・スタンダードによると、前首相は、児童の性的搾取をめぐる不祥事の全国調査で中核参加者となっており、同紙の見出しは、証言のために呼ばれる可能性があるとしている。テレグラフ・アンド・アーガスは、ブラッドフォードのグルーミング・ギャング調査で証言する可能性があると見出しを付け、キーリー・ニュースは、前首相がキーリーの調査で証言する可能性があると見出しを付けた。</p>
+        <p>見込みの強さについては、報道機関で表現が分かれる。スカイ・ニュースとイブニング・スタンダードは、召喚される、あるいは呼ばれる「可能性がある」と書く一方、AOL.co.ukの見出しは「召喚される見通し」としている。ロー・ソサエティ・ガゼットは2025年6月、キア卿がグルーミング・ギャングについて法定調査を命じたと報じていた。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">ビジネス · 競争<span>報道照合 ✓ 3社 · 両社に規則が適用される日付は示されていない</span></div>
+      <h3 class="hl">競争当局、アルディとリドルも他の大手スーパーと同じ土地協定の規則の対象と確認</h3>
+      <div class="body">
+        <p>競争・市場庁は、アルディとリドルも英国のほかの大手スーパーと同じ土地協定の規則の対象になると確認したと、10月22日付の発表でGOV.UKは伝えた。発表は、顧客が買い物先を最も幅広く選べるようにするのが狙いだとしている。シティAMによると、アルディとリドルは現在、英国最大のスーパーチェーンに「ランドブロッキング」と呼ばれる行為を禁じる法律の対象外にある。ザ・グローサーは、この決定をアルディとリドルが他のスーパーと同じ土地の規則に直面すると見出しにした。</p>
+        <p>シティAMは、ウェイトローズやモリソンズなどのスーパーのグループが、アルディとリドルを締め付ける競争当局の決定を歓迎したと伝えた。シティAMの見出しはこれを締め付けと呼ぶ一方、GOV.UKの発表は、この変更を、大手チェーンに適用される規則の下に両ディスカウント系スーパーを置くものと説明している。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">金融 · 規制<span>報道照合 ✓ 3社 · 規則の最終形はまだ固まっていない</span></div>
+      <h3 class="hl">規制当局、金融街の経営陣の責任を問う2008年以降の規則の緩和を提案　企業の負担は10年で20億ポンド減ると説明</h3>
+      <div class="body">
+        <p>規制当局は上級管理者・認証制度を簡素化する計画を公表したと、イングランド銀行は10月22日付の発表で述べた。発表は、規制当局による強化された審査を受けなければならない金融サービスの職務の数は、成長を支える提案のもとで大きく減るとしている。ガーディアンによると、この計画は、金融危機後に導入された、金融街シティの経営陣に不正の責任を負わせる規則を弱めるもので、FTは、この変更を、英国が銀行家の責任を問うために設けたフィット・アンド・プロパー（適格性）の規則を弱めるものと見出しにした。</p>
+        <p>ガーディアンは、規制当局が「不要な負担」をなくせば企業が10年間で約20億ポンド節約できると説明していると伝えた。ガーディアンの見出しは規則を2008年のものとし、計画を2008年以降の体制の緩和と表している。イングランド銀行の発表は同じ提案を簡素化と説明するのに対し、ガーディアンの見出しは緩和と説明している。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>20億ポンド</b><span>企業の節約見込み額、ガーディアンが伝えた規制当局の説明による</span></div>
+        <div><b>10年</b><span>規制当局が節約を見込む期間、ガーディアンによる</span></div>
+        <div><b>2008</b><span>ガーディアンの見出しが規則の時期を示すのに使った金融危機の年</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>バークレイズは5,000人をAIに置き換える。</b> <span>BBCニュースとスカイ・ニュースは、従業員の約5%にあたる5,000人の削減を伝え、同行は費用を抑え効率を高めるためにAIの活用を広げると説明している。ミラーは、うち約1,000人分の職は2026年上半期になくなったと伝えた。どの報道も、すべての職がAIに置き換わるとは述べていない。</span></div>
+        <div><b>政府は全員に食料を買い置くよう言っている。</b> <span>GOV.UKは、日常のサービスが一時的に途絶えた場合に備えて家庭がいくつかの簡単な手順をとるよう促す更新版の助言を示している。FTは、閣僚が家庭に必需品の買い置きを促していると伝えた。AOL.co.ukは、この警報が買い占めを招くという批判を報じた。</span></div>
+        <div><b>キア・スターマー卿はグルーミング・ギャング調査に召喚された。</b> <span>スカイ・ニュースとイブニング・スタンダードは、召喚される、あるいは呼ばれる可能性があると伝え、イブニング・スタンダードは、中核参加者でもあると伝えた。AOL.co.ukの見出しは召喚される見通しとするが、10月22日の報道は、召喚状が出されたとは述べていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/23 金</b><span>バークレイズの人員削減について、労働組合や財務省から声明が出るかどうか。また、嵐「オースティン」と「ボエロ」が英国を横切る間に、メット・オフィスの警報が更新されるかどうか。</span><b>今週</b><span>土地協定の規則について、アルディ、リドル、競争・市場庁がどう反応するか。また、規制当局による上級管理者・認証制度の計画についての追加の詳細。</span><b>その先</b><span>スカイ・ニュースによると、グルーミング・ギャング調査の審理は12月に始まる予定だ。</span><b>読者へ</b><span>GOV.UKの家庭向けの助言は、日常のサービスが短期間途絶えた場合の簡単な手順を示している。嵐の間は、お住まいの地域のメット・オフィスの警報を確かめたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "経済 · 銀行 · 報道照合 ✓ 7社 · 対象となる職種や部門は示されていない", "title": "バークレイズ、従業員の約5%にあたる5,000人を削減へ　AI活用で費用を抑える", "what": "バークレイズは10月22日、5,000人の雇用を削減すると発表した。BBCニュースとスカイ・ニュースによると、同行は人工知能の活用を広げて費用を抑え、効率を高めると説明している。スカイ・ニュースはこの削減を従業員の5%と伝え、イブニング・スタンダードは、同行が従業員の約5%と示したと報じた。従業員は2025年末時点で世界に約93,000人いた。ミラーは、同行の説明として、うち約1,000人分の職は2026年上半期に削られ、残りは下半期に分散すると報じた。ガーディアンは、7〜9月の税引き前利益が23億ポンドで、利益は12%増え、株主にはさらに5億ポンドが還元されると伝えた。シティAMは、23億ポンドは市場予想の平均24億ポンドにわずかに届かなかったと報じ、FTは、利益が金融街シティの予想に届かなかったと報じた。", "why": "今回の発表は、大手の銀行が自動化でどこまで人員を置き換える考えかを、数字で示した。しかも同行が株主に資金を還元する日に出た。二つの事実は報道の中で並んでいる。費用削減は効率の名で正当化され、一方で利益は伸びている。予算案の前という時期も意味を持つ。ガーディアンは、銀行が英国の銀行向け課税の引き上げに身構えていると伝えている。", "me": "銀行や金融サービスの支援部門で働いているなら、報道はどの職種や部門が対象かを示していない。見出しから推し量るより、勤め先自身からの連絡を確かめるのが現実的だ。バークレイズの顧客でも、支店やサービスが変わるとは、どの報道も述べていない。", "a": "BBCとスカイ・ニュースの伝え方では、同行の主張は、AIの活用拡大で仕事が効率化し、人員を約5%減らせるというもの。ミラーによれば、うち1,000人分の職は上半期にすでに削られている。", "b": "イブニング・スタンダードの見出しは、この削減を金融街シティへの大きな打撃と呼ぶ。シティAMは、マイクロソフトのビル・ボーデン氏が、AIが一部の仕事に取って代わるため銀行の雇用はさらに減ると語ったと伝えており、これは最初の発表で、ほかも続きかねないという見方だ。", "say": "複数の報道機関で確認されたこと：5,000人、従業員の約5%、同行がAIと結びつけていること。確認されていないこと：どの職種で、どこで、希望退職者と人員整理がそれぞれ何人か。労働組合の反応と、ガーディアンが同行が予想していると伝える予算案での銀行課税の詳細を見たい。", "src": "BBCニュース（5,000人削減とAI、10月22日）· スカイ・ニュース（従業員の5%、10月22日）· フィナンシャル・タイムズ（利益が予想に届かず、10月22日）· ガーディアン（23億ポンドの利益と株主への5億ポンド、10月22日）· シティAM（23億ポンド、予想平均は24億ポンド、10月22日）· イブニング・スタンダード（従業員93,000人、10月22日）· ミラー（上半期に1,000人分の職、10月22日）"},
+    "s2":{"kick": "安全保障 · 緊急時への備え · 報道照合 ✓ 4社 · 企業に求める対応は報道で示されていない", "title": "政府、家庭と企業に緊急事態への備えを促す　ストリーティング氏はインフラへの国家支援の攻撃を警告", "what": "GOV.UKは10月22日、日常のサービスが一時的に途絶えた場合に備えて、家庭がいくつかの簡単な手順をとるよう促す更新版の助言を公表した。FTは、閣僚が、自然災害、サイバー攻撃、国家支援テロの危険が高まる中、家庭と企業にいっそうの備えと必需品の買い置きを呼びかけていると報じた。ガーディアンは、国防相のウェス・ストリーティング氏が、敵対国が日常のインフラを狙う国家支援テロの脅威に英国は備えるべきだと述べたと報じた。氏はウェスト・ミッドランズのテルフォード・ガン・ホールの開所式で語り、ガーディアンによると、そこではドイツのラインメタルが戦車砲身の工場を開いた。GOV.UKが載せた演説の全文によると、氏は英国の産業と自国での生産能力について語った。AOL.co.ukは、氏が不安をあおっていると非難されたと報じ、みんなが買い占めに走ると語った批判者を引いている。", "why": "この助言は二つの別々の話を結びつけている。停電などに対する家庭の耐性と、敵対的な国家からのインフラ防衛だ。同じ発表に収めたことで、自宅に備蓄を持つといった日常の備えが、国の安全保障の一部として示された。AOL.co.ukが伝える批判は、こうした助言の受け止められ方の危うさを示している。備えを促す呼びかけそのものが、買い物を誘いかねないからだ。", "me": "GOV.UKの助言は小さく簡単な手順として示されているので、電気、水、インターネットが短時間止まった場合に何が要るかを確かめるのが実際的な読み方だ。不足が見込まれるとも、特定の品を大量に買うべきだとも、どの報道も述べていない。", "a": "FTとGOV.UKが伝える限り、閣僚は、この助言を、自然災害、サイバー攻撃、国家支援テロによる混乱へのささやかな備えとして示している。ストリーティング氏は、英国は必要なものをもっと大規模に自前で作るべきだと論じる。", "b": "AOL.co.ukが引く批判者は、ストリーティング氏が不安をあおっていると非難し、警報が買い占めを招くと言う。異議は、備えるという考えそのものではなく、警告の調子と効果に向けられている。", "say": "確認されたこと：GOV.UKの助言、国防相の警告、10月22日のテルフォードの開所式。確認されていないこと：新たな具体的脅威や、危険度の変化。スーパーや小売店が助言にどう応じるか、企業に求める対応の詳細が出るかを見たい。", "src": "GOV.UK（家庭の備えの助言とテルフォードでの演説、10月22日）· ガーディアン（ストリーティング氏の警告とテルフォード・ガン・ホール、10月22日）· フィナンシャル・タイムズ（国民と企業に備えを促す、10月22日）· AOL.co.uk（ストリーティング氏が不安をあおっていると批判、10月22日）"},
+    "s3":{"kick": "政治 · 公的調査 · 報道照合 ✓ 6社 · キア卿が正式に召喚されるかどうかは確認されていない", "title": "キア・スターマー卿、グルーミング・ギャング調査で証言のため召喚の可能性　審理は12月の予定", "what": "スカイ・ニュースは10月22日、キア・スターマー卿が、12月に始まる予定のグルーミング・ギャング調査で証言を求められる可能性があると報じた。イブニング・スタンダードは、前首相が児童の性的搾取をめぐる不祥事の全国調査で中核参加者となっていると報じた。同紙の見出しは、証言のために呼ばれる可能性があるとしている。テレグラフ・アンド・アーガスは、ブラッドフォードのグルーミング・ギャング調査で証言する可能性があると見出しを付け、キーリー・ニュースは、前首相がキーリーの調査で証言する可能性があると見出しを付けた。AOL.co.ukの見出しは、召喚される見通しとしている。ロー・ソサエティ・ガゼットは2025年6月、キア卿がグルーミング・ギャングについて法定調査を命じたと報じていた。", "why": "イブニング・スタンダードはキア卿を中核参加者、つまり調査の中での正式な立場にあると表し、スカイ・ニュースは、証言を求められうることを、12月に始まる審理と結びつけている。ロー・ソサエティ・ガゼットによれば、この調査は法定調査として命じられた。召喚が取り沙汰されるのはそのためだ。この件が注目されるのは、当事者が調査を命じた本人だからだ。", "me": "被害者、活動家、地元住民として調査を追っているなら、押さえておくべき日付は審理が始まる予定の12月だ。召喚状が出されたかどうか、キア卿がいつ出廷するかは、どの報道も述べていない。", "a": "スカイ・ニュースとイブニング・スタンダードの報道は、キア卿が中核参加者であることと、調査が証拠を求める権限を持つことを根拠に、この見込みを現実にありうる話として扱っている。", "b": "テレグラフ・アンド・アーガスとキーリー・ニュースの見出しも同じ仮定の表現を使い、イブニング・スタンダードの「呼ばれる可能性がある」は、召喚状が出されたとまでは言わない姿勢を示す。AOL.co.ukの見出しはそこからさらに踏み込んでいる。", "say": "確認されたこと：キア卿が中核参加者であること、審理が12月に始まる予定であること。確認されていないこと：召喚状が出されたことや、証言の時期。調査側が証人のリストについて出す声明と、キア卿のコメントを見たい。", "src": "スカイ・ニュース（スターマー氏が召喚の可能性、10月22日）· イブニング・スタンダード（中核参加者、10月22日）· テレグラフ・アンド・アーガス（ブラッドフォードの調査、10月22日）· キーリー・ニュース（前首相が証言する可能性、10月22日）· AOL.co.uk（召喚される見通し、10月22日）· ロー・ソサエティ・ガゼット（法定調査を命じる、2025年6月）"},
+    "s4":{"kick": "ビジネス · 競争 · 報道照合 ✓ 3社 · 両社に規則が適用される日付は示されていない", "title": "競争当局、アルディとリドルも他の大手スーパーと同じ土地協定の規則の対象と確認", "what": "競争・市場庁は10月22日、アルディとリドルも英国のほかの大手スーパーと同じ土地協定の規則の対象になると確認した。GOV.UKの発表は、顧客が買い物先を最も幅広く選べるようにするのが狙いだとしている。シティAMは、アルディとリドルは現在、英国最大のスーパーチェーンにいわゆるランドブロッキングを禁じる法律の対象外にあると報じた。シティAMはまた、ウェイトローズやモリソンズなどのスーパーのグループがこの決定を歓迎したと報じた。ザ・グローサーは、この決定をアルディとリドルが他のスーパーと同じ土地の規則に直面すると見出しにした。", "why": "シティAMは、ランドブロッキングを、法律が最大手のチェーンに禁じている行為と説明し、アルディとリドルは現在その法律の対象外だと述べる。同じ土地の規則を両社に広げることで、二つのディスカウント系スーパーと大手チェーンの違いはなくなる。ウェイトローズとモリソンズが歓迎したことは、どの競合がこの変更を好むかを示している。", "me": "買い物客にとって、狙いは買い物先の選択肢が増えることだが、報道は、価格が変わるとも、特定の店が開くとも述べていない。影響が出るとすれば、新しいスーパーがどこに建つかを通じて、時間をかけて表れる。", "a": "競争・市場庁の発表と、シティAMが伝えるウェイトローズとモリソンズの歓迎は、この変更を、大手の食品小売がすべて対象になるように規則をそろえ、買い物客がより良い選択を得られるようにするものと見ている。", "b": "シティAMの見出しはこの決定をアルディとリドルへの締め付けと呼び、急成長する二つの競合への制限という枠組みで見る。ただ、10月22日に出た報道には、どちらの会社の反応も載っていない。", "say": "確認されたこと：当局の決定、示された狙い、大手の競合による歓迎。確認されていないこと：両社に規則がいつ適用されるのか、アルディとリドルが何と言うか。両社の反応と、当局の正式な通知を見たい。", "src": "GOV.UK（競争・市場庁の発表、10月22日）· シティAM（スーパーのグループが締め付けを歓迎、10月22日）· ザ・グローサー（同じ土地の規則、10月22日）"},
+    "s5":{"kick": "金融 · 規制 · 報道照合 ✓ 3社 · 規則の最終形はまだ固まっていない", "title": "規制当局、金融街の経営陣の責任を問う2008年以降の規則の緩和を提案　企業の負担は10年で20億ポンド減ると説明", "what": "規制当局は10月22日、上級管理者・認証制度を簡素化する計画を公表した。イングランド銀行の発表によると、規制当局による強化された審査を受けなければならない金融サービスの職務の数は、成長を支える提案のもとで大きく減る。ガーディアンは、この計画が、金融危機後に導入された、金融街シティの経営陣に不正の責任を負わせる規則を弱めるものだと報じた。ガーディアンはまた、規制当局が「不要な負担」をなくせば企業が10年間で約20億ポンド節約できると説明していると伝えた。FTは、この変更を、英国が銀行家の責任を問うために設けたフィット・アンド・プロパーの規則を弱めるものと見出しにした。", "why": "ガーディアンによれば、この規則は金融街の経営陣に不正の責任を負わせるために作られた。イングランド銀行は、強化された審査を受ける職務が減ると述べる。審査対象が減れば、その正式な監視下に置かれる人も減る。ガーディアンとFTが強調するのはそこで、規制当局が強調するのは成長と費用の節約だ。", "me": "規制対象の会社で働いているなら、この提案によって、規制当局の承認が要る職務の数と、審査をどのくらいの頻度で繰り返すかが決まる。それ以外の人には、商品、手数料、保護がすぐに変わる兆しは報道にない。", "a": "規制当局は、イングランド銀行の発表とガーディアンが伝える限り、この変更は不要な負担を取り除き、成長を支え、企業が10年間で約20億ポンド節約できると言う。", "b": "ガーディアンとFTは、同じ計画を、2008年以降に作られた責任を問う規則を弱めるものと位置づける。争点は、審査される職務が減ると、上級銀行員と不正との結びつきが弱まるかどうかだ。", "say": "確認されたこと：計画、イングランド銀行の説明、規制当局によるとされる20億ポンドの見積もり。確認されていないこと：開始日や、対象とする職務の最終的な一覧。意見募集の詳細と、銀行や責任を求める団体の反応を見たい。", "src": "イングランド銀行（規制当局が計画を公表、10月22日）· ガーディアン（2008年以降の規則を緩和、10月22日）· フィナンシャル・タイムズ（フィット・アンド・プロパーの規則、10月22日）"},
+    "i1":{"kick": "安全保障 · ✓ 3社", "title": "英政府、通信会社への緊急権限と、海底ケーブル保護のための罰則強化を計画", "what": "BBCニュースは10月22日、海底ケーブルを守る計画のもとで、閣僚が国家安全保障上の緊急事態に通信会社に対する権限を得る見通しだと報じた。スカイ・ニュースは、19世紀の不十分な法律を強化し、英国の重要な海底ケーブルとパイプラインを狙う破壊工作者を抑止しなければならないと閣僚が述べたと報じた。スカイ・ニュースの記事は、英国が海底のパイプラインへの攻撃を抑止するため、より厳しい法律を求めるという見出しだ。英国議会は、合同の国家安全保障戦略委員会の委員長が、英国の海底ケーブル施設を傷つけた場合のより重い罰を歓迎したとの声明を公表した。", "why": "スカイ・ニュースは、現行の法律を19世紀のもので不十分と表しており、この計画は、法律が現在欠いている罰則と権限に対処する。BBCニュースによれば、新たな権限は国家安全保障上の緊急事態に通信会社に適用される。そのとき閣僚が民間の事業者に求められる内容が変わる。", "me": "報道が伝えるのは計画であり、すでに発効した変更ではないので、いま個人がすべきことはない。注目すべき点は、権限が、BBCニュースの説明どおり国家安全保障上の緊急事態に限られるかどうかだ。", "a": "スカイ・ニュースが引く閣僚の主張は、19世紀の法律は不十分で、ケーブルやパイプラインを攻撃する破壊工作者を抑止するために強化しなければならないというもの。", "b": "英国議会が伝える議会委員会の委員長の歓迎は、より重い罰に目を向ける。一方、BBCは通信会社への権限に焦点を当てており、その緊急権限がどう制限されるのかという疑問が出てくる。", "say": "確認されたこと：計画と、法律を不十分とする閣僚の説明。確認されていないこと：日程や罰則の中身。法案そのものと、通信業界の反応を見たい。", "src": "BBCニュース（海底ケーブルを守る緊急権限、10月22日）· スカイ・ニュース（海底への攻撃にもっと厳しい法律、10月22日）· 英国議会（委員会の委員長がより重い罰を歓迎、10月22日）"},
+    "i2":{"kick": "政治 · ✓ 2社", "title": "エネルギー相ミアッタ・ファンブラ氏、「気まずい」インタビュー発言のあと、移民問題で内務相を支持すると表明", "what": "エネルギー相のミアッタ・ファンブラ氏は10月22日、記者団への発言のあと、移民問題で内務相を支持すると述べたと、BBCニュースは報じた。BBCニュースによると、氏はテレビのインタビューについての自分の発言を「うまく伝えられなかった」と述べた。ガーディアンは、氏がより厳しい移民規則への反対を翻したように見えると報じた。ガーディアンはまた、氏が「気まずい」インタビューに触れたのは、軽い気持ちの自虐のつもりだったと説明したと伝えた。", "why": "閣僚が同僚の政策について語る言葉は、閣僚が公の場で政府の政策を支持することを集団責任が求めるため、注意深く報じられる。見出しの違いは、同じ発言が、釈明とも、方針の転換とも読めることを示している。", "me": "報道には移民規則の変更はないので、個人にとって変わることはない。政府が移民問題で立場をどう示すかの話だ。", "a": "BBCニュースの見出しは、氏の発言を内務相への支持として示し、うまく伝えられなかったと氏が述べたと引いている。", "b": "ガーディアンの見出しは、この発言を、より厳しい移民規則への反対の明らかな翻意として示し、以前の発言を実際の意見の相違として扱っている。", "say": "確認されたこと：氏が内務相を支持すると述べたこと、先の発言は軽い気持ちだったと述べたこと。確認されていないこと：政策上の食い違いがあるのかどうか。ダウニング街からの追加のコメントを見たい。", "src": "BBCニュース（移民問題で内務相を支持、10月22日）· ガーディアン（移民規則で翻意したように見える、10月22日）"},
+    "i3":{"kick": "国際 · ✓ 2社", "title": "ダウニング街、米特使ウィトコフ氏によるウラジーミル・プーチン氏の「人道主義者」との評を退ける", "what": "ガーディアンは10月22日、ダウニング街が、米特使ウィトコフ氏によるウラジーミル・プーチン氏の「人道主義者」との評を退けたと報じた。ガーディアンは、ナンバー10が、ロシア大統領は「罪のないウクライナ人も自国民も、数千人を殺してきた」と述べたと引いている。ブルームバーグ・テレビジョンは、プーチン氏が人質を解放し、人道主義者として米国の称賛を得たと報じた。ブルームバーグ・テレビジョンの別の記事は、プーチン氏がウィトコフ氏に人道主義者と称賛されたという見出しを付けた。", "why": "英政府が米特使の言葉を退けたことは、戦争をめぐる協議が続く中で、ロシア大統領の描き方に両国政府の間で隔たりがあることを示す。協議の当事者について使う言葉は、その約束がどれだけ真剣に受け止められているかを示すので、この違いは重要だ。", "me": "報道は、英国の政策や制裁の変更には触れておらず、個人への直接の影響はない。外交上の言葉づかいをめぐる話だ。", "a": "ガーディアンが引くナンバー10の返答は、ロシア大統領が殺した人の数に基づいており、それは人道主義者という言葉とは両立しないと言う。", "b": "ブルームバーグ・テレビジョンの報道は、称賛を、人質の解放に続くものとして示す。米国側がその言葉を使うときに指したのが、この出来事だ。", "say": "確認されたこと：ダウニング街が退けたことと、引かれた言葉。確認されていないこと：特使の発言の全体の文脈。米国側からの追加のコメントを見たい。", "src": "ガーディアン（ダウニング街がウィトコフ氏の評を退ける、10月22日）· ブルームバーグ・テレビジョン（プーチン氏が人道主義者と称賛される、10月22日）"},
+    "i4":{"kick": "天気 · ✓ 3社", "title": "気象庁メット・オフィス、嵐「ボエロ」と命名　24時間以内に英国を襲う2つ目の命名された嵐", "what": "メット・オフィスは10月22日に嵐「ボエロ」と命名し、スカイ・ニュースは、24時間以内に英国を襲う2つ目の命名された嵐だと報じた。BBCニュースは天気の報道で、「オースティン」と「ボエロ」が2日のうちに英国を狙っており、荒天がもう一度やってくる見通しだと伝えた。デイリー・メールは、嵐「オースティン」と「ボエロ」について、時速80マイルの突風と大雨がその夜から襲う警報が出ていると報じた。デイリー・メールの見出しは、英国は24時間で2つの嵐に叩かれるとしている。", "why": "嵐に名前を付けるのは、メット・オフィスが警報を追い、はっきり言及できるようにするためだ。2つが近い間隔で来るため、最初の嵐からの回復を待たずに状況が悪化しうる。", "me": "旅行や屋外の予定があるなら、確かめるべきはお住まいの地域のメット・オフィスの警報だ。報道が述べているのは、全国一様の予報ではなく、突風と大雨だからだ。", "a": "BBCニュースとスカイ・ニュースは、2つ目の嵐の到来を、嵐「オースティン」に続くもう一度の荒天として伝えている。", "b": "デイリー・メールの見出しは、時速80マイルまでの突風と大雨を挙げて激しさを強調し、放送局の要約より警報を深刻に聞こえさせる。", "say": "確認されたこと：メット・オフィスがボエロと命名したこと、両方の嵐に警報が出ていること。確認されていないこと：最大の突風や、最も大きな影響を受ける地域。メット・オフィスの警報の更新を見たい。", "src": "スカイ・ニュース（ボエロと命名、10月22日）· デイリー・メール（2つの嵐と警報、10月22日）· BBCニュース（2日で2つの嵐、10月22日）"},
+    "i5":{"kick": "事件 · ✓ 3社", "title": "ノッティンガム中心部で警察官が足を撃たれ、27歳の女を起訴", "what": "ノッティンガムシャー警察は10月22日、ノッティンガム中心部で警察官が足を撃たれた事件で、27歳の女を起訴したと、スカイ・ニュースとミラーは報じた。BBCニュースによると、警察官は中心部のバス停で2人に近づいた後に負傷した。ミラーは、10月22日の早い時間に出たこの事件についての警察の続報を伝えた。スカイ・ニュースは、起訴を、ノッティンガム中心部で警察官が撃たれた後の27歳の女に関するものと見出しにした。BBCニュースは、警察官が銃撃で負傷した後、女が起訴されたと見出しにした。", "why": "現職の警察官が撃たれた事件は、その重大さゆえに大きく報じられる。起訴は法的手続きの初期の一歩で、有罪かどうかは裁判所が決める。この段階の報道は、警察が述べたことを伝えるもので、裁判所が認定したことではない。", "me": "ノッティンガム中心部に住んでいる、または働いているなら、報道は、市民への継続的な危険には触れていない。追加の詳細は、ノッティンガムシャー警察から出るはずだ。", "a": "警察の発表は、3社が伝える限り、警察官が負傷し、女が起訴されたと述べ、警察官の傷は足を撃たれたものとしている。", "b": "BBCニュースの書き方は、警察官が2人に近づいた後に銃撃で負傷したというもので、銃撃の前に何があったのか、ほかに誰が関わったのかは明らかにしていない。", "say": "確認されたこと：27歳の女が起訴されたこと、警察官が足を撃たれたこと。確認されていないこと：経緯や、もう1人の身元。最初の出廷を見たい。", "src": "スカイ・ニュース（27歳の女を起訴、10月22日）· ミラー（警察の続報と起訴、10月22日）· BBCニュース（警察官の負傷を受け女を起訴、10月22日）"}
+  };
+
+  const G = {
+    "バークレイズ":{"f": "銀行", "d": "英国の大手銀行で、FTSE100の構成銘柄。", "w": "5,000人の雇用削減を発表した。"},
+    "人工知能":{"f": "テクノロジー", "d": "通常は人間の判断が要る作業をこなすソフトウェア。", "w": "同行が削減の理由に挙げている。"},
+    "予算案":{"f": "財政政策", "d": "財務相が示す税と歳出の計画。", "w": "銀行は増税を見込んで身構えている。"},
+    "財務相":{"f": "政府", "d": "財務省を担当する英国の閣僚。", "w": "ジョン・ヒーリー氏が財務相。"},
+    "税引き前利益":{"f": "会計", "d": "税金を差し引く前の利益。", "w": "7〜9月は23億ポンド。"},
+    "コンセンサス":{"f": "市場", "d": "アナリストの予想の平均。", "w": "シティAMによれば、24億ポンドが見込まれていた。"},
+    "投資銀行部門":{"f": "銀行", "d": "企業の取引を助言し、証券を売買する銀行の部門。", "w": "予想に及ばなかった。"},
+    "トレーディング部門":{"f": "銀行", "d": "銀行のために証券を売買するチーム。", "w": "四半期の業績を押し上げた。"},
+    "金融街シティ":{"f": "金融", "d": "ロンドンの金融業界を指す通称。", "w": "バークレイズは金融街シティの雇用主。"},
+    "国防相":{"f": "政府", "d": "国防省を率いる閣僚。", "w": "ウェス・ストリーティング氏がその職にある。"},
+    "国家支援テロ":{"f": "安全保障", "d": "国家が公然とは手を下さず、後ろ盾となって行わせる攻撃。", "w": "ストリーティング氏が警告した脅威。"},
+    "敵対国":{"f": "安全保障", "d": "敵対的とみなされる国家。", "w": "インフラを狙っていると名指しされた。"},
+    "自国での生産能力":{"f": "国防", "d": "重要な装備を自国内で作れる力。", "w": "テルフォードでの演説の主題。"},
+    "ラインメタル":{"f": "産業", "d": "ドイツの防衛関連メーカー。", "w": "ミッドランズの工場を開いた。"},
+    "テルフォード・ガン・ホール":{"f": "国防", "d": "ウェスト・ミッドランズにある大型砲身の工場。", "w": "国防相が演説した場所。"},
+    "ウェスト・ミッドランズ":{"f": "地理", "d": "イングランド中部の地域。", "w": "新しい工場がある。"},
+    "中核参加者":{"f": "公的調査", "d": "調査の中で正式な立場を与えられた人。", "w": "キア・スターマー卿が持つ立場。"},
+    "グルーミング・ギャング調査":{"f": "公的調査", "d": "集団による児童の性的搾取を扱う全国調査。", "w": "審理は12月に始まる予定。"},
+    "法定調査":{"f": "公的調査", "d": "法律に基づいて設けられ、証人に出頭を強制できる調査。", "w": "2025年6月にキア卿が命じた。"},
+    "競争・市場庁":{"f": "規制", "d": "英国の競争当局。", "w": "スーパーをめぐる決定を出した。"},
+    "ランドブロッキング":{"f": "小売", "d": "競合が使えないよう土地を押さえておくこと。", "w": "大手チェーンに規則が禁じている行為。"},
+    "ディスカウント系スーパー":{"f": "小売", "d": "主に低価格で競うスーパー。", "w": "対象はアルディとリドルの2社。"},
+    "上級管理者・認証制度":{"f": "金融規制", "d": "名指しされた上級の個人に責任を負わせる規則。", "w": "規制当局が簡素化を計画する制度。"},
+    "フィット・アンド・プロパー":{"f": "金融規制", "d": "規制対象の職に就くために満たすべき適格性の基準。", "w": "FTの見出しで使われた。"},
+    "イングランド銀行":{"f": "中央銀行", "d": "英国の中央銀行で、金融規制当局でもある。", "w": "制度についての発表を出した。"},
+    "金融危機":{"f": "経済", "d": "2008年の銀行の崩壊とその余波。", "w": "責任を問う規則の発端。"},
+    "メット・オフィス":{"f": "天気", "d": "英国の国立気象機関。", "w": "嵐に名前を付け、警報を出す。"},
+    "命名された嵐":{"f": "天気", "d": "警報を追えるよう名前が付けられた嵐。", "w": "「オースティン」と「ボエロ」。"},
+    "通信会社":{"f": "テクノロジー", "d": "電気通信を扱う企業。", "w": "新たな緊急権限の対象。"},
+    "海底ケーブル":{"f": "インフラ", "d": "海底に敷かれ、データを運ぶケーブル。", "w": "計画された権限の対象。"},
+    "破壊工作者":{"f": "安全保障", "d": "インフラを故意に傷つける者。", "w": "より厳しい法律が狙う相手。"},
+    "国家安全保障上の緊急事態":{"f": "安全保障", "d": "国家が特別な権限を主張する事態。", "w": "通信会社への権限が適用される場面。"},
+    "ダウニング街":{"f": "政府", "d": "首相の官邸と執務の場所。", "w": "特使の言葉を退けた。"},
+    "ナンバー10":{"f": "政府", "d": "首相官邸の通称。", "w": "プーチン氏について返答した。"},
+    "内務相":{"f": "政府", "d": "警察と入国管理を担当する閣僚。", "w": "ファンブラ氏が支持すると述べた閣僚。"},
+    "イブニング・スタンダード":{"f": "メディア", "d": "ロンドンの新聞。", "w": "バークレイズと調査の話を報じた。"},
+    "スカイ・ニュース":{"f": "メディア", "d": "英国の放送局。", "w": "複数の報道の情報源。"}
+  };
+
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

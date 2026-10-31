@@ -1,0 +1,355 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,550.30</b>KOSPI · 10/23 終値 · 前日比0.3%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>751.69</b>KOSDAQ · 10/23 終値 · 前日比1.62%下落</div>
+    </div>
+    <div class="dateline"><span>第20号 · 朝刊</span><b>2026年10月24日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="oh">
+      <div class="kick">政治・司法<span>報道照合 ✓ 5社 · 大法院の判断と宣告の時期は未確認</span></div>
+      <h2 class="hl">オ・セフン・ソウル市長、「ミョン・テギュン世論調査肩代わり」控訴審で無罪…1審の罰金刑を覆す</h2>
+      <p class="deck">ソウル高裁刑事7部、ミョン・テギュン氏の供述の信憑性を認めず…特検「上告して正す」</p>
+      <div class="body">
+        <p>ソウル高裁刑事7部(裁判長ク・フェグン)は23日、オ・セフン・ソウル市長の政治資金法違反の疑いに対する控訴審の宣告公判で、無罪を言い渡した。オ市長は2021年のソウル市長補欠選挙の局面で、政治ブローカーのミョン・テギュン氏に世論調査を依頼し、後援者のキム・ハンジョン氏にその費用を代わりに払うよう求めた疑いで起訴された。1審は7月、オ市長に市長職喪失刑に当たる罰金1000万ウォンを言い渡したが、控訴審で覆ったと聯合ニュースと東亜日報が報じた。京郷新聞によると、裁判部は「オ・セフンがミョン・テギュンに具体的な世論調査を依頼し、その対価として金を支払ったことが、合理的な疑いなく証明されたとは見がたい」と述べた。東亜日報は、裁判部が核心的な争点に対する直接的な証拠はミョン氏の供述が唯一だと説明したと伝えた。裁判部は「ミョン・テギュンの供述をそのまま信じるのは難しい」と述べ、一部の供述だけに信憑性を認めて有罪の証拠にするには、残りの供述を裏付ける十分な根拠や補強証拠が必要だと説明したと東亜日報が報じた。聯合ニュースは、オ市長が依頼したという世論調査の範囲と時期も確認されないと裁判部が判断したと伝えた。</p>
+        <p>東亜日報は、判決文に、ミョン氏が2021年の補欠選挙当時「オ・セフンが1位になる調査を持ってきてはいけない。生意気だ」と言って、オ市長に不利になるよう世論調査を操作しろと指示したという供述が盛り込まれたと報じた。キム・ゴンヒ特検(特別検事ミン・ジュンギ)が、ミョン氏がオ市長の依頼で調査を行ったとみて起訴したのとは異なり、裁判部は、ミョン氏側がむしろオ市長に不利になるよう結果に手を加えた状況があると判断したという。韓国経済は、宣告直後にオ市長が涙ぐみながら「期待に背かないよう一生懸命働く」と述べたと伝え、聯合ニュースは、オ市長が潔白を信じてくれたソウル市民に感謝するとの立場を示したと報じた。特検は「失望した。上告して正す」との立場を出したと聯合ニュースが伝えた。東亜日報は、控訴審判決が大法院でそのまま確定すればオ市長は市長職を維持し、大法院の宣告は来年初めと見込まれると報じた。京郷新聞は、ソウル市の内外で「事実上、大統領選モードに入った」という声が出ていると伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="mdl">
+      <div class="kick">政治・安保<span>報道照合 ✓ 4社 · 北朝鮮の応答は未確認</span></div>
+      <h3 class="hl">国防部、北朝鮮に軍事境界線の確認・軍通信線の復元を協議する南北軍事会談を改めて提案</h3>
+      <div class="one">
+        <p>国防部は23日、「南北間の地上軍事境界線(MDL)の明確な位置を相互に確認し、軍通信線の復元および国境地域の偶発的衝突の防止策を協議する南北軍事当局会談を開催することを、北朝鮮側当局に公式に提案する」と明らかにしたと京郷新聞が報じた。聯合ニュースと韓国経済は、国防部が軍事境界線に関する南北軍事会談を改めて提案したと速報で伝え、朝鮮日報も同じ内容を「MDL南北軍事会談提案」という見出しで報じた。聯合ニュースは、国防部が必要なら国連軍司令部を含む3者会談も可能だとして、北朝鮮の呼応に期待するとの立場を出したと伝えた。京郷新聞は、同日、仁川・江華郡から眺めた北朝鮮・黄海道開豊郡の国境地域で、北朝鮮の軍人が戦術道路や鉄柵の建設など国境線の要塞化作業をしていると、写真説明で伝えた。北朝鮮がこの提案に応じたという報道は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="audit"><b>李大統領、チェ・ギルス特別監察官の任命案を裁可…10年の空白に終止符</b><em>李在明大統領が23日に任命案を裁可し、国会法制司法委員会は前日、与野党の合意で聴聞経過報告書を採択した。東亜日報は、2016年にイ・ソクス初代監察官が辞任して以来の10年の空白が解消されたと伝えた。</em><span>政治 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="merz"><b>メルツ独首相、29日に訪韓…李大統領と首脳会談</b><em>メルツ首相は29～30日に公式訪韓し、29日午後に李在明大統領と会談する。ドイツ首相の二国間訪韓は3年ぶりで、就任後初の訪韓だと朝鮮日報が伝えた。</em><span>外交 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="nec"><b>選挙管理委員会特検「亡くなった職員の遺書に強圧捜査への言及なし」…捜査官の増員を要請</b><em>イ・テハン特検は、被疑者として調べを受けた翌日に亡くなった選挙管理委員会職員の遺書に、強圧的な取り調べの内容はないと明らかにした。特検は重捜庁長に会い、捜査官5～6人の追加派遣も要請した。</em><span>社会 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="aihack"><b>ソウル重捜庁、金融圏のAIハッキング事件で捜査不開始…警察が引き続き捜査</b><em>ソウル重捜庁は23日、警察に捜査不開始を通知し、警察が事件を引き続き捜査することになった。聯合ニュースは、警察と重捜庁の間を行き来する「ピンポン」の懸念が現実になるか注目されると指摘した。</em><span>社会 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="roh"><b>公訴庁、盧泰愚氏の裏金疑惑でイ・ビョンギ元儀典秘書官を参考人聴取</b><em>ソウル中央地方公訴庁犯罪収益還収部が23日午前10時から、イ・ビョンギ元青瓦台儀典秘書官を呼んで調べた。東亜日報は、キム・オクスク氏のメモにイ元秘書官の名前が記されていたと伝えた。</em><span>社会 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="life">
+      <div class="kick">社会・治安<span>報道照合 ✓ 5社 · 法制化の日程は未確認</span></div>
+      <h3 class="hl">李大統領「凶悪犯罪との戦争」を指示…仮釈放なしの無期刑・安心パトロール隊を推進</h3>
+      <div class="body">
+        <p>李在明大統領は23日、青瓦台で開かれた「超安全社会 政府横断対応会議」で、「凶悪犯罪に対して戦争を宣言するという覚悟で、特段の対策を立てなければならない」と指示したと京郷新聞が伝えた。カン・ユジョン青瓦台首席報道官が同日午後に書面ブリーフィングで公開した会議の内容には、凶悪犯に「仮釈放なしの無期刑」を導入する案が含まれたと朝鮮日報と韓国経済が報じた。朝鮮日報によると、警察庁は、家庭内暴力が発生した場合に加害者を住居から優先的に分離する「加害者隔離施設」を運営すると明らかにした。従来は、被害者が暴力を避けて離れる分離措置が優先だった。中央エコノミーニュースは、安心パトロール隊と公共移送団も推進すると伝え、マネートゥデイは「凶悪犯、20年たてば出てくる?」という見出しで、李大統領の仮釈放なしの無期刑導入の推進を報じた。京郷新聞は社説で、異常動機犯罪と関係性犯罪が連日続き、国民の不安が高まったと指摘した。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="hynix">
+      <div class="kick">経済・株式市場<span>報道照合 ✓ 7社 · 資金調達の代替策は未確認</span></div>
+      <h3 class="hl">SKハイニックス、ソリダイムの上場検討を中断…KOSPIは急落で寄り付いた後、0.3%高で引け</h3>
+      <div class="body">
+        <p>SKハイニックスは23日の公示で、孫会社ソリダイムのプレIPOと新規株式公開(IPO)の検討を中断すると明らかにしたと聯合ニュースと東亜日報が伝えた。会社は「生産能力の拡大および競争力強化のための多様な資金調達策を検討してきたが、資本市場の状況などを総合的に考慮し、検討を中断することを決めた」と説明したと東亜日報が報じた。ZDNetコリアによると、会社はソリダイムの成長可能性や投資の必要性が変わったからではないと明らかにし、最近の国政監査では、イ・チャンジン金融監督院長とイ・オグォン金融委員長が、ソリダイムの上場は重複上場の規制対象に当たるとの立場を示してきた。SBSは、8月に上場準備の事実が知られてから79日での中断だと伝えた。東亜日報は、ソリダイムは2021年にSKハイニックスがインテルのNANDフラッシュ・SSD事業部門を90億ドル(約13兆ウォン)で買収して設立した米国法人だと説明した。同日、KOSPIは聯合ニュースによると2.4%安の5,403で寄り付き、取引時間中は5,300台と5,500台を行き来し、朝鮮日報は、ソリダイムの上場中断のニュースとバイオ業種への循環物色を受けて午後に上昇に転じたと伝えた。ソウル新聞は、SKハイニックスの株価が下落から4%を超える上昇に転じ、KOSPIが0.3%高で引けたと報じた。韓国経済は、KOSDAQが1%を超えて下落したと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="php">
+      <div class="kick">科学技術・セキュリティ<span>報道照合 ✓ 5社 · 国内の実際の被害は未確認</span></div>
+      <h3 class="hl">PHPのセキュリティ脆弱性、公開4日前から攻撃の試み…政府のサイバー危機警報を「注意」に引き上げ</h3>
+      <div class="body">
+        <p>世界のウェブサイトの70%以上で使われているプログラミング言語PHPで、ログインなしでサーバーを掌握できる致命的なセキュリティ脆弱性が見つかり、各国が非常事態に陥っていると朝鮮日報が伝えた。聯合ニュースと東亜日報によると、アマゾンの最高情報セキュリティ責任者(CISO)であるCJ・モーゼス副社長は21日(現地時間)、セキュリティブログで、脆弱性が公式に公開され修正プログラムが配布される4日前の17日にすでに悪用の試みを捉えていたと明らかにし、公開後、攻撃の試みは数百万件に膨らんだ。東亜日報は、科学技術情報通信部が22日正午、民間分野のサイバー危機警報を「関心」から「注意」へ一段階引き上げ、韓国インターネット振興院(KISA)が非常対応体制を稼働させたと報じた。行政安全部は、地方自治体と公共機関にセキュリティパッチの適用を案内する公文書を送り、所管の情報システム217件を調べた結果、PHPで開発したシステムはなかったと京郷新聞が伝えた。</p>
+        <p>ZDNetコリアによると、ソ・チョノ国民の力議員は23日の科学技術情報通信部の国政監査で、政府がPHPに関するセキュリティ上の脅威をいつ認識し、どんな措置を取っているかを問い、国内のウェブサイトの約80%がPHPを使っていると指摘した。東亜日報は、KISAが国内の公共機関のPHP使用状況をきちんと把握できていないことが分かったと報じた。ペ・ギョンフン副首相兼科学技術情報通信部長官は23日の国会の総合監査で、これを機に省庁横断の総合対策を設けると明らかにしたと聯合ニュースが伝えた。朝鮮日報は、まだハッキング被害が報告された例はなく、専門家は、脅威は数週間以上続きうるが実際の攻撃に使うのは予想より難しいと分析していると伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>70%</b><span>世界のウェブサイトに占めるPHPの使用比率(朝鮮日報)</span></div>
+        <div><b>4日</b><span>公開前にアマゾンが悪用の試みを捉えた時点(聯合ニュース)</span></div>
+        <div><b>217件</b><span>行政安全部が点検した所管情報システムの数(京郷新聞)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>PHPの脆弱性のせいですでに大規模なハッキング被害が出たという主張</b> <span>朝鮮日報は、まだハッキング被害が報告された例はないと伝えた。ただし聯合ニュースは、アマゾンが公開4日前から悪用の試みを捉え、試みは数百万件に達すると報じた。試みと実際の被害は区別しなければならない。</span></div>
+        <div><b>ソリダイムの上場中断は、ソリダイムの成長性が衰えたからだという解釈</b> <span>ZDNetコリアによると、SKハイニックスはソリダイムの成長可能性や投資の必要性が変わったからではないと明らかにした。東亜日報は、会社が資本市場の状況と株価の動きを理由に挙げたと伝えた。</span></div>
+        <div><b>オ・セフン市長の控訴審無罪で事件がすべて終わったという主張</b> <span>特検が上告して正すと明らかにしたと聯合ニュースが伝えた。東亜日報は、大法院の宣告は来年初めと見込まれ、そのとき確定すれば市長職が維持されると報じた。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 土 10月24日</b><span>国防部の軍事会談の提案に北朝鮮が応じるか、特検がオ・セフン事件の上告手続きを取るかが注目される。国防部は北朝鮮の呼応に期待すると明らかにし、特検は上告すると明らかにした(聯合ニュース)。</span><b>来週</b><span>27日にイスラエル総選挙が行われ(聯合ニュース)、同日、ハン・ドンフン議員の娘の虚偽スペック・捜査もみ消し疑惑の告発人聴取が予定されている(聯合ニュース・朝鮮日報)。29～30日にメルツ独首相が訪韓し、29日午後に首脳会談を行う。</span><b>その後</b><span>オ・セフン事件の大法院の宣告は来年初めと見込まれる(東亜日報)。PHP関連の省庁横断の総合対策は、ペ・ギョンフン長官が設けると明らかにしたが、具体的な日程は公開されていない(聯合ニュース)。</span><b>読者へ</b><span>ウェブサイトやサーバーでPHPを使っているなら、行政安全部が自治体・公共機関に案内したセキュリティパッチが適用されたかを確認するのが、政府の案内の核心だ(京郷新聞)。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "oh":{"kick": "政治・司法 · 報道照合 ✓ 5社 · 大法院の判断と宣告の時期は未確認", "title": "オ・セフン・ソウル市長、「ミョン・テギュン世論調査肩代わり」控訴審で無罪…1審の罰金刑を覆す", "what": "ソウル高裁刑事7部(裁判長ク・フェグン)は23日、オ・セフン・ソウル市長の政治資金法違反事件の控訴審で無罪を言い渡したと京郷新聞と東亜日報が報じた。1審は7月、市長職喪失刑に当たる罰金1000万ウォンを言い渡した。裁判部は、核心的な争点に対する直接証拠はミョン・テギュン氏の供述が唯一だと説明し、「ミョン・テギュンの供述をそのまま信じるのは難しい」と述べたと東亜日報が伝えた。京郷新聞によると、裁判部は、オ市長が具体的に世論調査を依頼し対価を支払ったことが合理的な疑いなく証明されたとは見がたいと判断した。東亜日報は、判決文に、ミョン氏がオ市長に不利になるよう調査を操作しろと指示したという供述が盛り込まれたと報じた。特検は上告すると明らかにしたと聯合ニュースが伝えた。", "why": "この事件は直接証拠がミョン氏の供述一つだけで、その供述をどこまで信じられるかが有罪・無罪を分けた。1審の罰金1000万ウォンが市長職喪失刑だったため、控訴審の結果はすなわち市長職を維持できるかどうかであり、大法院が同じ争点をあらためて判断することになる。", "me": "ソウル市民にとっては、市長の交代や補欠選挙の可能性が当面は小さくなったという意味だ。ただ、東亜日報が伝えたとおり、大法院の宣告は来年初めと見込まれ、市政と政治日程に不確実性が残る。", "a": "無罪は司法の場で筋が通ったという見方だ。朝鮮日報は社説で、今回の判決はミン・ジュンギ特検の無理な起訴にまた一件が加わったものだと評価した。直接証拠が供述一つだけの事件を起訴したこと自体が問題だという論理だ。", "b": "判決をすぐに結論とみるのは早いという見方だ。京郷新聞は社説で、大法院が疑念が残らないよう厳正に判断することを促した。特検は「失望した」として、上告して正すと明らかにしたと聯合ニュースが伝えた。", "say": "確認されたのは、控訴審の無罪宣告、判断の核心がミョン氏の供述の信憑性だったこと、特検が上告の方針を明らかにしたことだ。確認されていないのは、大法院の判断の方向と時期だ。きょうは、特検が実際に上告状を出すか、オ市長がどんな立場を追加で示すかを見ればよい。", "src": "聯合ニュース(控訴審無罪/特検の立場、10/23) · 東亜日報(判決文分析、10/23) · 京郷新聞(裁判部の判断、10/23) · 韓国経済(オ・セフンの反応、10/23) · 朝鮮日報(社説/速報、10/23～24)"},
+    "mdl":{"kick": "政治・安保 · 報道照合 ✓ 4社 · 北朝鮮の応答は未確認", "title": "国防部、北朝鮮に軍事境界線の確認・軍通信線の復元を協議する南北軍事会談を改めて提案", "what": "国防部は23日、南北間の地上軍事境界線(MDL)の明確な位置を相互に確認し、軍通信線の復元および国境地域の偶発的衝突の防止策を協議する南北軍事当局会談を北朝鮮側に公式に提案したと京郷新聞が報じた。聯合ニュースと韓国経済は、国防部が軍事境界線に関する南北軍事会談を改めて提案したと速報で伝えた。聯合ニュースは、国防部が必要なら国連軍司令部を含む3者会談も可能だと明らかにしたと報じた。朝鮮日報も同日、「MDL南北軍事会談提案」を速報で伝えた。北朝鮮の応答は報じられていない。", "why": "軍事境界線の位置について南北の認識が異なれば、国境地域で偶発的衝突が起こりうるし、軍通信線が途絶えた状態では衝突を防ぐ意思疎通の手段もない。国防部が会談の議題として位置の確認と通信線の復元をあわせて挙げた理由だ。国連軍司令部を含む可能性は、軍事境界線管理の法的枠組みが停戦協定にあるためだ。", "me": "国境地域の住民や観光客にとっては、偶発的衝突の危険が下がりうる案件だ。ただ、会談が開かれるには北朝鮮が応じなければならないので、直ちに変わることはない。", "a": "国防部は北朝鮮の呼応に期待するという立場だ。聯合ニュースによると、軍事境界線の位置を確認し軍通信線を復元する実務的な議題で、衝突の可能性を下げようという趣旨だ。", "b": "京郷新聞が写真説明で伝えたように、北朝鮮の軍人は国境地域で戦術道路や鉄柵の建設など国境線の要塞化作業をしている。こうした動きが続くなかで、提案が受け入れられるかは不透明だという見方がある。", "say": "確認されたのは、国防部が23日に公式提案を行い、国連軍司令部を含む3者会談の可能性も開いておいたことだ。確認されていないのは、北朝鮮の応答だ。きょう以降、北朝鮮が公式な反応を出すか、軍通信線に変化があるかを見ればよい。", "src": "京郷新聞(国防部の公式提案、10/23) · 聯合ニュース(軍事会談を改めて提案/3者会談、10/23) · 韓国経済(速報、10/23) · 朝鮮日報(MDL軍事会談提案、10/23)"},
+    "life":{"kick": "社会・治安 · 報道照合 ✓ 5社 · 法制化の日程は未確認", "title": "李大統領「凶悪犯罪との戦争」を指示…仮釈放なしの無期刑・安心パトロール隊を推進", "what": "李在明大統領は23日、青瓦台の「超安全社会 政府横断対応会議」で、「凶悪犯罪に対して戦争を宣言するという覚悟で、特段の対策を立てなければならない」と指示したと京郷新聞が伝えた。朝鮮日報と韓国経済は、カン・ユジョン首席報道官の書面ブリーフィングを引用して、凶悪犯に仮釈放なしの無期刑を導入する案が含まれたと報じた。朝鮮日報によると、警察庁は家庭内暴力の発生時に加害者を住居から優先的に分離する加害者隔離施設を運営すると明らかにした。中央エコノミーニュースは安心パトロール隊と公共移送団の推進を伝え、マネートゥデイは「凶悪犯、20年たてば出てくる?」という見出しで報じた。", "why": "仮釈放なしの無期刑は、今の無期刑が一定期間後に仮釈放されうる点を狙った制度だ。隔離施設は、被害者が家を離れなければならなかった従来の分離措置の向きを、加害者中心に変える。刑事処罰と現場対応をあわせて扱ったのが、今回の会議の特徴だ。", "me": "家庭内暴力やストーキングのような関係性犯罪が心配な人にとっては、通報後に加害者が先に分離される方式が変わりうる。ただ、制度化の日程はまだ報じられておらず、すぐ適用されるわけではない。", "a": "政府側の見方は、連日続く凶悪犯罪で高まった国民の不安に、特段の対策が必要だというものだ。李大統領は戦争を宣言する覚悟を求めたと京郷新聞が伝えた。", "b": "京郷新聞の社説は、政府の力量を総動員して国民の安全を守れとしつつ、対策が宣言にとどまってはならないという趣旨を盛り込んだ。制度の変更には立法が必要な部分があり、国会の議論を経なければならない点も指摘すべきところだ。", "say": "確認されたのは、大統領の指示と会議で公開された方向だ。確認されていないのは、仮釈放なしの無期刑の具体的な要件と立法の時期だ。きょう以降、法務部と警察庁が細部案を出すか、国会の議論が始まるかを見ればよい。", "src": "朝鮮日報(会議の結果/加害者隔離施設、10/23) · 韓国経済(仮釈放なしの無期刑の推進、10/23) · 京郷新聞(大統領の発言/社説、10/23) · マネートゥデイ(20年たてば出てくる、10/23) · 中央エコノミーニュース(安心パトロール隊/公共移送団、10/23)"},
+    "hynix":{"kick": "経済・株式市場 · 報道照合 ✓ 7社 · 資金調達の代替策は未確認", "title": "SKハイニックス、ソリダイムの上場検討を中断…KOSPIは急落で寄り付いた後、0.3%高で引け", "what": "SKハイニックスは23日の公示で、孫会社ソリダイムのプレIPOとIPOの検討を中断すると明らかにしたと聯合ニュースと東亜日報が伝えた。会社は、資本市場の状況などを総合的に考慮したと説明した。ZDNetコリアによると、会社はソリダイムの成長可能性や投資の必要性が変わったわけではないと明らかにした。SBSは、上場準備の事実が知られた8月以降79日での中断だと伝えた。聯合ニュースは、KOSPIが2.4%安の5,403で寄り付いたと報じ、朝鮮日報は、ソリダイムのニュースとバイオ業種への循環物色で午後に上昇に転じたと伝えた。引け値ベースで、KOSPIは5,550.30で0.3%上昇し、KOSDAQは751.69で1.62%下落した。", "why": "親会社が育てた子会社を別に上場すると親会社の株主の取り分が減りうるという重複上場の論争があり、金融当局のトップが規制対象だという立場を出した。上場の撤回はこの負担を和らげ、株価の好材料と受け止められた。一方、韓国経済は、資金調達の負担は大きくなりうると分析した。", "me": "SKハイニックスや半導体株を保有する個人にとっては、株価変動の要因が一つ整理されたという意味だ。KOSPIが5,403で寄り付き、上昇で引けるまで、1日で流れが変わっただけに、取引時間中の変動は大きかった。", "a": "株式市場側の見方は、上場の中断が半導体の投資心理の回復に寄与するだろうというものだ。聯合ニュースはこうした分析を伝えた。ハイニックスの株価は4%を超えて上昇したとSBSが報じた。", "b": "懸念する見方は、資金調達の問題が残るという点だ。韓国経済は、重複上場の懸念は和らいだが資金調達の負担は大きくなりうると分析し、ソウル経済は社説で、投資の好機を逃せば株主にもブーメランになりうると指摘した。", "say": "確認されたのは、公示の内容と当日のKOSPI・KOSDAQの動きだ。確認されていないのは、ソリダイムがどんな方法で資金を調達するかだ。きょう以降、SKハイニックスが資金調達の代替策を出すか、半導体株の流れが続くかを見ればよい。", "src": "聯合ニュース(上場中断/株式市場の引け、10/23) · 東亜日報(公示引用/ソリダイム設立、10/23) · SBS(79日での中断/株価反発、10/23) · 朝鮮日報(マーケットビュー、10/23) · 韓国経済(KOSDAQ/資金調達分析、10/23) · ZDNetコリア(成長性の立場/国政監査での発言、10/23) · ソウル新聞(KOSPI 0.3%高で引け、10/23)"},
+    "php":{"kick": "科学技術・セキュリティ · 報道照合 ✓ 5社 · 国内の実際の被害は未確認", "title": "PHPのセキュリティ脆弱性、公開4日前から攻撃の試み…政府のサイバー危機警報を「注意」に引き上げ", "what": "朝鮮日報は、世界のウェブサイトの70%以上で使われているPHPで、ログインなしでサーバーを掌握できるセキュリティ脆弱性が見つかったと伝えた。聯合ニュースと東亜日報によると、アマゾンのCISOであるCJ・モーゼス副社長は21日(現地時間)、公開4日前の17日に悪用の試みを捉えたと明らかにし、攻撃の試みは数百万件に達する。東亜日報は、科学技術情報通信部が22日、民間分野のサイバー危機警報を「関心」から「注意」に上げたと報じた。京郷新聞は、行政安全部が所管の情報システム217件を調べたが、PHPで開発したシステムはなかったと伝えた。ZDNetコリアは、ソ・チョノ議員が国内のウェブサイトの約80%がPHPを使っていると指摘したと報じた。", "why": "PHPはウェブ開発に広く使われているため、脆弱性一つが多くのサーバーに同時に影響を与えうる。ログインなしでリモートコマンドを実行できる点と、攻撃コードが公開された点のため、政府が警報を上げたと東亜日報が説明した。", "me": "個人や小規模事業者がPHPベースのホームページやオンラインショップを運営しているなら、セキュリティパッチが適用されたかをホスティング業者に確認すべきだ。利用者の立場では、普段使っているサイトがパッチ点検のために一時停止されることがある。", "a": "被害が大きいという見方だ。東亜日報は、各国の企業と政府がウェブサービスを相次いで止めており、KISAが国内の公共機関のPHP使用状況をきちんと把握できていないと報じた。", "b": "過度な恐怖を戒める見方だ。朝鮮日報は、まだハッキング被害の例は報告されておらず、専門家は実際の攻撃への活用は予想より難しいと分析していると伝えた。脅威が数週間以上続く可能性が高い点もあわせて指摘した。", "say": "確認されたのは、公開前の悪用の試み、警報の引き上げ、政府の総合対策の方針だ。確認されていないのは、国内の実際の被害規模だ。きょうは、パッチ適用の案内がどれだけ広がるか、最初の被害例が報告されるかを見ればよい。", "src": "聯合ニュース(公開前の攻撃捕捉/総合対策、10/23) · 東亜日報(警報引き上げ/KISAの現況、10/23) · 朝鮮日報(被害未報告/専門家の分析、10/23) · 京郷新聞(行政安全部の公文書/217件点検、10/23) · ZDNetコリア(国政監査での質問、10/23)"},
+    "audit":{"kick": "政治 · ✓ 報道4件", "title": "李大統領、チェ・ギルス特別監察官の任命案を裁可…10年の空白に終止符", "what": "李在明大統領は23日、チェ・ギルス特別監察官の任命案を裁可したと、カン・ユジョン青瓦台首席報道官が明らかにしたと京郷新聞と朝鮮日報が報じた。国会法制司法委員会は22日、与野党の合意で適格・不適格の意見を併記した人事聴聞経過報告書を採択したと東亜日報が伝えた。人事聴聞会は先月18日に開かれ、報告書の採択まで34日かかった。東亜日報は、朴槿恵政権時代の2016年9月にイ・ソクス初代特別監察官が辞任して以来続いた10年の空白が解消されたと報じた。聯合ニュースによると、参与連帯は大統領の側近の不正を徹底的に監視せよと促した。", "why": "特別監察官は大統領の親族や側近の不正を監察する職だが、10年近く空席だった。候補者の聴聞後、与野党の攻防で報告書の採択がひと月以上遅れたことが空白を長引かせたと朝鮮日報が伝えた。", "me": "一般市民に直接関わる案件ではないが、大統領周辺の権力を監視する仕組みが再び動くという意味がある。任命後、監察活動がどう公開されるかが関心事だ。", "a": "与党側は、チェ候補者が検事時代に監察業務を担った経験があって専門性があり、政治的な外圧に揺らがないという意志を確認したと評価したと東亜日報が伝えた。", "b": "参与連帯は、聯合ニュースによると、大統領の側近の不正行為を徹底的に監視すべきだと求めた。聴聞報告書に不適格の意見が併記された点も東亜日報があわせて伝えた。", "say": "確認されたのは、任命の裁可と聴聞報告書の採択の経緯だ。確認されていないのは、監察の対象と方式の具体的な計画だ。きょう以降、特別監察官室が最初の活動計画を明らかにするかを見ればよい。", "src": "聯合ニュース(参与連帯の促し、10/23) · 東亜日報(裁可/10年の空白、10/23) · 京郷新聞(任命案の裁可、10/23) · 朝鮮日報(聴聞報告書/裁可、10/23)"},
+    "merz":{"kick": "外交 · ✓ 報道3件", "title": "メルツ独首相、29日に訪韓…李大統領と首脳会談", "what": "フリードリヒ・メルツ独首相が29日から2日間公式訪韓し、李在明大統領と首脳会談を行うと、カン・ユジョン青瓦台首席報道官が23日の書面ブリーフィングで明らかにしたと聯合ニュースが報じた。朝鮮日報によると、ドイツ首相の二国間訪韓は3年ぶりで、メルツ首相の就任後初の訪韓だ。ソウルで開かれる第19回ドイツ・アジア太平洋ビジネス会議への出席を機にする。京郷新聞は、李大統領とメルツ首相が6月にフランス・エビアンのG7首脳会議の場で二国間会談を行ったと伝えた。", "why": "ドイツ首相がビジネス会議を機に訪韓するだけに、経済協力が議題に上る可能性がある。ただ、具体的な議題はまだ公開されていない。", "me": "韓国とドイツの企業間の協力のニュースが続きうる日程だ。企業の関係者や投資家なら、会談後の発表内容に注目する価値がある。", "a": "青瓦台側は、首脳会談と会議への出席をあわせて知らせ、両国の協力を強調する立場だ。聯合ニュースは29日午後に会談が開かれると伝えた。", "b": "議題と成果物はまだ発表されていない。京郷新聞と朝鮮日報は日程と意味を伝えただけで、具体的な合意内容には触れなかった。", "say": "確認されたのは、29～30日の訪韓日程と29日午後の首脳会談だ。確認されていないのは、会談の議題と合意文書だ。来週初めに青瓦台が議題をさらに明らかにするかを見ればよい。", "src": "聯合ニュース(訪韓/首脳会談の発表、10/23) · 朝鮮日報(3年ぶりの訪韓、10/23) · 京郷新聞(G7会談の経緯、10/23)"},
+    "nec":{"kick": "社会 · ✓ 報道3件", "title": "選挙管理委員会特検「亡くなった職員の遺書に強圧捜査への言及なし」…捜査官の増員を要請", "what": "イ・テハン選挙管理委員会特検チームは23日、被疑者として調べを受けた翌日に亡くなった中央選挙管理委員会職員の遺書に、強圧捜査への言及はなかったと明らかにしたと京郷新聞が報じた。特検は「遺書には、捜査の過程で強圧的な取り調べがあったという内容は全く見当たらなかった」と説明し、京郷新聞は見出しで、特検を恨まないという内容だと伝えた。聯合ニュースと韓国経済は、この特検が捜査の過程で亡くなった故人の冥福を祈ると明らかにしたと速報で伝えた。京郷新聞は、特検がキム・ジヨン重捜庁長に会い、来週までに少なくとも5～6人の捜査官の追加派遣を要請したと報じた。", "why": "特検は選挙管理委員会の入札不正および随意契約の優遇疑惑を捜査している。職員の死亡で捜査方式への疑惑が提起されうるため、遺書の内容の公開と人員確保の要請が同じ日に相次いだ。", "me": "選挙管理委員会は選挙を管理する機関なので、捜査結果が信頼に影響しうる。一般市民は、捜査方式をめぐる論争とは別に、疑惑の実体が明らかになるかを見る必要がある。", "a": "特検側は、遺書に強圧捜査への言及がなかった点を公開し、捜査過程の適法性を説明する立場だ。", "b": "今回の報道では、特検の発表に対する別の反論は確認されていない。死亡の経緯の追加調査の有無も報じられていない。", "say": "確認されたのは、特検が明らかにした遺書の内容と人員の要請だ。確認されていないのは、死亡の具体的な経緯と今後の捜査日程だ。きょう以降、重捜庁が捜査官の派遣を決めるかを見ればよい。", "src": "京郷新聞(遺書の内容/人員派遣の要請、10/23) · 聯合ニュース(特検の立場の速報、10/23) · 韓国経済(特検の立場の速報、10/23)"},
+    "aihack":{"kick": "社会 · ✓ 報道3件", "title": "ソウル重捜庁、金融圏のAIハッキング事件で捜査不開始…警察が引き続き捜査", "what": "ソウル重大犯罪捜査庁は23日、金融機関のAIハッキング事件について、警察に捜査不開始を通知したと明らかにしたと京郷新聞と聯合ニュースが報じた。京郷新聞によると、ソウル重捜庁は警察から認知通報を受けた事件を検討した後、捜査を開始しないことを決め、これにより警察が引き続き捜査する。聯合ニュースは、この決定をめぐり、「警察→重捜庁→警察」のピンポンの懸念が現実になるかを指摘した。韓国経済も、ソウル重捜庁が金融圏のAIハッキングを担当しないと伝えた。", "why": "捜査機関が新たに分かれ、どの機関がどの事件を担当するかの基準が重要になった。事件が機関の間を行き来すれば初動捜査が遅れうるというのが、聯合ニュースが指摘した懸念だ。", "me": "金融圏のハッキング事件は、個人情報や金融取引に影響しうる。捜査主体が整理されたことは、事件処理の責任が警察にあるという意味だ。", "a": "ソウル重捜庁は、警察から認知通報を受けた事件を検討した末、捜査を開始せず警察が引き続き捜査するのが妥当だという判断を下したと明らかにしたと京郷新聞が伝えた。", "b": "聯合ニュースは、事件が機関の間を行き来する「ピンポン」の可能性を懸念として報じた。捜査の遅れの有無はまだ確認されていない。", "say": "確認されたのは、ソウル重捜庁の捜査不開始の通知だ。確認されていないのは、事件の被害規模と捜査の進み具合だ。きょう以降、警察が捜査状況を公開するかを見ればよい。", "src": "京郷新聞(捜査不開始の通知、10/23) · 聯合ニュース(ピンポンの懸念/速報、10/23) · 韓国経済(重捜庁の立場、10/23)"},
+    "roh":{"kick": "社会 · ✓ 報道3件", "title": "公訴庁、盧泰愚氏の裏金疑惑でイ・ビョンギ元儀典秘書官を参考人聴取", "what": "盧泰愚元大統領一家の裏金隠匿疑惑を捜査するソウル中央地方公訴庁犯罪収益還収部(部長検事ソ・ジョンス)が23日午前10時から、イ・ビョンギ元青瓦台儀典秘書官を参考人として調べたと京郷新聞と東亜日報が報じた。東亜日報によると、イ元秘書官は盧泰愚政権時に儀典秘書官、朴槿恵政権時に大統領秘書室長を務め、盧泰愚元大統領の夫人キム・オクスク氏のメモに名前が記されていた。京郷新聞は、8月にキム・オクスク氏のソウル・延禧洞の私邸などが家宅捜索されたと伝えた。聯合ニュースも召喚の事実を報じた。", "why": "裏金疑惑は古い事件なので、当時の政府関係者の供述やメモが核心的な手がかりになる。参考人聴取は、被疑者聴取とは異なり、疑惑の事実関係を確認する段階だ。", "me": "一般市民にとっては、過去の権力と資金の流れを確認する捜査という意味がある。結果は捜査が進んでみないと分からない。", "a": "捜査側は、8月の家宅捜索以降、関係者を順次呼んで事実関係を確認している。キム・オクスク氏のメモに名前が上がった人物を参考人として呼んだのが今回の聴取だ。", "b": "参考人聴取の段階なので、イ元秘書官の容疑の有無は確認されていない。聴取内容は報じられていない。", "say": "確認されたのは、23日の参考人聴取の事実とイ元秘書官の経歴だ。確認されていないのは、供述内容と捜査結果だ。きょう以降、公訴庁が追加の召喚を行うかを見ればよい。", "src": "聯合ニュース(召喚報道、10/23) · 京郷新聞(参考人聴取、10/23) · 東亜日報(キム・オクスクのメモ/経歴、10/23)"}
+  };
+  const G = {
+    "政治資金法":{"f": "法律", "d": "政治資金の収入・支出の方法と限度を定めた法律", "w": "オ市長はこの法律違反の疑いで起訴された"},
+    "控訴審":{"f": "法律", "d": "1審判決を不服として改めて受ける2審の裁判", "w": "ソウル高裁刑事7部が無罪を言い渡した"},
+    "市長職喪失刑":{"f": "法律", "d": "宣告されると公職を失う刑の重さ", "w": "1審の罰金1000万ウォンが該当した"},
+    "ミョン・テギュン":{"f": "人物", "d": "政治ブローカーと呼ばれる人物", "w": "オ市長事件の核心的な供述者だ"},
+    "合理的な疑い":{"f": "法律", "d": "有罪の判断に必要な証明の基準", "w": "裁判部は証明されたとは見がたいとした"},
+    "信憑性":{"f": "法律", "d": "供述を信じられる程度", "w": "裁判部はミョン氏の供述をそのまま信じるのは難しいとした"},
+    "上告":{"f": "法律", "d": "2審判決を不服として大法院に改めて判断を求める手続き", "w": "特検が上告の方針を明らかにした"},
+    "大法院":{"f": "法律", "d": "最終的な法律審を担う最高裁判所", "w": "宣告は来年初めと見込まれる"},
+    "特検":{"f": "法律", "d": "特別検事。特定の事件を独立して捜査する職", "w": "キム・ゴンヒ特検がオ市長を起訴した"},
+    "軍事境界線":{"f": "安保", "d": "休戦ライン。南北の軍事的な対峙線", "w": "国防部が位置の相互確認を提案した"},
+    "MDL":{"f": "安保", "d": "Military Demarcation Line、軍事境界線の英語の略称", "w": "会談の議題の核心だ"},
+    "軍通信線":{"f": "安保", "d": "南北の軍当局をつなぐ直通の通信線", "w": "復元の協議が提案された"},
+    "国連軍司令部":{"f": "安保", "d": "国連軍司令部。停戦協定を管理する機関", "w": "3者会談の可能性が言及された"},
+    "仮釈放":{"f": "法律", "d": "刑期の途中で条件を付けて早く出す制度", "w": "現行の無期刑は一定期間後に可能だという指摘が出た"},
+    "無期刑":{"f": "法律", "d": "期間を定めない懲役刑", "w": "仮釈放なしの無期刑の導入が推進される"},
+    "超安全社会 政府横断対応会議":{"f": "行政", "d": "凶悪犯罪への対応のための政府横断の会議", "w": "23日に青瓦台で開かれた"},
+    "加害者隔離施設":{"f": "治安", "d": "家庭内暴力の加害者を住居から分離して置く施設", "w": "警察庁が運営の方針を明らかにした"},
+    "安心パトロール隊":{"f": "治安", "d": "住民が不安を感じる地域を巡回する組織", "w": "推進の対象として挙げられた"},
+    "プレIPO":{"f": "金融", "d": "上場前の投資誘致", "w": "ソリダイムが検討していたが中断した"},
+    "新規株式公開":{"f": "金融", "d": "非上場企業が株式を市場に初めて公開すること。IPO", "w": "上場の検討が中断された"},
+    "重複上場":{"f": "金融", "d": "親会社が育てた子会社を別に上場すること", "w": "金融当局が規制対象だという立場を出した"},
+    "ソリダイム":{"f": "企業", "d": "SKハイニックスが買収したインテルのNAND事業から出発した米国法人", "w": "上場の検討が中断された"},
+    "NANDフラッシュ":{"f": "半導体", "d": "電源が切れてもデータが残るメモリー", "w": "ソリダイムの主力事業だ"},
+    "KOSPI":{"f": "株式", "d": "有価証券市場の総合株価指数", "w": "2.4%安で寄り付き、0.3%高で引けた"},
+    "KOSDAQ":{"f": "株式", "d": "中小・ベンチャー中心の市場", "w": "1%を超えて下落した"},
+    "循環物色":{"f": "株式", "d": "上昇した業種から別の業種へ資金が移る現象", "w": "バイオ業種への循環物色があった"},
+    "PHP":{"f": "技術", "d": "ウェブサーバーで広く使われているプログラミング言語", "w": "致命的な脆弱性が見つかった"},
+    "最高情報セキュリティ責任者":{"f": "企業", "d": "企業の情報セキュリティを統括する役員。CISO", "w": "アマゾンのCISOであるCJ・モーゼス副社長が攻撃の試みを明らかにした"},
+    "サイバー危機警報":{"f": "行政", "d": "サイバー脅威の水準に応じて発令する警報", "w": "「関心」から「注意」に上がった"},
+    "韓国インターネット振興院":{"f": "機関", "d": "インターネット・セキュリティ政策を支援する公共機関。KISA", "w": "非常対応体制を稼働させた"},
+    "行政安全部":{"f": "機関", "d": "地方行政や情報システムなどを担う省庁", "w": "セキュリティパッチの案内の公文書を送った"},
+    "特別監察官":{"f": "機関", "d": "大統領の親族や側近の不正を監察する職", "w": "10年の空白の末に任命された"},
+    "選挙管理委員会":{"f": "機関", "d": "選挙の管理を担う委員会", "w": "特検の捜査対象だ"},
+    "捜査不開始":{"f": "法律", "d": "捜査を始めないとする決定", "w": "ソウル重捜庁が警察に通知した"},
+    "参考人":{"f": "法律", "d": "被疑者ではない事件関係者", "w": "イ・ビョンギ元秘書官がこの身分で調べを受けた"},
+    "公訴庁":{"f": "機関", "d": "起訴を担当する機関", "w": "盧泰愚氏の裏金疑惑を捜査する"},
+    "メルツ":{"f": "人物", "d": "ドイツのフリードリヒ・メルツ首相", "w": "29日に訪韓する"},
+    "遺書":{"f": "法律", "d": "故人が残した文", "w": "特検が内容を明らかにした"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

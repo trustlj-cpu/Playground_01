@@ -1,0 +1,472 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>10,441.60</b>FTSE100 · 10月8日終値 · −0.16%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>1.3228</b>ポンド/ドル（GBP/USD） · 10月9日 · −0.03%</div>
+    </div>
+    <div class="dateline"><span>第5号 · 朝刊</span><b>2026年10月9日（金）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="oil">
+      <div class="kick">経済 · 市場<span>報道照合 ✓ 8社 · 終値は取引所とデータ提供会社の相場による。利回りの数字は市場リポートによる</span></div>
+      <h2 class="hl">トランプ氏「中間選挙前にイランは攻撃しない」　それでもブレントは104ドル超えで引け、ギルト利回りは数十年ぶりの高水準近くにとどまる</h2>
+      <p class="deck">この約束で市場は落ち着かなかった。原油は約4%上昇し、ウォール街のハイテク株は下げ、FRBの当局者は利上げが必要だと述べた。</p>
+      <div class="body">
+        <p>ドナルド・トランプ大統領は木曜、11月3日の中間選挙の前に米国がイランを攻撃することはないと述べたと、ロイター、フィナンシャル・タイムズ（FT）、ブルームバーグが報じた。市場は安心しなかった。NBCニュースは、かつてなら大統領のこうした投稿で株が上がっただろうと指摘した。同じ日、ニューヨーク・タイムズ紙が、米国防総省が3日間の攻撃の新たな計画をまとめ、まもなく空母3隻が中東に集まると報じたためだ。この報道は、第2の報道機関による裏付けがない。ブルームバーグのその日の見出しは、方向が割れていた。トランプ氏はイランとの合意をもう求めていないと言い、協議は実りがあったとも言っている。イランのマスウード・ペゼシュキアン大統領は、テヘランは交渉の席を離れないと述べたと、イランのISNA通信が伝えた。ロイターによると、イランはホルムズ海峡の航路をさらに封鎖すると表明した。フーシ派によるサウジの空港への攻撃を受け、ルフトハンザ航空とインドの航空会社はリヤド便を運休した。ブレント原油は1バレル104.28ドルで清算され、4.07%上昇した。米国の指標であるWTIは91.49ドルで、3.64%上昇した。米メキシコ湾岸に向かうハリケーン「イサイアス」は、すでに精製と生産を危うくしている。ライアンエアのマイケル・オリアリー最高経営責任者は、ジェット燃料のコストは2028年まで「途方もなく高い」ままかもしれないと述べ、トタルエナジーズの最高経営責任者は、原油価格を「法外だ」と評した。ロイターによると、アジアは戦争を受けて、原油の備蓄を急ぎ、再生可能エネルギーの導入を早めている。</p>
+        <p>債券市場では、まずロンドンが痛みを受けた。FTSE100は0.16%安の10,441.60で引けた。石油生産企業の比重が大きい指数としては小幅な下げだ。ギルトは、主要国の国債のなかでも最も弱い部類だった。ある市場リポートは、5年物の利回りが約7ベーシスポイント上昇して5.05%、10年物は5.48%近くで、2007年以来の高水準に近いとした。30年物の利回りは前日に6.036%となり、1998年1月以来の水準だった。同じリポートによると、短期金融市場は、11月までにイングランド銀行が約23ベーシスポイントの利上げをすると織り込んでいる。ポンドは1.3228ドル付近で終えた。ウォール街は下げて引け、S&P500は0.47%安の7,765.36、ナスダックは1.25%安の27,193.34だったが、ダウは0.10%高の51,231.64だった。ブルームバーグはハイテク株の下げをAI投資への不安と結びつけ、FTは、オープンAIの年率換算の売上高が、従来示されていた水準より200億ドル少ないと報じた。米10年物国債の利回りは4.6ベーシスポイント低下して5.231%となった。ロイターが30年債入札で需要は堅調だったと報じたためだ。FRBのムサレム氏は、今後6〜9か月で利上げが必要だと述べ、ウォラー氏は追加の利上げが必要だと述べた。金は4,157ドル付近で終えた。ユーロ圏では、財務相らがフランスに2027年度予算を成立させるよう求め、債券市場を落ち着かせる見通しだと、ロイターが報じた。EUのバルディス・ドンブロフスキス氏は、スプレッドは意識しているが、警戒はしていないと述べた。ロンドンでの予算発表は10月28日だ。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>104.28ドル</b><span>ブレントの清算値。イラン戦争とタンカー攻撃を受け、4.07%上昇（ロイター、ブルームバーグ）</span></div>
+        <div><b>6.036%</b><span>前日の30年物ギルト利回り。1998年1月以来の高水準（市場リポート）</span></div>
+        <div><b>5.231%</b><span>木曜終値の米10年物国債の利回り。4.6ベーシスポイント低下</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="sailor">
+      <div class="kick">安全保障 · 防衛<span>報道照合 ✓ 6社 · 起訴内容は容疑であり、認定ではない</span></div>
+      <h3 class="hl">英海軍の水兵、ロシアのスパイ容疑で起訴され出廷　16日まで勾留</h3>
+      <div class="one">
+        <p>テディ・ヤング容疑者（24）は木曜、警察に2023年国家安全保障法違反の2つの罪で起訴されたあと、ウェストミンスター治安判事裁判所に出廷した。AP通信、ユーロニュース、ITV、サウスチャイナ・モーニング・ポストは、事件がロシアに関わるものだと報じた。起訴の時点では、この点が明らかにされていなかった。2024年11月から2025年5月にかけて、保護情報を入手し、その開示を準備した罪に問われている。報道によると、ロンドン警視庁は、ダークウェブで潜在的な脅威となる主体に接触しようとしたとしている。罪状認否は行わず、10月16日にロンドンで開かれる次の審理まで勾留されている。王立検察局は、戦闘情報担当の下士官兵で、高度な保全許可を得ていたと述べた。今週どこで逮捕されたかについては、報道が食い違っている。英海軍は、コメントするのは適切でないとした。警察は、この事件はフェアフォードの捜査とは別だとしている。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>勾留<i>法</i></b><p>被告人を、次の出廷まで身柄を拘束すること。多くは、罪が重い、または逃亡のおそれがあると治安判事が判断したときに行われる。有罪の認定ではない。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="holborn"><b>ホルボーン・アンド・セントパンクラス補欠選挙、投票終了　結果は10月9日朝に判明の見通し</b><em>ガーディアン紙とRTÉによると、キア・スターマー卿が空けた議席に15人が立候補した。労働党は議席を守りたい考えだ。2024年に緑の党は同選挙区で3位だった。</em><span>政治 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="houthi"><b>フーシ派がサウジの空港を攻撃、ルフトハンザとインドの航空会社がリヤド便を運休</b><em>ロイターとAP通信は、リヤド空港で爆発、煙、避難があったと報じた。トルコはサウジの防衛支援を検討中だが、攻撃的な役割は否定した。</em><span>世界 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="hasan"><b>国防総省、フォートフッド銃撃犯の銃殺刑執行をライブ配信すると発表</b><em>ロイター、AP通信、BBC、FTは、2009年の銃撃事件で有罪となったニダル・ハサンについての国防総省の発表を伝えた。報道では、日程は確認されていない。</em><span>米国 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="amex"><b>アメリカン・エキスプレス、資金洗浄対策の不備で3億5000万ドルの罰金</b><em>ロイターとFTは、資金洗浄の疑いを報告しなかったことへの罰金だと報じ、FRBは強制措置を発表した。</em><span>ビジネス · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="isaias"><b>ハリケーン「イサイアス」、大型級に迫る　メキシコ湾岸は上陸に備える</b><em>ロイターとブルームバーグは、精製と生産が危うくなっていると報じた。MMAは、米メキシコ湾の原油の停止分を生産量の63%とし、ホワイトハウスの顧問は製油所が再稼働しつつあると述べた。</em><span>気象 · ✓ 3社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="ukraine">
+      <div class="kick">世界 · ウクライナ<span>報道照合 ✓ 5社 · 各当事者の主張は出典を明記</span></div>
+      <h3 class="hl">ルビオ氏、ウクライナ戦争は「危険な膠着状態」　クレムリンも同意。米特使、きょうマイアミでウクライナ側と会談</h3>
+      <div class="body">
+        <p>マルコ・ルビオ米国務長官は木曜、ウクライナでの戦争は危険な膠着状態に達したと述べたと、ロイターが報じた。クレムリンのドミトリー・ペスコフ報道官は、ロシアも同意見だと述べた。ロイターとFinancialJuiceによると、スティーブ・ウィトコフ氏とジャレッド・クシュナー氏は金曜、マイアミでウクライナ側の代表者と実務レベルの協議を行う。ウォロディミル・ゼレンスキー大統領は、ウクライナの代表団が米国に向かうと確認した。協議では、米国の交渉担当者がロシアとウクライナと進め始めた新たな案を話し合う。</p>
+        <p>戦闘は止まらなかった。ロイターによると、ウクライナ東部の要衝の通りにロシアの爆弾が落ち、33人が死亡した。ウクライナは、ロシア最大の製油所を攻撃したと述べた。ドローンはヤンデックスのデータセンターを襲った。ロシアのデータ拠点への大規模な攻撃は初めてで、同社は、施設を復旧できるかどうか不明だとしている。エド・ミリバンド外相はキーウでウラジーミル・プーチン氏に、「こちらが根負けするのを待っても無駄だ」と述べ、英国はロシアの資金、原油、サプライチェーンに対する新たな制裁を発表した。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="adhd">
+      <div class="kick">医療 · 社会<span>報道照合 ✓ 3社 · 各社が強調する点が異なる。CQCに関する約束は、第2の報道機関がまだ確認していない</span></div>
+      <h3 class="hl">政府のレビュー、ADHDと自閉症の大規模な過剰診断は確認されず　ただし、診断というレッテルを待たないと支援を受けられない仕組みが問題と指摘</h3>
+      <div class="body">
+        <p>イングランドの精神保健、ADHD、自閉症のサービスに関する独立したレビューの報告書が、木曜に公表された。ピーター・フォナギー教授が率いた。子どもと若者の苦痛が急激に増えており、現行の仕組みは不十分だと結論づけた。紹介と診断は大きく増えたが、過剰診断が大規模に起きていると結論づけることはできないとした。ガーディアン紙は、需要が急増するなかでNHSは「システムの失敗」の危険にあり、若者への害は現実のものだと報じた。</p>
+        <p>BBCの見出しは違う書き方で、ADHDと自閉症は過剰診断の危険があるとした。報告書は、診断を待つ対応から、必要により早く応じる対応へ移ることを勧めている。報道によると、政府はADHDと自閉症のすべての評価をケア品質委員会（CQC）の対象とし、民間の提供者に基準を守らせ、NHSが過大な請求を受けないようにする。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="microsoft">
+      <div class="kick">テクノロジー · 移民<span>報道照合 ✓ 5社 · 停止の理由は確認されていない</span></div>
+      <h3 class="hl">米国、H-1B労働者のグリーンカード申請支援の制度からマイクロソフトを停止　ヴァンス氏が明らかに</h3>
+      <div class="body">
+        <p>JD・ヴァンス副大統領は木曜、マイクロソフトが、H-1Bビザの労働者のグリーンカードを申請できる制度から停止されていると述べたと、AP通信が報じた。ロイター、BBC、FTもこれを伝え、FTは、外国人労働者の永住権取得の支援を禁じるものだとした。ブルームバーグの見出しは、停止の対象はマイクロソフトを含むテクノロジー企業だとしたが、ほかの企業は挙げられていない。どの報道も理由には触れていない。ロイターの解説記事は、この専門職向けの制度をトランプ氏が攻撃していると説明した。</p>
+        <p>この措置は、トランプ氏がマイクロソフトのサティア・ナデラ最高経営責任者を、同社を一変させたとほめた日に出たと、FinancialJuiceが報じた。英国の読者にとっては、影響は間接的だ。英国を拠点とする多くの技術者や卒業生が、これらの米国の職を争っており、この決定は、熟練した移民に制度が開かれたままかどうかへの疑念を強める。マイクロソフトは、私たちが確認した報道のなかではコメントしていなかった。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>スターバックスがチポトレの買収を検討したと、FTが報じた。チポトレ株は急伸<span>Reuters · Bloomberg</span></li>
+        <li>ベネズエラのニコラス・マドゥロ前指導者と妻、拷問の疑いで米国で起訴<span>Reuters · FT</span></li>
+        <li>スペースX、携帯電話の通信網向けに低周波数帯の免許を購入へ<span>Reuters · FinancialJuice</span></li>
+        <li>国連の気象機関、エルニーニョは強まり2027年2月まで続くと予想<span>Reuters · BBC</span></li>
+        <li>ライアンエアのオリアリー氏、ジェット燃料のコストは2028年まで「途方もなく高い」ままかもしれないと発言<span>Reuters</span></li>
+        <li>ハーヴェイ・ニコルズ、1月にバーミンガム店を閉店<span>Guardian</span></li>
+        <li>インフルエンザの流行はシーズン初めとして低水準だが、過去4年よりは高い<span>UKHSA</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「米国はイラン攻撃を排除した」</b> <span>トランプ氏が述べたのは、11月3日の中間選挙の前は攻撃しない、ということだ。ニューヨーク・タイムズは攻撃計画が作られたと報じており、第2の報道機関は確認していない。</span></div>
+        <div><b>「ロシアとウクライナは合意に近い」</b> <span>ルビオ氏とクレムリンは、どちらも戦争を膠着状態だとしている。マイアミの会談は実務レベルの協議であり、合意は発表されていない。</span></div>
+        <div><b>「ADHDと自閉症は大規模に過剰診断されている」</b> <span>報告書は、過剰診断が大規模に起きていると結論づけることはできないとした。ただしBBCの見出しは危険性を強調した。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/9 金</b><span>ホルボーン・アンド・セントパンクラス補欠選挙の結果・ウィトコフ氏とクシュナー氏がマイアミでウクライナ側と会談・ノーベル平和賞の発表・ハリケーン「イサイアス」が米メキシコ湾岸に上陸・ブレントの104ドル超えの引けを受け、ギルトとFTSE100がどう寄り付くか。</span><b>今週</b><span>テディ・ヤング容疑者の次の審理は10月16日・予算発表は10月28日・米中間選挙は11月3日・イランをめぐるワシントンからの発言。</span><b>読者へ</b><span>固定金利の住宅ローンの期間がまもなく終わる方へ。貸し手はギルト利回りに合わせて金利を見直す。数日かけて各社の条件を比べ、1日の動きにあわてないようにしたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    oil:{kick:"経済 · 市場 · 報道照合 ✓ 8社",title:"トランプ氏「中間選挙前にイランは攻撃しない」　それでもブレントは104ドル超えで引け、ギルト利回りは数十年ぶりの高水準近くにとどまる",
+      what:"トランプ大統領は10月8日、11月3日の中間選挙の前に米国がイランを攻撃することはないと述べた。市場は落ち着かなかった。ブレントは104.28ドルで清算されて4.07%上昇し、WTIは91.49ドルで3.64%上昇した。ホルムズ海峡の内外でタンカーが攻撃を受け、フーシ派がサウジの空港を砲撃したためだ。ニューヨーク・タイムズは、国防総省が3日間の攻撃計画をまとめたと報じたが、第2の報道機関による確認はない。ロンドンではFTSE100が0.16%安の10,441.60で引けた。ある市場リポートは、10年物ギルトの利回りを5.48%近くとし、短期金融市場は11月までにイングランド銀行が約23ベーシスポイントの利上げをすると織り込んでいるとした。ウォール街ではS&P500が0.47%、ナスダックが1.25%下落し、ダウは0.10%上昇した。米10年物国債の利回りは5.231%に低下した。",
+      why:"湾岸の戦争が英国の物価に及ぶ経路が、原油だ。エネルギーのコストが上がればインフレが再燃し、政府が自らの債務に払う利回りと、銀行が住宅ローンに課す金利を押し上げる。ギルトは、ほかの多くの債券市場より大きな割合で、その圧力を負っている。",
+      me:"借り換えや固定金利の契約をするなら、貸し手はギルト利回りに連動するスワップ金利で値付けするので、見積もりは数日で動きうる。エネルギー料金とガソリンが、原油の影響が次に表れる場所だ。",
+      a:"この約束は、11月前に突然のエスカレーションが起きる可能性を下げ、外交に時間を与える。",
+      b:"選挙の日付に結びついた約束は戦略ではない。報じられた攻撃計画の存在は、危険が先送りされただけだと示している。",
+      say:"市場が織り込んでいるのは、約束ではなく戦争だ。見るべきは三つ。ブレントが100ドルを保つか、30年物ギルトの利回りが6%を上回ったままか、イングランド銀行が11月について何を言うか。10月28日の予算発表は、この状況のなかで行われる。",
+      src:"Reuters、Financial Times、Bloomberg、NBC News、CNBC、Euronews、FinancialJuice、Trading Economics（2026年10月8〜9日）"},
+    sailor:{kick:"安全保障 · 防衛 · 報道照合 ✓ 6社",title:"英海軍の水兵、ロシアのスパイ容疑で起訴され出廷　16日まで勾留",
+      what:"英海軍の戦闘情報担当の下士官兵、テディ・ヤング容疑者（24）が、10月8日にウェストミンスター治安判事裁判所に出廷した。2023年国家安全保障法違反の2つの罪で起訴されている。外国勢力の利益になりうる保護情報を入手した罪と、その開示を準備した罪だ。容疑の行為は2024年11月から2025年5月にかけてとされる。AP通信、ユーロニュース、ITV、サウスチャイナ・モーニング・ポストは、事件がロシアに関わるものだと報じた。ロンドン警視庁は、ダークウェブで潜在的な脅威となる主体との接触を試みたとした。罪状認否は行わず、10月16日まで勾留されている。英海軍はコメントを控えた。",
+      why:"軍の内部からモスクワへの漏えいが疑われる事件が公になるのは珍しい。英国とドイツが、破壊工作とサイバーの脅威への協力を深めることで合意したばかりの時期にあたる。",
+      me:"あなたに直接の変化はない。この事件は、政府が敵対国によるスパイ活動を国内の現実の脅威として扱っていることを思い出させる。",
+      a:"2023年の法律による訴追は、被害が出るずっと前に、治安機関が容疑者に対して動けることを示している。",
+      b:"起訴は有罪判決ではない。詳細は警察の説明から出ており、裁判所が検証すべきだ。",
+      say:"10月16日の審理と、正式起訴の有無を待ちたい。警察は、この事件はフェアフォードの捜査とは別だとしており、これまでに公表されたもののなかに両者を結びつけるものはない。",
+      src:"AP、Euronews、ITV News、South China Morning Post、Reuters、BBC（2026年10月8日）"},
+    holborn:{kick:"政治 · 報道照合 ✓ 2社",title:"ホルボーン・アンド・セントパンクラス補欠選挙、投票終了　結果は10月9日朝に判明の見通し",
+      what:"キア・スターマー卿が空けたロンドン北部の議席をめぐる補欠選挙の投票が、10月8日の22時に終わった。ガーディアン紙とRTÉによると、立候補者は15人で、結果は未明に出る見通しだった。2024年にはスターマー卿が得票率48.9%を得て、無所属のアンドルー・ファインスタイン氏の18.9%、緑の党の10.4%を上回った。ガーディアン紙は、労働党は議席を守りたい考えだと伝えた。当紙の締め切り時点で、結果はまだ宣言されていない。",
+      why:"安全な労働党の議席で、アンディ・バーナム政権が投票で受ける最初の試験になる。緑の党と無所属も、同じ有権者を争っている。",
+      me:"労働党から票が離れれば、有権者が新政権をどう評価しているかを示す兆しと受け止められるだろう。選挙区の住民にとっては、勝者が下院で宣誓したあと、自分の議員になる。",
+      a:"",b:"",
+      say:"勝者だけでなく、得票差と投票率を見たい。僅差の結果は、明確な勝利が労働党の戦略家を安心させる以上に、彼らを不安にさせるだろう。",
+      src:"The Guardian、RTÉ（2026年10月8日）"},
+    houthi:{kick:"世界 · 中東 · 報道照合 ✓ 3社",title:"フーシ派がサウジの空港を攻撃、ルフトハンザとインドの航空会社がリヤド便を運休",
+      what:"ロイターによると、ルフトハンザ航空とインドの航空会社は、フーシ派によるサウジの空港への攻撃を受け、リヤド便を運休した。AP通信は、フーシ派がサウジの首都の空港への新たな攻撃を主張し、目撃者が避難の様子を語ったと報じた。ロイターは、リヤド空港で航空機から煙が上がったとも報じた。トルコの外相は、アンカラはサウジの防衛への支援を検討しており、攻撃的な役割は否定したと述べ、シリアはイエメンでの支援を検討していると述べた。死傷者の数は週の前半に報じられており、最新の数字は照合できていない。",
+      why:"湾岸の航空とエネルギーの基盤が直接狙われるようになり、原油価格に響き、移動のコストを押し上げる。",
+      me:"リヤド行き、またはリヤド経由の便に搭乗予定なら、航空会社に確認しよう。最新情報は、外務省の渡航情報で確認できる。",
+      a:"",b:"",
+      say:"注目すべきは、ルフトハンザに続く航空会社がほかにも出るかどうかだ。運休が広がれば、英国の旅行者が使う湾岸のハブ空港に響く。",
+      src:"Reuters、AP、FinancialJuice（2026年10月8日）"},
+    hasan:{kick:"米国 · 司法 · 報道照合 ✓ 4社",title:"国防総省、フォートフッド銃撃犯の銃殺刑執行をライブ配信すると発表",
+      what:"国防総省の当局者は、2009年のフォートフッド銃撃事件で有罪となったニダル・マリク・ハサンについて、陸軍による銃殺刑の執行をライブ配信すると述べた。ロイター、AP通信、BBC、FTが10月8日にこの発表を報じた。報道のなかに、確認された日程は見つかっていない。FTの見出しは、公開処刑だと表現した。",
+      why:"米国で軍による死刑執行は珍しく、それを放送するとなれば、法と倫理の問題が浮かぶ。",
+      me:"英国の読者に直接の影響はないが、死刑とメディアをめぐる激しい議論が起きるだろう。",
+      a:"",b:"",
+      say:"法的な異議申し立てと、日程を確認したい。何が映されるかの詳細は公表されていない。",
+      src:"Reuters、AP、BBC、Financial Times（2026年10月8日）"},
+    amex:{kick:"ビジネス · 規制 · 報道照合 ✓ 3社",title:"アメリカン・エキスプレス、資金洗浄対策の不備で3億5000万ドルの罰金",
+      what:"ロイターとFTは10月8日、アメリカン・エキスプレスが、不十分な資金洗浄対策のプログラムをめぐって3億5000万ドルの罰金を科されたと報じた。FinancialJuiceは、FRBが同社に対し、資金洗浄をめぐる強制措置を発表したと報じた。",
+      why:"金融犯罪対策の甘さに大きな罰金が科されたことは、米国の規制当局がカード事業のコンプライアンスにまだ圧力をかけていることを示している。",
+      me:"カード会員にはほとんど変化はない。同社は、確認の手続きを改善しなければならなくなる。",
+      a:"",b:"",
+      say:"FRBの命令の文言と、同社に求められる是正措置を確認したい。",
+      src:"Reuters、Financial Times、FinancialJuice（2026年10月8日）"},
+    isaias:{kick:"気象 · エネルギー · 報道照合 ✓ 3社",title:"ハリケーン「イサイアス」、大型級に迫る　メキシコ湾岸は上陸に備える",
+      what:"ロイターは、米メキシコ湾岸が上陸に備えるなか、ハリケーン「イサイアス」が勢力を強めたと報じた。ブルームバーグは、大型級に迫っており、日量50万バレルの精製能力が危うくなっていると伝えた。FinancialJuiceはMMAを引いて、日量130万バレル、つまり米メキシコ湾の原油生産の63%が停止していると伝えた。ホワイトハウスの顧問は、製油所は再稼働しつつあり、まもなく緩和されると述べた。",
+      why:"メキシコ湾の生産と精製は燃料と原油の供給を支えており、上陸すれば、イラン戦争で動揺している市場にさらに負担を加える。",
+      me:"ガソリン価格は原油と石油製品の価格に遅れて追随する。戦争に加えてハリケーンが来れば、燃料コストの上昇要因になる。",
+      a:"",b:"",
+      say:"上陸地点と製油所の被害が、短い一時的な動きで終わるか、長い逼迫になるかを決める。",
+      src:"Reuters、Bloomberg、FinancialJuice/MMA（2026年10月8日）"},
+    ukraine:{kick:"世界 · ウクライナ · 報道照合 ✓ 5社",title:"ルビオ氏、ウクライナ戦争は「危険な膠着状態」　クレムリンも同意。米特使、きょうマイアミでウクライナ側と会談",
+      what:"マルコ・ルビオ氏は10月8日、ウクライナでの戦争は危険な膠着状態にあると述べ、クレムリンのドミトリー・ペスコフ報道官は、ロシアも同意見だと述べた。ロイターとFinancialJuiceによると、スティーブ・ウィトコフ氏とジャレッド・クシュナー氏は金曜にマイアミでウクライナ側の代表者と会う予定で、ゼレンスキー大統領は、ウクライナの代表団が向かっていると述べた。ロイターによると、ロシアの爆撃でウクライナ東部の通りで33人が死亡した。ウクライナは、ロシア最大の製油所を攻撃したと述べ、ドローンはヤンデックスのデータセンターを襲った。英国は新たな制裁を発表し、エド・ミリバンド外相はキーウを訪れた。",
+      why:"ワシントンとモスクワの双方が戦争を膠着状態と呼ぶとき、議論は条件に移り、欧州は何を受け入れ、何を資金面で支えるのかを示さなければならなくなる。",
+      me:"和平が成立すれば、いずれエネルギーと安全保障のリスクは下がる。行き詰まったままなら、防衛費と物価は高いままになる。",
+      a:"話し合うことは膠着よりよい。マイアミでの会談は、協議が動いていることを示している。",
+      b:"ロシアは要求を変えておらず、「膠着状態」という言葉は、キーウに譲歩を迫るために使われうる。",
+      say:"実務レベルの協議は、合意ではない。欧州の政府が席に着いているか、そしてミリバンド氏の「根負けするのを待っても無駄だ」が何につながるかを見たい。",
+      src:"Reuters、FinancialJuice、GOV.UK、BBC、AP（2026年10月8日）"},
+    adhd:{kick:"医療 · 社会 · 報道照合 ✓ 3社",title:"政府のレビュー、ADHDと自閉症の大規模な過剰診断は確認されず　ただし、診断というレッテルを待たないと支援を受けられない仕組みが問題と指摘",
+      what:"ピーター・フォナギー教授が率いたレビューが、イングランドの精神保健、ADHD、自閉症のサービスについて報告した。子どもと若者の精神的な苦痛が大きく増え、現行の仕組みは不十分だと認めた。紹介と診断は急増したが、過剰診断が大規模に起きていると結論づけることはできなかった。ガーディアン紙はシステムの失敗の危険を、BBCは過剰診断の危険を強調した。報告書は、必要により早く応じることを勧めており、報道によると、ADHDと自閉症のすべての評価は、ケア品質委員会が規制することになる。",
+      why:"評価の待機者リストは長く、民間の提供者が増えている。閣僚は、この議論を疾病給付のコストと結びつけてきた。",
+      me:"あなたやお子さんが評価を待っているなら、待つあいだにどんな支援が受けられるか、かかりつけ医に尋ねよう。",
+      a:"評価を規制すれば、患者と公金が守られる。",
+      b:"臨床医を増やさない規制は、待ち行列を長くするだけだ。",
+      say:"試金石は、診断の前に支援が始まるかどうかだ。CQCによる規制の財源と日程を確認したい。",
+      src:"The Guardian、BBC、LBC、Healthcare Leader（2026年10月8〜9日）"},
+    microsoft:{kick:"テクノロジー · 移民 · 報道照合 ✓ 5社",title:"米国、H-1B労働者のグリーンカード申請支援の制度からマイクロソフトを停止　ヴァンス氏が明らかに",
+      what:"JD・ヴァンス副大統領は、マイクロソフトが、H-1Bビザの労働者のグリーンカードを申請できる制度から停止されていると述べた。AP通信、ロイター、BBC、FTがこれを報じ、ブルームバーグは、マイクロソフトを含むテクノロジー企業が影響を受けるとした。私たちが確認した報道では、理由は示されていない。同じ日、FinancialJuiceは、トランプ氏がサティア・ナデラ最高経営責任者をほめたと報じた。",
+      why:"H-1Bは、熟練した外国人労働者が米国のテクノロジー業界に入る主な経路で、グリーンカードは、彼らが長期にとどまれるようになる一歩だ。",
+      me:"直接の影響は、米国で働く人々にある。英国を拠点とするテクノロジー職にとっては、米国で長期のキャリアを築く主な経路の一つが狭まる。",
+      a:"この制度は、国内の雇用を安く置き換えるために使われてきたと、支持する側は言う。",
+      b:"主要な雇用主を締め出せば、人材と投資がほかへ流れると、批判する側は言う。",
+      say:"ほかのどの企業が含まれるのか、法的な根拠があるのかを確かめたい。理由こそが、欠けている事実だ。",
+      src:"AP、Reuters、BBC、Financial Times、Bloomberg、FinancialJuice（2026年10月8日）"}
+  };
+
+  const G = {
+    "中間選挙":{f:"政治",d:"大統領の4年の任期の中間に行われる米国の選挙。下院の全議席と、上院の3分の1の議席が争われる。",w:"トランプ氏は、11月3日のこの選挙の前にイランを攻撃しないと述べた。"},
+    "ホルムズ海峡":{f:"地理",d:"イランとオマーンの間にある狭い海路。世界の原油の約5分の1が通る。",w:"イランは、ここを通る航路をさらに封鎖すると表明した。"},
+    "ブレント":{f:"市場",d:"原油の主要な国際指標価格。北海産の油種で決まる。",w:"1バレル104.28ドルで清算された。"},
+    "WTI":{f:"市場",d:"ウェスト・テキサス・インターミディエイト。米国の原油の指標価格。",w:"91.49ドルで清算された。"},
+    "フーシ派":{f:"世界",d:"イランが支援するイエメンの武装勢力。国の北部の大半を支配し、船舶や湾岸の標的を攻撃してきた。",w:"サウジの空港への攻撃を受け、航空会社がリヤド便を運休した。"},
+    "ギルト":{f:"市場",d:"英国政府が資金を借りるために発行する国債。価格が下がると、利回りは上がる。",w:"木曜は、主要国の国債のなかでも最も弱い部類だった。"},
+    "ベーシスポイント":{f:"市場",d:"1パーセントポイントの100分の1。100ベーシスポイントが1パーセントポイントにあたる。",w:"5年物ギルトの利回りは約7ベーシスポイント上昇した。"},
+    "短期金融市場":{f:"市場",d:"銀行や機関投資家が短い期間で資金を貸し借りする卸売の市場。その値付けは、金利について市場参加者が何を予想しているかを示す。",w:"11月までにイングランド銀行が約23ベーシスポイントの利上げをすると織り込んでいる。"},
+    "年率換算":{f:"経済",d:"短い期間の数字を1年分に引き伸ばしたもの。年間の数字と比べられるようにする。",w:"FTは、オープンAIの年率換算の売上高は、示されていた水準より低いと報じた。"},
+    "30年債入札":{f:"市場",d:"米財務省が30年債を投資家に売る入札。需要が弱いと利回りが上がる。",w:"需要が堅調で、米国債は買われた。"},
+    "2023年国家安全保障法":{f:"法",d:"スパイ行為、破壊工作、外国勢力のための活動を対象とする、2023年制定の英国の法律。",w:"水兵は、この法に基づく2つの罪で起訴されている。"},
+    "ダークウェブ":{f:"テクノロジー",d:"特殊なソフトを通じてしか接続できないインターネットの領域。匿名の活動によく使われる。",w:"潜在的な脅威となる主体に接触しようとして、これを使ったとされる。"},
+    "勾留":{f:"法",d:"裁判所が、保釈ではなく、次の審理まで身柄を拘束しておくこと。",w:"ヤング容疑者は、10月16日まで勾留されている。"},
+    "膠着状態":{f:"世界",d:"どちらの側も前に進めない状態。",w:"ルビオ氏とクレムリンは、ウクライナについてどちらもこの言葉を使っている。"},
+    "制裁":{f:"世界",d:"ある国が、他国の人、企業、物品に科す罰則。資産凍結や貿易禁止など。",w:"英国は、ロシアの資金、原油、サプライチェーンに対する新たな制裁を発表した。"},
+    "過剰診断":{f:"医療",d:"診断を受けても利益にならない人に、病名をつけてしまうこと。",w:"報告書は、これが大規模に起きていると結論づけることはできないとした。"},
+    "ケア品質委員会":{f:"医療",d:"イングランドの医療と社会的ケアの独立した規制機関。",w:"報道によると、ADHDと自閉症のすべての評価を規制することになる。"},
+    "H-1B":{f:"法",d:"熟練した外国人労働者向けの米国のビザ。テクノロジー分野に多く、グリーンカードにつながりうる。",w:"マイクロソフトは、保有者を支援するこの制度から停止された。"},
+    "グリーンカード":{f:"法",d:"米国に永住して働くための許可。",w:"この停止で、マイクロソフトはH-1Bの社員のためにこれを申請できなくなる。"},
+    "グリーンカード申請支援":{f:"法",d:"雇用主が外国人労働者のために米国の永住権（グリーンカード）を申請してあげること。",w:"マイクロソフトは、H-1B労働者のグリーンカード申請支援の制度から停止された。"},
+    "ドミトリー・ペスコフ":{f:"人物",d:"ウラジーミル・プーチン露大統領の報道官。",w:"ロシアも戦争が膠着状態に達したという点で同意見だと述べた。"},
+    "スティーブ・ウィトコフ":{f:"人物",d:"トランプ大統領の特使を務める米国の不動産開発業者。",w:"金曜、マイアミでジャレッド・クシュナー氏とともにウクライナ側と会談する。"},
+    "ジャレッド・クシュナー":{f:"人物",d:"トランプ大統領の娘婿である米国の実業家で、非公式の特使役を務めてきた。",w:"スティーブ・ウィトコフ氏とともにマイアミでウクライナ側と協議する。"},
+    "ヤンデックス":{f:"テクノロジー",d:"検索エンジンとクラウドサービスで知られるロシアのIT企業。",w:"ドローンが同社のデータセンターを襲った。"},
+    "データセンター":{f:"テクノロジー",d:"オンラインのデータやサービスを保存・処理するコンピューターとネットワークを収めた建物。",w:"ヤンデックスのデータセンターへの攻撃は、ロシアのデータ拠点への初の大規模攻撃だった。"},
+    "ピーター・フォナギー":{f:"人物",d:"ユニバーシティ・カレッジ・ロンドンの精神分析学・発達科学の教授。",w:"イングランドの精神保健、ADHD、自閉症のサービスに関する独立レビューを率いた。"},
+    "ADHD":{f:"医療",d:"注意、衝動の制御、活動量に影響する注意欠如・多動症。",w:"レビューは大規模な過剰診断は確認されなかったが、レッテルを待たせる仕組みが問題だとした。"},
+    "永住権":{f:"法",d:"国民でなくても、その国に無期限に住める権利。",w:"FTは、外国人労働者の永住権取得の支援を禁じるものだと表現した。"},
+    "サティア・ナデラ":{f:"人物",d:"2014年からマイクロソフトを率いる最高経営責任者。",w:"トランプ氏は、同社を一変させたとほめた。"},
+    "チポトレ":{f:"企業",d:"ブリトーやボウルで知られる米国のファストフードチェーン。",w:"スターバックスの買収検討の報道で株価が急伸した。"},
+    "スペースX":{f:"テクノロジー",d:"イーロン・マスク氏が創業した米国の宇宙・衛星企業で、スターリンク・インターネットも運営する。",w:"携帯電話の通信網向けに低周波数帯の免許を購入する予定。"},
+    "低周波数帯の免許":{f:"通信",d:"携帯電話などのサービスのため、電波の一部を使う許可を政府が与えるもの。",w:"スペースXが低周波数帯の免許を購入する。"},
+    "エルニーニョ":{f:"気象",d:"数年おきに太平洋の海面水温が上がり、世界の天候を乱す自然現象。",w:"国連の気象機関は、強まって2027年2月まで続くと予想している。"},
+    "ハーヴェイ・ニコルズ":{f:"企業",d:"英国の高級百貨店チェーン。",w:"1月にバーミンガム店を閉店する。"},
+    "UKHSA":{f:"政府",d:"感染症などの公衆衛生上の脅威を監視する英国健康安全保障庁（UKHSA）。",w:"インフルエンザの流行はシーズン初めとして低水準だが、過去4年よりは高いと発表した。"},
+    "ニコラス・マドゥロ":{f:"人物",d:"ベネズエラの前大統領。",w:"妻とともに拷問の疑いで米国で起訴された。"},
+    "ヴァンス":{f:"人物",d:"米国のJD・ヴァンス副大統領。",w:"マイクロソフトがH-1B労働者のグリーンカード申請を支援する制度から停止されると明らかにした。"},
+    "AI投資":{f:"テクノロジー",d:"企業や政府が人工知能のコンピューティングやソフトウェアにつぎ込む資金。",w:"ブルームバーグはハイテク株の下げをAI投資への不安と結びつけた。"},
+    "数十年ぶりの高水準":{f:"市場",d:"数十年間見られなかった水準。",w:"ギルト利回りは数十年ぶりの高水準近くにとどまる。"},
+    "国防総省":{f:"防衛",d:"本部の建物の名にちなむ米国防総省（ペンタゴン）。",w:"ニューヨーク・タイムズは3日間の攻撃の新たな計画をまとめたと報じたが、第2の報道機関の裏付けはない。"},
+    "マスウード・ペゼシュキアン":{f:"人物",d:"2024年に選ばれたイランの大統領。",w:"テヘランは交渉の席を離れないと述べた。"},
+    "ISNA":{f:"メディア",d:"イラン学生通信で、半官半民のイランの通信社。",w:"ペゼシュキアン大統領の発言を伝えた。"},
+    "リヤド":{f:"地名",d:"サウジアラビアの首都。",w:"空港で爆発、煙、避難があったと報じられた。"},
+    "精製":{f:"エネルギー",d:"原油をガソリン、軽油、ジェット燃料などの燃料に変える工業プロセス。",w:"ブルームバーグによると、日量約50万バレルの精製能力が危うい。"},
+    "トタルエナジーズ":{f:"企業",d:"フランスの多国籍石油・ガス企業。",w:"最高経営責任者が原油価格を「法外だ」と評した。"},
+    "FTSE100":{f:"市場",d:"ロンドン証券取引所に上場する時価総額上位100社の株価指数。",w:"石油生産企業の比重が大きい指数としては小幅な0.16%安で引けた。"},
+    "5年物の利回り":{f:"市場",d:"現在の価格で5年物国債が生む年間の利回り。",w:"約7ベーシスポイント上昇して5.05%となった。"},
+    "ポンド":{f:"市場",d:"英国の通貨で、正式名称はポンド・スターリング。",w:"1.3228ドル付近で終えた。"},
+    "S&P500":{f:"市場",d:"米国の大企業500社の株価指数で、米国株式市場の標準的な指標。",w:"0.47%安の7,765.36だった。"},
+    "ナスダック":{f:"市場",d:"テクノロジー企業が中心の米国の証券取引所および株価指数。",w:"1.25%安の27,193.34だった。"},
+    "オープンAI":{f:"テクノロジー",d:"ChatGPTを手がける米国の人工知能企業。",w:"FTは、年率換算の売上高が従来示された水準より200億ドル少ないと報じた。"},
+    "国債の利回り":{f:"市場",d:"現在の価格で米国債が生む年間の利回りで、世界の借り入れの基準。",w:"10年物の利回りは4.6ベーシスポイント低下して5.231%となった。"},
+    "FRB":{f:"経済",d:"米国の中央銀行である連邦準備制度理事会で、米国の政策金利を決める。",w:"当局者の一人が利上げが必要だと述べた。"},
+    "ムサレム":{f:"人物",d:"アルベルト・ムサレム、セントルイス連邦準備銀行総裁。",w:"今後6〜9か月で利上げが必要だと述べた。"},
+    "ウォラー":{f:"人物",d:"クリストファー・ウォラー、連邦準備制度理事会（FRB）理事。",w:"追加の利上げが必要だと述べた。"},
+    "ユーロ圏":{f:"経済",d:"ユーロを通貨とするEU加盟国の集まり。",w:"財務相らがフランスに2027年度予算を成立させるよう求める見通し。"},
+    "バルディス・ドンブロフスキス":{f:"人物",d:"EUの経済・生産性担当の欧州委員で、ラトビアの元首相。",w:"スプレッドは意識しているが、警戒はしていないと述べた。"},
+    "スプレッド":{f:"市場",d:"フランスとドイツの国債など二つの債券の利回りの差で、投資家が見る借り手のリスクを示す。",w:"フランスの不安の兆しを探るため注視されている。"},
+    "国家安全保障法":{f:"法",d:"スパイ行為、破壊工作、外国情報機関への協力を犯罪とする2023年の英国の法律。",w:"この法に基づく2つの罪で起訴された。"},
+    "保護情報":{f:"法",d:"開示すれば国家の安全を害しうる情報で、2023年国家安全保障法が扱う。",w:"これを入手し、開示を準備した罪に問われている。"},
+    "脅威となる主体":{f:"安全保障",d:"敵対的な国家やハッカーなど、サイバーや安全保障上の脅威となる個人や集団。",w:"ダークウェブで接触しようとしたとされる。"},
+    "勾留されている":{f:"法",d:"裁判の合間に、保釈せずに刑事施設に身柄を置いておくこと。",w:"10月16日にロンドンで開かれる次の審理まで勾留されている。"},
+    "王立検察局":{f:"法",d:"イングランドとウェールズで、警察が送致した事件を起訴するかどうか決める機関（CPS）。",w:"戦闘情報担当の下士官兵で、高度な保全許可を得ていたと述べた。"},
+    "戦闘情報担当の下士官兵":{f:"防衛",d:"海軍の作戦のため情報を分析する英海軍の下級職。",w:"王立検察局は、この職にあったと述べた。"},
+    "保全許可":{f:"安全保障",d:"機密情報を閲覧できるようにする公的な身元審査。",w:"王立検察局は、高度な保全許可を得ていたと述べた。"},
+    "ホルボーン・アンド・セントパンクラス":{f:"政治",d:"ロンドン・カムデンにある下院の選挙区で、以前はキア・スターマー氏が議席を持っていた。",w:"投票が終了し、15人が立候補した。"},
+    "補欠選挙":{f:"政治",d:"総選挙の合間に議員が辞職・死亡・失職した際、一つの選挙区で行う選挙。",w:"結果は未明に出る見通しだった。"},
+    "RTÉ":{f:"メディア",d:"アイルランドの公共放送、ラジオ・テイリフィス・エアラン（RTÉ）。",w:"補欠選挙に15人が立候補したと報じた。"},
+    "フォートフッド":{f:"防衛",d:"テキサス州にある米陸軍の大きな基地。",w:"2009年のここでの銃撃事件でニダル・ハサンが有罪となった。"},
+    "銃殺刑":{f:"法",d:"兵士や警察官が複数で死刑囚を撃つ死刑の執行方法。",w:"国防総省は、執行をライブ配信すると発表した。"},
+    "ニダル・ハサン":{f:"人物",d:"13人が死亡した2009年のフォートフッド銃撃事件で有罪となった元米陸軍の精神科医。",w:"国防総省は、銃殺刑の執行をライブ配信すると発表した。"},
+    "資金洗浄対策":{f:"法",d:"犯罪に関わる疑わしい資金を見つけて報告するよう企業に求める規則と点検。",w:"同社のプログラムは不十分とされた。"},
+    "資金洗浄":{f:"法",d:"犯罪で得た金の出どころを隠して、合法に見せかけること。",w:"同社は疑わしい事例を報告しなかった。"},
+    "強制措置":{f:"規制",d:"規制当局が企業に規則違反を正すよう求める公式の措置で、罰金を伴うことが多い。",w:"FRBがアメリカン・エキスプレスに対して発表した。"},
+    "停止分":{f:"エネルギー",d:"ハリケーンに備えるときなどに、油井やプラットフォームを一時的に閉鎖すること、またその量。",w:"MMAは、米メキシコ湾の原油の停止分を生産量の63%とした。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

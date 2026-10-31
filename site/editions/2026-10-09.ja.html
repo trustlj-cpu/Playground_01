@@ -1,0 +1,506 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>6,625.93</b>KOSPI · 10/8 終値 · −2.62% · きょうはハングルの日で休場、次の営業日は12日月曜日</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>1,338.5ウォン</b>ウォン/ドル · 10/8 ソウル終値 · 1.9ウォン下落 · 夜間取引は1,342ウォン台</div>
+    </div>
+    <div class="dateline"><span>第5号 · 朝刊</span><b>2026年10月9日 金曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="oil">
+      <div class="kick">国際・市場<span>報道照合 ✓ 5社 · 原油・指数は相場データ · 空港攻撃はフーシ派側の主張</span></div>
+      <h2 class="hl">フーシ派のミサイルとホルムズ攻撃でブレント原油105ドル。トランプ氏「選挙前にイラン攻撃せず」でもNY株は下落</h2>
+      <p class="deck">リヤド空港が攻撃されたとの主張を受け、航空各社が路線を止めた。韓国株式市場はきょうハングルの日で休場、前夜の衝撃は12日月曜日の寄り付きにまとめて反映される</p>
+      <div class="body">
+        <p>前夜、国際原油価格が再び跳ね上がった。北海産ブレント原油は8日（現地時間）、1バレル=105ドルを超え（ブルームバーグ）、西テキサス産原油（WTI）は91ドル台で3%台上昇した。火種は湾岸の各地で同時に上がった。イエメンのフーシ派は、サウジアラビアの首都リヤドのキング・ハリド国際空港を弾道ミサイルで攻撃したと主張した。サウジ主導の連合軍はミサイル2発を迎撃したと発表したが、空港から煙が上がる様子が目撃され、ルフトハンザやインドの航空会社がリヤド路線を止めた（ロイター・AP）。サウジの空港で足止めされた韓国人旅行者も出た。ホルムズ海峡では、イランによるタンカー攻撃が数カ月ぶりに再び増えたとの報道が出た（ワシントン・ポスト）。米国防総省が中央軍にイランへの大規模作戦の再開準備を指示したとの報道も続いた。トランプ大統領はこの日、SNSに「11月3日の中間選挙の前には、いかなる場合もイランを攻撃しない」と書いた。イランと「生産的な協議」をしているとしながらも、海上封鎖はそのまま維持すると述べた。</p>
+        <p>ニューヨーク株式市場は、原油高と金利の重荷で主要3指数がそろって下げた。S&P500は0.61%、ハイテク株中心のナスダックは1.37%下落した。オープンAIが投資家に年換算売上高およそ500億ドルを伝えたとの報道の後、エヌビディアやオラクルなどAI関連株が軟調だった（CNBC）。米10年物国債の利回りは5.2%台にとどまった。アジア各国は原油の備蓄を急いでいる（ロイター）。原油が上がれば物価が上がり、そうなればFRBがさらに利上げしうるとの懸念が、株式と債券をともに揺らした。韓国株式市場はきょう休場だ。KOSPIは昨日、サムスン電子の過去最高の業績にもかかわらず2.62%下げ、6,625.93で取引を終えた。前夜の原油高とニューヨーク株安は、次の営業日である12日月曜日の寄り付きに反映される。原油をほぼ全量輸入する韓国では、原油価格が為替、物価、企業コストへと一度に波及する。トランプ氏の「攻撃保留」の約束が実際に緊張を抑えるのか、フーシ派とホルムズが原油価格を押し上げ続けるのかが、週末の見どころだ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>$105+</b><span>ブレント原油。8日に1バレル=105ドルを超えた（ブルームバーグ）</span></div>
+        <div><b>+3.6%</b><span>WTI。1バレル=91.48ドルに上昇した</span></div>
+        <div><b>5.23%</b><span>米10年物国債の利回り。5%台の高金利が続く</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="nobel">
+      <div class="kick">文化・文学<span>報道照合 ✓ 6社 · 選考理由はアカデミーの発表</span></div>
+      <h3 class="hl">ノーベル文学賞にカナダの詩人アン・カーソン氏。感想は「みんなどうかしてますね」</h3>
+      <div class="one">
+        <p>カナダの詩人アン・カーソン氏（76）が8日、2026年のノーベル文学賞の受賞者として発表された。スウェーデン・アカデミーは、古典の伝統と遊び心をもって対話しながら現代文学の新しい形式を生み出した「大胆で創造的な作品世界」を理由に挙げた。カーソン氏は古代ギリシャ文学を教えてきた古典学者でもある。詩と散文、翻訳、パフォーマンスの境界を行き来する書き方で知られる。代表作には『Eros the Bittersweet』『Autobiography of Red』、亡くなった兄を悼む『Nox』が挙げられる。受賞の知らせが届いたとき、氏はアイスランドで「風の音を聞いて」いて、感想を問われると「みんなどうかしてますね」と答えた。イタリアのANSA通信は、氏が賞金を寄付すると語ったと伝えた。詩人の受賞は2020年のルイーズ・グリュック氏以来、カナダの作家の受賞は2013年のアリス・マンロー氏以来初めてだ。エル・ムンドのインタビューでは「みんなが忙しい今は、短い詩のほうが散文より役に立つ」と語った。2024年の受賞者ハン・ガン（韓江）氏は『Nox』に「胸に染みるほど真実なもの」という推薦の言葉を寄せたことがある。マーク・カーニー・カナダ首相は「カナダの誇らしい瞬間」と祝意を示した。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>スウェーデン・アカデミー<i>文化</i></b><p>1786年に創設された学術機関で、終身会員18人が毎年ノーベル文学賞の受賞者を選ぶ。選考の過程は50年間公開しない。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="hgv"><b>国産の極超音速滑空飛翔体、初の試験発射に成功</b><em>李在明大統領が視察した。北朝鮮の地雷爆発とミサイル挑発の後、政府が電撃的に公開した。</em><span>安全保障 · ✓ 報道5件</span></div>
+      <div class="it story" tabindex="0" data-id="cptpp"><b>李大統領「CPTPPの年内加入申請はするな」</b><em>再検討の指示から2日での見送り。農地調査で強まった農漁民の反発を意識した。</em><span>通商 · ✓ 報道5件</span></div>
+      <div class="it story" tabindex="0" data-id="wto"><b>WTO、今年の物品貿易の伸び率を3.9%に上方修正</b><em>3月の見通し（1.9%）の2倍。AI投資が中東戦争による混乱を埋めた。サービス貿易の見通しは引き下げた。</em><span>世界経済 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="coupang"><b>クーパン・クーパンイーツ、深夜に接続障害</b><em>9日未明、アプリにつながらなくなった。会社は「システムエラー」として原因を調べている。</em><span>生活 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="jobs"><b>米新規失業保険申請19万7000件</b><em>予想（20万件）を下回り、7月以降で最低。雇用が持ちこたえれば、利上げ圧力も残る。</em><span>米国経済 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="visa">
+      <div class="kick">米国・移民<span>報道照合 ✓ 5社 · 悪用の主張はバンス副大統領の発言</span></div>
+      <h3 class="hl">米国、MSの外国人社員の永住権申請を阻止。バンス氏「米国人を雇え」</h3>
+      <div class="body">
+        <p>米政権は8日、マイクロソフト（MS）を、雇用主基盤の永住権手続きの第一段階である労働許可（PERM）プログラムから排除した。JD・バンス副大統領は記者会見で、MSが米国人社員を減らしながらビザ制度を悪用したと主張した。排除は「必要な限り」続くとした。アドビなど他のテック企業も対象に挙がったとの報道がある。</p>
+        <p>バンス氏はH-1BやJ-1のビザ制度も見直すとした。米国のテック企業で働きながら永住権を待つ外国人材、その中でも韓国人エンジニアに直接関わる決定だ。MSの公式な対応はまだ確認されていない。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="ukr">
+      <div class="kick">外交<span>報道照合 ✓ 5社 · 外交部発表に帰属</span></div>
+      <h3 class="hl">政府、駐ウクライナ大使を召還。「北朝鮮軍捕虜」めぐる対立で18年ぶりの強い措置</h3>
+      <div class="body">
+        <p>政府は8日、パク・ギチャン（박기창）駐ウクライナ大使を本国に呼び戻すことにした。ゼレンスキー大統領が北朝鮮軍捕虜の韓国送還を公表すると、政府は非公開の合意を破ったとして公開の謝罪を求め、ウクライナが応じないため抗議の水準を引き上げた。相手国に駐在する大使の召還は、2008年に独島の教科書問題で駐日大使を呼び戻して以来、18年ぶりだ。</p>
+        <p>ウクライナ外務省の報道官は「外交は感情に先立つべきだ」として、対話の再開に前向きだと述べた。外交部も「協議を続ける」と明らかにしており、大使の召還が関係断絶に向かう手順というわけではない。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="tsmc">
+      <div class="kick">半導体<span>報道照合 ✓ 4社 · 売上高は会社発表に帰属</span></div>
+      <h3 class="hl">TSMCの7〜9月期売上高が50%増え過去最高。サムスンと同じ日、市場の反応も同じだった</h3>
+      <div class="body">
+        <p>世界最大のファウンドリーTSMCが8日に発表した7〜9月期の売上高は約1兆4942億台湾ドル（約62兆8000億ウォン）で、四半期ベースで過去最高だ。1年前より約50%増え、LSEG集計の市場予想（1兆4600億台湾ドル）を上回った。エヌビディアなど顧客企業のAI半導体の注文が増えたおかげだ。同じ日、米グローバルファウンドリーズは、TSMCにAIチップ向けのシリコン・インターポーザーを供給する20億ドル規模の契約を結んだ。</p>
+        <p>サムスン電子も同じ日に四半期営業利益107兆ウォンを発表したが、両社とも株価の反応は鈍かった（ブルームバーグ）。数字は記録的なのに、市場は借金で支えられたAI投資ブームがどこまで続くかをより心配した。今月の決算説明会で示される来年の設備投資計画が、次の確認ポイントだ。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>スターバックスがメキシコ料理チェーンのチポトレの買収を検討したとのFT報道が出た。成立すれば外食業界で過去最大の取引になる<span>FT・ロイター</span></li>
+        <li>ゴールドマン・サックスの最高経営陣に渡る特別ボーナスが5億ドルを超える見通しだ。原油高の中、ウォール街の報酬をめぐる論争が大きくなりうる<span>FT・ブルームバーグ</span></li>
+        <li>イタリアのメローニ首相が、勝者に議席を上積みする選挙法改正案を通した。否決されれば辞任すると賭けていた勝負だった<span>ロイター・ガーディアン</span></li>
+        <li>ウクライナが、ロシア最大の製油施設であるオムスク製油所を攻撃したと明らかにした。原油が跳ねた日に、供給不安がまた一つ加わった<span>ロイターほか</span></li>
+        <li>米財務省が、イラン産原油を運んだ船舶17隻を制裁した。海上封鎖と合わせて、イランの原油輸出の道を狭める措置だ<span>ロイターほか</span></li>
+        <li>クーパンが、個人情報流出などで受けた6200億ウォン台の課徴金に不服として行政訴訟を起こし、執行停止も申請した。法廷闘争が長引く<span>聯合・韓国経済</span></li>
+        <li>米検察が、ベネズエラのマドゥロ氏と妻フローレス氏を米国市民への拷問容疑で追加起訴した。圧力が法廷に及んだ<span>ロイター・ブルームバーグ</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「米国がまもなくイランを再び攻撃する」</b> <span>国防総省の準備指示の報道はあったが、トランプ氏は11月3日の中間選挙前の攻撃はないと明言した。封鎖は維持。</span></div>
+        <div><b>「金融機関を狙ったハッカーは広東省の26歳の中国人」</b> <span>名指しされた当人は「番号の盗用」を主張した。警察もその可能性を排除していない。身元は未確定。</span></div>
+        <div><b>「クーパンのダウンはまたハッキングのせい」</b> <span>根拠なし。会社はシステムエラーとして原因を調べているとした。ハッキングの形跡は発表されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>10/9 金</b><span>ハングルの日、国内株式市場は休場。午後6時（韓国時間）にノーベル平和賞の発表。崔泰源SK会長が、半導体用地の候補である光州の軍空港を訪れる。</span><b>週末</b><span>フーシ派・ホルムズの動向と原油価格。「選挙前の攻撃なし」の約束が市場を落ち着かせるか。</span><b>読者へ</b><span>KOSPIは3日休み、12日月曜日に再開する。その間にたまった海外の変数が、寄り付き一度に入ってくる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    oil:{kick:"国際・市場 · 報道照合 ✓ 5社 · 原油・指数は相場データ · 空港攻撃はフーシ派側の主張",title:"フーシ派のミサイルとホルムズ攻撃でブレント原油105ドル。トランプ氏「選挙前にイラン攻撃せず」でもNY株は下落",
+      what:"8日（現地時間）、ブレント原油が1バレル=105ドルを超えた（ブルームバーグ）。西テキサス産原油（WTI）は1バレル=91.48ドルで3.6%上昇した。イエメンのフーシ派はリヤドのキング・ハリド国際空港を弾道ミサイルで攻撃したと主張し、サウジ主導の連合軍はミサイル2発を迎撃したと発表した。空港では煙が目撃され、ルフトハンザやエア・インディアなどインドの航空会社がリヤド路線を中止した（ロイター・AP・ヒンドゥスタン・タイムズ）。ワシントン・ポストは、イランがホルムズ海峡で攻撃を増やしていると報じ、米国防総省が中央軍に大規模作戦の再開準備を指示したとの報道も出た。トランプ大統領はトゥルース・ソーシャルに「11月3日の中間選挙の前にはイランを攻撃しない」と書き、イランと生産的な協議をしているとした。対イラン海上封鎖は維持するという。ニューヨーク株式市場は、原油高と金利の重荷で主要3指数がそろって下げた。S&P500は0.61%、ハイテク株中心のナスダックは1.37%下落した。",
+      why:"原油は物価に、物価は金利につながる。米国ではFRBの追加利上げの可能性が取り沙汰される中、米10年物国債の利回りが5.2%台にある。ガソリン代が再び上がれば利上げの論理が強まり、高い金利はAIブームで上がったハイテク株の値札を削る。前夜のニューヨークで、原油・金利・AI株が同じ方向に動いた理由だ。トランプ氏の「攻撃保留」は、米国が先に戦線を広げないという意味にすぎず、フーシ派とイランの攻撃まで止める約束ではない。",
+      me:"韓国株式市場はきょうハングルの日で休場、12日月曜日に再開する。3日間にたまった海外の変数が一度に反映される。ガソリン・軽油の価格は、国際製品価格に2〜3週間の時差で追随する傾向がある。航空券の燃油サーチャージも、原油価格に合わせて毎月調整される。",
+      a:"トランプ氏が選挙前の攻撃を自ら除外した。米国発の戦線拡大のリスクは下がった。供給の混乱が実際の物量の減少につながらなければ、原油価格は再び下がりうる。",
+      b:"攻撃の主体は米国ではなく、フーシ派とイランだ。サウジの空港とホルムズが同時に揺れている状況で、「米国は攻撃しない」という言葉は供給不安を減らせない。封鎖の維持は、緊張が続くという意味だ。",
+      say:"きょう市場が休みなのは、韓国の投資家にとって得ではない。衝撃を分けて受けられず、月曜日にまとめて受ける。週末のあいだに見る数字は二つある。ブレント原油が105ドルの上にとどまるか、そしてリヤド路線の運休がほかの航空会社に広がるか。どちらもそうなら、月曜日のKOSPIは金曜休場の代価を払うことになる。",
+      src:"ブルームバーグ（ブレント105ドル、10/8） · ロイター（ルフトハンザ・インドの航空会社のリヤド運航中止、トランプ氏の発言、10/8） · AP（フーシ派のリヤド空港攻撃の主張、10/8） · ワシントン・ポスト（ホルムズ攻撃、10/8） · 聯合ニュース・東亜日報・朝鮮日報（トランプ氏のトゥルース・ソーシャル、国防総省の準備指示の報道、10/8〜9） · CNBC（オープンAIの売上高報道・AI株） · 指数・原油・金利：相場データ"},
+    nobel:{kick:"文化・文学 · 報道照合 ✓ 6社 · 選考理由はアカデミーの発表",title:"ノーベル文学賞にカナダの詩人アン・カーソン氏。感想は「みんなどうかしてますね」",
+      what:"スウェーデン・アカデミーは8日、2026年のノーベル文学賞の受賞者として、カナダの詩人でエッセイスト、翻訳家のアン・カーソン氏（76）を発表した。選考理由は、古典の伝統と遊び心をもって対話しながら現代文学の新しい形式を生み出した、大胆で創造的な作品世界だ。カーソン氏は古代ギリシャ文学を研究・講義してきた古典学者で、詩・散文・翻訳・パフォーマンスを行き来する。代表作は『Eros the Bittersweet』、『Autobiography of Red』、兄を悼んだ『Nox』などだ。発表の当時アイスランドにいた氏は、感想を問われると「みんなどうかしてますね」と答えた。ANSA通信は、氏が賞金を寄付すると語ったと伝えた。エル・ムンドは、詩人の受賞が2020年のルイーズ・グリュック氏以来だと指摘した。",
+      why:"ノーベル文学賞は、2年前のハン・ガン（韓江）氏の受賞以降、韓国の読者にぐっと身近な賞になった。カーソン氏は、ジャンルを混ぜ、古典を今の言葉で書き直す作家だ。アカデミーが小説ではなく境界に立つ詩人を選んだのは、「文学の形式」そのものを評価した選択と読める。",
+      me:"ハン・ガン氏は『Nox』に「胸に染みるほど真実なもの」という推薦の言葉を寄せた（ハンギョレ）。国内で翻訳されたカーソン氏の本があるので、書店での需要が増える可能性が高い。初めて読むなら、短い詩と散文が混ざった本から勧める評が多い。",
+      a:"古典と現代をつなぐ仕事は、翻訳不可能に見えるものを移す作業だ。アカデミーが大衆性より形式の革新を選んだのは、賞の本来の趣旨に合っている。",
+      b:"カーソン氏は英米圏の文壇で長く有力候補だった。「新しい形式」という評価とは裏腹に、結果的にはまた一人、英語圏の作家が受賞したという指摘も出うる。",
+      say:"カーソン氏の感想は短く、冗談のようだった。その短さが氏の詩に似ている。エル・ムンドのインタビューで氏は、みんなが忙しい今は詩のほうが散文より役に立つと語った。7分で読める一面をつくる私たちにも響く言葉だ。きょう午後6時には平和賞が発表される。",
+      src:"スウェーデン・アカデミー発表の引用（ジャパンタイムズ・SRF・スミソニアン、10/8） · 聯合ニュース（受賞の感想・経歴、10/8〜9） · ANSA（賞金の寄付、10/8） · エル・ムンド（グリュック氏以来の詩人、10/8） · ハンギョレ（ハン・ガン氏の推薦の言葉） · シドニー・モーニング・ヘラルド（アイスランド）"},
+    hgv:{kick:"安全保障 · 報道照合 ✓ 5社 · 青瓦台発表に帰属",title:"国産の極超音速滑空飛翔体、初の試験発射に成功",
+      what:"青瓦台は8日、李在明大統領が、国内技術で開発中の極超音速滑空飛翔体（HGV）の初の試験発射を視察したと明らかにした。推進体で大気圏上層まで上がった後に分離し、低い高度で滑空する兵器で、軌道を変えながら飛ぶため迎撃が難しい。青瓦台は、軌道変更などの飛行を正確にこなしたと明らかにした。李大統領は「われわれの安全保障は、自らの力で確保するものだ」と述べた。北朝鮮が非武装地帯の地雷爆発を「自作自演」と非難し、3日に極超音速ミサイルを発射してから5日での公開だ。",
+      why:"これまで秘密裏に開発してきた兵器を公開したこと自体が、北朝鮮に送る信号だ。ロシア・中国・米国に続き、韓国も迎撃網を突破する型の兵器を備える段階に入ったとの評価が出ている（東亜日報）。",
+      me:"実戦配備までには追加の試験が残っている。射程など具体的な性能は公開されていない。",
+      a:"",b:"",
+      say:"「初の試験成功」と「戦力化」のあいだには、普通は数年かかる。公開の時期が北朝鮮の挑発の直後だという点が、今回の発表の重みを決める。北朝鮮の反応を見よう。",
+      src:"聯合ニュース・東亜日報・京郷新聞・韓国経済新聞・SBS（青瓦台の書面ブリーフィングの引用、10/8〜9）"},
+    cptpp:{kick:"通商 · 報道照合 ✓ 5社 · 青瓦台発表に帰属",title:"李大統領「CPTPPの年内加入申請はするな」",
+      what:"李在明大統領は8日、環太平洋パートナーシップに関する包括的及び先進的な協定（CPTPP）の年内の加入申請をしないよう指示した。6日の閣議で再検討を指示してから2日でのことだ。青瓦台は、11月のCPTPP閣僚会合で韓国の加入を議論するには、遅くとも10月中旬までに公聴会の計画を官報で告知する必要があるとの意見があったと説明した。大統領は「期限を決めず、農漁民と十分に対話せよ」と述べた。",
+      why:"CPTPPは、日本・カナダ・オーストラリアなどが参加する大型の貿易協定だ。加入すれば、農畜水産物市場の開放幅が広がる。農地の全数調査で農民の不満が高まった状況で、政府は速度を落とした。",
+      me:"輸出企業には、加入の遅れは機会損失だという分析もある（韓国経済新聞）。逆に農漁民にとっては、目先の開放の負担が先送りされた。",
+      a:"",b:"",
+      say:"今回は4度目の加入試みの急ブレーキだ。次の節目は来年の閣僚会合だ。それまでに農漁民対策が具体的な数字で出るかを見よう。",
+      src:"聯合ニュース・東亜日報・京郷新聞・毎日経済新聞・韓国経済新聞（10/8〜9） · 毎日新聞（10/8）"},
+    wto:{kick:"世界経済 · 報道照合 ✓ 4社 · WTO発表に帰属",title:"WTO、今年の物品貿易の伸び率を3.9%に上方修正",
+      what:"世界貿易機関（WTO）は、今年の世界の物品貿易の伸び率の見通しを3.9%に引き上げた。3月の見通し1.9%の2倍だ。来年の見通しは4.1%である。AI関連の投資と機器の貿易が、中東戦争による混乱を相殺したとの説明だ。一方、サービス貿易の見通しは、運輸・旅行の混乱で3.3%に下げた。今年の世界経済の成長率は2.6%とみた。",
+      why:"半導体やサーバーのようなAI機器が、世界の貿易を引っ張っているという意味だ。韓国の輸出構造と同じ方向である。",
+      me:"韓国の輸出好調の背景を、国際機関の数字で確かめた形だ。ただし、一つの業種に偏った成長である。",
+      a:"",b:"",
+      say:"モノは増え、サービスは減った。戦争が人の移動を止め、AIがモノの移動を増やした。どちらが先に折れるかが、来年の見通しの焦点だ。",
+      src:"WTO発表の引用：聯合ニュース・CNA・ストレーツ・タイムズ・FinancialJuice（10/8〜9）"},
+    coupang:{kick:"生活 · 報道照合 ✓ 4社 · 原因は会社の説明に帰属",title:"クーパン・クーパンイーツ、深夜に接続障害",
+      what:"9日未明、クーパン、クーパンイーツ、クーパンプレイのアプリで接続エラーが発生した。配達員向けのアプリにまで影響が及んだとの報道がある。クーパンは「システムエラー」として原因を調べていると明らかにした。復旧の時点と被害の規模は発表されていない。",
+      why:"クーパンは、国内最大のオンラインショッピングモールであり、配達・物流網でもある。アプリが止まれば、注文だけでなく配送の現場も止まる。",
+      me:"早朝配送の注文が遅れた可能性がある。決済が二重に処理されていないか、注文履歴を確認しておこう。",
+      a:"",b:"",
+      say:"同じ日、クーパンは6000億ウォン台の課徴金に不服で訴訟を起こした。信頼を争う日にサービスが止まった。原因の発表がどれだけ具体的かが、次の確認ポイントだ。",
+      src:"聯合ニュース・SBS・MBC・聯合ニュースTV（10/9未明）"},
+    jobs:{kick:"米国経済 · 報道照合 ✓ 3社 · 米労働省発表に帰属",title:"米新規失業保険申請19万7000件",
+      what:"米国の週間新規失業保険申請件数は19万7000件で、市場予想（20万件）を下回った。ブルームバーグは、7月以降で最も低い水準だと伝えた。継続受給件数は171万6000件だった。",
+      why:"解雇が増えていないというサインだ。雇用が堅調なら、FRBが利下げする理由は減る。",
+      me:"米国の金利が高止まりすれば、ウォン/ドル相場や国内の貸出金利にも圧力が残る。",
+      a:"",b:"",
+      say:"良い雇用指標が株式市場には歓迎されない時期だ。次の確認ポイントは、来週の米消費者物価である。",
+      src:"FinancialJuice・ブルームバーグ・聯合ニュース（10/8）"},
+    visa:{kick:"米国・移民 · 報道照合 ✓ 5社 · 悪用の主張はバンス副大統領の発言",title:"米国、MSの外国人社員の永住権申請を阻止。バンス氏「米国人を雇え」",
+      what:"JD・バンス米副大統領は8日の記者会見で、マイクロソフトを、雇用主基盤の永住権手続きの第一段階である労働許可（PERM）プログラムから排除すると明らかにした。氏は、MSが米国人社員を減らしながらビザ制度を悪用したと主張し、排除は必要な限り続くとした。「MSを傷つけたいのではなく、米国人を雇えということだ」とも述べた。アドビなど他のテック企業も対象に含まれたとの報道がある（ヴァロール）。バンス氏は、H-1BとJ-1のビザ制度の見直しも予告した。",
+      why:"PERMは、会社が外国人社員の永住権を後援するときに通る最初の関門だ。特定の会社をまるごと排除したのは異例である。移民政策が個別企業への制裁手段として使われ始めたという点で、ほかのテック企業も緊張せざるをえない。",
+      me:"米国のビッグテックで働きながら永住権を準備中の韓国人なら、会社の移民担当部署の案内をまず確認しよう。すでに進行中の申請にどんな影響があるかは、まだ公開されていない。",
+      a:"外国人材の雇用制度が自国の労働者を押しのけるのに使われたのなら、正さなければならない。政府が具体的な違反を根拠にしたのなら、正当な執行だ。",
+      b:"違反の内容が公開されないまま、特定の企業をまるごと止めた。被害は会社より、永住権を待っていた個人の社員が先に被る。高度人材が米国の外に流れかねない。",
+      say:"「必要な限り」という言葉には、期限も基準もない。次に見るものは二つある。政府がMSの具体的な違反内容を公開するか、MSが法的対応に出るか。どちらにせよ、米国での就職を準備する韓国人エンジニアには、計画を立て直すサインだ。",
+      src:"ロイター・AP・ザ・ヒル（バンス氏の記者会見、10/8） · ヴァロール・エコノミコ（アドビなど、10/8） · 聯合ニュース・韓国経済新聞（10/9） · FinancialJuice（発言のリアルタイム）"},
+    ukr:{kick:"外交 · 報道照合 ✓ 5社 · 外交部発表に帰属",title:"政府、駐ウクライナ大使を召還。「北朝鮮軍捕虜」めぐる対立で18年ぶりの強い措置",
+      what:"外交部は8日、パク・ギチャン（박기창）駐ウクライナ大使を本国に召還することを決めたと明らかにした。ゼレンスキー大統領が北朝鮮軍捕虜2人の韓国送還の事実を公表すると、政府は非公開の合意への違反だとして釈明と公開の謝罪を求めたが、ウクライナは10日以上応じなかった。外交部は「両国間の懸案が円満に解決されることを期待し、ウクライナ側との協議を続ける」とした。相手国に駐在する大使の召還は、2008年の駐日大使の召還以来、18年ぶりだ（東亜日報）。ウクライナ外務省の報道官は「外交は感情に先立つべきだ」として、建設的な対話に前向きだと明らかにした。",
+      why:"大使召還は、断交のすぐ下の段階の外交的な抗議だ。捕虜送還のようなデリケートな案件で非公開の約束が守られなければ、今後の交渉も難しくなるというのが政府の判断だ。",
+      me:"ウクライナの復興事業に参加しようとする国内企業には、不確実性が一つ増えた。在外国民の安全と領事業務は、大使館が引き続き担う。",
+      a:"非公開の約束を破ったことにはっきり線を引かなければ、ほかの交渉でも同じことが繰り返される。召還は抑制のきいた手段だ。",
+      b:"戦争中の国との対立を公然と大きくすれば、北朝鮮とロシアだけが得をする。捕虜本人の安全と送還の完了が先だ。",
+      say:"双方とも「対話」という言葉を残した。謝罪の形式をめぐって妥協点を探るのか、大使の空席が長引くのかが焦点だ。大使がいつ戻るかが、対立の終わりを教えてくれるだろう。",
+      src:"聯合ニュース（外交部発表・ウクライナの反応、10/8〜9） · 東亜日報（18年ぶり、10/8〜9） · 京郷新聞・朝鮮日報・SBS（10/8）"},
+    tsmc:{kick:"半導体 · 報道照合 ✓ 4社 · 売上高は会社発表に帰属",title:"TSMCの7〜9月期売上高が50%増え過去最高。サムスンと同じ日、市場の反応も同じだった",
+      what:"台湾TSMCの7〜9月期の売上高は約1兆4942億台湾ドル（約62兆8000億ウォン）で、四半期ベースで過去最高だ。前年同期比で約50%増え、LSEG集計の市場予想1兆4600億台湾ドルを上回った。エヌビディアなど主要顧客のAI半導体の注文増がけん引した。同じ日、グローバルファウンドリーズは、TSMCにシリコン・インターポーザーを供給する20億ドル、初期5年の契約を発表した。ブルームバーグは、サムスン電子とTSMCが同じ日に記録的な数字を出したが、投資家の反応は鈍かったと伝えた。",
+      why:"TSMCは、エヌビディアのAIチップをつくる工場だ。売上高が増えたのは、AI投資がまだ折れていないという意味である。サムスン電子のメモリー業績と同じ流れだ。ところが市場は、数字よりも、その投資が借金でなされている点に、より注目した。",
+      me:"国内の半導体投資家にとって、TSMCの業績はサムスン・SKハイニックスの先行指標と読まれる。数字は良く、株価がそれを反映できない局面だ。",
+      a:"",b:"",
+      say:"好業績でも株価が上がらない日が、2社で重なった。市場はすでに今四半期ではなく、来年を見ている。TSMCの決算説明会での設備投資計画が、その答えの最初の手がかりだ。",
+      src:"聯合ニュース・韓国経済新聞・ニューストップ（TSMCの売上高、10/8） · ロイター（グローバルファウンドリーズの契約、10/8） · ブルームバーグ引用のジャパンタイムズ（市場の反応、10/8） · タイペイ・タイムズ（10/9）"},
+  };
+
+  // ───── 用語集: 本文・ポップアップ内の用語に点線の下線、押すと説明
+  const G = {
+    "ブレント原油":{f:"エネルギー",d:"北海で採れる原油。世界の原油取引の基準価格として最も広く使われる。韓国が多く買う中東産のドバイ原油の価格とも連動して動く。",w:"8日に1バレル=105ドルを超えた。フーシ派のリヤド空港攻撃の主張とホルムズの緊張が重なった。"},
+    "WTI":{f:"エネルギー",d:"西テキサス産原油。米国の原油価格の基準だ。ブレント原油より通常、数ドル安い。",w:"前夜、91ドル台で3%台上昇した。"},
+    "フーシ派":{f:"国際・安全保障",d:"イエメン北部を掌握したシーア派系の武装勢力。イランの支援を受け、紅海の船舶やサウジアラビアをミサイルやドローンで攻撃してきた。",w:"リヤドのキング・ハリド国際空港を弾道ミサイルで攻撃したと主張した。サウジ側は2発を迎撃したと発表した。"},
+    "ホルムズ海峡":{f:"国際・エネルギー",d:"ペルシャ湾とオマーン湾をつなぐ狭い海路。世界の海上原油輸送の相当部分が通る。",w:"イランによるタンカー攻撃が数カ月ぶりに再び増えたとの報道が出た。"},
+    "中央軍":{f:"国際・安全保障",d:"米中央軍（CENTCOM）。中東と中央アジア地域の米軍の作戦を担う。",w:"米国防総省がここにイランへの大規模作戦の再開準備を指示したとの報道が出た。"},
+    "中間選挙":{f:"米国政治",d:"大統領の任期の中間に行う米連邦議会の選挙。下院の全議席と上院の3分の1を改選する。",w:"今年は11月3日だ。トランプ氏は、その前にはイランを攻撃しないとした。"},
+    "海上封鎖":{f:"国際・安全保障",d:"軍艦で特定の国の港や海路を塞ぎ、船舶の出入りを統制すること。",w:"トランプ氏は、攻撃は保留するが対イラン海上封鎖は維持するとした。"},
+    "10年物国債":{f:"金融",d:"満期10年の国債。米国の10年物の利回りは、住宅ローンなど長期金利と世界の資産価格の基準の役割を果たす。",w:"5.2%台にとどまった。原油が上がれば、物価と利上げ懸念を通じてこの利回りも揺れる。"},
+    "FRB":{f:"金融",d:"米連邦準備制度理事会。米国の中央銀行で、政策金利を決める。",w:"原油が物価を押し上げればFRBがさらに利上げしうるとの懸念が、前夜の市場を押さえた。"},
+    "スウェーデン・アカデミー":{f:"文化",d:"1786年に創設された学術機関で、終身会員18人がノーベル文学賞の受賞者を選ぶ。",w:"アン・カーソン氏を選び、古典の伝統との遊び心ある対話で現代文学の新しい形式をつくったと評価した。"},
+    "永住権":{f:"移民・法",d:"外国人がその国に期限なく住み、働ける資格。米国ではグリーンカードと呼ぶ。",w:"米政権は、MSを雇用主が後援する永住権手続きから排除した。"},
+    "PERM":{f:"移民・法",d:"米労働省の恒久的な労働許可の手続き。会社が外国人社員の永住権を後援するとき、「このポストに合う米国人がいない」ことを立証する第一段階だ。",w:"MSはこのプログラムから排除された。バンス副大統領は、期限を「必要な限り」としか述べなかった。"},
+    "H-1B":{f:"移民・法",d:"米国の専門職向けの短期就労ビザ。テック企業が外国人エンジニアを採用するときに主に使う。多くの人がこのビザで働きながら永住権を申請する。",w:"バンス氏は、H-1BとJ-1のビザ制度も見直すと予告した。"},
+    "北朝鮮軍捕虜":{f:"外交・安全保障",d:"ロシア側でウクライナ戦争に参戦し、ウクライナ軍に捕らえられた北朝鮮の兵士たち。",w:"ゼレンスキー大統領が彼らの韓国送還の事実を公表したことで、韓国とウクライナの外交的な対立が始まった。"},
+    "召還":{f:"外交",d:"相手国に駐在している自国の大使を呼び戻すこと。断交のすぐ下の段階の、強い外交的抗議の手段だ。",w:"政府が駐ウクライナ大使を呼び戻した。2008年の駐日大使の召還以来、18年ぶりだ。"},
+    "ファウンドリー":{f:"半導体",d:"他社が設計した半導体を受注して製造する受託生産事業。TSMCが世界1位だ。",w:"TSMCは、AIチップの注文増で7〜9月期の売上高が過去最高だった。"},
+    "インターポーザー":{f:"半導体",d:"AIチップとHBMのような複数のチップを1枚の板の上に並べてつなぐ中間基板。先端パッケージングの中核部品だ。",w:"グローバルファウンドリーズが、TSMCにシリコン・インターポーザーを供給する20億ドルの契約を結んだ。"},
+    "極超音速滑空飛翔体":{f:"安全保障・科学",d:"ロケットで大気圏上層まで上がった後に分離し、マッハ5以上で低く滑空する兵器（HGV）。軌道を変えられるため、迎撃が難しい。",w:"国産HGVの初の試験発射が8日に成功した。李在明大統領が視察した。"},
+    "CPTPP":{f:"通商",d:"環太平洋パートナーシップに関する包括的及び先進的な協定。日本・カナダ・オーストラリア・英国などが参加する大型の自由貿易協定だ。",w:"李大統領が、年内の加入申請をしないよう指示した。農漁民の反発を考慮した。"},
+    "物品貿易":{f:"経済",d:"国境を越えて行き来するモノの取引。運輸・旅行・金融のようなサービス貿易と区別する。",w:"WTOが今年の伸び率の見通しを3.9%に引き上げた。AI機器の貿易がけん引した。"},
+    "失業保険":{f:"経済",d:"仕事を失った人が受け取る給付。米国は新規申請件数を毎週発表し、雇用市場を最も早く映す指標として使う。",w:"新規申請は19万7000件で、予想を下回った。"},
+    "課徴金":{f:"法・行政",d:"法律に違反した企業に行政機関が科す金銭的な制裁。刑罰である罰金とは異なる。",w:"クーパンは、個人情報流出などで受けた6200億ウォン台の課徴金に不服として訴訟を起こした。"},
+    "執行停止":{f:"法",d:"行政処分の効力を、訴訟の結果が出るまで一時止めてほしいと裁判所に求めること。",w:"クーパンは、課徴金処分の取り消し訴訟とあわせて執行停止も申請した。"},
+    "西テキサス産原油":{f:"エネルギー",d:"米国のテキサス州などで生産される軽質原油で、ニューヨーク市場で取引される国際原油価格の基準（WTI）。",w:"WTIは1バレル=91.48ドルで3.6%上昇した。"},
+    "北海産":{f:"エネルギー",d:"英国とノルウェーのあいだの北海の油田で採れる原油。ブレント原油の価格の基準になる。",w:"北海産ブレント原油が105ドルを超えた。"},
+    "バレル":{f:"単位",d:"原油の体積の単位。1バレルは約159リットル。",w:"原油価格が1バレル=105ドルを超えたと伝えられた。"},
+    "ハリド国際空港":{f:"地理",d:"サウジアラビアの首都リヤドにある国際空港。",w:"フーシ派はこの空港をミサイルで攻撃したと主張した。"},
+    "弾道ミサイル":{f:"軍事",d:"発射後に放物線を描いて飛び、目標に落ちるミサイル。",w:"フーシ派はリヤド空港に向けて撃ったと主張した。"},
+    "迎撃":{f:"軍事",d:"飛んでくるミサイルやドローンを空中で撃ち落とすこと。",w:"サウジ主導の連合軍はミサイル2発を迎撃したと発表した。"},
+    "トゥルース・ソーシャル":{f:"メディア",d:"トランプ大統領が使うソーシャルメディアのプラットフォーム。",w:"攻撃を保留するとの約束をここに書き込んだ。"},
+    "ナスダック":{f:"金融",d:"技術株が中心の米国の証券取引所と、その総合指数。",w:"1.37%下落した。"},
+    "S&P500":{f:"金融",d:"米国の大型株500銘柄でつくる代表的な株価指数。",w:"0.61%下落した。"},
+    "ハイテク株":{f:"金融",d:"IT・半導体・ソフトウェアなど技術企業の株式。",w:"金利の重荷で軟調だった。"},
+    "オープンAI":{f:"企業",d:"チャットGPTをつくった米国の人工知能企業。",w:"年換算売上高およそ500億ドルを伝えたとの報道が出た。"},
+    "年換算売上高":{f:"会計",d:"直近の1カ月または四半期の売上高を1年分に換算した値。",w:"オープンAIが伝えたとされる数字だ。"},
+    "エヌビディア":{f:"企業",d:"AI半導体（GPU）を設計する米国企業。",w:"軟調だったAI関連株に含まれた。"},
+    "オラクル":{f:"企業",d:"米国のソフトウェア・クラウド企業。",w:"軟調だったAI関連株に含まれた。"},
+    "AI関連株":{f:"金融",d:"人工知能事業に関わる企業の株式。",w:"オープンAIの報道の後、軟調だった。"},
+    "原油の備蓄":{f:"エネルギー",d:"供給が滞る場合に備えて原油を買い入れてためておくこと。",w:"アジア各国が急いでいる。"},
+    "債券":{f:"金融",d:"政府や企業が資金を借りる際に発行する証書。",w:"原油・金利への懸念で株式とともに揺れた。"},
+    "寄り付き":{f:"金融",d:"株式市場で取引が始まること。",w:"月曜日の寄り付きで海外の変数が一度に反映される。"},
+    "燃油サーチャージ":{f:"航空",d:"国際原油価格に応じて航空券に加算される追加料金。",w:"原油価格に合わせて毎月調整される。"},
+    "国際製品価格":{f:"エネルギー",d:"国際市場で取引されるガソリン・軽油などの価格。",w:"国内のガソリンスタンドの価格には2〜3週間の時差で反映される。"},
+    "戦線拡大":{f:"安全保障",d:"紛争がより大きな規模に広がること。",w:"米国が先に戦線を広げないという意味だと説明された。"},
+    "供給不安":{f:"経済",d:"生産や輸送が止まって物量が減るおそれ。",w:"サウジとホルムズの不安で取り沙汰されている。"},
+    "アカデミー":{f:"機関",d:"ノーベル文学賞の受賞者を選ぶスウェーデンの学術機関。",w:"アン・カーソン氏を発表した。"},
+    "古典学者":{f:"学問",d:"古代ギリシャ・ローマの文献や文化を研究する学者。",w:"カーソン氏の本業だ。"},
+    "エッセイスト":{f:"文学",d:"随筆や評論を書く作家。",w:"カーソン氏は詩人でありエッセイストだ。"},
+    "推薦の言葉":{f:"出版",d:"本の表紙や冒頭に載せる推薦の文章。",w:"ハン・ガン氏が『Nox』に寄せた。"},
+    "アン・カーソン":{f:"人物",d:"カナダの詩人で古典学者。",w:"2026年のノーベル文学賞の受賞者だ。"},
+    "ルイーズ・グリュック":{f:"人物",d:"米国の詩人。2020年にノーベル文学賞を受賞。",w:"詩人の受賞の直前の例だ。"},
+    "アリス・マンロー":{f:"人物",d:"カナダの小説家。2013年にノーベル文学賞を受賞。",w:"カナダの作家の受賞の直前の例だ。"},
+    "マーク・カーニー":{f:"人物",d:"カナダの首相。",w:"受賞を祝った。"},
+    "終身会員":{f:"組織",d:"亡くなるまで資格が続く会員。",w:"アカデミーの会員18人が当てはまる。"},
+    "極超音速":{f:"軍事",d:"音速の5倍以上の速度。",w:"国産の滑空飛翔体の速度の範疇だ。"},
+    "試験発射":{f:"軍事",d:"性能を確かめるために撃ってみること。",w:"初の試験発射に成功した。"},
+    "推進体":{f:"軍事",d:"兵器を押し上げるロケットエンジンの部分。",w:"大気圏上層まで上げた後に分離する。"},
+    "滑空":{f:"軍事",d:"推進力なしに滑るように飛ぶ飛行。",w:"滑空飛翔体の飛行方式だ。"},
+    "軌道変更":{f:"軍事",d:"飛行経路を途中で変えること。",w:"迎撃を難しくする特徴だ。"},
+    "戦力化":{f:"軍事",d:"開発した兵器を実際に軍に配備すること。",w:"試験の成功と戦力化のあいだには数年かかると説明された。"},
+    "射程":{f:"軍事",d:"兵器が届く最大の距離。",w:"具体的な性能は公開されていない。"},
+    "自作自演":{f:"安全保障",d:"自分で仕組んだことを他人の仕業のように言うこと。",w:"北朝鮮が地雷爆発を自作自演と非難した。"},
+    "環太平洋パートナーシップに関する包括的及び先進的な協定":{f:"通商",d:"アジア太平洋の11カ国が結んだ自由貿易協定（CPTPP）。",w:"年内の加入申請をしないよう指示した。"},
+    "公聴会":{f:"行政",d:"政策を決める前に意見を聴く公開の場。",w:"加入の議論には、計画を官報で告知する必要がある。"},
+    "官報":{f:"行政",d:"政府が法令や公告を知らせる公式の刊行物。",w:"公聴会の計画を告知する必要がある媒体だ。"},
+    "閣僚会合":{f:"通商",d:"協定の加盟国の閣僚が集まる会議。",w:"11月のCPTPP閣僚会合が取り沙汰された。"},
+    "農漁民":{f:"農業",d:"農業や漁業に従事する人々。",w:"開放の拡大への反発が強まった。"},
+    "市場の開放":{f:"通商",d:"輸入の障壁を下げて外国の商品を入りやすくすること。",w:"加入すれば農畜水産物市場の開放幅が広がる。"},
+    "農畜水産物":{f:"農業",d:"農産物・畜産物・水産物を合わせた言い方。",w:"開放拡大への懸念が大きい品目だ。"},
+    "農地調査":{f:"農業",d:"すべての農地の利用の実態を確かめる調査。",w:"農民の不満が高まった。"},
+    "世界貿易機関":{f:"機関",d:"国際貿易のルールを定め、紛争を解決する機関（WTO）。",w:"今年の物品貿易の伸び率を3.9%に引き上げた。"},
+    "WTO":{f:"機関",d:"世界貿易機関の英語の略称。",w:"物品貿易の見通しを上方修正した。"},
+    "サービス貿易":{f:"通商",d:"運輸・旅行・金融などのサービスを売り買いする貿易。",w:"見通しが3.3%に下がった。"},
+    "クーパンイーツ":{f:"企業",d:"クーパンの料理配達サービス。",w:"アプリにつながらなくなった。"},
+    "物流網":{f:"物流",d:"商品を保管・輸送する連携網。",w:"アプリが止まれば配送の現場も止まる。"},
+    "継続受給件数":{f:"経済",d:"すでに失業保険を受けている人が引き続き申請する件数。",w:"171万6000件だった。"},
+    "予想":{f:"経済",d:"専門家が事前に予測した数値。",w:"予想の20万件を下回った。"},
+    "米消費者物価":{f:"経済",d:"消費者が買う商品・サービスの価格の指標。",w:"来週の米消費者物価が確認ポイントだ。"},
+    "J-1":{f:"移民",d:"交流訪問者に与えられる米国のビザ。",w:"バンス氏が見直しを予告した。"},
+    "労働許可":{f:"移民",d:"外国人を雇うために先に受ける労働省の承認（PERM）。",w:"永住権手続きの第一段階だ。"},
+    "ビッグテック":{f:"産業",d:"大手の技術企業。",w:"永住権を待つ人が多い会社だ。"},
+    "駐ウクライナ大使":{f:"外交",d:"ウクライナに派遣された韓国の大使。",w:"パク・ギチャン大使が召還された。"},
+    "送還":{f:"法",d:"本国に送り返すこと。",w:"北朝鮮軍捕虜の送還が対立の始まりだ。"},
+    "断交":{f:"外交",d:"国家間の外交関係を断つこと。",w:"大使の召還はそのすぐ下の段階だ。"},
+    "領事業務":{f:"外交",d:"海外で自国民を保護する外交官の業務。",w:"領事業務は続く。"},
+    "在外国民":{f:"外交",d:"海外に住む自国民。",w:"安全は大使館が担う。"},
+    "TSMC":{f:"企業",d:"世界最大の半導体受託生産企業。",w:"7〜9月期の売上高が過去最高だ。"},
+    "LSEG":{f:"金融",d:"ロンドン証券取引所グループ。市場予想を集計する。",w:"集計された予想を上回った。"},
+    "AI半導体":{f:"産業",d:"AIの演算に使うチップ。",w:"顧客企業の注文が増えた。"},
+    "シリコン":{f:"産業",d:"半導体の基本素材。",w:"インターポーザーの材料だ。"},
+    "グローバルファウンドリーズ":{f:"企業",d:"米国の半導体受託生産企業。",w:"TSMCと20億ドルの契約を結んだ。"},
+    "設備投資":{f:"企業",d:"工場や設備に対する投資。",w:"来年の計画が確認ポイントだ。"},
+    "決算説明会":{f:"企業",d:"企業が投資家に業績を説明する場。",w:"今月開かれる。"},
+    "先行指標":{f:"経済",d:"今後の流れを先に示す指標。",w:"TSMCの業績がサムスン・SKハイニックスの先行指標だ。"},
+    "チポトレ":{f:"企業",d:"米国のメキシコ料理チェーン。",w:"スターバックスが買収を検討した。"},
+    "ゴールドマン・サックス":{f:"企業",d:"米国の大手投資銀行。",w:"特別ボーナスが5億ドルを超える見通しだ。"},
+    "ウォール街":{f:"金融",d:"米国の金融の中心地であるニューヨークのウォール街。",w:"報酬をめぐる論争が大きくなりうる。"},
+    "メローニ":{f:"人物",d:"イタリアのジョルジャ・メローニ首相。",w:"選挙法の改正案を通した。"},
+    "オムスク":{f:"地理",d:"ロシア・シベリアの都市。大型の製油所がある。",w:"ウクライナが攻撃したと明らかにした。"},
+    "製油所":{f:"産業",d:"原油を精製する施設。",w:"供給不安がまた一つ加わった。"},
+    "制裁":{f:"外交",d:"経済的・外交的な不利益を与える措置。",w:"船舶17隻が対象だ。"},
+    "マドゥロ":{f:"人物",d:"ベネズエラのニコラス・マドゥロ大統領。",w:"米国市民への拷問容疑で追加起訴された。"},
+    "追加起訴":{f:"法",d:"検察官が裁判を請求すること。",w:"マドゥロ氏と妻が追加起訴された。"},
+    "拷問容疑":{f:"法",d:"人に過酷な行為を加えた疑い。",w:"米国市民を対象にした容疑だ。"},
+    "広東省":{f:"地理",d:"中国南部の省。",w:"ハッカーの居住地として報じられた。"},
+    "番号の盗用":{f:"犯罪",d:"他人の電話番号やIPを使うこと。",w:"名指しされた当人が主張した。"},
+    "軍空港":{f:"安全保障",d:"軍が使う空港。",w:"崔泰源会長が用地の候補を探す。"},
+    "行政訴訟":{f:"法",d:"行政機関の処分を争う訴訟。",w:"クーパンが課徴金に不服として起こした。"},
+    "法廷闘争":{f:"法",d:"処分や判決に従わず、裁判で争うこと。",w:"クーパンが課徴金を争っている。"},
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
