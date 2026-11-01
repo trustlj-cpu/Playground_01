@@ -1,0 +1,338 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>63,290.11</b>日経平均 · 10/30終値 · 前日比 -2.12%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,580.07</b>S&amp;P 500 · 10/30終値 · 前日比 -1.82%</div>
+    </div>
+    <div class="dateline"><span>No. 28 · 夕刊</span><b>2026年11月1日(日)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="kintetsu">
+      <div class="kick">サイバー · 個人情報<span>✓ 2媒体 · 流出の確認と他社への影響は未確認</span></div>
+      <h2 class="hl">NTTデータの委託先に不正アクセス 近鉄GHDの社債購入者2678件の情報が漏えいのおそれ</h2>
+      <p class="deck">氏名と購入金額が流出したおそれがある。住所や口座の情報が含まれるかは確認されていない。</p>
+      <div class="body">
+        <p>NTTデータは31日、社債を購入した人に特典を付与するサービスの委託先が不正アクセスを受けたと発表した。このサービスを使う近鉄グループホールディングスは、自社の社債を購入した人の氏名と購入金額が漏えいしたおそれがあると明らかにした。対象は2678件で、第135回無担保社債を100万円以上購入した投資家の情報にあたる。流出が確認されたのではなく、まだ「おそれ」の段階である。</p>
+        <p>委託先とは、企業が業務の一部を任せている外部の会社のことだ。自社のシステムが無事でも、任せた先が攻撃されれば情報が外に出る場合があり、今回はその形にあたる。報告されているのは氏名と購入金額で、住所や口座番号、カード情報が含まれるかは確認されていない。不正アクセスがいつ始まったか、同じ委託先を使う他の企業の利用者に影響が及ぶかも分かっていない。個人情報をめぐる不正アクセスの公表は、GMOやクラブツーリズムに続くものだ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="binance">
+      <div class="kick">金融 · 暗号資産<span>✓ 3媒体 · 盗まれた資金の最終的な行き先は未確認</span></div>
+      <h3 class="hl">FBI、バイナンス攻撃に北朝鮮が関与と発表 影響額は同社推計で約1兆円</h3>
+      <div class="one">
+        <p>アメリカの連邦捜査局(FBI)は31日(現地時間)、暗号資産取引所大手バイナンスへのサイバー攻撃に北朝鮮が関与したと発表した。FBIは、北朝鮮が10月29日ごろに60億ドル超の暗号資産を盗んだとしている。バイナンスは影響を受けた資産を約63億ドルと推定している。約1兆円にあたるが、バイナンス自身の推定で、確定した損失額ではない。バイナンスはその約95%を自社の資金で補填したと発表し、1日から出金を段階的に再開した。先に90%と公表していたが、割合を引き上げた。 FBIが名指ししたのは「トレードトレイター(TraderTraitor)」と呼ばれる北朝鮮の国家支援のグループだ。盗まれた資産が別の通貨に替えられるなど、資金洗浄の動きもFBIは確認したとしている。資金洗浄とは、犯罪で得た資金の出どころを分からなくするため、取引を重ねたり別の通貨に替えたりすることだ。具体的な手口、盗まれた資金の最終的な行き先、出金が完全に元に戻る時期は確認されていない。補填は自社が負担するとされるが、ユーザーが全額を直ちに引き出せるかも分かっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="quake"><b>三重県南東沖でM6.1の深発地震 福島県で震度3、津波の心配なし</b><em>1日午前7時15分ごろ、震源の深さは約350キロと推定される。震央に近い東海や近畿は震度1程度で、関東や東北、北海道が震度2から3だった。</em><span>防災 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="cluster"><b>北朝鮮、弾道ミサイル搭載のクラスター弾を試験したと発表 最大約360メートル四方を焦土化</b><em>北朝鮮は1日、31日の評価試験で最大でおよそ360メートル四方を焦土化できると実証されたと発表した。実戦配備の時期は確認されていない。</em><span>安保 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="fy"><b>フォーエバーヤングはBCクラシック5着で連覇ならず テーオーエルビスはBCスプリントで日本馬初制覇</b><em>米ブリーダーズカップで、史上2頭目のクラシック連覇を狙った日本馬は5着だった。オーナーの藤田晋氏は「悔しいというより、寂しい」と話した。</em><span>スポーツ · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="shomarin"><b>「しょまりん」本田真凜・宇野昌磨組、アイスダンスのデビュー戦は4位 合計145.70点</b><em>全日本選手権予選のフリーダンスで87.02点を出し、合計145.70点だった。優勝は吉田唄菜・森田真沙也組で、紀平梨花・西山真瑚組が3位に入った。</em><span>スポーツ · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="midterm"><b>米中間選挙は3日に投開票 期日前投票はすでに前回2022年の人数を上回る</b><em>フロリダ大学の研究グループによると、投票を済ませた人は2022年の中間選挙をすでに上回っている。市場では民主党が大勝した場合のAI投資への影響も意識されている。</em><span>国際 · ✓ 3媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="ekiden">
+      <div class="kick">スポーツ · 駅伝<span>✓ 3媒体 · 最終順位の詳細は未確認</span></div>
+      <h3 class="hl">早大が大会新で16年ぶり6回目の優勝 出雲と合わせ大学駅伝2冠、区間新記録は3つ</h3>
+      <div class="body">
+        <p>熱田神宮西門前から伊勢路を走る全8区間、27チームの第58回全日本大学駅伝は1日に行われ、早稲田大が大会記録を大幅に更新して優勝した。16年ぶり6回目で、10月の出雲全日本大学選抜駅伝に続き、今季の大学三大駅伝で2冠となった。</p>
+        <p>レースは1区で青学大が先頭に立ち、早大は2位で2区へ入った。2区で1年生の増子陽太が区間新記録で首位に立つと、3区の新妻遼己が首位を保ち、5区の鈴木琉胤も区間新で独走した。区間新記録は早大が3つ出している。出雲で11位だった青学大は、大差で敗れた。レース中は、選手の位置を示す速報画面からGPS機器の不具合で複数校が消え、大会の公式Xが謝罪した。残るは正月の箱根駅伝で、早大は3冠に王手をかけた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="robots">
+      <div class="kick">テクノロジー · 生成AI<span>✓ 2媒体 · 具体的なトークン名は未確認</span></div>
+      <h3 class="hl">AI学習の拒否をrobots.txtで一括指定へ OpenAI・Google・Microsoftが共通の仕組みに対応</h3>
+      <div class="body">
+        <p>OpenAI、Google、Microsoftは、Webサイトの運営者が自分のコンテンツをAIの学習に使わせるかどうかを一括で指定できる共通の仕組みに対応すると表明した。Anthropicの担当者も個人の名義で実装すると明らかにした。運営者はrobots.txtに共通のトークンを書くだけで、各社のクローラーを一元的に管理できる。AI学習だけを断り、検索のための巡回は続けさせる使い方を想定している。共通仕様の導入は2027年とされる。</p>
+        <p>robots.txtは、サイトの入り口に置く小さな文書で、巡回するロボットに「ここは入ってよい」「ここは入らないで」と伝える。これまでは会社ごとにクローラーの名前を並べて指定する必要があり、AI学習は断りたいが検索には載せたい運営者には手間が大きかった。ただし、指定を守るかどうかは各社の対応に委ねられ、守らない事業者を止める強制力はない。トークンの具体名や、すでに集められたデータの扱いは確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="mayor">
+      <div class="kick">政治 · 地方選挙<span>✓ 2媒体 · 福岡市長選の投開票日は未確認</span></div>
+      <h3 class="hl">福岡市長選に13人が立候補、戦後最多 現職不在は40年ぶり 熊本市長選も告示</h3>
+      <div class="body">
+        <p>福岡市長選が1日に告示され、新顔13人が立候補を届け出た。戦後最多で、政令指定都市の市長選としても過去最多になった。現職が立たない選挙は40年ぶりだ。候補者が多いため、ポスターの掲示枠は増設された。</p>
+        <p>届け出が多いと、当選に必要な法定得票に誰も届かず、再選挙になる可能性もある。市長選の法定得票は有効投票総数の4分の1だ。熊本市長選も同じ日に告示され、4期目を狙う現職に新顔4人が挑む。投開票は15日である。東京では8日に新宿区・品川区・小金井市で首長選が告示される。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>法定得票<i>選挙</i></b><p>当選に必要な最低限の得票数。市長選では有効投票総数の4分の1で、誰も届かなければ選挙をやり直す。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>近鉄グループの社債を買った人のカード番号やパスワードが流出した</b> <span>公表されたのは氏名と購入金額の2678件分で、カード番号やパスワードが含まれるとの発表はない。NTTデータと近鉄GHDの説明では、流出の確認ではなく「おそれ」の段階だ。</span></div>
+        <div><b>バイナンスで盗まれた暗号資産は、すべて北朝鮮に渡った</b> <span>FBIは北朝鮮の関与を発表したが、盗まれた資産のうち実際に北朝鮮側へ渡った額は、公表された範囲では確認できない。バイナンスは影響額の約63億ドルのうち約95%を自社資金で補填したと発表している。</span></div>
+        <div><b>robots.txtで拒否すれば、すでに集められたAI学習用のデータも消える</b> <span>共通の仕組みは今後の巡回についての意思表示で、すでに集められたデータの扱いは公表されていない。導入は2027年とされる。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今夜 · 日 11月1日</b><span>福岡市長選と熊本市長選が選挙戦に入る。近鉄GHDとNTTデータが、流出のおそれがある情報の詳細を追加で出すか注目したい。</span><b>今週</b><span>2日(月)午後にGMOが記者会見を開く。3日は米中間選挙の投開票日で、開票の進み方を見たい。8日には東京の新宿区・品川区・小金井市で首長選が告示される。</span><b>今後</b><span>熊本市長選は15日に投開票される。FBIが示すバイナンスの資金の流れ、AI学習の共通仕様の公開、年始の箱根駅伝での早大の3冠挑戦が続く。</span><b>読者へ</b><span>社債や証券の特典を名乗るメールやSMSのリンクは開かず、公式の窓口で確かめたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "kintetsu":{"kick": "サイバー · 個人情報 · ✓ 2媒体 · 流出の確認と他社への影響は未確認", "title": "NTTデータの委託先に不正アクセス 近鉄GHDの社債購入者2678件の情報が漏えいのおそれ", "what": "NTTデータは10月31日、社債購入者向けに特典を付与するサービスの委託先が不正アクセスを受けたと発表した。このサービスを利用している近鉄グループホールディングスは、自社の社債を購入した人の氏名と購入金額の情報が漏えいしたおそれがあると公表した。対象は2678件で、第135回無担保社債を100万円以上購入した投資家の情報である。流出が確認されたとは発表されておらず、「おそれ」の段階だ。住所、口座番号、カード情報が含まれるかは公表されていない。", "why": "社債の購入履歴は、資産の規模や投資先が分かる情報で、本人を狙った詐欺の材料になりやすい。特典付与のような周辺サービスは外部の会社に任されることが多く、本体の守りが固くても委託先が弱点になる。今回は委託先を通じた流出が、投資家の情報に及んだ形だ。", "me": "近鉄グループの社債を買った人は、公式の案内が届くまで、社債や特典を名乗るメールやSMSのリンクを開かない。証券会社を名乗る電話で金額を言い当てられても、折り返しは公式の番号にかける。他社の社債でも、特典サービスの案内が届いたら発行元の公式サイトで確かめたい。", "a": "委託先の管理責任を重く見る立場は、情報を預ける側の企業が、委託先の守りを点検する義務を負うと考える。契約時と運用中に、監査や訓練の結果を確認する仕組みが要るという。", "b": "攻撃を受けた側の事情を見る立場もある。高度な攻撃は大企業でも防ぎきれず、被害の範囲を早く公表したこと自体が、被害者を守る対応だという。再発防止の中身で評価すべきだという。", "say": "確認できたのは、委託先への不正アクセスと、氏名・購入金額2678件のおそれである。流出の確定、住所やカード情報の有無、同じ委託先を使う他社への影響は分からない。NTTデータと近鉄GHDが追加の調査結果をいつ出すかを見たい。", "src": "NHK(NTTデータ委託先に不正アクセス、10月31日) · 朝日新聞(社債購入者の個人情報流出か、11月1日)"},
+    "binance":{"kick": "金融 · 暗号資産 · ✓ 3媒体 · 盗まれた資金の最終的な行き先は未確認", "title": "FBI、バイナンス攻撃に北朝鮮が関与と発表 影響額は同社推計で約1兆円", "what": "アメリカの連邦捜査局(FBI)は31日(現地時間)、暗号資産取引所大手バイナンスへのサイバー攻撃に北朝鮮が関与したと発表した。FBIは、北朝鮮が10月29日ごろに60億ドル超の暗号資産を盗んだとしている。バイナンスは影響を受けた資産を約63億ドル(約1兆円)と推定しており、これはバイナンス自身の推定である。FBIが名指ししたのは北朝鮮の国家支援のグループ「トレードトレイター」だ。盗まれた資産が別の通貨に替えられるなど、資金洗浄の動きもFBIは確認したとしている。バイナンスは約95%を自社資金で補填したと発表し、先に90%と公表していた。出金は1日から段階的に再開された。", "why": "国家が暗号資産を盗むと、その資金が制裁を逃れて兵器開発などに回りうる。取引所は世界中の利用者の資産が集まる場所で、攻撃に成功すれば一度に巨額が動く。捜査当局が国を名指しする意味は、各国が追跡や凍結の協力を進めやすくなる点にある。", "me": "取引所に資産を預けている人は、二段階認証を有効にし、出金先アドレスの許可リストを設定しておく。取引所のニュースを名乗るメールのリンクは開かない。日本の利用者にも、国内の取引所が同様の攻撃の対象になりうるという前提は残る。", "a": "国家による犯罪として制裁と国際連携を強めるべきだという立場がある。資金洗浄の出口になる取引所や仲介業者に、本人確認と追跡の義務を厳しく課すよう求めるという。", "b": "取引所の側の備えを問う立場もある。大規模な窃取は、秘密鍵の管理や内部の権限設計の弱さを突かれやすく、国名の特定よりも利用者の資産を守る仕組みの公開が先だという。", "say": "確認できたのは、FBIが北朝鮮の関与を発表したことと、バイナンスが影響額を約63億ドルと自ら推定し、その約95%を補填したと発表したことだ。盗まれた資金の最終的な行き先と、出金が完全に戻る時期は分からない。バイナンスの出金再開の範囲と、FBIが追加で示す資金の流れを見たい。", "src": "NHK(バイナンスへのサイバー攻撃 FBI北朝鮮が関与、11月1日) · 朝日新聞(バイナンスのハッキング被害 北朝鮮が関与、11月1日) · 時事通信(1兆円不正流出 北朝鮮が関与、11月1日)"},
+    "ekiden":{"kick": "スポーツ · 駅伝 · ✓ 3媒体 · 最終順位の詳細は未確認", "title": "早大が大会新で16年ぶり6回目の優勝 出雲と合わせ大学駅伝2冠、区間新記録は3つ", "what": "第58回全日本大学駅伝は11月1日に熱田神宮西門前から伊勢路を走る全8区間で行われ、27チームが出場した。早稲田大が大会記録を大幅に更新して優勝し、16年ぶり6回目の優勝となった。10月の出雲全日本大学選抜駅伝に続く優勝で、今季の大学三大駅伝で2冠となった。区間新記録は早大が3つ出した。2区の増子陽太は1年生で区間新記録を出して首位に立ち、5区の鈴木琉胤も区間新で独走した。出雲で11位だった青学大は大差で敗れた。選手の位置を示す速報画面ではGPS機器の不具合で複数校が表示から消え、大会の公式Xが謝罪した。", "why": "出雲と全日本を取ると、残る箱根駅伝で3冠を狙える立場になる。1年生が主力の区間で結果を出したことは、層の厚さを示す。距離が延びる箱根でも同じ流れを保てるかが次の焦点だ。", "me": "年始の箱根駅伝を見るなら、今回区間新を出した選手の名前を頭に入れておくと、中継の流れがつかみやすい。走っている途中の順位が分かりにくい日は、公式の速報ページに頼りすぎず、中継の実況も併せて見るとよい。", "a": "早大の強さは本物で、箱根でも優勝候補の筆頭だという見方がある。1年生が3人以上主力として走り、区間新が重なった点を根拠にする。", "b": "距離が長い箱根は別物だという見方もある。山登りなど特殊な区間での強さは、この大会では測れず、前回王者の駒大や青学大の巻き返しの余地はあるという。", "say": "確認できたのは、早大の優勝と大会記録の更新、2冠である。最終の2位以下の順位とタイム差、区間新の全員の名前は、ここでは確認できていない。箱根駅伝の区間エントリーと、青学大の立て直しを見たい。", "src": "NHK(全日本大学駅伝 早大が16年ぶり優勝、11月1日) · 毎日新聞(早稲田大が16年ぶり6回目の優勝、11月1日) · 朝日新聞(2冠の早稲田 新人離れの快走、11月1日)"},
+    "robots":{"kick": "テクノロジー · 生成AI · ✓ 2媒体 · 具体的なトークン名は未確認", "title": "AI学習の拒否をrobots.txtで一括指定へ OpenAI・Google・Microsoftが共通の仕組みに対応", "what": "OpenAI、Google、Microsoftは、Webサイトの運営者がAIの学習へのコンテンツ利用について意向を一括で指定できる共通の仕組みに対応すると表明した。Anthropicの担当者も、個人の名義で実装すると明らかにした。運営者はrobots.txtに共通のトークンを記述するだけで、各社のAIクローラーを一元的に管理できる。AI学習だけを拒否しても、検索のための巡回は止めない指定ができる。共通仕様の導入は2027年とされる。", "why": "これまでは会社ごとにクローラー名を並べる必要があり、指定の漏れが起きやすかった。共通化されれば、運営者の意思表示のコストが下がる。AI各社にとっても、学習データを集める際の線引きがそろい、あとから争いになるのを減らせる。", "me": "ブログやお店のサイトを持つ人は、AIの学習に使われたくない文章や画像があるかを先に整理しておく。導入は2027年のため、すぐに設定を変える必要はない。使っているサイト作成サービスが対応を案内するかも確かめたい。", "a": "運営者の権利を守る第一歩だと評価する立場がある。AI学習と検索を分けて断れる点が、報道機関や創作者の懸念に応えるという。", "b": "自主的な取り決めにすぎず、守らない事業者を止められない点を課題とする立場もある。すでに集められたデータの扱いや、対応しない新興事業者への実効性が残るという。", "say": "確認できたのは、4社が共通の仕組みを支持したことと、導入が2027年とされることだ。トークンの具体名、標準化の場、既存データの扱いは分からない。仕様の公開と、各社の対応開始時期を見たい。", "src": "ITmedia(AI学習への利用拒否をrobots.txtで一括指定へ、11月1日) · Impress Watch(AI学習の可否をrobots.txtで指定 共通仕様を27年導入、11月1日)"},
+    "mayor":{"kick": "政治 · 地方選挙 · ✓ 2媒体 · 福岡市長選の投開票日は未確認", "title": "福岡市長選に13人が立候補、戦後最多 現職不在は40年ぶり 熊本市長選も告示", "what": "福岡市長選が11月1日に告示され、新顔13人が立候補を届け出た。戦後最多で、政令指定都市の市長選としても過去最多となった。現職が立たない選挙は40年ぶりである。候補者が多いため、ポスターの掲示枠が増設され、当選に必要な得票に誰も届かない場合の再選挙も視野に入っている。同じ日に熊本市長選も告示され、4期目を狙う現職に新顔4人が挑む。熊本市長選の投開票は15日である。", "why": "候補者が乱立すると票が割れ、法定得票に届く人が出にくくなる。再選挙になれば、市政の空白と費用が生じる。福岡のような大都市で現職が立たない選挙は、市政の継続と刷新のどちらを選ぶかが明確に問われる。", "me": "福岡市や熊本市に住む人は、投票所入場券が届く時期と期日前投票の期間を自治体の案内で確認する。候補者が多い場合、各陣営の公約を比べるには、選挙公報と公式のチラシを並べて見るのが早い。住民でなくても、政令指定都市の選挙は他の都市の議論に波及しやすい。", "a": "多様な候補が出ることは、市民の選択肢が広がる好ましい状況だという立場がある。現職がいない分、争点が政策本位になりやすいという。", "b": "乱立で票が割れ、法定得票に届かず再選挙になる懸念を挙げる立場もある。有権者が候補者を比べる負担が増え、投票率が下がりかねないという。", "say": "確認できたのは、福岡市長選の立候補が13人で戦後最多であることと、熊本市長選が15日投開票であることだ。福岡市長選の投開票日、有力とされる候補は、ここでは確認できていない。各陣営の公約と、期日前投票の動きを見たい。", "src": "朝日新聞(福岡市長選告示、新顔13人が立候補届け出、11月1日) · 毎日新聞(福岡市長選告示 戦後最多13人、熊本市長選告示、11月1日)"},
+    "quake":{"kick": "防災 · ✓ 3媒体", "title": "三重県南東沖でM6.1の深発地震 福島県で震度3、津波の心配なし", "what": "11月1日午前7時15分ごろ、三重県南東沖を震源とする深発地震があった。震源の深さは約350キロ、地震の規模はマグニチュード6.1と推定される。津波の心配はない。震央に近い東海地方や近畿地方では最大でも震度1程度だったが、福島県の大熊町、双葉町、浪江町で震度3を観測し、北海道から関東にかけて震度2が観測された。震度の分布は、震央を中心とした同心円状ではなかった。", "why": "震源が深い地震では、揺れが地下のプレートを伝わって遠くへ届き、震央付近より遠方のほうが強く揺れることがある。これを異常震域と呼ぶ。震源が深いため、震源の近くで建物が壊れるような被害は起きにくい。", "me": "震度1から3の揺れでも、棚の上の物や高い位置の食器が落ちることがある。普段から、寝室の背の高い家具の固定を見直しておくとよい。地震の直後は、デマや古い映像が出回りやすいので、気象庁の発表を確認したい。", "a": "深い地震だから過度に心配しなくてよいという見方がある。被害の報告は確認されておらず、日常の備えを続ければ十分だという。", "b": "発生する場所が広がる点に目を向ける立場もある。震源が深くても遠方で強く揺れる例があり、地域によっては揺れの予想がしにくいという。", "say": "確認できたのは、震源の深さが約350キロであること、最大震度が3であること、津波の心配がないことだ。けが人や被害の有無は、ここでは確認できていない。気象庁が出す追加の情報を見たい。", "src": "ウェザーニュース(三重県南東沖でM6.1の深発地震、11月1日) · 日本経済新聞(福島で震度3 震源地は三重県南東沖、11月1日) · NHK(福島県で震度3 津波の心配なし、11月1日)"},
+    "cluster":{"kick": "安保 · ✓ 2媒体", "title": "北朝鮮、弾道ミサイル搭載のクラスター弾を試験したと発表 最大約360メートル四方を焦土化", "what": "北朝鮮は1日、31日に弾道ミサイルに搭載するクラスター弾の評価試験を行ったと発表した。試験では、最大でおよそ360メートル四方を焦土化できることが実証されたという。クラスター弾は、1つの弾の中に多数の小さな爆弾を入れ、空中で散らして広い面積を攻撃する兵器である。実戦配備や運用の時期については、公表された範囲では確認されていない。", "why": "短距離の弾道ミサイルに広い面を攻撃できる弾頭が付けば、飛行場や部隊の集結地を狙う能力が上がる。ミサイル防衛で迎撃しにくい低い軌道のミサイルと組み合わされると、警戒の難しさが増す。国際的にはクラスター弾を禁じる条約があるが、北朝鮮は加わっていない。", "me": "日本に住む人にとって、すぐに行動を変える必要はない。ミサイル発射の警報が出たときの避難行動を、自治体の案内で一度確認しておくとよい。ニュースでは、発表を行った主体と、実際に確認された事実を分けて読みたい。", "a": "北朝鮮の能力が上がっているとして、警戒を強める立場がある。日米韓の監視と迎撃態勢の見直しが必要だという。", "b": "自国メディアの発表は誇張を含みうるとして、慎重に見る立場もある。威力の数字は検証できず、実際の信頼性は別だという。", "say": "確認できたのは、北朝鮮が評価試験を発表したことと、およそ360メートル四方という数字である。威力の独立した検証、搭載したミサイルの種類、配備の時期は分からない。次の発射の有無と、日米韓の分析結果を見たい。", "src": "NHK(クラスター弾の評価試験実施と伝える、11月1日) · 毎日新聞(北朝鮮、クラスター弾を2026年内に運用か、11月1日)"},
+    "fy":{"kick": "スポーツ · ✓ 4媒体", "title": "フォーエバーヤングはBCクラシック5着で連覇ならず テーオーエルビスはBCスプリントで日本馬初制覇", "what": "アメリカで開かれたブリーダーズカップのクラシックで、昨年の勝ち馬フォーエバーヤングは5着だった。25年ぶり史上2頭目の連覇はならなかった。オーナーの藤田晋氏は「悔しいというより、寂しい」と話し、「目に見えない疲れがあったのかな」と振り返った。今後については「すぐに決めると思います」と述べた。矢作調教師は「分からない」と話した。同じ日のBCスプリントでは、テーオーエルビスが1番人気を差し切り、日本調教馬として初めて制した。", "why": "日本調教馬のBCスプリント初制覇は、短距離でも世界の頂点に届いたことを示す。一方、連覇のかかった本命が敗れたことで、遠征の疲れや馬場への適応という課題も浮かぶ。今後の遠征計画や引退後の種牡馬入りの判断にも影響する。", "me": "競馬を見る人は、世界のレースの結果が日本の競走馬の評価や来年の遠征予定に直結することを覚えておくとよい。初めて海外レースを見るなら、日本馬が出る日の中継の時間を調べておくと見やすい。", "a": "今回の敗戦は能力の衰えではなく、遠征や疲れなど条件の問題だという見方がある。オーナーの話にある疲れの示唆を根拠に、巻き返しを期待する。", "b": "連覇の難しさを示す結果だという見方もある。史上2頭目という重みの通り、2年続けて勝つ難度は高く、今回の5着を重く受け止めるべきだという。", "say": "確認できたのは、フォーエバーヤングが5着だったことと、テーオーエルビスがBCスプリントを制したことだ。敗因の詳しい分析と今後のレース予定は、ここでは確認できていない。陣営の発表を見たい。", "src": "読売新聞(テーオーエルビスがBCスプリント制覇、フォーエバーヤングは5着、11月1日) · 日刊スポーツ(藤田オーナー「悔しいというより、寂しい」、11月1日) · スポニチ(フォーエバーヤング5着、11月1日) · 47NEWS(フォーエバーヤングは5着、11月1日)"},
+    "shomarin":{"kick": "スポーツ · ✓ 2媒体", "title": "「しょまりん」本田真凜・宇野昌磨組、アイスダンスのデビュー戦は4位 合計145.70点", "what": "本田真凜さんと宇野昌磨さんのアイスダンスペア「しょまりん」が11月1日、全日本選手権の予選会でデビュー戦を迎え、4位だった。フリーダンスは87.02点で、合計145.70点である。優勝は吉田唄菜・森田真沙也組で、紀平梨花・西山真瑚組が3位に入った。宇野さんは「大会に出てよかった」と話した。現役復帰したペアの初の公式戦で、会場は超満員になった。", "why": "宇野さんはシングルで世界選手権を制した選手で、アイスダンスへの転向は競技の枠を超えた話題になった。デビュー戦の位置づけは、全日本選手権の出場権に近づけるかどうかに直結する。結果は、新ペアの成長の道筋を測る最初の基準になる。", "me": "フィギュアを普段見ない人も、アイスダンスは音楽と振り付けの比重が大きい種目で、見やすい。次の大会の日程を調べ、中継で滑りを見ておくと、シングルとの違いが分かる。チケットを狙う場合は、公式の販売案内を確認したい。", "a": "デビュー戦としては十分な内容だったという見方がある。初の公式戦で合計145点台を出し、リフトも決まり、伸びしろが大きいという。", "b": "4位という結果から、国内の層の厚さを指摘する立場もある。全日本選手権で上位に入るには、まだ大きな上積みが要るという。", "say": "確認できたのは、4位という順位と、フリーダンス87.02点、合計145.70点だ。全日本選手権の出場権の扱いと、次戦の日程は、ここでは確認できていない。競技団体の発表を見たい。", "src": "毎日新聞(しょまりん、デビュー戦は4位、11月1日) · 朝日新聞(アイスダンスに「しょまりん」デビュー、11月1日)"},
+    "midterm":{"kick": "国際 · ✓ 3媒体", "title": "米中間選挙は3日に投開票 期日前投票はすでに前回2022年の人数を上回る", "what": "アメリカの中間選挙は11月3日に投開票される。フロリダ大学の研究グループによると、投票を済ませた人の数は、前回2022年の中間選挙をすでに上回っている。市場関係者の間では、民主党が大勝した場合に米株が逆風を受け、AI投資に冷や水となる可能性が意識されている。ローマ教皇レオ14世が郵便投票を行ったことも、前日までに伝えられた。", "why": "中間選挙は大統領の任期の中間評価にあたり、議会の多数派が変わるかが焦点になる。議会が変われば、予算や関税、AI規制の議論の進み方が変わりうる。期日前投票が多いと、投票日の結果の読み方も変わる。", "me": "日本から見ても、米国の議会勢力は円相場や株価、米国向けの輸出に影響する。投票日の結果が確定するまでには時間がかかることがあり、開票の途中の数字で判断しないようにしたい。", "a": "期日前投票の多さは、有権者の関心の高さを示すという見方がある。投票率が上がれば、既存の世論調査の見立てが外れる余地が広がるという。", "b": "事前の投票が多いことは、結果の予想に直結しないという見方もある。どちらの支持層が先に投票したかが分からず、熱気だけで勝敗は読めないという。", "say": "確認できたのは、投開票日が3日であることと、期日前投票が2022年の人数をすでに上回っていることだ。どちらの党が優位か、議会の多数派がどうなるかは、ここでは確認できていない。3日夜からの開票の進み方を見たい。", "src": "NHK(アメリカ中間選挙の期日前投票 前回上回る、11月1日) · 毎日新聞(米中間選挙、3日投開票、11月1日) · 時事通信(民主大勝なら米株逆風か、10月31日)"}
+  };
+  const G = {
+    "不正アクセス":{"f": "サイバー", "d": "他人のIDや欠陥を悪用し、権限なくシステムに入ること。", "w": "委託先が攻撃を受けた。"},
+    "委託先":{"f": "契約", "d": "企業が業務の一部を任せている外部の会社。", "w": "特典付与サービスの委託先が狙われた。"},
+    "漏えい":{"f": "サイバー", "d": "本来外に出てはならない情報が外部に出てしまうこと。", "w": "氏名と購入金額のおそれが公表された。"},
+    "社債":{"f": "金融", "d": "企業がお金を借りるために発行する債券。買った人は利子を受け取る。", "w": "購入者の情報が対象になった。"},
+    "暗号資産":{"f": "金融", "d": "インターネット上で取引される電子的な資産。ビットコインなど。", "w": "取引所の資産が約1兆円規模で影響を受けた。"},
+    "資金洗浄":{"f": "金融・法律", "d": "犯罪で得た資金の出どころを分からなくする行為。", "w": "盗まれた暗号資産に行われたとFBIが指摘した。"},
+    "クローラー":{"f": "技術", "d": "Webサイトを自動で巡回して内容を集めるプログラム。", "w": "AI各社が学習用データ集めに使う。"},
+    "robots.txt":{"f": "技術", "d": "サイトの入り口に置き、巡回ロボットに入ってよい範囲を伝える文書。", "w": "AI学習の拒否を一括指定できるようになる。"},
+    "トークン":{"f": "技術", "d": "ここでは、robots.txtに書く、特定の意味を持つ決まった文字列のこと。", "w": "共通のトークンで各社をまとめて指定する。"},
+    "深発地震":{"f": "地震", "d": "震源の深さがおよそ60キロより深い地震。", "w": "震源は約350キロだった。"},
+    "震度":{"f": "防災", "d": "ある場所での揺れの強さを表す階級。", "w": "福島県で3、北海道から関東で2だった。"},
+    "津波":{"f": "防災", "d": "海底の地殻変動などで起きる、海面の大きな動き。", "w": "津波の心配はないとされた。"},
+    "クラスター弾":{"f": "安保", "d": "1つの弾に多数の小型爆弾を入れ、空中で散らす兵器。", "w": "北朝鮮が評価試験を発表した。"},
+    "弾道ミサイル":{"f": "安保", "d": "高く打ち上げられ、放物線を描いて落ちるミサイル。", "w": "搭載する弾頭の試験とされた。"},
+    "期日前投票":{"f": "選挙", "d": "投票日より前に投票できる制度。", "w": "米国では前回の人数をすでに上回った。"},
+    "中間選挙":{"f": "選挙", "d": "米大統領の任期の中間に行われる連邦議会選挙。", "w": "3日に投開票される。"},
+    "政令指定都市":{"f": "地方自治", "d": "人口が多く、府県並みの権限を持つ大都市。", "w": "福岡市は過去最多の候補者になった。"},
+    "法定得票":{"f": "選挙", "d": "当選に必要な最低限の得票数。", "w": "市長選では有効投票総数の4分の1。"},
+    "再選挙":{"f": "選挙", "d": "当選者が決まらないとき、選挙をやり直すこと。", "w": "候補者が多いと視野に入る。"},
+    "告示":{"f": "選挙", "d": "選挙の期日を公式に知らせ、立候補の受け付けを始めること。", "w": "市長選が1日に告示された。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
