@@ -1,0 +1,343 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,859.08</b>KOSPI · 11/02(月) 終値 · 前日比+2.24%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,580.07</b>S&amp;P 500 · 10/30(金) 終値 · 前日比-1.82%</div>
+    </div>
+    <div class="dateline"><span>第30号 · 朝刊</span><b>2026年11月3日 火曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="bnb">
+      <div class="kick">金融 · 仮想資産<span>報道照合 ✓ 5社 · ハッキングの経緯と盗まれた資産の回収規模は未確認</span></div>
+      <h2 class="hl">バイナンス、出金再開後の純流出が5兆ウォン近くに…金融委、国内取引所にハッキング対策の準備金積み増しを要請</h2>
+      <p class="deck">出金が解禁されると利用者が資産を引き出し、金融委は2日、国内の仮想資産取引所を招集した。</p>
+      <div class="body">
+        <p>世界最大の仮想資産取引所バイナンスから先月末、63億ドル、ウォン換算で約8兆4000億ウォン相当が流出し、出金が再び開くと、利用者が資金を引き出し始めた。盗難は10のブロックチェーンのウォレットで行われ、大半が約20分の間に動いた。バイナンスは約30億ドル相当を凍結し、損失は利用者ではなく会社が負担すると明らかにした。秘密鍵が漏れた証拠は見つかっていないという立場だ。出金は1日の韓国時間午後3時から段階的に再開され、2日午前0時30分までに、出金46億4900万ドル、入金10億1000万ドルが処理された。出た金から入った金を引いた純流出は約36億4000万ドル、ウォン換算で約4兆8500億ウォンで、10月28日時点の運用資産総額1710億ドルの2.1%に当たる。その後の集計では6兆ウォン台まで膨らんだという数値も出ており、集計時点ごとに金額が異なる。</p>
+        <p>背後には、北朝鮮のハッキング組織『トレーダートレイター(TraderTraitor)』が名指しされた。ブロックチェーン分析会社のTRMは「高い確信をもって判断する」と述べ、チェイナリシス(Chainalysis)も同じ組織の犯行の可能性が高いとし、米連邦捜査局(FBI)は先月31日の声明でこの組織を黒幕と名指しした。バイナンスは、捜査当局と協力して犯人の身元を確認中だと明らかにしてきた。初期調査では、エンジニアのノートパソコンが破られたことが出発点かもしれないという可能性が出たが、経緯は確定していない。国内では金融委員会が2日、アップビット・ビッサム・コインワン・デジタルエックス・ゴパックスなどのウォン建て取引所とコインマーケット取引所を緊急招集し、コールドウォレットの比率引き上げ、入出金の常時点検と対応人員の確保、ハッキング試行の迅速な報告、準備金の積み増しを求めた。コールドウォレットはインターネットから切り離したオフラインのウォレットで、準備金は事故の際に利用者に弁償できるよう積み立てておく金だ。金融委は、ハッキングが疑われるときに出金を素早く止める方策も検討している。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="pass">
+      <div class="kick">政治 · セキュリティ<span>報道照合 ✓ 4社 · 流出経路とファイルが実際にダウンロードされたかは未確認</span></div>
+      <h3 class="hl">イ大統領夫妻の旅券番号など『1号機搭乗者』168人の個人情報、マルウェア検査サイトに5カ月間露出…青瓦台「事前に把握して対応」</h3>
+      <div class="one">
+        <p>イ・ジェミョン大統領夫妻をはじめとする空軍1号機の搭乗者168人の個人情報が、インターネット上の有料マルウェア検査サイトに約5カ月間さらされていた事実が2日、明らかになった。6月2日に『1号機搭乗者名簿』という題のエクセルファイルがアップロードされ、大統領夫妻の生年月日と旅券番号、ハン・ソンスク首相(当時の中小ベンチャー企業部長官)やウィ・ソンラク国家安保室長のような高官、警護員と出入り記者の情報が入っていた。6月の欧州歴訪時の名簿だ。青瓦台は「報道内容について事前に把握して対応措置を取り、今後は外交部などが追加措置を行う予定」と明らかにした。外交部は事案を重く受け止め、経緯を調べている。ハッキングが原因なのか、歴訪文書をセキュリティ点検する過程で内部の人員が直接アップロードしたのかは判別されていない。露出期間中にファイルがダウンロードされたのか、政府が最初に知った時点がいつなのかも、まだ明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="ioki"><b>日本の陸上自衛隊、沖縄に16式機動戦闘車を初配備…台湾有事に備え</b><em>陸上自衛隊が沖縄の駐屯地に16式機動戦闘車を初めて配備した。台湾有事などを念頭に置いた措置だ。</em><span>安保 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="iscalp"><b>アイドル公演・韓国シリーズのチケットを高値で転売し22億ウォンを得た一味を送致…8万1000ウォンの券を893万ウォンで売ったことも</b><em>高値での転売で22億ウォンを得た内国人と外国人の一味が送致された。8万1000ウォンの野球のチケットを893万ウォンで売った事例がある。</em><span>社会 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="ibmt"><b>放送メディア通信委員会の世宗移転に労組が反発…「職員との事前協議はなかった」</b><em>国家公務員労組の放送メディア通信委員会支部が、移転日程の再検討と協議を求めた。事前協議がなかったという主張だ。</em><span>政策 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="iins"><b>金融当局、若者の自動車保険加入時に親の運転経歴を活用する手続きを今月中に改善</b><em>金融当局が、若者が経歴認定制度と特約を見逃さないよう、今月中に加入手続きを改める。ある事例では保険料が130万ウォンから71万ウォンに下がる。</em><span>金融 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="iear"><b>5月に勤労・子ども奨励金の申請を逃したなら、12月1日までに申請を</b><em>去る5月に昨年分の勤労・子ども奨励金の申請を逃したなら、12月1日まで申請できる。5月の定期申請期間が過ぎた後の申請だ。</em><span>生活 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="jeon">
+      <div class="kick">社会 · 司法<span>報道照合 ✓ 4社 · 公訴庁の起訴の有無とチョン氏側の立場は未確認</span></div>
+      <h3 class="hl">『5・18北朝鮮介入説』流布の疑いのチョン・ハンギル、公訴庁に送致…警察、特別法違反・名誉毀損などを適用</h3>
+      <div class="body">
+        <p>警察が、5・18民主化運動に北朝鮮が介入したと発言した疑いのある、韓国史講師出身のユーチューバー、チョン・ハンギル氏を公訴庁に送った。ソウル警察庁広域犯罪捜査隊が先月30日に事件をソウル中央地方公訴庁に送致し、2日に伝えられた。適用された容疑は5・18民主化運動などに関する特別法違反が中心で、情報通信網法上の名誉毀損と電気通信基本法違反なども含まれた。チョン氏は4月にユーチューブのチャンネルで、5・18に北朝鮮が介入したという趣旨の発言をした疑いが持たれている。この特別法は、情報通信網で5・18に関する虚偽の事実を広めた場合、5年以下の懲役または5000万ウォン以下の罰金に処すと定めている。</p>
+        <p>北朝鮮軍介入説は、国防部が事実無根と明らかにし、大法院も虚偽と判断したことがある。同じ送致には、イ・ジェミョン大統領とイ・ジュンソク前改革新党代表に対する虚偽事実流布の疑いも入っている。送致は警察が捜査を終えて事件を渡す段階であり、裁判にかけるかどうかは公訴庁が決める。チョン氏側の反論の立場は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="hap">
+      <div class="kick">政治 · 与党<span>報道照合 ✓ 4社 · キム・ミンソク指導部の公式の立場と合党協議の日程は未確認</span></div>
+      <h3 class="hl">民主・革新の合党論が再燃…チョン・チョンレ「遅くとも来年1月」の期限にイ・ヘシク「唐突に決めて助けになるのか」、革新党は「局面転換用ではない」</h3>
+      <div class="body">
+        <p>共に民主党と祖国革新党の合党論が再び燃え上がった。チョン・チョンレ前民主党代表は「早くするほどよく、遅くとも来年1月には終えるべきだ」と期限を示し、2028年の総選挙の党内予備選で革新党出身者が権利党員を募るには最低6カ月が必要だという理由を挙げた。イ・ヘシク議員は「予言者のように合党の期限を唐突に決めて助けになるのか」と、合党が不発に終わった責任から自由でない前代表を公開で批判した。合党論は、前代表が党代表だった去る1月に初めて提案されたが、党内の反発で流れたことがある。</p>
+        <p>大統合推進団長のパク・ポムゲ議員は、両党指導部の政治的決断で迅速に進める案を考える時期だとしつつも、期限は来年の夏まで余裕があると述べた。革新党のキム・ジュニョン院内代表は、革新党は政権与党の局面転換の手段ではなく、原則のない合党は支持を得にくいと明らかにした。キム・ミンソク代表体制が8月に発足させた大統合推進団には、まだ目に見える成果がなく、合党協議の予定された日程もない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="hoban">
+      <div class="kick">経済 · 財界<span>報道照合 ✓ 4社 · ホバンの現在の持ち株比率と筆頭株主変更の有無は未確認</span></div>
+      <h3 class="hl">ホバン、ハンジンカルの筆頭株主の可能性で公正取引委員会に企業結合を届け出…ハンジンカルは『未確定』開示、チョ・ウォンテ会長は370億ウォンを追加購入</h3>
+      <div class="body">
+        <p>ホバングループが、ハンジングループの持ち株会社ハンジンカルの株式を市場内でさらに買い増し、筆頭株主になる可能性があるとして、公正取引委員会に企業結合を届け出た。公正取引法は、一定規模以上の企業が上場会社の株式の15%以上を持ったまま株式をさらに取得して最多出資者になる場合、届け出るよう定めている。ホバンの持ち株は7月10日時点で20.15%で、チョ・ウォンテ・ハンジングループ会長側の約20.6%より低く、追加購入後の正確な持ち株比率は公開されていない。ハンジンカルは、筆頭株主の変更が確定していないという『未確定』の開示を出し、12月1日までに再び開示すると述べた。ホバンは、保有目的が『単純投資』から変わっていないと明らかにした。</p>
+        <p>同じ日、チョ会長はハンジンカルの普通株32万5000株を370億5000万ウォンで買い入れる契約を開示した。株当たり11万4000ウォンで、12月3日から来年1月1日の間に時間外大量売買で取引され、目的は『責任経営の強化』だ。個人の持ち株は5.75%から6.23%に、特殊関係人を合わせると21.06%になる。ハンジングループは、以前から準備していたことだと説明した。デルタ航空(14.90%)と産業銀行(10.58%)はチョ会長側の友好株主に分類され、チョ会長側と合わせると46.05%だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>20.15%</b><span>ホバンのハンジンカル持ち株比率、7月10日時点</span></div>
+        <div><b>6.23%</b><span>チョ・ウォンテ会長の個人持ち株比率、購入完了後</span></div>
+        <div><b>12/1</b><span>ハンジンカル筆頭株主の再開示予定日</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>バイナンスに預けた利用者の金は戻ってこないという話</b> <span>バイナンスのリチャード・テン共同最高経営責任者は、盗難被害を利用者ではなく会社が負担すると明らかにした。出金は1日から段階的に再開された。</span></div>
+        <div><b>大統領夫妻の旅券番号がハッキングで盗まれたという話</b> <span>旅券番号が入ったファイルがマルウェア検査サイトにアップロードされていた事実だけが伝えられている。ハッキングか内部アップロードか流出経路は確認されておらず、外交部が経緯を調べている。</span></div>
+        <div><b>ホバングループがすでにハンジンカルの筆頭株主になったという話</b> <span>ハンジンカルは、筆頭株主の変更が確定していないという未確定の開示を出し、12月1日までに再び開示すると明らかにした。ホバンの現在の持ち株比率は公開されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 火 11月3日</b><span>韓国シリーズ第1戦が水原で開かれ、KTのダニエルとサムスンのチェ・ウォンテが先発で投げ合う。イ・ジェミョン大統領とエルドアン・トルコ大統領の首脳会談が予定されている。国内の取引所が、金融委の準備金積み増しの要請にどう応えるかが注目点だ。</span><b>今週</b><span>バイナンスの純流出とハッキングの経緯について、追加の発表が出る可能性がある。外交部による1号機搭乗者名簿の露出経緯の調査が続く。</span><b>その後</b><span>ハンジンカルは12月1日までに、筆頭株主の変更の有無を再び開示する。チョ・ウォンテ会長のハンジンカル株の取引は、12月3日から来年1月1日の間に行われる。チョン・チョンレ前代表が示した合党の期限は来年1月だ。チョン・ハンギル氏の起訴の有無は、公訴庁が判断する。</span><b>読者へ</b><span>業務ファイルをセキュリティ点検の目的で外部サイトにアップロードする前に、そのサイトがアップロードされたファイルを他の利用者と共有するかどうか、まず確認しよう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "bnb":{"kick": "金融 · 仮想資産 · ✓ 5社 · ハッキングの経緯と盗まれた資産の回収規模は未確認", "title": "バイナンス、出金再開後の純流出が5兆ウォン近くに…金融委、国内取引所にハッキング対策の準備金積み増しを要請", "what": "バイナンスから先月末、63億ドル相当の仮想資産が流出した。盗難は10のブロックチェーンのウォレットで行われ、大半が約20分の間に移動した。バイナンスは約30億ドル相当を凍結し、損失は利用者ではなく会社が負担すると明らかにした。出金は1日の韓国時間午後3時から段階的に再開された。2日午前0時30分までに、出金46億4900万ドル、入金10億1000万ドルが処理され、純流出は約36億4000万ドルで、これは10月28日時点の運用資産総額1710億ドルの2.1%に当たる。分析会社のTRMは北朝鮮の組織トレーダートレイターの犯行と高い確信をもって判断し、FBIは31日の声明でこの組織を黒幕と名指しした。金融委員会は2日に国内の仮想資産取引所を招集し、コールドウォレットの比率引き上げ、常時点検、迅速な報告、準備金の積み増しを求めた。", "why": "取引所は利用者の仮想資産を代わりに預かる場所であるため、大きな盗難の後には、利用者が資産を引き出す動きがすぐに続きうる。出金再開の直後に純流出が運用資産総額の2%を超えたことは、補填の約束だけでは信頼がすぐには戻らないことを数字で示している。国内の取引所も同じ構造であるため、金融委がコールドウォレットと準備金をまず点検することになった。", "me": "国内の取引所に資産を預けている利用者なら、その取引所がコールドウォレットの比率と準備金をどう公開しているか確認してみるとよい。バイナンスに加入していなくても、仮想資産の相場が揺れれば、保有コインの評価額が一緒に動きうる。今回のことは、国内取引所のセキュリティ点検の強化につながる可能性がある。", "a": "バイナンスが全額補填を約束し、約30億ドルを凍結して被害を埋める余力があるとみる見方がある。この見方では、出金が殺到したのは一時的な不安であり、補填計画が履行されれば流出は収まるとみる。", "b": "出金再開の直後に純流出が運用資産総額の2%を超えた点から、信頼の毀損がすでに始まったとみる見方もある。この見方では、取引所の自前の補填能力にだけ頼る構造を点検すべきで、国内でも準備金とコールドウォレットの基準をより厳しくすべきだとみる。", "say": "確認されたのは、63億ドル規模の盗難、出金再開後の純流出の数値、金融委の要請だ。確認されていないのは、ハッキングの経緯と、盗まれた資産がどれだけ取り戻されるかだ。北朝鮮の組織の名指しは分析会社とFBIの判断であり、バイナンスは捜査当局と協力して身元を確認中だと明らかにしてきた。きょうは、純流出が止まるかどうかと、国内取引所の準備金の告知が注目点だ。", "src": "聯合ニュース(純流出の集計、11/2) · 東亜日報(金融委の招集内容、11/2) · 朝鮮日報(出金再開後の流出、11/2) · 韓国経済新聞(補填の余力、11/2) · AP通信(分析会社の判断、10/30)"},
+    "pass":{"kick": "政治 · セキュリティ · ✓ 4社 · 流出経路とファイルが実際にダウンロードされたかは未確認", "title": "イ大統領夫妻の旅券番号など『1号機搭乗者』168人の個人情報、マルウェア検査サイトに5カ月間露出…青瓦台「事前に把握して対応」", "what": "6月2日、『1号機搭乗者名簿』という題のエクセルファイルが有料のマルウェア検査サイトにアップロードされた。ファイルには空軍1号機の搭乗者168人の情報が入っており、イ・ジェミョン大統領夫妻の生年月日と旅券番号が含まれていた。ハン・ソンスク首相(当時の中小ベンチャー企業部長官)、ウィ・ソンラク国家安保室長などの高官と、警護員、出入り記者の情報も入っていた。6月の欧州歴訪時の名簿だ。ファイルは約5カ月間さらされ、2日に伝えられた。青瓦台は、事前に把握して対応措置を取り、外交部などが追加措置を行う予定だと明らかにした。外交部は事案を重く受け止め、経緯を調べている。流出経路は確認されていない。", "why": "旅券番号と生年月日は、航空券の予約、出入国書類、本人確認に使われる情報であり、一度広まると変えにくい。大統領一行の情報は、警護や動線のセキュリティにも関わっている。政府が露出の事実をいつ知り、何をしたかが、責任を問う核心だ。", "me": "旅券番号は、氏名・生年月日とともに使われると、本人確認の手続きに悪用されうる。業務ファイルをセキュリティ点検と称して外部サイトにアップロードすることは誰にでも起こりうるため、アップロードする前に、そのサイトがファイルを他の利用者と共有するか確認する必要がある。", "a": "青瓦台は、露出の事実を把握した後に対応措置を取り、外交部などが追加措置に乗り出す点を強調する。この見方では、個人情報の露出の可能性が確認された以上、経緯の調査を終えることが優先だ。", "b": "事前に把握して対応したという説明に疑問を呈する見方もある。この見方では、5カ月間ファイルが残っていた理由と、政府が知った時点を明らかにすることが先だとみる。", "say": "確認されたのは、6月2日のファイル掲載、168人の情報の包含、約5カ月の露出、青瓦台の事前把握後に対応したという説明だ。確認されていないのは、流出経路と、ファイルが実際にダウンロードされたか、政府が最初に知った時点だ。外交部の調査結果と、捜査着手の有無が注目点だ。", "src": "聯合ニュース(大統領らの旅券番号の露出、11/2) · 東亜日報(168人の情報流出、11/2) · 韓国経済新聞(搭乗者名簿の流出、11/2) · 京郷新聞(青瓦台の対応、11/2)"},
+    "jeon":{"kick": "社会 · 司法 · ✓ 4社 · 公訴庁の起訴の有無とチョン氏側の立場は未確認", "title": "『5・18北朝鮮介入説』流布の疑いのチョン・ハンギル、公訴庁に送致…警察、特別法違反・名誉毀損などを適用", "what": "警察が先月30日、チョン・ハンギル氏の事件をソウル中央地方公訴庁に送致し、2日に伝えられた。ソウル警察庁広域犯罪捜査隊が捜査した。適用された容疑は5・18民主化運動などに関する特別法違反が中心で、情報通信網法上の名誉毀損と電気通信基本法違反などが含まれた。チョン氏は4月にユーチューブのチャンネルで、5・18に北朝鮮が介入したという趣旨の発言をした疑いが持たれている。特別法は、情報通信網で5・18に関する虚偽の事実を広めた場合、5年以下の懲役または5000万ウォン以下の罰金に処すと定めている。同じ送致には、イ・ジェミョン大統領とイ・ジュンソク前改革新党代表に対する虚偽事実流布の疑いも含まれた。国防部は北朝鮮軍介入説を事実無根と明らかにし、大法院も虚偽と判断したことがある。", "why": "送致は警察が捜査を終えて判断を渡す段階であり、実際に裁判になるかどうかは公訴庁の起訴の決定にかかっている。5・18に関する虚偽事実の流布を処罰する特別法が、ユーチューブのような個人放送に適用される事例であり、オンライン発言の限界線が争点になる。大統領に関わる容疑が一緒に入っているため、政治的な波紋も残る。", "me": "ユーチューブやSNSで歴史的事件についての虚偽の主張を共有しても、情報通信網法や特別法の対象になりうる。動画を拡散する前に、政府の記録や判決のような確認できる資料があるか調べる習慣が役に立つ。", "a": "表現の自由を理由に、処罰には慎重であるべきだとみる見方がある。この見方では、起訴と裁判で、発言の虚偽性と故意が厳格に立証されるべきだとみる。", "b": "5・18の歪曲は被害者と遺族への二次加害であり、国防部と大法院がすでに虚偽と判断した事案であるため、法で防ぐべきだとみる見方がある。この見方では、特別法はまさにこうした場合のために作られたとみる。", "say": "確認されたのは、送致の事実と適用された容疑だ。確認されていないのは、公訴庁の起訴の有無と、チョン氏側の立場だ。起訴の決定時期と、裁判所の判断が注目点だ。", "src": "聯合ニュース(公訴庁への送致、11/2) · 韓国経済新聞(送致された容疑、11/2) · アジア経済(送致の経緯、11/2) · フィナンシャルニュース(大統領関連の容疑、11/2)"},
+    "hap":{"kick": "政治 · 与党 · ✓ 4社 · キム・ミンソク指導部の公式の立場と合党協議の日程は未確認", "title": "民主・革新の合党論が再燃…チョン・チョンレ「遅くとも来年1月」の期限にイ・ヘシク「唐突に決めて助けになるのか」、革新党は「局面転換用ではない」", "what": "チョン・チョンレ前共に民主党代表は、祖国革新党との合党を、遅くとも来年1月には終えるべきだと述べた。前代表は、2028年の総選挙の党内予備選で革新党出身者が権利党員を募るには、最低6カ月が必要だという理由を挙げた。合党論は、前代表が党代表だった去る1月に初めて提案されたが、党内の反発で流れた。イ・ヘシク議員は、合党の期限を唐突に決めて助けになるのかと公開で批判した。大統合推進団長のパク・ポムゲ議員は、両党指導部の政治的決断で迅速に進める案を考える時期だと述べ、期限は来年の夏まで余裕があると語った。革新党のキム・ジュニョン院内代表は、革新党は政権与党の局面転換の手段ではないとし、両党の信頼回復が先だと述べた。合党協議の予定された日程はない。", "why": "合党は二つの党の支持層、公認の持ち分、党権の構図を一度に変えることなので、期限を誰がどう決めるかがそのまま主導権争いになる。チョン前代表の発言は、キム・ミンソク代表体制と距離を置く動きとも読め、党内の権力構図と絡んでいる。革新党が一線を画しており、協議の構図そのものが不透明だ。", "me": "合党が成立すれば、総選挙と地方選挙の候補の構図や政党支持率の勢力図が変わりうる。ただ、いまは議論の段階であり、投票の選択に直接影響する決定は出ていない。", "a": "チョン前代表は、合党は早いほどよく、予備選の日程を考えれば来年1月が締め切りだとみる。期限を決めてこそ協議が動くという見方だ。", "b": "党内のイ・ヘシク議員と革新党は、手続きと信頼回復が先であり、一方的な期限の提示は協議の妨げになるとみる。革新党は、原則のない合党は支持を得にくいという立場だ。", "say": "確認されたのは、チョン前代表の1月期限の発言と、イ・ヘシク、パク・ポムゲ両議員、革新党のまちまちな反応だ。確認されていないのは、キム・ミンソク代表指導部の公式の立場と、合党協議の日程だ。民主党指導部が期限についてどんな立場を出すかが注目点だ。", "src": "聯合ニュース(合党論の再浮上、11/2) · 韓国経済新聞(パク・ポムゲの発言、11/2) · 国民日報(1月期限への反応、11/2) · MBC(イ・ヘシクの発言、11/2)"},
+    "hoban":{"kick": "経済 · 財界 · ✓ 4社 · ホバンの現在の持ち株比率と筆頭株主変更の有無は未確認", "title": "ホバン、ハンジンカルの筆頭株主の可能性で公正取引委員会に企業結合を届け出…ハンジンカルは『未確定』開示、チョ・ウォンテ会長は370億ウォンを追加購入", "what": "ホバングループがハンジンカルの株式を市場内で追加購入し、公正取引委員会に企業結合を届け出た。届け出は、ホバンが最多出資者になる可能性によるものだ。ホバンの持ち株は7月10日時点で20.15%で、チョ・ウォンテ会長側は約20.6%だった。追加購入後の正確な持ち株比率は公開されていない。ハンジンカルは、筆頭株主の変更が確定していないという未確定の開示を出し、12月1日までに再び開示すると明らかにした。ホバンは、保有目的が単純投資という立場を維持した。チョ会長は同じ日、ハンジンカルの普通株32万5000株を370億5000万ウォンで買い入れる契約を開示し、取引は12月3日から来年1月1日の間に行われる。ハンジングループは、以前から準備していたことでホバンとは無関係だと明らかにした。", "why": "ハンジンカルはハンジングループの持ち株会社であるため、筆頭株主の座は経営権争いの基準線になる。持ち株の差が1%ポイントにもならないため、一度の追加購入で順位が変わりうる。デルタ航空と産業銀行のような友好株主の議決権が、最終的な勝負を分ける変数だ。", "me": "ハンジンカルや大韓航空の株を持っているなら、持ち株の競争が株価変動の要因になりうる。公正取引委員会の審査結果と12月1日の再開示が、次の確認点だ。", "a": "ホバンは、保有目的が単純投資から変わっていないと明らかにし、届け出は法が定めた手続きに従ったものだという立場だ。この見方では、経営権紛争と断定しにくい。", "b": "チョ会長の追加購入を、ホバンの持ち株拡大に対抗する対応とみる見方がある。ハンジングループはこれを否定し、責任経営の強化のためだと説明する。", "say": "確認されたのは、ホバンの企業結合の届け出、ハンジンカルの未確定の開示、チョ会長の370億ウォン台の購入契約だ。確認されていないのは、ホバンの現在の持ち株比率と筆頭株主の変更の有無だ。12月1日の再開示と、公正取引委員会の審査結果が注目点だ。", "src": "聯合ニュース(企業結合の届け出、11/2) · 朝鮮日報(チョ・ウォンテ会長の購入、11/2) · 東亜日報(筆頭株主の可能性、11/2) · 電子新聞(ハンジンカルの未確定の開示、11/2)"},
+    "ioki":{"kick": "安保 · ✓ 報道2件", "title": "日本の陸上自衛隊、沖縄に16式機動戦闘車を初配備…台湾有事に備え", "what": "日本の陸上自衛隊が、沖縄の駐屯地に16式機動戦闘車を初めて配備した。機動戦闘車は、車輪で動きながら強い火力を出せる車両だ。陸上自衛隊は、台湾有事などを念頭にこの車両を配備した。沖縄の駐屯地にこの車両が入ったのは今回が初めてだ。配備の規模は公開されていない。", "why": "沖縄は、台湾に近い島々でつながる日本の南西の防衛線の中心だ。ここに、移動しながら撃てる火力が入れば、有事の島の防衛と部隊の移動の仕方が変わる。台湾海峡の緊張が日本の軍の配備につながる流れを示している。", "me": "韓国の読者にとっては、北東アジアの軍拡競争の一場面だ。朝鮮半島の安保に直接影響する決定ではないが、域内の緊張が高まれば、エネルギー価格や海上物流に影響が及びうる。", "a": "日本側には、防衛能力を備えることが抑止力だという見方がある。この見方では、今回の配備は攻撃ではなく島の防衛のためだとみる。", "b": "周辺国からは、地域の緊張を高める軍備拡張だという見方が出うる。この見方では、対応の配備が続けば、偶発的な衝突の危険が高まるとみる。", "say": "確認されたのは、初の配備の事実と、台湾有事に備えるという目的だ。確認されていないのは、配備の規模と追加配備の計画だ。中国側の反応が出るかが注目点だ。", "src": "聯合ニュース(沖縄への初配備、11/2) · 東亜日報(台湾有事への備え、11/2)"},
+    "iscalp":{"kick": "社会 · ✓ 報道2件", "title": "アイドル公演・韓国シリーズのチケットを高値で転売し22億ウォンを得た一味を送致…8万1000ウォンの券を893万ウォンで売ったことも", "what": "警察が、アイドル公演と韓国シリーズのチケットを定価より高く売った内国人と外国人の一味を送致した。一味が得た金は22億ウォンだ。8万1000ウォンの野球のチケットを893万ウォンで売った事例が確認され、チケット代が約110倍に膨らんだ場合があった。マクロプログラムでチケットを大量に確保したダフ屋が検挙された。韓国シリーズは3日、KTとサムスンの第1戦で始まる。同じ日に、3万6000ウォンの野球のチケットを18万ウォンで転売したポストシーズンのダフ屋が摘発された事例も出た。", "why": "人気の試合や公演のチケットは手に入れにくく、上乗せ取引が生まれやすい。マクロプログラムは、一般の利用者がチケットを買う機会を奪う。韓国シリーズの開幕を1日前にして、取り締まりの結果が出た形だ。定価の100倍を超える価格がついた事例があり、価格の確認が重要だ。", "me": "個人取引でチケットを買うときは、定価の何倍か、譲渡が認められているチケットかを確認しなければならない。定価より大きく高いチケットは詐欺の危険もあるため、公式の予約窓口とキャンセル分の販売をまず見ることができる。", "a": "取り締まりを強化し、処罰の水準を上げてこそ、チケットが利用者に回るとみる見方がある。", "b": "需要が供給より大きい限り、取引を防ぐのは難しく、予約方式と座席の供給構造を変えるべきだとみる見方もある。", "say": "確認されたのは、22億ウォン規模、893万ウォンでの販売事例、送致の事実だ。確認されていないのは、一味の正確な人数と裁判の結果だ。韓国シリーズの期間中、現場の取り締まりが続くかが注目点だ。", "src": "東亜日報(22億ウォンの送致、11/2) · 韓国経済新聞(893万ウォンの販売事例、11/2)"},
+    "ibmt":{"kick": "政策 · ✓ 報道2件", "title": "放送メディア通信委員会の世宗移転に労組が反発…「職員との事前協議はなかった」", "what": "国家公務員労働組合の放送メディア通信委員会支部が、委員会の世宗移転計画に反発した。労組は、移転日程を再検討し、労組と協議するよう求めた。労組は、職員との事前協議がなかったと主張した。委員会の移転は、政府の中央行政機関の世宗移転計画に含まれている。政府の立場はまだ出ていない。労組は、移転に先立って職員と協議するよう求めている。", "why": "行政機関の移転は、職員の住居や子どもの教育、働き方に直接影響する。放送・通信の規制機関がソウルを離れれば、事業者の調査や意見聴取の方式も変わりうる。移転日程を決める過程で、当事者である職員の意見をどう反映するかが、対立の中心だ。", "me": "放送・通信事業者の許可や是正命令のような手続きが世宗で行われれば、業界と利用者の苦情窓口が変わりうる。ただ、移転の時期と方式はまだ決まっていない。", "a": "政府の立場では、均衡発展のために機関の移転が必要で、日程は計画どおりに進めるべきだという見方だ。", "b": "労組は、職員の意見を聴かずに日程が決まったとみて、協議と日程の再検討が先だという見方だ。", "say": "確認されたのは、労組の要求と、事前協議がなかったという主張だ。確認されていないのは、政府と委員会の立場、日程変更の有無だ。委員会と労組の協議が開かれるかが注目点だ。", "src": "聯合ニュース(労組の反発、11/2) · SBS(移転計画への反発、11/2)"},
+    "iins":{"kick": "金融 · ✓ 報道3件", "title": "金融当局、若者の自動車保険加入時に親の運転経歴を活用する手続きを今月中に改善", "what": "金融当局が、若者の自動車保険加入時に親の運転経歴を活用できるよう、今月中に加入手続きを改善する。若者層が経歴認定制度と特約を見逃さないようにする措置だ。ある事例では、保険料が130万ウォンから71万ウォンに下がる。具体的な手続き改善の内容は、今月中に施行される。130万ウォン台の保険料が71万ウォンまで下がる場合をめぐり、若い運転者は60万ウォンほど節約できるという説明が出た。", "why": "自動車保険料は運転経歴に大きく左右され、初心者の若い運転者が最も高い料率を受ける。制度があっても知らなければ使えないため、加入手続きで案内することが核心だ。親の経歴を活用すれば、同じ若者でも保険料の差が大きく出うる。", "me": "若い運転者や家族が自動車保険の加入を控えているなら、親の運転経歴を認めてもらえるか、どんな特約があるかを加入時に尋ねてみることができる。条件は保険会社ごとに異なりうる。", "a": "制度の案内と手続きの改善だけでも、若者の保険料負担をかなり減らせるとみる見方がある。", "b": "認定要件と適用範囲を自分で確認する必要があり、すべての若者が同じ幅で割引を受けるわけではないとみる見方もある。", "say": "確認されたのは、金融当局の今月中の手続き改善方針と、130万ウォンから71万ウォンに下がる事例だ。確認されていないのは、事例以外の一般の加入者の割引幅だ。保険会社ごとの加入画面が実際に変わるかが注目点だ。", "src": "聯合ニュース(手続き改善、11/2) · SBS(親の運転経歴の活用、11/2) · 電子新聞(割引事例、11/2)"},
+    "iear":{"kick": "生活 · ✓ 報道2件", "title": "5月に勤労・子ども奨励金の申請を逃したなら、12月1日までに申請を", "what": "去る5月に昨年分の勤労・子ども奨励金の申請を逃した人は、12月1日までに申請しなければならない。申請期限は来月1日だ。奨励金は、所得の低い世帯が申請すれば受け取れる支援金だ。申請方法と対象は、国税庁の案内に従う。5月の定期申請期間はすでに過ぎた。", "why": "奨励金は申請して初めて受け取れる制度であるため、期限の案内が受給の可否を分ける。5月の定期申請を逃した人にとって、12月1日が今年に残った申請の機会だ。毎年申請時期を逃す世帯が出るだけに、締め切り直前の案内が重要だ。", "me": "対象になりうる世帯は、12月1日までに申請資格と書類を確認しなければならない。近い家族や隣人に期限を知らない人がいれば、教えることができる。所得と財産の基準に合うかは、国税庁の案内でまず確認できる。", "a": "案内を増やして、対象者が漏れなく申請するようにすべきだとみる見方がある。この見方では、締め切り前に文字メッセージと郵便の案内を強化することが効果的だとみる。", "b": "申請方式そのものを簡単に変えて、見逃す人がいないようにすべきだとみる見方もある。この見方では、自分で申請しなければ受け取れない構造が、脆弱な世帯に不利だとみる。", "say": "確認されたのは、12月1日という申請期限だ。確認されていないのは、個別の世帯の受給資格と支給額だ。期限が迫って案内がさらに出るかが注目点だ。", "src": "聯合ニュース(期限の案内、11/2) · SBS(12月1日締め切り、11/2)"}
+  };
+  const G = {
+    "運用資産総額":{"f": "金融", "d": "取引所や運用会社が利用者に代わって預かり、運用または保管する資産の総額。", "w": "バイナンスの10月28日時点で1710億ドル"},
+    "純流出":{"f": "金融", "d": "出ていった金から入ってきた金を引いた値。プラスなら、その分だけ金が減ったという意味だ。", "w": "出金再開後に約36億4000万ドル"},
+    "ブロックチェーン":{"f": "技術", "d": "取引記録を多数のコンピューターに分けて保存し、偽造を難しくした記録方式。仮想資産がこの上で動く。", "w": "10のブロックチェーンのウォレットで盗難"},
+    "凍結":{"f": "金融", "d": "口座やウォレットの資産を動かせないように縛っておく措置。", "w": "約30億ドル相当を凍結"},
+    "秘密鍵":{"f": "セキュリティ", "d": "仮想資産のウォレットを開け、取引を承認する、暗証番号のような鍵。", "w": "流出の証拠はないとバイナンスが明らかにした"},
+    "コールドウォレット":{"f": "仮想資産", "d": "インターネットにつなげずに保管するオフラインのウォレット。ハッキングには相対的に安全だ。", "w": "金融委が比率の引き上げを要請"},
+    "準備金":{"f": "仮想資産", "d": "事故が起きたときに利用者に弁償できるよう、取引所が別に積み立てておく金。", "w": "積み増しを要請"},
+    "マルウェア":{"f": "セキュリティ", "d": "コンピューターにひそかにインストールされ、情報を抜き取ったりシステムを壊したりするプログラム。", "w": "検査サイトにファイルがアップロードされた"},
+    "送致":{"f": "法", "d": "警察が捜査を終え、事件を起訴の判断をする機関に渡すこと。", "w": "チョン・ハンギル氏の事件を公訴庁に送致"},
+    "公訴庁":{"f": "法", "d": "犯罪を裁判にかけるかどうか判断する機関。", "w": "送致された事件の起訴の有無を判断"},
+    "起訴":{"f": "法", "d": "検事などが犯罪の疑いを裁判にかけること。", "w": "送致後に公訴庁が判断"},
+    "情報通信網法":{"f": "法", "d": "インターネットなど情報通信網の利用や個人情報の保護、名誉毀損などを規律する法。", "w": "名誉毀損の容疑を適用"},
+    "権利党員":{"f": "政治", "d": "一定期間党費を納め、党代表選挙や候補の予備選で投票権を持つ党員。", "w": "革新党出身者の権利党員の募集問題"},
+    "党内予備選":{"f": "政治", "d": "政党が選挙に出す候補を党内の投票で選ぶ手続き。", "w": "2028年総選挙の党内予備選"},
+    "大統合推進団":{"f": "政治", "d": "複数の政党・勢力の統合を進めるために作られた党内組織。", "w": "パク・ポムゲ議員が団長"},
+    "最多出資者":{"f": "経済", "d": "会社の持ち株を最も多く持つ人や会社。", "w": "ホバンがなる可能性で企業結合を届け出"},
+    "企業結合":{"f": "経済", "d": "ある企業が他の企業の株式を取得するなどして経済的に一つになること。一定の要件を満たせば公正取引委員会に届け出なければならない。", "w": "ホバンのハンジンカル株の取得"},
+    "単純投資":{"f": "金融", "d": "経営に参加する目的なしに、収益だけを狙って持ち株を持つという、開示上の保有目的。", "w": "ホバンが保有目的を維持"},
+    "特殊関係人":{"f": "法", "d": "血縁や持ち株の関係で、一体のように動くとみなされる人・会社。", "w": "チョ会長側の持ち株21.06%"},
+    "友好株主":{"f": "金融", "d": "経営陣の側で議決する株主。", "w": "デルタ航空と産業銀行"},
+    "時間外大量売買":{"f": "金融", "d": "通常の取引時間外に、大きな数量を事前に決めた値段で売買する方式。", "w": "チョ会長のハンジンカル購入"},
+    "未確定":{"f": "金融", "d": "開示で、まだ事実が定まっていないという表示。定まれば、再び開示する。", "w": "ハンジンカルの筆頭株主変更の開示"},
+    "機動戦闘車":{"f": "安保", "d": "車輪の上に大砲を載せ、素早く動いて撃つ装甲車の一種。", "w": "沖縄に初配備"},
+    "経歴認定制度":{"f": "金融", "d": "他の人の運転経歴を自動車保険の加入に反映する制度。", "w": "親の経歴の活用"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
