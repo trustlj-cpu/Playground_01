@@ -1,0 +1,340 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>63,081.86</b>日経平均 · 11/2終値 · 前日比-0.33%(3日は文化の日で東京市場は休場)</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,580.07</b>S&amp;P 500 · 10/30終値 · 米市場は11/2も取引中のため直近の確定終値</div>
+    </div>
+    <div class="dateline"><span>No. 30 · 朝刊</span><b>2026年11月3日(火)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会 · 防災<span>✓ 3媒体 · 備蓄状況の全国調査は未確認</span></div>
+      <h2 class="hl">防災庁が発足、水・食料は最低3日分の備蓄を国民に緊急要請 細野防災相「しっかり行動を」</h2>
+      <p class="deck">内閣府の防災部門を改組した防災庁が2日に発足し、初日に国民・自治体・省庁へ備えを求める緊急要請を出した。定員は352人。</p>
+      <div class="body">
+        <p>防災庁が11月2日に発足した。首相をトップに、防災相を務める細野豪志氏が業務を統括し、定員は352人と、これまで内閣府にあった防災部門の220人から大きく増えた。地震や噴火が起きてからの対応だけでなく、建物の耐震化や避難所の環境づくりといった事前防災から、復旧・復興までを一つの組織で受け持つ。発足式で高市首相は「強い司令塔に」と述べ、「国民の命守り抜く」と強調した。</p>
+        <p>発足初日に出したのが「緊急要請」だ。国民には家具の固定や住宅の耐震化を求め、水と食料は最低3日分、できれば1週間分の備蓄を呼びかけた。省庁には業務継続計画の点検を、自治体には避難所の環境改善や帰宅困難者対策を求め、都道府県が市町村を支える体制の強化も盛り込んだ。取り組みが不十分な場合は、防災庁が改善を求める勧告権を使う可能性にも触れている。細野氏は南海トラフ地震や富士山の噴火を国難級の災害と位置づけた。今後は、この要請を各省庁と自治体がどこまで実行に移すかが焦点になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">社会 · サイバー<span>✓ 3媒体 · 攻撃者の特定は未確認</span></div>
+      <h3 class="hl">GMO不正アクセス、警視庁が公安部など70人態勢の捜査本部 侵入は8月5日と会社が説明</h3>
+      <div class="one">
+        <p>GMOインターネットグループへの不正アクセスで、警視庁が公安部などの約70人態勢で捜査本部を設けた。不正アクセス禁止法違反などの容疑を視野に、GMOが提供する解析資料の分析や関係者への聞き取りを進める。2日夕方の会見では謝罪と役員報酬の減額が焦点だったが、同じ日のうちに、事件そのものの捜査が始まり、侵入の時期も説明された。 会社の説明では、攻撃者は8月5日に社内へ侵入し、システム全体を動かせる管理者権限を盗んだ。「お名前.com デスクトップクラウド」で不正なプログラムが見つかったのは10月20日で、侵入から発覚まで2カ月半ある。攻撃者は約80億円を要求したがGMOは応じない方針で、先月23日以降は攻撃者からの連絡も途絶えている。熊谷正寿社長は解析結果について「申し上げられない」とし、データは関係機関に報告したと述べた。攻撃者が誰かは、捜査当局も会社も公表していない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>憲法公布から80年、全国の「憲法9条の碑」は100カ所を超えた</b><em>憲法は1946年11月3日に公布され、文化の日の3日でちょうど80年になる。9条が焦点の改憲発議の時期とともに、全国で9条の碑が100カ所を超えた。</em><span>政治 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>線路付近にチェーンソーなどを放置した疑い、「撮り鉄」の2人を再逮捕</b><em>北海道警は線路付近にチェーンソーなどを放置した疑いで、「撮り鉄」の2人を威力業務妨害容疑で再逮捕した。2人は先に別の容疑で逮捕されていた。</em><span>社会 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>小学校で給食費などの督促を怠り5400万円が不足 校長らが私費で補てん</b><em>ある小学校で給食費などの督促を怠った結果、5400万円が不足した。足りない分は校長らが私費で補てんした。</em><span>教育 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>徳島刑務所で収容者46人が食中毒 自分たちで調理、9月にも発生</b><em>徳島刑務所で収容者46人が食中毒になった。食事は収容者自身が調理しており、9月にも同じ施設で食中毒が起きている。</em><span>社会 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>キオクシア株が15%下落、日経平均は続落して6万3081円86銭で引ける</b><em>2日の東京市場でキオクシア株が15%下落し、日経平均は前日比0.33%安の6万3081円86銭で取引を終えた。決算では売上収益の伸びが1%にとどまった。</em><span>市場 · ✓ 3媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">経済 · 個人情報<span>✓ 3媒体 · 流出した情報の悪用は未確認</span></div>
+      <h3 class="hl">個人情報の漏えい発表が相次ぐ ノジマ約700万件、ネットマイル最大549万人分、ロードサービス最大550万件</h3>
+      <div class="body">
+        <p>2日、不正アクセスによる個人情報の漏えいの公表が相次いだ。最大はノジマで、通販サイト「ノジマオンライン」と中古スマホ買取サイトの会員約700万件の氏名、住所、電話番号、ログインID、暗号化パスワードが外部に出た。同社は1日に侵入を検知し、同日中に漏えいを確認した。クレジットカード情報は両サイトで持っておらず、対象外だという。2サイトは休止中で、再開時期は決まっていない。</p>
+        <p>ポイント交換の「ネットマイル」は最大約549万人分、ロードサービスを手がけるプレステージ・インターナショナルはグループ会社のシステムから最大約550万件が漏えいした可能性を発表した。丸井グループは、デジタル社債の管理を任せた委託先のサーバーが攻撃され、最大約9000人分が漏れたとした。同じ2日にはサントリーHDの約10万人分も公表されており、委託先や関連会社のシステムが入り口になる例が目立つ。どの情報がどこまで悪用されているかは、各社とも確認中としている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">国際 · 米国<span>✓ 3媒体 · 結果は日本時間4日朝以降</span></div>
+      <h3 class="hl">米中間選挙、日本時間3日に投票開始 下院435議席全てと上院の3分の1が改選</h3>
+      <div class="body">
+        <p>米国の中間選挙の投票が、米国時間の3日、日本時間では3日夜から始まる。トランプ大統領の任期の中間にあたり、下院435議席の全てと、上院の約3分の1が改選される。大統領は中西部で最後の遊説を終え、「私が立候補していると思って」投票してほしいと訴えた。民主党側ではハリス前副大統領が「怒りを行動に移すべき時だ」と呼びかけている。物価高に対する不満が大統領への批判につながっており、接戦のアイオワ州にも大統領が入った。</p>
+        <p>ミシガン州では、民主党の議員が一夜で共和党の支持に回る動きもあった。投票の締め切りは州ごとに異なり、最初の州は日本時間4日朝8時ごろから順次締め切られる。3日の日本は文化の日で東京株式市場が休場のため、結果への最初の市場の反応は、4日の取引まで日本では見えない。上院と下院のどちらの多数党が入れ替わるかで、トランプ政権が進める政策の通り方が変わる。結果は州ごとの集計に時間がかかる可能性がある。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">政治 · 労働<span>✓ 1媒体 · 発言の前後の文脈は未確認</span></div>
+      <h3 class="hl">特定技能の受け入れ上限、小野田担当相「AIの発達で縮減」 2日の会見で拡大に否定的</h3>
+      <div class="body">
+        <p>外国人政策を担当する小野田紀美氏が11月2日の記者会見で、特定技能の外国人の受け入れ上限について「AIの発達や処遇改善などやるべきことをやっていけば、上限数は拡大どころか縮減してしかるべきだ」と述べた。特定技能は、人手が足りない介護や建設などの分野で働く外国人を受け入れる在留資格で、国は分野ごとに受け入れの上限を見積もっている。</p>
+        <p>政府が示す受け入れ見込み数は、特定技能と育成就労を合わせて約123万人にのぼる。発言は、この上限を引き上げ続ける流れに歯止めをかける趣旨と読める一方、AIがどの分野の人手をどれだけ代わるのかは示されていない。現場の人手不足と上限の見直しをどう両立させるかは、今後の議論に委ねられた。発言の全文と前後の文脈は確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>11月2日</b><span>小野田担当相が会見で上限の縮減に言及</span></div>
+        <div><b>約123万人</b><span>政府が示す受け入れ見込み数(特定技能と育成就労の合計)</span></div>
+        <div><b>16分野</b><span>特定技能の受け入れ対象分野</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>GMOへの攻撃は北朝鮮のハッカー集団によるもの、という指摘がある</b> <span>GMOも警視庁も攻撃者を公表していない。熊谷社長は会見で解析結果を「申し上げられない」と述べており、現時点で確認できていない。</span></div>
+        <div><b>イスラエル首相がトランプ氏に、中間選挙直後のイラン攻撃再開を求めたという話がある</b> <span>電話会談があったことは伝えられているが、要求の中身について両政府が公式に説明した形跡は確認できていない。</span></div>
+        <div><b>日本政府が5000億ドル規模の防衛費の計画を検討している、という話がある</b> <span>政府が公式に表明した数字ではなく、確認できていない。政府の正式な発表を待つ必要がある。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 火 11月3日</b><span>文化の日で東京株式市場は休場。米国で中間選挙の投票が行われ、防災庁の緊急要請を受けた各自治体の動きも出る。GMOの捜査と、漏えいを公表した各社の対象者への案内も続く。</span><b>今週</b><span>4日朝から米中間選挙の開票が日本時間で順次進み、ドル円と米金利の反応が4日の東京市場で出る。6日には沖縄政策協議会が開かれる。</span><b>後で</b><span>GMOの解析結果の公表と捜査の進展、特定技能の受け入れ上限をめぐる政府の方針、改憲発議の時期の議論が続く。</span><b>読者に</b><span>水と食料の3日分の備蓄を確かめ、パスワードの使い回しをやめ、不審なメールのリンクを開かないことを、休日の今日のうちに済ませておく。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会 · 防災 · ✓ 3媒体 · 備蓄状況の全国調査は未確認", "title": "防災庁が発足、水・食料は最低3日分の備蓄を国民に緊急要請 細野防災相「しっかり行動を」", "what": "防災庁は2026年11月2日に発足した。内閣府の防災担当を改組したもので、トップは首相、防災相は細野豪志氏が務める。定員は352人で、従来の防災部門の220人から増えた。事前防災から復旧・復興までを一元的に担う。細野氏は発足日に緊急要請を出した。国民向けは家具の固定、住宅の耐震化、水と食料の最低3日分(できれば1週間分)の備蓄。省庁向けは業務継続計画の点検、自治体向けは避難所環境の改善と帰宅困難者対策で、都道府県による市町村支援の強化も入った。取り組みが不十分な場合は勧告権の行使もありうるとされた。", "why": "日本の防災は、災害のたびに各省庁が別々に動く縦割りが課題とされてきた。司令塔が一つになれば、備蓄や避難所の基準を全国でそろえ、被災後の物資や人の配分を早く決められる。ただ組織を作っただけでは備えは増えず、勧告権を実際に使えるかが実効性を分ける。", "me": "自宅の水と食料が3日分あるかを今日確かめ、足りなければ買い足す。家具の固定や避難所の場所の確認も、休日の今日なら時間が取りやすい。", "a": "要請を前向きに受け止める立場は、首相と防災相が初日に具体的な数字(3日分、1週間分)を示した点を評価する。国民に行動を求める明確なメッセージが出たことで、備えが家庭にまで届く最初の機会になるとみる。", "b": "慎重な立場は、要請に法的な強制力がなく、実行は自治体や各家庭に任される点を指摘する。定員352人で南海トラフ地震のような国難級災害に対応できるのか、予算と権限が伴うのかを見極める必要があるとみる。", "say": "確認できているのは、発足の事実、定員352人、緊急要請の中身までだ。備蓄が実際にどれだけ進むか、勧告権が使われるかは未確認で、数字で判断できる材料はまだない。今日は国のメッセージより先に、自宅の備蓄を一度点検してほしい。次に見るのは自治体の対応計画だ。", "src": "時事通信(家具固定、備蓄を緊急要請, 11/2) · 47NEWS(防災庁、国民へ食料備蓄を緊急要請, 11/2) · 読売新聞(防災庁発足、細野防災相が緊急要請, 11/2)"},
+    "s2":{"kick": "社会 · サイバー · ✓ 3媒体 · 攻撃者の特定は未確認", "title": "GMO不正アクセス、警視庁が公安部など70人態勢の捜査本部 侵入は8月5日と会社が説明", "what": "警視庁は2日、GMOインターネットグループへの不正アクセス事件で、公安部などの約70人態勢の捜査本部を設置した。不正アクセス禁止法違反などを視野に捜査する。GMOは同日の会見で、攻撃者が8月5日に侵入し、管理者権限を盗んだと説明した。「お名前.com デスクトップクラウド」では10月20日に不正なプログラムが確認された。攻撃者は約80億円を要求し、GMOは応じない方針を示している。攻撃者からは先月23日以降、連絡がない。熊谷社長は解析結果について「申し上げられない」と答え、解析データは関係機関に報告したと述べた。", "why": "侵入から発覚まで約2カ月半あったことは、攻撃を見つける仕組みが働かなかったことを意味する。管理者権限を握られると、利用者のデータを取ったり設定を書き換えたりできるため、被害の範囲を確定するのに時間がかかる。捜査が始まったことで、攻撃の経路と主体の解明が公的な手続きに移る。", "me": "GMO系のサービスを使っている人は、パスワードを変更してログオフし、同じパスワードを使い回している他のサイトも変える。不審なメールやSMSのリンクは開かない。", "a": "企業の責任を重く見る立場は、社内の専門家が2024年4月に改善点を指摘していたのに、社長まで情報が上がらなかった点を問題にする。再発防止には報告の基準そのものの見直しが必要だとみる。", "b": "攻撃者の側の巧妙さを強調する立場は、外国を含む組織的な攻撃では、どの会社でも防ぎきれない場合があるとみる。会社が懸賞金を設け、政府に防御の枠組みを提案していることを、対策の前進として受け止める。", "say": "確認できたのは、捜査本部の設置、侵入時期(8月5日)、要求額と不支払いの方針だ。攻撃者がどこの誰かは、会社も警視庁も明らかにしていない。今日は、解析結果の公表と、被害を受けた顧客への案内が出るかを見たい。", "src": "毎日新聞(警視庁が捜査本部設置、攻撃者は8月に侵入, 11/2) · 47NEWS(GMO不正アクセス、警視庁が捜査本部設置, 11/2) · 朝日新聞(GMOが初の会見, 11/2)"},
+    "s3":{"kick": "経済 · 個人情報 · ✓ 3媒体 · 流出した情報の悪用は未確認", "title": "個人情報の漏えい発表が相次ぐ ノジマ約700万件、ネットマイル最大549万人分、ロードサービス最大550万件", "what": "2日、4社が不正アクセスによる個人情報の漏えいを公表した。ノジマは「ノジマオンライン」と中古スマホ買取サイトの会員約700万件の氏名、住所、電話番号、ログインID、暗号化パスワードが漏れたと発表した。同社は1日に侵入を検知し、同日中に外部への漏えいを確認した。クレジットカード情報は両サイトで保有していない。ネットマイルは最大約549万人分、プレステージ・インターナショナルはグループ会社のシステムから最大約550万件、丸井グループは委託先のサーバーから最大約9000人分が漏えいしたとしている。", "why": "一つの会社を守っても、取引先や関連会社の守りが弱ければそこから入られる。ネットマイルやロードサービスのように利用者が多い業務の委託先が狙われると、一度に数百万人分が動く。流出した氏名と電話番号は、フィッシング詐欺などに使われやすい。", "me": "メールやSMSで届く「会員情報の確認」「パスワード再設定」のリンクは開かず、公式アプリや自分で検索した公式サイトから確認する。該当しうるサービスのパスワードは変え、使い回しをやめる。", "a": "事業者の対応を問う立場は、検知から公表まで短かったノジマの動きは評価しつつ、同じ週に大規模な漏えいが重なる状況は、委託先管理の基準が追いついていない表れだとみる。", "b": "攻撃側の変化を重くみる立場は、AIの普及で攻撃の自動化や巧妙化が進み、企業が単独で防ぐには限界があるとみる。業界全体での情報共有や、国による支援の枠組みが必要だと考える。", "say": "確認できたのは、各社が発表した件数と、ノジマにカード情報がないという説明までだ。対象に自分が含まれるか、悪用が起きているかは各社の案内で確かめるしかない。今日は、各社が対象者への連絡と窓口を出すかを見たい。", "src": "NHK(ネットマイル最大549万人分、ノジマ約700万件、丸井最大9000人分, 11/2) · 朝日新聞(ノジマ、会員情報約700万人が流出, 11/2) · 47NEWS(ノジマ、丸井で個人情報漏えい, 11/2)"},
+    "s4":{"kick": "国際 · 米国 · ✓ 3媒体 · 結果は日本時間4日朝以降", "title": "米中間選挙、日本時間3日に投票開始 下院435議席全てと上院の3分の1が改選", "what": "米国の中間選挙は米国時間の3日に投票され、日本時間では3日夜から投票が始まる。下院435議席の全てと上院の約3分の1が改選される。トランプ大統領は中西部で遊説を終え、接戦のアイオワ州でも演説した。民主党のハリス前副大統領は「怒りを行動に移すべき時」と述べた。物価高に対する不満が大統領への批判につながっている。ミシガン州では民主党議員が共和党支持に回った。最初の州の締め切りは日本時間4日朝8時ごろで、結果は州ごとに順次わかる。", "why": "議会の多数党が入れ替われば、大統領が進める予算や関税、外交の政策に議会が歯止めをかけられる。日本は、為替や米国の金利、対日関税の議論を通じて影響を受ける。選挙結果は、米国の株式市場やドル円にも波及する。", "me": "3日の東京市場は休場なので、結果の最初の反応は4日の取引で出る。ドルや米株に関わる投資をしている人は、4日朝の動きに備えて、急な値動きでも慌てて売買しない方針を決めておく。", "a": "政権への信任が問われるとみる立場は、物価高と大統領への不満の広がりを根拠に、与党が議席を減らす可能性を重く見る。", "b": "結果は読みにくいとみる立場は、接戦州が多く、投票日当日の動きや開票の遅れで見通しが変わりうると考える。世論調査の差がそのまま議席に反映されるとは限らない。", "say": "確認できているのは、投票の日程と改選議席、各陣営の最後の訴えだ。どちらが多数を握るかは、開票が進むまでわからない。今日は、4日朝の開票速報と、ドル円・米金利の最初の反応を見たい。", "src": "NHK(アメリカ中間選挙3日に投票開始, 11/2) · 時事通信(ミシガン州で民主議員が共和支持, 11/2) · 朝日新聞(トランプ氏、米中間選挙前の地方遊説終える, 11/2)"},
+    "s5":{"kick": "政治 · 労働 · ✓ 1媒体 · 発言の前後の文脈は未確認", "title": "特定技能の受け入れ上限、小野田担当相「AIの発達で縮減」 2日の会見で拡大に否定的", "what": "外国人政策を担当する小野田紀美氏が2日の記者会見で、特定技能の受け入れ上限について「AIの発達や処遇改善などやるべきことをやっていけば、上限数は拡大どころか縮減してしかるべきだ」と述べた。特定技能は人手不足が深刻な分野で外国人を受け入れる在留資格で、分野ごとに上限を見込む。政府が示す受け入れ見込み数は、特定技能と育成就労の合計で約123万人にのぼる。受け入れ対象は16分野にある。発言の全文や前後の文脈は確認できていない。", "why": "上限は企業の採用計画に直結するため、方針が変われば介護や建設の現場に影響する。AIでどの仕事が代わるのかは分野ごとに違い、現時点で人手が足りている分野は少ない。上限を決める基準が人手の必要量なのか、政策判断なのかが問われる。", "me": "特定技能の人材を雇っている、または雇うつもりの事業者は、今後の上限の議論を追っておく。働き手として暮らす外国人にとっては、制度の安定性が生活設計に関わる。", "a": "縮減に理解を示す立場は、AIや業務の効率化で人手の必要量を減らせるなら、受け入れを抑える方針は妥当だとみる。処遇改善を進める動機にもなると考える。", "b": "懸念する立場は、介護や建設などの現場は人手不足が続いており、AIで代われる範囲は限られるとみる。上限を下げれば現場の運営に影響が出ると考える。", "say": "確認できたのは、小野田担当相の2日の会見での発言だ。縮減が政府の正式な方針なのか、担当相の考えの表明なのかは未確認で、数字も示されていない。今後の閣議決定や分野別の見込み数の改定が出るかを見たい。", "src": "朝日新聞(特定技能の外国人受け入れ上限、小野田担当相「AIの発達で縮減」, 11/2)"},
+    "i1":{"kick": "憲法", "title": "憲法公布から80年、全国の「憲法9条の碑」は100カ所を超えた", "what": "憲法は1946年11月3日に公布され、2026年の文化の日で公布から80年になる。国会では憲法審査会が議論を続けている。焦点は9条の扱いで、自衛隊の明記や、改憲発議の時期が論点になっている。全国では「憲法9条の碑」が急増し、公布80年の日に100カ所を超えたとされる。9条の碑は、市民が条文を刻んで建てるものだ。3日は国民の祝日で、各地で憲法に関する催しが開かれる。", "why": "憲法の改正は、国会が総議員の3分の2以上で発議し、国民投票で過半数を得る必要があり、発議の時期は政治日程と結びつく。9条は最も意見が分かれる条文で、碑の広がりは、市民の側に条文を守りたい動きがあることを示す。", "me": "祝日の今日は、自分の住む地域に9条の碑や憲法に関する展示があるかを調べ、条文を一度通して読む。", "a": "改憲を進める立場は、公布から80年がたち、自衛隊の存在や緊急時の対応など、条文と現実のずれを埋める議論が必要だとみる。", "b": "護憲の立場は、9条が戦後の平和を支えてきたとして、碑の広がりを市民の意思の表れだとみる。改憲の発議を急ぐことに慎重だ。", "say": "確認できたのは、公布80年という節目と、9条の碑が100カ所を超えたことだ。発議の時期は未定で、与野党の合意も整っていない。今後は憲法審査会の議題と、条文案の起草がどう進むかを見たい。", "src": "毎日新聞(実際の改憲発議はいつに? 9条が焦点, 11/2) · 朝日新聞(全国で急増「憲法9条の碑」, 11/2)"},
+    "i2":{"kick": "事件", "title": "線路付近にチェーンソーなどを放置した疑い、「撮り鉄」の2人を再逮捕", "what": "北海道警は、線路付近にチェーンソーなどを放置した疑いで、「撮り鉄」の2人を威力業務妨害の容疑で再逮捕した。2人は先に別の容疑で逮捕されていた。線路や線路付近に道具を置く行為は、列車の運行を妨げるおそれがある。道警は動機や経緯を調べている。線路や周辺への妨害は列車の遅れや運休につながるうえ、運転士や乗客の安全にも関わる。", "why": "撮り鉄の迷惑行為が、道具を使った線路への介入まで広がっていることを示す。列車の安全に直接関わるため、事業者は警察と連携して対応する。", "me": "鉄道写真を撮る人は、立ち入り禁止の場所に入らず、線路や樹木に手を加えない。列車の運行に関わる行為は、犯罪になりうる。", "a": "厳しい対応を求める立場は、列車の安全を脅かす行為は再発を防ぐため、再逮捕を含めて厳しく処罰すべきだとみる。", "b": "対策を重視する立場は、取り締まりだけでなく、撮影の名所での案内や、マナーを守る呼びかけも並行して必要だとみる。", "say": "確認できたのは、2人が威力業務妨害容疑で再逮捕されたことだ。動機や列車への影響の程度は未確認で、今後の調べで明らかになる。次は、起訴の有無と、鉄道事業者が出す再発防止策を見たい。", "src": "朝日新聞(撮り鉄仲間の2人を逮捕, 11/3) · 47NEWS(「撮り鉄」2人を威力業務妨害疑いで再逮捕, 11/2)"},
+    "i3":{"kick": "教育", "title": "小学校で給食費などの督促を怠り5400万円が不足 校長らが私費で補てん", "what": "小学校で給食費などの督促を怠った結果、5400万円が不足したことが明らかになった。足りない分は校長らが私費で補てんした。給食費は保護者から集めて食材費に充てるお金で、督促は未納の家庭に支払いを求める手続きだ。どの学校か、不足が生じた期間や詳しい経緯は確認できていない。自治体が調査しているとみられるが、結果は出ていない。", "why": "給食費の徴収と督促は学校や自治体が担ってきたが、担当者の負担が重い。督促が滞ると未納が積み上がり、運営に穴が開く。", "me": "子どもが給食を食べている家庭は、給食費の納付方法と期限を確認する。納付が難しい場合は、早めに学校や自治体に相談する。", "a": "学校の対応を問う立場は、督促の記録や確認が不十分だったとみる。管理の仕組みを見直すべきだと考える。", "b": "担当者の負担を重くみる立場は、徴収を教員や事務職員に任せる仕組みそのものに無理があるとみる。自治体が公会計として管理する方法が有効だと考える。", "say": "確認できたのは、5400万円が不足し、校長らが私費で補てんしたことだ。学校名や、督促を怠った期間は未確認。次は教育委員会の調査結果と、徴収の仕組みの見直しが出るかを見たい。", "src": "朝日新聞(小学校で給食費などの督促怠り5400万円不足, 11/2)"},
+    "i4":{"kick": "社会", "title": "徳島刑務所で収容者46人が食中毒 自分たちで調理、9月にも発生", "what": "徳島刑務所で収容者46人が食中毒になった。食事は収容者自身が調理しており、9月にも同じ施設で食中毒が起きている。9月の事例では、徳島県が収容者18人の症状を発表し、うち9人の便からウエルシュ菌が検出され、食中毒と断定した。県は調理業務の禁止を命じ、刑務所は弁当で対応した。今回の原因となった菌や食品は確認できていない。患者の症状や回復の状況も、公表された範囲では明らかになっていない。", "why": "施設内では調理や衛生管理を収容者が担う場合があり、同じ環境で繰り返すと、手順そのものに問題がある可能性がある。集団生活の場では、一度発生すると患者が一気に増える。", "me": "大量調理した食品は、加熱後に急に冷まして保管し、再加熱せずに食べるとウエルシュ菌が増えやすい。家庭の作り置きは小分けにして早く冷ます。", "a": "再発防止を求める立場は、9月の事例を受けた対策が十分だったのかを問う。調理体制の見直しが必要だとみる。", "b": "施設の負担を重くみる立場は、収容者が調理する体制が前提の中で、人手や設備を整えることが課題だとみる。", "say": "確認できたのは、収容者46人が食中毒になり、9月にも発生していたことだ。原因となった菌や食品は未確認。次は県の発表を見たい。", "src": "朝日新聞(徳島刑務所で収容者46人が食中毒, 11/2)"},
+    "i5":{"kick": "市場", "title": "キオクシア株が15%下落、日経平均は続落して6万3081円86銭で引ける", "what": "2日の東京株式市場で、キオクシア株が15%下落した。日経平均株価は続落し、前日比0.33%安の6万3081円86銭で取引を終えた。午前の前引けは195円安の6万3095円だった。韓国株の上昇が下支えになった。キオクシアの決算では、売上収益の伸びが1%にとどまったことが示されている。3日は文化の日で東京市場は休場となるため、次の取引は4日になる。", "why": "キオクシアは半導体メモリー大手で、日経平均の値動きに与える影響が大きい。AI向けの需要がどこまで続くかについての受け止めが、株価に出やすい。", "me": "新NISAなどで日経平均や全世界株の積立をしている人は、1日の値動きで売買せず、積立の金額と頻度を決めたとおりに続ける。", "a": "調整とみる立場は、決算で伸びが鈍っても業績は上昇傾向にあり、株価の下落は行き過ぎだとみる。", "b": "警戒する立場は、AI関連の株価が高い水準にあり、成長の鈍化が確認されると下げが続くとみる。", "say": "確認できたのは、15%の下落と日経平均の終値だ。AI関連相場が転換点かどうかは未確認で、1日の値動きだけでは判断できない。次の取引日である4日の東京市場と、米国市場の動きを見たい。", "src": "日本経済新聞(東証大引け 日経平均は続落 キオクシア15%安, 11/2) · ITmedia AI+(キオクシア、2桁成長に急ブレーキ?, 11/2) · 東洋経済オンライン(AIバブル崩壊の兆し?キオクシア決算, 11/2)"}
+  };
+  const G = {
+    "事前防災":{"f": "防災", "d": "災害が起きる前に、建物の耐震化や備蓄、避難計画などで被害を小さくしておくこと。", "w": "防災庁が復旧・復興と並ぶ柱に据えた。"},
+    "緊急要請":{"f": "行政", "d": "国が法的な強制力なしに、国民や自治体、省庁へ対応を求めること。", "w": "防災庁が発足初日に出した。"},
+    "勧告権":{"f": "行政", "d": "取り組みが不十分な相手に、改善を求める権限。従わせる強制力はないが、公表されると重みがある。", "w": "防災庁が省庁に対して使う可能性に触れた。"},
+    "業務継続計画":{"f": "防災", "d": "災害時にも重要な業務を止めない、または早く再開するための計画。", "w": "緊急要請で省庁に点検が求められた。"},
+    "南海トラフ地震":{"f": "防災", "d": "駿河湾から九州沖の海底の溝で起きると想定される巨大地震。", "w": "細野防災相が国難級の災害と位置づけた。"},
+    "国難級":{"f": "防災", "d": "国の存続に関わるほどの被害を想定する災害の呼び方。", "w": "細野防災相が南海トラフ地震などをこう位置づけた。"},
+    "捜査本部":{"f": "法律", "d": "重大事件で警察が専従の態勢を作って捜査する組織。", "w": "警視庁が約70人でGMO事件に設置した。"},
+    "管理者権限":{"f": "情報セキュリティ", "d": "システムの設定変更や全データの閲覧ができる最上位の操作権限。", "w": "攻撃者が8月に盗んだとGMOが説明した。"},
+    "不正アクセス禁止法":{"f": "法律", "d": "他人のIDやパスワードを無断で使ってシステムに入ることなどを禁じる法律。", "w": "警視庁がGMO事件で適用を視野に入れる。"},
+    "暗号化パスワード":{"f": "情報セキュリティ", "d": "元の文字列がわからない形に変換して保存したパスワード。強度が弱いと解読される恐れがある。", "w": "ノジマの漏えい対象に含まれた。"},
+    "威力業務妨害":{"f": "法律", "d": "威力を用いて他人の業務を妨げる犯罪。", "w": "撮り鉄2人の再逮捕の容疑。"},
+    "中間選挙":{"f": "政治", "d": "米大統領の任期の中間にあたる年の連邦議会選挙。", "w": "3日に投票される。"},
+    "改選":{"f": "政治", "d": "任期が終わった議席を、選挙でもう一度決めること。", "w": "下院は全議席、上院は約3分の1が対象。"},
+    "特定技能":{"f": "労働", "d": "人手不足の分野で一定の技能を持つ外国人を受け入れる在留資格。", "w": "小野田担当相が受け入れ上限の縮減に言及した。"},
+    "受け入れ上限":{"f": "労働", "d": "国が分野ごとに見込む外国人労働者の受け入れ数の上限。", "w": "縮減が語られた。"},
+    "改憲発議":{"f": "憲法", "d": "国会が憲法改正案を国民に提案すること。総議員の3分の2以上の賛成が必要。", "w": "公布80年の節目で時期が焦点となる。"},
+    "公布":{"f": "憲法", "d": "成立した法を国民に知らせ、効力が出る前提を整えること。", "w": "憲法は1946年11月3日に公布された。"},
+    "売上収益":{"f": "会計", "d": "企業の本業の売り上げにあたる数字。国際会計基準で使う名称。", "w": "キオクシアの決算で伸びが1%にとどまった。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

@@ -1,0 +1,443 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開する。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>&mdash;</b>FTSE100 · 水曜の終値は未確認</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>&mdash;</b>ポンド/ドル（GBP/USD） · 水曜の終値は未確認</div>
+    </div>
+    <div class="dateline"><span>第11号 · 朝刊</span><b>2026年10月15日（木）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="brand">
+      <div class="kick">英国 · 裁判<span>報道照合 ✓ 5社 · 検察側の主張であり、認定ではない。答弁はニューヨーク・タイムズの報道による</span></div>
+      <h2 class="hl">検察側、ラッセル・ブランド氏の裁判で同氏を「冷酷で、計算高く、人を操る」性的加害者だと主張　同氏は無罪と推定され、無罪を主張している</h2>
+      <p class="deck">検察側は水曜、公開の法廷で主張を述べた。これまでに報じられているのは検察側の説明であり、いずれもまだ検証されていない。</p>
+      <div class="body">
+        <p>検察側は水曜、ロンドンの裁判所で、ラッセル・ブランド氏は「冷酷で、計算高く、人を操る」性的加害者だと述べたと、ガーディアンが報じた。同紙はこの言葉を報道の冒頭に据えた。ロイター、BBC、イブニング・スタンダードも同じ罪状を伝え、BBCの朝刊各紙の紹介も、これを一面の記事の一つに挙げている。コメディアン兼俳優の同氏は、火曜に私たちが報じたとおり、月曜に初めて出廷した。BBCの水曜の見出しは検察側の冒頭陳述を裁判の始まりとして扱っており、いつ始まったかは報道機関によって食い違っている。ニューヨーク・タイムズは、月曜の審理のあと、ブランド氏がすべての罪状について無罪を主張したと報じた。罪状はレイプと性的暴行にかかわるもので、ミラー紙が全一覧を公表している。イブニング・スタンダードとミラー紙は、申し立てと罪状の解説記事も出しており、概要は容易に見つかる。イングランドの法では、陪審が別の判断を下すまで、同氏は無罪と推定される。</p>
+        <p>検察側の冒頭陳述は、検察側が立証すると述べる内容の表明にすぎない。証拠ではなく、まだ誰も問いただしていない。このページにあるブランド氏についての描写はすべて検察側のものであり、そのように伝える。スタンダードは、同氏が「心配そうな」様子で出廷したと伝えた。イブニング・スタンダードは、同氏が虐待したとされる女性たちを笑ったこと、そしてラジオ局で申し立てられた性的暴行の最中に周囲の人々が何もしなかったことが、法廷で述べられたと報じた。この2点を確認できたのはスタンダードだけであり、冒頭陳述についての一報道機関の説明として受け止めてほしい。私たちの情報源には、被害を訴える人の人数も、裁判の日程も示されておらず、弁護側の反応を載せたものもなかったため、いずれも示さない。</p>
+        <p>この件は、過去1日で英国で最も広く報じられた話題で、少なくとも5社が取り上げており、審理が続く間、毎朝戻ってくる。読者にとっては、見出しよりも法廷のルールのほうが重要だ。報道は法廷で述べられたことの公正で正確な説明に限られ、そのため一方の言い分が先に聞かれ、もう一方は後になる。検察側が証人を呼び、弁護側がそれに尋問してから、ブランド氏または弁護士が自らの主張を述べると見てよい。性犯罪事件の被害を訴える人には生涯にわたって匿名が認められており、このページにも、私たちが確認した報道にも、名前は出てこない。冒頭陳述から、どちらの向きであれ評決を読み取ってはならない。注目点は、法廷がきょう予定どおり開かれるかどうか、そして裁判官が報道に何らかの制限を告げるかどうかだ。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>3.7%</b><span>9月の米国のインフレ率、予想を上回ったと、フィナンシャル・タイムズ（FT）とBBCが報じた</span></div>
+        <div><b>1,700万ポンド</b><span>ロシアのドローンで被害を受けたチョルノービリ原子力発電所の修復のため、英国が拠出する額（GOV.UK、イブニング・スタンダード、ミラー紙）</span></div>
+        <div><b>≈ 50万人</b><span>リアル・リビング・ウェージの引き上げで賃上げとなる労働者、とミラー紙が報じた</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="zelensky">
+      <div class="kick">世界 · ウクライナ<span>報道照合 ✓ 10社 · スターリンクの制限はキーウの説明。マスク氏は、自社ではなく米国によるものだと述べている</span></div>
+      <h3 class="hl">バーナム氏、ゼレンスキー氏に英国の支援は「変わらない」と伝える　キーウは、トランプ氏に裏切られたと感じ、スターリンクの制限でドローンに支障が出ていると訴え</h3>
+      <div class="one">
+        <p>ウォロディミル・ゼレンスキー大統領は水曜、ロンドンにいた。バッキンガム宮殿で国王に謁見し、その「揺るぎない支援」に感謝したと、イブニング・スタンダードとポリティコが報じた。その後、ダウニング街でアンディ・バーナム首相と会談した。GOV.UKがこの会談を記録している。「われわれはあなたたちの後ろにいる。それは変わらない」とバーナム氏は述べたと、BBCが報じた。協議に先立ち、英国は対ドローンミサイルの納入を早めると、ガーディアンとテレグラフが伝え、デイリー・メールは、バーナム氏がトランプ氏とウラジーミル・プーチン氏の取引をウクライナにとっての「暗い瞬間」と呼んだと報じた。ゼレンスキー氏はトランプ氏に裏切られたと感じていると述べたと、テレグラフ、ガーディアン、ミラー紙が報じ、ロイターは、トランプ氏が別の側を選ぶことを同氏が「痛い」と語ったと引用した。スタンダードは、両首脳がロシアに和平への関心はないという点で一致したと伝え、BBCは、ゼレンスキー氏がロシアの攻撃で60万人が停電に見舞われたと述べたと報じた。目下の不満はスターリンクである。大統領の側近はロイターに、スペースXがウクライナでの運用を制限し、軍事作戦に支障が出ていると語った。アルジャジーラは、スペースXが端末の速度を絞ったというキーウの非難を報じ、ガーディアンは、戦闘中の兵士のアクセスが制限されたと伝えた。マスク氏は、制限があるとすれば米国の決定であり、同社のものではないと述べたと、BBCが報じた。ロイターは、ポーランドのシコルスキ氏が、スターリンクで政治をしているのかとマスク氏に尋ねたこと、欧州にはすぐに打てる手がないことを報じた。フィナンシャル・タイムズは別に、ワシントンが和平協議を再開させるため、ロシアの資産の一部の凍結解除を持ち出したが、欧州の当局者はこの案を拒んでいると報じた。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>スターシールド<i>テクノロジー</i></b><p>衛星インターネットサービス、スターリンクのスペースXによる軍事版。ロイターは今週これについての解説記事を出した。ウクライナが軍用グレードのサービスへの制限を指摘した時期と重なり、この争いが家庭だけでなく前線にも及ぶのはそのためだ。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="pope"><b>教皇レオ、肺がんの手術後「予定どおり」回復</b><em>ロイター、ガーディアン、BBCは、穏やかな夜を過ごし、回復は順調だと報じている。タグレ枢機卿が代わってミサを執り行う。バチカンはきょう早い時間に追加の発表を出した。</em><span>世界 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="usprices"><b>米インフレ率3.7%に上昇、利上げ観測が強まる　イングランド銀行のチーフエコノミストは、英国で4回続く利上げに懐疑的</b><em>FT、BBC、ロイターは米国の数字と売りを報じ、トレーダーは米連邦準備制度理事会の利上げに賭けている。シティAMとメール紙は、同行のエコノミストの懐疑的な見方を伝えている。</em><span>経済 · ✓ 6社</span></div>
+      <div class="it story" tabindex="0" data-id="hormuz"><b>コンテナ船がホルムズ海峡付近で沈没、アラムコ本社も大きな被害を受けたと報じられる</b><em>ロイター、BBC、ガーディアンは沈没を報じている。ロイターは関係筋を引き、フーシ派の攻撃を受けたサウジアラビアでの被害を伝えている。</em><span>世界 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="wage"><b>リアル・リビング・ウェージの引き上げで、50万人近い労働者が賃上げへ</b><em>ミラー紙とイブニング・スタンダードは、日付が変わった直後にこのニュースを出した。私たちが確認した見出しには、新しい時給は示されていなかった。</em><span>英国 · 仕事 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="tiger"><b>トラに殺された男性の遺族、死の映像の拡散をやめるよう求める　検視審問が開かれる予定</b><em>ロイター、CTV、ガーディアン、スタンダード、ミラー紙は、トランプ氏がトラと自分を写したAI動画を投稿したのを受けた、遺族の訴えを報じている。</em><span>英国 · ✓ 6社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="budget">
+      <div class="kick">英国 · 経済<span>報道照合 ✓ 6社 · すべて予算案の事前の説明である。10億ポンドという数字はシティAMのみ</span></div>
+      <h3 class="hl">ヒーリー氏の10月28日の予算案、ネット販売業者への課税強化、若者の雇用コストの引き下げ、追加借り入れなしを含むと報じられる　産業界は負担軽減を働きかけ</h3>
+      <div class="body">
+        <p>財務相のジョン・ヒーリー氏は10月28日に初の予算案を発表する。事前の説明はすでに出ている。ガーディアン、シティAM、ミラー紙は、同氏がネット上の販売業者のVATの抜け穴をふさぎ、オンラインのマーケットプレイスを取り締まる計画だと報じた。ミラー紙は対象企業としてアマゾンとeBayを挙げた。シティAMは、これで得られる額を10億ポンドとし、店舗向けの減税の財源になるとしたが、この数字はほかには見当たらなかった。FTは、この減税策が追加借り入れなしで賄われると報じた。シティAMはまた、ヒーリー氏がNEETを雇う際の事業主の負担を減らすことを検討していると伝えた。別に、ガーディアンとスカイニュースは、接客業界が職のない若者に最大10万人分の仕事を提供すると報じた。</p>
+        <p>ロビー活動は激しい。B&amp;Qとスクリューフィックスを傘下に持つキングフィッシャーの最高経営責任者は、税が上がれば同社のNEET支援を打ち切ると述べ、ビジネスレートの引き下げを求めたと、シティAMが報じた。シティAMは、ヒーリー氏が雇用にかかる税とエネルギー料金の引き下げを求められたと伝え、スカイニュースは、賭け屋が自社への新税を避けるよう土壇場の訴えを行ったと報じた。FTとシティAMは、ケミ・ベイドノック氏が銀行への課税強化の可能性を警告していると報じた。実際に計画があるかどうかは、私たちの情報源では確認できていない。BBCのフェイサル・イスラム氏は、英国経済への意外な称賛が予算案について何を物語るのかを問うた。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="reform">
+      <div class="kick">英国 · 政治<span>報道照合 ✓ 10社 · 発言はITVニュースなどが撮影・描写したとおり。リフォームの反応は1社のみの報道</span></div>
+      <h3 class="hl">リフォームUKの議員らが人種差別的な発言を撮影され、党は調査を開始　バーナム氏は、緑の党が可決した「シオニズムは人種差別」の動議をめぐり、同党との取り決めを否定</h3>
+      <div class="body">
+        <p>ITVニュースの潜入調査「インサイド・リフォーム」は、リフォームUKの地方議員と候補者が、カメラの前で極端で人種差別的な発言をする様子を映し出したと、ITVの番組紹介、BBC、ガーディアンが伝えた。イブニング・スタンダードは、番組が、ロンドンの議員がチャールズ国王はイスラム教徒だと主張し、黒人の子どもたちを侮辱する発言をしたと申し立てたと報じた。ミラー紙は、リフォームが映像に名前の出た政治家たちの調査を始めたと報じ、BBCは、党が批判にさらされていると述べた。リフォーム自身の反応は、私たちが知るかぎりミラー紙を通じてのみであり、これ以上は引用しない。</p>
+        <p>緑の党には、独自の騒動がある。アンディ・バーナム首相は、同党がブライトンの大会で「シオニズムは人種差別」とする動議を可決したのを受け、党との一切の取り決めを否定したと、BBC、スタンダード、インデペンデント、デイリー・メールが報じた。メール紙はこの動議を反ユダヤ的だと呼び、ザ・ナショナルは、首相から「反ユダヤ主義」だと非難されたと同紙が呼ぶものに対し、緑の党のザック・ポランスキー党首が怒りの返答をしたと報じた。FTは、党が分裂しており、副党首が投票結果は「尊重されなければならない」と述べたと伝えた。ハフポストUKは、ポランスキー氏の返答を「深く示唆に富む」と見出しにした。デイリー・メールは別に、保守党がリフォームを上回る2件目の世論調査を報じたが、調査会社も数字も確認できなかった。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="uefa">
+      <div class="kick">スポーツ · チャンピオンズリーグ<span>報道照合 ✓ 6社 · BBCとスカイスポーツは、マルティネスの声明を異なる形で報じている</span></div>
+      <h3 class="hl">PSGがマンチェスター・シティに4-2、マレスカ監督の初黒星　バルコラのハットトリックでリバプールは6-3、ビラは6点を挙げて記録的な勝利、マルティネスの激しい発言はユナイテッドでくすぶり続ける</h3>
+      <div class="body">
+        <p>マンチェスター・シティは水曜夜、パリ・サンジェルマン（PSG）に4-2で敗れたと、スカイスポーツが報じた。アーリング・ハーランドが2得点を挙げた。エンツォ・マレスカ監督にとってシーズン初の敗戦で、ペップ・グアルディオラ氏がスタジアムで観戦したと、スカイとBBCが伝えた。ESPNは、プレミアリーグが財務規則違反でシティを有罪としてから、初めてのホーム戦だったと伝えた。ガーディアンは、アウェーチームの勝利を、ドゥエとデンベレの早い時間帯のゴールによるものとし、BBCは、PSGが欧州サッカー史上最高の王朝を築きつつあるのかと問い、テレグラフは、息もつかせぬ試合でシティは解体されたと伝えた。ほかの試合では、リバプールがLASKに6-3で勝ち、ブラッドリー・バルコラがクラブでの初のハットトリックを決めたと、BBC、ガーディアン、テレグラフが報じた。テレグラフは、リバプールが安易な3失点を喫したとも述べた。</p>
+        <p>アストン・ビラはフェネルバフチェに6点差をつけて記録的な勝利を収め、ジャクソンとバークリーがそれぞれ2得点を挙げたと、ガーディアンとBBCが報じた。レアル・マドリードは終盤の逆転でローマに4-3で勝ったと、フットボール・イタリアとBBCが伝えた。マンチェスター・ユナイテッドでは、火曜のアトレティコ・マドリード戦での2-0の敗戦が騒動になった。ディフェンダーのリサンドロ・マルティネスがクラブの首脳陣を批判し、上級幹部のジェイソン・ウィルコックス氏への怒りはチームメートの間で広く共有されていたと、ガーディアンが伝えた。その後、同選手は声明を出した。BBCの見出しは謝罪したと伝えているが、スカイスポーツは、声明は発言の趣旨を明確にしたが謝罪はしなかったと伝えている。私たちが確認した見出しからはどちらの表現が正しいのか決められないため、両方を伝える。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>ネットフリックス、約1,000人を削減へ、2022年以来最大の人員整理<span>BBC · Guardian · FT</span></li>
+        <li>パランティアとサディク・カーン氏、ロンドン警視庁との契約をめぐる法廷闘争を取りやめ。シティAMは和解と呼んでいる<span>Guardian · FT · City AM</span></li>
+        <li>競争・市場庁（CMA）、ウェイフェア、アプライアンシズ・ダイレクト、ゴールドジムに、誤解を招く販売手法で約600万ポンドの罰金<span>BBC · Evening Standard · GOV.UK</span></li>
+        <li>サリー・ルーニー氏、パレスチナ・アクションを支持したため、自著を英国でこれ以上販売できなくなったと語る<span>BBC · Guardian · Irish Times</span></li>
+        <li>中国と北朝鮮、長らく遅れていた鴨緑江の橋を開通<span>Reuters · BBC · Bloomberg</span></li>
+        <li>ケニア、2人目のエボラ感染を確認、最初の患者の親族<span>Reuters · BBC · Telegraph</span></li>
+        <li>モーリシャス、数十年ぶりの最悪の暴動を受け、2夜目の夜間外出禁止令を延長<span>BBC · Bloomberg</span></li>
+        <li>アンドルー・ベイリー氏、ソーシャルメディア上の「まったくの犯罪」の詐欺の取り締まりを要求<span>Evening Standard · City AM · This is Money</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「マスク氏がウクライナのスターリンクを停止した」</b> <span>ロイターとガーディアンが述べているのは、軍事作戦と兵士のアクセスへの制限であり、全面停止ではない。BBCは、マスク氏が米国政府の責任だとしていると報じており、私たちが確認した報道にワシントンの返答はなかった。</span></div>
+        <div><b>「米国はロシアの資産の凍結を解除する」</b> <span>フィナンシャル・タイムズは、案が持ち出され、欧州の当局者が拒んだと報じた。ロイターはFTの報道を繰り返した。決定は報じられていない。</span></div>
+        <div><b>「バーナム氏はマンチェスター・シティのオーナーから無償の接待を受けた」</b> <span>メール紙の見出しは、無償の接待が公的記録から削除されたとしている。BBCとインデペンデントは、削除された記録をもとに、シティの会長との接待の夕食2回を報じ、タイムズは、市長時代に4回の会談があったと数えている。バーナム氏は、オーナーらがプレミアリーグの告発について持ち出したことはないと述べている。私たちが確認した見出しのどれも、規則違反があったとは申し立てていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/15 木</b><span>ロンドンでラッセル・ブランド氏の裁判が続く見通し・トラに殺された男性の死亡をめぐる検視審問が開かれる予定と、スタンダードとスカイニュースが伝えた・ハリー王子とメーガンが英国で初めて二人そろって公の場に姿を見せると、ミラー紙とスタンダードが伝えた。会場も時間も、私たちが確認した見出しには示されていない・元DUP党首ジェフリー・ドナルドソン氏が性犯罪で量刑を言い渡される予定だと、スタンダードが伝えている（1社のみ、時間は不明）・バーナム氏のスコットランド訪問。BBCスコットランドはSNPの党大会と結びつけている（時間は不明）。ロンドンの終値は、ここでは確認できなかった。アジア株は、半導体株の売りを受けて夜間に下落したと、ロイターとブルームバーグが報じた。</span><b>今週（10/15〜18）</b><span>バーナム氏は、ロスバンクとジャックドーの石油・ガス田についての決定が「近く」出ると述べたと、BBCとシティAMが報じた。日付は不明・バンコクでのIMFと世界銀行の年次総会、今週開催中・ゼレンスキー氏が、米国の特使スティーブ・ウィットコフ氏とジャレッド・クシュナー氏との協議を提案したと、ロイターが今週前半に報じた。日付は不明。</span><b>その先</b><span>10月28日の予算案・11月3日の米中間選挙・11月20日のブリュッセルでの英EU首脳会談。</span><b>読者へ</b><span>リアル・リビング・ウェージの認定を受けた事業主に雇われている場合は、新しい時給が公表されたら確認すること。ミラー紙によれば、50万人近い労働者が引き上げの対象となる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    brand:{kick:"英国 · 裁判 · 報道照合 ✓ 5社",title:"検察側、ラッセル・ブランド氏の裁判で同氏を「冷酷で、計算高く、人を操る」性的加害者だと主張　同氏は無罪と推定され、無罪を主張している",
+      what:"検察側は水曜、ロンドンの裁判所で、ラッセル・ブランド氏は「冷酷で、計算高く、人を操る」性的加害者だと述べたと、ガーディアン、ロイター、BBC、イブニング・スタンダードが報じた。同氏は月曜に初めて出廷した。ニューヨーク・タイムズは、その審理のあと、同氏がすべての罪状について無罪を主張したと報じた。罪状はレイプと性的暴行にかかわるもので、ミラー紙が全一覧を公表している。イブニング・スタンダードは、同氏が虐待したとされる女性たちを笑ったこと、そしてラジオ局で申し立てられた性的暴行の最中に周囲の人々が何もしなかったことが、法廷で述べられたと報じた。この2点を載せたのはスタンダードだけである。私たちの情報源には、被害を訴える人の人数も、日程も、弁護側の反応もなかった。",
+      why:"冒頭陳述は、検察側が立証すると述べる内容の表明であり、証拠ではない。この件が重要なのは、いまの英国で最も広く報じられている裁判だからであり、また、長年にわたって世間が申し立てを追ってきたなかで、法廷がようやくそれを検証し始めたからだ。",
+      me:"することは何もない。報道は法廷で述べられたことの公正で正確な説明に限られ、そのため一方の言い分が先に聞かれ、もう一方は後になる。陪審が判断を下すまで、同氏は無罪と推定される。",
+      a:"検察側を支持する人たちは、重大な申し立ては公開の法廷で扱うべきであり、明確な冒頭陳述は陪審が証拠を追う助けになると述べる。",
+      b:"弁護側は、冒頭陳述は一方の側の物語にすぎず、証拠は検証されなければならず、公正な裁判には報道の抑制が必要だと主張するだろう。",
+      say:"初日から評決を読み取ってはならない。注目すべきは、証人、反対尋問、そして何を報じてよいかについての裁判官の判断である。弁護側の主張が聞かれるまで、公正な要約は、重大な申し立てがなされ、否定されている、ということだけだ。",
+      src:"Reuters、The Guardian、BBC、Evening Standard、Mirror、The New York Times、BBC（The Papers） · 2026年10月14〜15日"},
+    zelensky:{kick:"世界 · ウクライナ · 報道照合 ✓ 10社",title:"バーナム氏、ゼレンスキー氏に英国の支援は「変わらない」と伝える　キーウは、トランプ氏に裏切られたと感じ、スターリンクの制限でドローンに支障が出ていると訴え",
+      what:"ゼレンスキー大統領は水曜、ロンドンを訪れた。バッキンガム宮殿で国王に謁見したと、イブニング・スタンダードとポリティコが報じ、ダウニング街でアンディ・バーナム首相と会談した。GOV.UKがこれを記録している。バーナム氏は「われわれはあなたたちの後ろにいる。それは変わらない」と述べたと、BBCが報じ、英国は対ドローンミサイルの納入を早めると、ガーディアンとテレグラフが伝えた。ゼレンスキー氏は、米国のロシアとの取引をめぐってトランプ氏に裏切られたと感じていると述べたと、テレグラフ、ガーディアン、ミラー紙が報じた。大統領の側近はロイターに、スペースXがウクライナでのスターリンクの運用を制限したと語った。マスク氏は、制限があるとすれば米国の決定だと述べたと、BBCが報じた。英国はまた、チョルノービリ発電所の修復に1,700万ポンドを拠出すると約束した。",
+      why:"ウクライナ軍は、米国の情報とスターリンクに頼っている。どちらかが制限されれば、欧州の支援がその穴を埋めなければならないが、すぐには埋められない。ロイターが欧州には素早い打開策がないと述べたとおりである。この訪問は、ロンドンがキーウとワシントンの両方をつなぎとめようとしている姿も示している。",
+      me:"日常生活に直接の変化はない。エネルギー価格と、戦争が英国の納税者に課す負担は、戦闘がどれだけ続くか、防空を誰が負担するかで決まる。防衛費と制裁が、最もありうる政策上の結果である。",
+      a:"バーナム氏の支持者は、ワシントンがぐらついているとき、キーウに必要なのは、ウクライナへの公の、個人としての支持と、より早いミサイルだと述べる。",
+      b:"懐疑的な人たちは、言葉と王室の歓迎は、撤回された米国の支援の代わりにならず、英国自身の防空の備蓄にも限りがあると述べる。",
+      say:"確認されていることと、主張されていることを分けること。確認されているのは、会談、約束、ゼレンスキー氏の怒り、そしてスターリンクの制限という事実である。争われているのは、誰がそれを決めたかだ。ミサイルが期日を示して届くのか、そしてワシントンがキーウに公に答えるのかを見守りたい。",
+      src:"GOV.UK、BBC、Evening Standard、The Guardian、The Telegraph、Mirror、Daily Mail、Reuters、Al Jazeera、Politico、Financial Times · 2026年10月14日"},
+    pope:{kick:"世界 · バチカン · 報道照合 ✓ 4社",title:"教皇レオ、肺がんの手術後「予定どおり」回復",
+      what:"ロイターは、教皇レオが肺がんの手術のあと、病院で穏やかな夜を過ごしたと報じた。ガーディアンは、回復は「予定どおり進んでいる」と述べ、BBCは医師らの話として、歩いており、予想どおり回復していると伝えた。BBCはまた、家族の一人が、兄弟もがんの治療を受けているため、家族は「大変な思いをしている」と話したと報じた。イブニング・スタンダードは、国王が見舞いの言葉を送ったと報じ、私たちの情報源は、教皇が回復する間、タグレ枢機卿がサン・ピエトロ広場でミサを執り行うと伝えた。バチカンは木曜の早い時間に追加の健康に関する発表を出したが、詳細は確認できなかった。",
+      why:"教皇の健康は、教会の日程に、そして長い目で見れば後継の問題に影響する。私たちが確認した報道には、がんの種類も進行度も、職務に復帰する日も示されていなかった。",
+      me:"読者にとって変わることはない。教会の公的な行事は別で、当面はタグレ枢機卿らが担う。",
+      a:"",b:"",
+      say:"バチカンががんの種類と治療の計画を公表するまで、長期の予測は推測として扱うこと。教皇の次の公の場への登場日に注目したい。",
+      src:"Reuters、The Guardian、BBC、Evening Standard、Mirror · 2026年10月14〜15日"},
+    usprices:{kick:"経済 · 市場 · 報道照合 ✓ 6社",title:"米インフレ率3.7%に上昇、利上げ観測が強まる　イングランド銀行のチーフエコノミストは、英国で4回続く利上げに懐疑的",
+      what:"米国の消費者物価は9月に加速したと、FT、BBC、ロイターが報じた。FTは年率を3.7%とし、イラン戦争とガソリン高が要因だとした。ロイターは、食品とエネルギーを除くコア指数も強含んだと伝えた。ブルームバーグとFTは、株式、債券、半導体株が下落し、トレーダーが米連邦準備制度理事会の利上げへの賭けを増やしたと伝えた。ロイターによれば、アジアの木曜朝には、FRB高官が利上げのペースを控えめに語ったことで、ドルは18か月ぶりの高値から後退した。英国では、シティAMとメール紙が、イングランド銀行のチーフエコノミストが4回の利上げという市場の予想に懐疑的だと報じた。ポンドは水曜、対ユーロで16か月ぶりの高値をつけたと、ロイターが報じた。",
+      why:"金利は、住宅ローンの負担、預金の収益、そして財務相の裁量の余地を左右する。米国の金利が上がれば、ほかの国の借り入れコストも上がりやすく、AI関連株の売りは年金基金の重荷になりうる。",
+      me:"変動型やトラッカー型の住宅ローンを組んでいる人、まもなく借り換える人にとっては、市場の金利見通しが重要だ。それは見通しであって、決定ではない。",
+      a:"利上げを支持する人たちは、インフレ率が3%を超えているなら、それが定着する前に手を打つべきだと述べる。",
+      b:"シティAMとメール紙が引くイングランド銀行のエコノミストを含む懐疑派は、市場は行き過ぎで、金利の上昇はすでに鈍い経済を痛めつけると述べる。",
+      say:"ウォール街の終値とFTSE100の終値は、2つの情報源で確認できなかったため、株価指数の水準は示さない。注目点は、イングランド銀行の次の金利決定と、次の米インフレ統計である。",
+      src:"Financial Times、BBC、Reuters、Bloomberg、City AM、Daily Mail · 2026年10月14〜15日"},
+    hormuz:{kick:"世界 · 中東 · 報道照合 ✓ 4社",title:"コンテナ船がホルムズ海峡付近で沈没、アラムコ本社も大きな被害を受けたと報じられる",
+      what:"飛翔体を受けたコンテナ船がホルムズ海峡付近で沈没したと、ロイターが関係筋を引いて報じた。BBCはシンガポールを引いて報じ、ガーディアンとCNBCは、イランによる船舶への攻撃の急増を報じた。別に、ロイターは関係筋を引いて、サウジアラムコの本社がフーシ派の攻撃で広範な被害を受け、フーシ派がサウジの空港と石油施設へのさらなる攻撃を宣言したと報じた。被害についてのサウジの公式発表は確認できなかった。ロイターによれば、アジアでは木曜、投資家が供給と中東の緊張を見極めるなかで、原油価格が下落した。",
+      why:"ホルムズは、世界の石油の多くがペルシャ湾から出ていく海路である。船舶、空港、石油施設への攻撃は、燃料と海運のコストを押し上げ、それが英国の物価に波及する。",
+      me:"ガソリン、ディーゼル、暖房の価格はすでに高い。新たな攻撃のたびに敏感に反応する状態が続くとみられる。湾岸地域に旅行する場合は、外務省の助言に従うこと。",
+      a:"",b:"",
+      say:"アラムコの被害は、サウジアラビアまたはアラムコが確認するまで「関係筋による報道」として扱うこと。ブレント原油の価格と、海運保険の変化に注目したい。",
+      src:"Reuters、BBC、The Guardian、CNBC、Bloomberg · 2026年10月14〜15日"},
+    wage:{kick:"英国 · 仕事 · 報道照合 ✓ 2社",title:"リアル・リビング・ウェージの引き上げで、50万人近い労働者が賃上げへ",
+      what:"ミラー紙は、リアル・リビング・ウェージの引き上げで50万人近い労働者が賃上げになると報じた。イブニング・スタンダードは同じニュースについて2本の記事を出し、1本は新しい時給について、もう1本はロンドンの額についてだった。私たちが確認した見出しには、額そのものが示されていなかったため、引用しない。",
+      why:"リアル・リビング・ウェージは、認定を受けた事業主が支払う任意の賃金水準で、法定の最低賃金より高い。これが上がれば、ほかの事業主への圧力も高まる。",
+      me:"事業主が認定を受けているなら、新しい額がいつ、あなたに適用されるのかを尋ねること。",
+      a:"",b:"",
+      say:"額は、見出しではなく、リビング・ウェージ財団そのものの発表で確認すること。ロンドンとそれ以外の英国で水準が異なるからだ。",
+      src:"Mirror、Evening Standard · 2026年10月14〜15日"},
+    tiger:{kick:"英国 · ニュース · 報道照合 ✓ 6社",title:"トラに殺された男性の遺族、死の映像の拡散をやめるよう求める　検視審問が開かれる予定",
+      what:"野生動物公園でトラに殺された元子役のウィリアム・チャップマンさんの遺族は、トランプ氏がトラと自分を写したAI動画を投稿したのを受け、襲撃の映像の拡散をやめるよう求めたと、ロイター、CTVニュース、ガーディアン、イブニング・スタンダード、ミラー紙が報じた。ピアーズ・モーガン氏は、この投稿を「あきれるほど無神経」だと呼んだと、複数の報道機関が引用して伝えた。イブニング・スタンダードとスカイニュースは、死亡をめぐる検視審問が開かれる予定だと報じた。",
+      why:"この件は、一人の死、遺族の悲しみ、そして政治指導者のソーシャルメディア上の選択が重なっている。検視審問は、人がどのように死んだかを調べ、安全についての勧告を出すことができる。",
+      me:"野生動物公園を訪れる人は、検視審問のあと、新しい安全対策を目にするかもしれない。",
+      a:"",b:"",
+      say:"死がどのように起きたかは、動画をめぐる論争ではなく、検視審問が答えを出す。検視官が囲いについて何を聞かされるかに注目したい。",
+      src:"Reuters、CTV News、The Guardian、Evening Standard、Mirror、Sky News · 2026年10月14〜15日"},
+    budget:{kick:"英国 · 経済 · 報道照合 ✓ 6社",title:"ヒーリー氏の10月28日の予算案、ネット販売業者への課税強化、若者の雇用コストの引き下げ、追加借り入れなしを含むと報じられる　産業界は負担軽減を働きかけ",
+      what:"財務相のジョン・ヒーリー氏は10月28日に初の予算案を発表する。ガーディアン、シティAM、ミラー紙は、同氏がオンラインのマーケットプレイスを取り締まり、ネット販売業者のVATの抜け穴をふさぐ計画だと報じた。ミラー紙はアマゾンとeBayの名を挙げた。シティAMは、これで得られる額を10億ポンドとし、店舗向けの減税の財源になるとした。FTは、この減税策が追加借り入れなしで賄われると報じた。シティAMは、同氏がNEETの雇用コストの引き下げを検討していると伝え、ガーディアンとスカイニュースは、接客業が職のない若者に最大10万人分の仕事を提供すると報じた。キングフィッシャーの最高経営責任者、賭け屋などは、増税に反対するロビー活動を行った。",
+      why:"予算案の事前の説明は、何かが法になる前に、人々の予想をかたちづくる。財務相は、歳出の約束、増税、借り入れのコストの釣り合いを取らなければならず、イングランド銀行の金利の見通しが重要になるのはそのためだ。",
+      me:"予算案が出るまで、変わることはない。この計画が通れば、海外の販売業者からのネット通販はVATの変更に直面するかもしれず、事業主は25歳未満の人を雇うコストが下がると感じるかもしれない。",
+      a:"ネット販売業者への課税強化を支持する人たちは、商店街の店舗にとって公平な競争の場になると述べる。",
+      b:"批判する人たちは、コストの上昇は買い物客にのしかかると述べ、企業には雇用にかかる税とビジネスレートの引き下げが必要だと訴える。",
+      say:"数字はすべて、10月28日までは事前の説明として扱うこと。10億ポンドはシティAMのみのものだ。試金石は、FTが報じたように、追加借り入れなしで数字が合うかどうかである。",
+      src:"The Guardian、City AM、Mirror、Financial Times、Sky News、BBC · 2026年10月14〜15日"},
+    reform:{kick:"英国 · 政治 · 報道照合 ✓ 10社",title:"リフォームUKの議員らが人種差別的な発言を撮影され、党は調査を開始　バーナム氏は、緑の党が可決した「シオニズムは人種差別」の動議をめぐり、同党との取り決めを否定",
+      what:"ITVニュースの潜入調査「インサイド・リフォーム」は、リフォームUKの地方議員と候補者が、カメラの前で極端で人種差別的な発言をする様子を映し出したと、ITVの番組紹介、BBC、ガーディアンが伝えた。イブニング・スタンダードは、番組が、ロンドンの議員がチャールズ国王はイスラム教徒だと主張したと申し立てたと報じた。ミラー紙は、リフォームが調査を始めたと報じ、BBCは、党が批判にさらされていると述べた。別に、アンディ・バーナム首相は、緑の党が大会で「シオニズムは人種差別」とする動議を可決したのを受け、同党との取り決めを否定したと、BBC、スタンダード、インデペンデント、メール紙が報じた。ザ・ナショナルは、緑の党のザック・ポランスキー党首の怒りの返答を報じ、FTは、党が分裂していると伝えた。",
+      why:"どちらの件も、政党が自らの党員に求める水準にかかわる。リフォームにとっては候補者の審査の問題であり、緑の党にとっては、党の大会が指導部をどこまで拘束できるかの問題である。",
+      me:"映像に名前の出たリフォームの議員がいる自治体地域に住んでいるなら、地元での圧力を覚悟すること。どちらの件も、法律を変えるものではない。",
+      a:"リフォームを批判する人たちは、この映像は個々の発言ではなく一つのパターンを示しており、党内の調査では足りないと述べる。",
+      b:"リフォームの支持者は、数人の個人が党を代表するわけではなく、党は彼らを調べていると述べる。緑の党を擁護する人たちは、この動議はイスラエルについての政治的な声明であり、ユダヤ人への敵意ではないと述べる。",
+      say:"2つの話を分けて考えること。リフォームの件は、党が名前の出た人々にどう対処するかにかかっている。緑の党の件は、指導部が大会の議決を受け入れるのか、覆すのかにかかっている。",
+      src:"ITV News、BBC、The Guardian、Evening Standard、Mirror、Independent、Daily Mail、The National、HuffPost UK、Financial Times · 2026年10月14日"},
+    uefa:{kick:"スポーツ · チャンピオンズリーグ · 報道照合 ✓ 6社",title:"PSGがマンチェスター・シティに4-2、マレスカ監督の初黒星　バルコラのハットトリックでリバプールは6-3、ビラは6点を挙げて記録的な勝利、マルティネスの激しい発言はユナイテッドでくすぶり続ける",
+      what:"マンチェスター・シティはパリ・サンジェルマンに4-2で敗れたと、スカイスポーツが報じた。アーリング・ハーランドが2得点を挙げた。エンツォ・マレスカ監督にとってシーズン初の敗戦で、ペップ・グアルディオラ氏がスタジアムにいた。ESPNは、有罪の判断が出てから、シティにとって初のホーム戦だったと伝えた。リバプールはLASKに6-3で勝ち、ブラッドリー・バルコラがハットトリックを決めたと、BBC、ガーディアン、テレグラフが伝えた。アストン・ビラはフェネルバフチェに6点差をつけて記録的な勝利を収めたと、ガーディアンとBBCが報じ、レアル・マドリードはローマに4-3で勝ったと、フットボール・イタリアとBBCが伝えた。マンチェスター・ユナイテッドでは、リサンドロ・マルティネスがクラブの首脳陣を批判したあとに声明を出した。BBCは同選手が謝罪したと述べ、スカイスポーツは謝罪していないと述べている。",
+      why:"チャンピオンズリーグは、イングランドのどのクラブが欧州のトップに近いかを映し出す。シティの敗戦は、クラブが有罪の判断の結果に直面しているときに起き、ユナイテッドの騒動は、不振のコストを示している。",
+      me:"ファンはリーグフェーズの順位表を確認できる。それ以外の人にとっては、シティとユナイテッドの話は、スポーツ面だけでなく、ニュース面にも載るだろう。",
+      a:"",b:"",
+      say:"事実はスコアである。疑問符が付くのは、マルティネスの言葉づかいと、クラブの次の対応だ。確認できた処分はないため、報じない。",
+      src:"Sky Sports、BBC Sport、The Guardian、The Telegraph、ESPN、Football Italia · 2026年10月14〜15日"}
+  };
+
+  const G = {
+    "検察側":{f:"法",d:"刑事事件で罪状を示し、それを立証しなければならない側。イングランドとウェールズでは、通常は検察庁（Crown Prosecution Service）が担う。",w:"検察側が法廷でブランド氏についての主張を述べた。"},
+    "無罪と推定":{f:"法",d:"罪に問われた人は、裁判所が有罪と認めるまで無罪として扱われるという原則。",w:"ブランド氏にも適用される。"},
+    "無罪を主張":{f:"法",d:"罪状を正式に否認すること。これにより事件は裁判に進む。",w:"ニューヨーク・タイムズがブランド氏の答弁を報じた。"},
+    "陪審":{f:"法",d:"イングランドの重大な刑事裁判で有罪かどうかを決める、一般市民12人。",w:"ブランド氏の事件を判断する。"},
+    "ポリティコ":{f:"メディア",d:"米国の政治ニュースサイトで、欧州版もある。",w:"王室の歓迎を報じた。"},
+    "シティAM":{f:"メディア",d:"ロンドンの無料のビジネス紙で、ウェブサイトも運営する。",w:"10億ポンドという数字を伝えた。"},
+    "ITVニュース":{f:"メディア",d:"英国の放送局ITVのニュース部門。",w:"潜入映像を制作した。"},
+    "ダウニング街":{f:"地名",d:"ロンドンにある、首相の執務室と住居がある通り。",w:"バーナム氏はそこでゼレンスキー氏と会談した。"},
+    "バッキンガム宮殿":{f:"地名",d:"ロンドンにある国王の住まい。",w:"ゼレンスキー氏はそこで謁見した。"},
+    "スターリンク":{f:"テクノロジー",d:"スペースXの衛星インターネットサービス。ウクライナ軍が前線で使っている。",w:"その制限が主な不満である。"},
+    "スターシールド":{f:"テクノロジー",d:"スペースXによる、スターリンクの軍事版。",w:"ロイターは、国防関連の顧客向けだと解説した。"},
+    "対ドローンミサイル":{f:"安全保障",d:"ドローンを撃ち落とすために作られたミサイル。ロシアがウクライナの都市に向けて撃つものなどが対象。",w:"英国は、より多く、より早く納入すると述べている。"},
+    "チョルノービリ":{f:"地名",d:"1986年に原子力発電所の事故があったウクライナの地。ロシア語ではチェルノブイリと綴る。",w:"英国は発電所の修復に資金を出す。"},
+    "凍結解除":{f:"法",d:"制裁による資金や財産の凍結をやめ、所有者が再び使えるようにすること。",w:"FTは、米国がロシアの資産の一部についてこれを持ち出したと報じた。"},
+    "財務相":{f:"政治",d:"税と歳出を決める英国の閣僚。ジョン・ヒーリー氏がその職にある。",w:"予算案を発表する。"},
+    "予算案":{f:"経済",d:"政府が毎年、税と歳出の計画を示す声明。10月28日に予定されている。",w:"事前の説明は、これに先立って出ている。"},
+    "VAT":{f:"経済",d:"付加価値税。ほとんどの商品とサービスにかかる売上税。",w:"この計画はネット販売業者の抜け穴を狙っている。"},
+    "NEET":{f:"社会",d:"教育も、雇用も、職業訓練も受けていない若者。",w:"事業主は、彼らをより安く雇えるようになるかもしれない。"},
+    "ビジネスレート":{f:"経済",d:"店舗、オフィスなど事業用の建物にかかる税。",w:"小売業界は引き下げを求めている。"},
+    "キングフィッシャー":{f:"ビジネス",d:"B&Qとスクリューフィックスを傘下に持つ小売グループ。",w:"その最高経営責任者が財務相に働きかけた。"},
+    "リフォームUK":{f:"政治",d:"ナイジェル・ファラージ氏が率いるポピュリスト政党。",w:"その議員らが、ITVの調査で撮影された。"},
+    "シオニズムは人種差別":{f:"政治",d:"緑の党の大会で可決された動議。批判する側は反ユダヤ的だと呼び、党首は党の立場を擁護している。",w:"バーナム氏はこれをめぐり、取り決めを否定した。"},
+    "ハットトリック":{f:"スポーツ",d:"1人の選手が1試合で挙げる3得点。",w:"バルコラがリバプールで初めて決めた。"},
+    "マレスカ":{f:"スポーツ",d:"エンツォ・マレスカ。マンチェスター・シティの監督。",w:"シーズン初の試合に敗れた。"},
+    "バルコラ":{f:"スポーツ",d:"ブラッドリー・バルコラ。リバプールでプレーするフランス人フォワード。",w:"ハットトリックを決めた。"},
+    "リサンドロ・マルティネス":{f:"スポーツ",d:"マンチェスター・ユナイテッドでプレーするアルゼンチン人ディフェンダー。",w:"クラブの首脳陣を批判した。"},
+    "タグレ枢機卿":{f:"宗教",d:"ルイス・アントニオ・タグレ。教皇の回復中、代わってミサを執り行うフィリピン出身の枢機卿。",w:"サン・ピエトロ広場でミサを執り行う。"},
+    "バチカン":{f:"機関",d:"カトリック教会の総本山があるローマの都市国家。",w:"教皇の健康に関する発表を出す。"},
+    "米連邦準備制度理事会":{f:"経済",d:"米国の中央銀行で、米国の政策金利を決める（FRB）。",w:"トレーダーは利上げに賭けている。"},
+    "イングランド銀行":{f:"機関",d:"英国の中央銀行で、主要な政策金利を決める。",w:"そのチーフエコノミストは、4回の利上げに懐疑的だ。"},
+    "ホルムズ海峡":{f:"地名",d:"イランとオマーンの間の狭い海路で、湾岸の石油の多くがここを通って運ばれる。",w:"コンテナ船がその付近で沈没した。"},
+    "アラムコ":{f:"ビジネス",d:"サウジアラビアの国営石油会社。",w:"本社が被害を受けたと報じられている。"},
+    "リアル・リビング・ウェージ":{f:"経済",d:"認定を受けた事業主が支払う、法定の最低賃金より高い任意の時給水準。",w:"50万人近い労働者が賃上げとなる。"},
+    "検視審問":{f:"法",d:"人の死因を調べる裁判所の審問。",w:"トラによる死亡について開かれる予定だ。"},
+    "CMA":{f:"機関",d:"競争・市場庁。不公正な商慣行を取り締まる。",w:"販売手法をめぐり、企業に罰金を科した。"},
+    "パレスチナ・アクション":{f:"政治",d:"2025年に英国でテロ対策法に基づき禁止された直接行動グループ。",w:"サリー・ルーニー氏がこれを支持したため、著書の販売が打ち切られた。"},
+    "鴨緑江":{f:"地名",d:"中国と北朝鮮の国境を流れる川。",w:"新しい橋が開通した。"},
+    "エボラ":{f:"健康",d:"体液との接触で広がる重いウイルス性疾患。",w:"ケニアは2人目の感染を確認した。"},
+    "GOV.UK":{f:"機関",d:"英国政府の公式ウェブサイト。発表や記録を掲載する。",w:"バーナム氏とゼレンスキー氏の会談を記録した。"},
+    "IMF":{f:"機関",d:"国際通貨基金。各国政府に融資し、世界経済について助言する。",w:"年次総会はバンコクで開かれる。"},
+    "SNP":{f:"政治",d:"スコットランド国民党。スコットランドの独立を掲げる。",w:"バーナム氏は、その党大会のころにスコットランドを訪れる。"},
+    "ロスバンク":{f:"エネルギー",d:"英国政府の決定を待つ、北海の石油・ガス田開発計画。",w:"バーナム氏は、決定が近いと述べている。"},
+    "ウィットコフ":{f:"政治",d:"スティーブ・ウィットコフ。ロシアとウクライナ問題を担当する米国の特使。",w:"ゼレンスキー氏は、同氏との協議を提案した。"},
+    "DUP":{f:"政治",d:"民主統一党。英国との連合を支持する北アイルランドの政党。",w:"ドナルドソン氏はかつてその党首だった。"},
+    "パランティア":{f:"ビジネス",d:"英国の公共事業の契約をもつ米国のデータ分析企業。",w:"サディク・カーン氏に対する訴えを取り下げた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

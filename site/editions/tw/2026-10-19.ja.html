@@ -1,0 +1,358 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>47,111.26</b>加権指数 · 16日終値 · 0.30%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>32.428</b>米ドル対台湾ドル · 16日終値</div>
+    </div>
+    <div class="dateline"><span>第15号 · 朝刊</span><b>2026年10月19日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">天気 · 台風<span>✓ 7社 · 22日以降の北上か西進かは未定</span></div>
+      <h2 class="hl">強烈台風の薔琵、きょう勢力のピークに　気象署「海上警報は早ければ水曜夜」</h2>
+      <p class="deck">複数の報道が、強烈台風の薔琵は19日に勢力のピークを迎える見通しで、気象署の海上台風警報は早ければ21日夜に発表されると伝えた。22日以降は、北上と西寄りの二通りの進路が並び立つ。</p>
+      <div class="body">
+        <p>薔琵台風は18日、聯合報、中国時報、ETtoday、自由時報、三立ニュースネットの報道で、すでに強烈台風と呼ばれている。中央社は16日、気象署が当時、薔琵はまだ熱帯低気圧で、24時間以内に台風へ発達する見通しだと述べ、その後の進路はなお不確かで、その時点の薔琵はグアムの東の海上にあった、と報じた。中央社英語版は17日、薔琵は同日、台湾南端の東南東約2980キロにあり、時速22キロで西へ進んでいると報じ、気象署は薔琵が来週、台湾に接近または通過する可能性があると述べた。自由時報と三立ニュースネットは予報官の話として、薔琵は19日（きょう）に最初の勢力のピークに達する見通しだと伝え、三立ニュースネットは「台湾襲来の確率高い」の見出しでこの予想を報じた。聯合報、中国時報、ETtodayは、気象署が海上台風警報を早ければ21日（水曜）夜に発表すると指摘し、台風の移動が速まれば発表が前倒しになる可能性があると報じた。ETtodayは17日にすでに「薔琵台風が加速」の見出しでこの説明を報じており、中国時報は気象署が公表した雨の多い地域も併せて報じた。自由時報の英語版『台北時報』も19日に同じ説明を掲載した。聯合報はさらに、影響が最も目立つのは金曜と土曜、つまり23日と24日で、その間は全土で雨となり、北部、宜蘭、花蓮では局地的な大雨または豪雨になると報じた。</p>
+        <p>進路は、報道の見方が最も割れている部分だ。中央社英語版は気象署の予報官の話として、薔琵は21日前後に琉球の南の海上に達し、22日（木曜）前後には台湾の東の海上に位置し、その後は次第に北上する可能性があるとした。気象署は、進路は太平洋高気圧に左右されると説明している。高気圧が大きく弱まれば台風は早めに北上し、高気圧が強まれば転向するときの台湾との距離が近くなり、台湾を通過する可能性さえある。自由時報は、現在は二つの可能性があり、一つは東部沖から北上するもの、もう一つは西寄りに台湾を通過し、上陸さえするものだと報じた。ほかの二つの報道は気象専門家の話として、一方は北上の可能性は低いとし、もう一方は予報が次第に上陸寄りになっているとした。中央社は、24日と25日の週末には、北東季節風または台風の外側の循環で北部と東部の雨量が増える可能性があるとも報じた。フィリピンの『Philstar』は、薔琵がフィリピンの責任海域に入ったときはスーパー台風の強さだったとし、その後は次第に弱まると予想している。『台北時報』が19日に掲載した報道の時点で、気象署は海上警報も陸上警報もまだ発表していない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">社会 · 健康保険<span>✓ 3社 · 施行細則、開始日、財源は不明</span></div>
+      <h3 class="hl">老人福祉法の改正が三読で可決、条件を満たす65歳以上の健康保険料は中央が全額補助</h3>
+      <div class="one">
+        <p>立法院は16日、『老人福祉法』第22条の改正案を三読で可決した。65歳以上の高齢者本人またはその法定の扶養義務者について、直近1年の総合所得の合計が申告基準に満たない、または総合所得税の税率が20%に満たない場合、健康保険料は中央の主管機関が全額を補助する。民報、自由時報、三立ニュースネットによると、採決結果は60票対39票で、改正は民衆党団が主導し、国民党と民衆党の両党が協力して進めた。その後に提出された再議案は、賛成39票、反対60票で否決された。補助の対象、項目、基準は、中央の主管機関が後に別途定める。衛生福利部長の石崇良氏は反対を表明し、健康保険の核心は応能負担と相互扶助で、補助はほかの層か税収が負担せざるを得ないと述べた。15歳から64歳の人口が負担する場合は1人当たり年平均3000元余りの増加、税収で賄う場合は1世帯当たり年平均約8000元余りの増加になると試算した（民報、自由時報）。台湾医院協会など医療界の7団体は共同声明で反対し、財政試算と影響評価が欠けていると指摘した。行政院長の卓栄泰氏は、韓国瑜立法院長が野党議員による違憲行為の主導を放置していると批判し、行政院は合憲的な対応をとると表明した。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>トランプ氏、ネタニヤフ氏の再選を公然と支持　イスラエル総選挙は27日に投票</b><em>トランプ氏はネタニヤフ氏を「偉大な戦士の首相」と呼んだ。対抗するアイゼンコット氏は、だれが首相になるかを決められるのはイスラエルの国民だけだと述べた。</em><span>国際 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>ウクライナのドローンがサンクトペテルブルクを攻撃、石油ターミナルと油槽所で火災　少なくとも1人死亡</b><em>ベグロフ州知事は少なくとも1人が死亡、5人が負傷したと述べた。ロシア国防省は夜間に1015機のウクライナ軍ドローンを迎撃したとし、レニングラード州知事は同州上空で145機を撃墜したと述べた。</em><span>国際 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>カナダ・アルバータ州の軍基地で火災、カーニー首相「軍人4人が死亡」</b><em>数十人が重傷を負った。軍はテロ攻撃の兆候はないとしている。火は強風にあおられて広がり、出火原因は調査中だ。</em><span>国際 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>台湾シリーズ、味全ドラゴンズが中信ブラザーズに3対1で連勝、シリーズ2勝0敗に</b><em>曾聖安が5回裏に逆転3ランを放った。7回裏に一塁へ走り込んだあと倒れ、球団は左太もものけいれんと説明し、王順和が守備を引き継いだ。</em><span>スポーツ · ✓ 6社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>台南の鉄道地下化が開通、新台南駅と国定古跡の旧駅を広場で結ぶ</b><em>新駅は低く抑えた設計で旧駅に場所を譲り、二つの駅を沈み込み式の広場でつなぐ。林森駅は2029年末、南台南駅は2030年の開通を予定する。</em><span>生活 · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">政治 · 選挙<span>✓ 5社 · 選対本部の幹部名簿と役割分担は未公表</span></div>
+      <h3 class="hl">盧秀燕氏、蒋万安氏の選対本部の主任委員就任を認める　選挙チームはきょう午後2時に幹部名簿を発表</h3>
+      <div class="body">
+        <p>台中市長の盧秀燕氏は18日、新竹市で高虹安氏の選対本部の設立大会に出席した際の取材で、3日前に台北市長の蒋万安氏の選対本部の主任委員を引き受けると約束していたことを認めた。聯合報によると、蒋万安氏も同じ日に自らこの手配を認めた。ETtodayと聯合報によると、蒋万安氏の選対本部は19日（きょう）午後2時に記者会見を開き、盧秀燕氏の主任委員就任を発表するとともに、選挙チームの主要幹部の名簿を公表する予定だ。世界日報は「中間層への訴求力を発揮」の見出しでこの人事を報じた。</p>
+        <p>盧秀燕氏は8月1日にすでに、国民党の台中市長選候補・江啓臣氏の選対本部の主任委員を務めており、中央社によると、その際、江啓臣氏は後継の最適な人選だと語った。蒋万安氏は再選を目指し、対抗するのは民進党の候補・沈伯洋氏だ。ETtodayは19日の記者会見を、盧秀燕氏と蒋万安氏が「合体」して「洋流」に対抗する、と見出しにした。中央社によると、沈伯洋氏の陣営は10月11日から、「台北大洋流」と名づけた車掃（選挙カーでの街頭回り）の活動を行っている。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">国際 · 欧州<span>✓ 3社 · 暴力の原因と死傷の詳細は不明</span></div>
+      <h3 class="hl">フランスの物価高抗議デモが暴力に発展　パリ警察「パリ首都圏で855人逮捕」</h3>
+      <div class="body">
+        <p>フランス内務省のローラン・ヌニェス（Laurent Nuñez）大臣は、17日（土曜）の物価高抗議デモが各地で暴力的な衝突に発展したと述べた。AP通信は、全国で約55万人が参加したと報じた。全国の逮捕者数は報道によって異なる。AP通信は少なくとも1800人、ユーロニュースはヌニェス内務相が2000人超と述べたと報じた。パリ警察は、パリ首都圏で855人が逮捕されたとした（ABC NewsがAP通信、ユーロニュースを転載）。負傷者については、AP通信がヌニェス氏の話として、警察官、憲兵、消防士500人超が負傷したと報じ、ユーロニュースは600人超と報じた。後者は暫定の数字である。</p>
+        <p>ヌニェス氏はXに、抗議は基本的な権利だが、意図的かつ集団で暴力によって混乱を起こすことはそうではない、と書いた。ユーロニュースによると、パリ、マルセイユ、ボルドー、ニース、ストラスブールなどで商店が略奪され、リモージュでは市庁舎に放火された。ヌニェス氏は暴力を、数千人の極左勢力のせいだとした。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">経済 · エネルギー<span>✓ 4社 · 立法院の審議結果と電気料金の調整は未定</span></div>
+      <h3 class="hl">行政院の追加予算1809億が審議待ち　経済部、中東情勢を受けエネルギー価格の安定への支持を呼びかけ</h3>
+      <div class="body">
+        <p>行政院は10月1日に追加予算案を可決した。総額は1809.35億元で、うち台湾中油に1014.31億元、台湾電力に711.04億元を補填し、ほかに84億元を関連の石油事業者に充てる。台視ニュースと新頭殼によると、卓栄泰行政院長は、立法院に11月末までの三読での可決を呼びかけた。自由時報と聯合報によると、経済部は、国際的な石油・天然ガス価格が、去年8月に115年度予算を編成したときの見積もりを大きく上回っており、追加予算がなければ、台湾中油と台湾電力が物価安定の役割を担い続けるのは難しいと説明した。</p>
+        <p>経済部は18日、追加予算への支持をあらためて呼びかけ、台湾中油と台湾電力は油・ガスの船便や燃料の調整の手配に加え、物価上昇を防ぐ最前線の「波消しブロック」の役割も担っていると述べた（自由時報、聯合報）。経済部は、戦前と比べ、ブレント原油の価格は66%上昇し、台湾のガソリン価格は14%、軽油は12%上がったと指摘し、日本と韓国もすでに補助策をとっているとした。台湾電力は今年4月と10月の2回の電気料金審議でいずれも当面の値上げ見送りを決め、家庭向けの天然ガスとボンベ入りガスは年末まで据え置き、電気料金は立法院での追加予算の審議の状況を見て調整するかどうかを決める。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>ゼレンスキー氏：米国が情報共有を再開<span>ウクライナのゼレンスキー大統領は訪問中、短い中断のあと米国が重要な情報の提供を再開し、ロシアのミサイル攻撃への防御を助けていると述べた（自由時報がロイターを引用）。</span></li>
+        <li>台湾、中国船16隻を退去させる<span>台湾は、「海上での嫌がらせ」に関わった中国海警局の船、調査船、漁船など16隻を退去させたと表明した（Taipei TimesがAFP通信を引用）。</span></li>
+        <li>国防部、150件余りの予算が未解除<span>今年度予算は9月中旬に立法院へ送られたが、国防部にはなお150件余りの予算案が凍結解除されておらず、M1A2T戦車の部品・付属品や戦術ネットワーク関連の予算も含まれる（自由時報、Taipei Times）。</span></li>
+        <li>入植者が外交官の車列を襲撃<span>ヨルダン川西岸で17日、イスラエル人入植者が欧州の外交官の車列を襲い、訪れていたフランスの市長を殴った。米国の駐イスラエル大使とフランス、ベルギーの外相がいずれも非難した（自由時報）。</span></li>
+        <li>台湾シリーズ初戦はドラゴンズが勝利<span>味全ドラゴンズは17日、台北ドームで中信ブラザーズを3対0で完封した。蒋銲は8回を無失点に抑え、ブラザーズは全試合で安打2本だけだった（鏡週刊、中央社、華視）。</span></li>
+        <li>金鐘奨、台風で緊急対応<span>金鐘奨の授賞式まで5日、主催者は薔琵台風の接近を受けて、式の段取りに緊急で対応した（自由時報）。</span></li>
+        <li>台湾電力「誤った情報を広げないで」<span>台湾電力は、台中火力発電所の大気汚染と炭素排出は原発があったときより少ないとして、盧秀燕台中市長にこれ以上誤った情報を伝えないよう呼びかけた（自由時報）。</span></li>
+        <li>周天成、デンマーク・オープンで4強ならず<span>周天成はデンマーク・バドミントン・オープンの準々決勝で懸命に追い上げたが、21歳のフランスの世界王者に及ばなかった（自由時報）。</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>薔琵は必ず台湾に上陸し、連休も来週も、職場と学校は休みになる。</b> <span>自由時報と中央社は気象署の話として、22日前後には東部沖から北上するか、西寄りに台湾を通過するかの二通りの可能性があると伝えており、『台北時報』が19日に掲載した報道の時点で、気象署は警報をまだ何も発表していない。</span></div>
+        <div><b>フランスの17日のデモで逮捕されたのは400人ほどにとどまる。</b> <span>全国の逮捕者数は報道によって異なる。AP通信は少なくとも1800人、ユーロニュースはヌニェス内務相が2000人超と述べたと報じ、パリ警察はパリ首都圏で855人とした（ABC NewsがAP通信を転載）。400人という数字に対応する報道機関や公的な出所は見つからない。</span></div>
+        <div><b>ウクライナは18日に1000機超のドローンを出動させ、サンクトペテルブルク史上最大の攻撃になった。</b> <span>1015機はロシア国防省が述べた夜間の迎撃数で、レニングラード州知事は同州で145機を撃墜したと述べた（フランス24は144機と報道）。タス通信はこれを同地域で4年来最大の攻撃としている（アルジャジーラ）。これらの説明はいずれもロシア側のもので、独立した確認はなく、「史上最大」を裏づける報道もない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/19（月）</b><span>蒋万安氏の選対本部が午後2時に記者会見を開き、盧秀燕氏の主任委員就任を発表して幹部名簿を公表する。薔琵はきょう勢力のピークに達する見通し。</span><b>今週</b><span>21日（水）夜から、気象署は早ければ薔琵の海上台風警報を発表する。23日、24日（金曜、土曜）は、報道が影響が最も目立つとする時間帯。</span><b>その後</b><span>10月27日にイスラエルの総選挙。行政院は、追加予算案が11月末までに三読で可決されることを望んでいる。</span><b>読者へ</b><span>台風の進路と警報は気象署の発表を基準にし、逮捕者数やドローンの機数などの統計は公的な発表を基準にする。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "天気 · 台風 · ✓ 7社 · 22日以降の北上か西進かは未定", "title": "強烈台風の薔琵、きょう勢力のピークに　気象署「海上警報は早ければ水曜夜」", "what": "薔琵台風は18日、聯合報、中国時報、ETtoday、自由時報、三立ニュースネットの報道で強烈台風と呼ばれた。自由時報と三立ニュースネットは予報官の話として、薔琵は19日に最初の勢力のピークに達する見通しだと伝えた。聯合報、中国時報、ETtodayは、気象署が海上台風警報を早ければ21日夜に発表すると指摘し、移動が速まれば前倒しになる可能性があると報じた。中央社英語版は気象署の予報官の話として、薔琵は22日前後に台湾の東の海上に位置し、その後は次第に北上する可能性があるが、太平洋高気圧が強いままなら進路は西寄りになり、台湾を通過する可能性があるとした。聯合報は、23日と24日（金曜、土曜）は全土で雨となり、北部、宜蘭、花蓮では局地的な大雨または豪雨になると報じた。『台北時報』が19日に掲載した報道の時点で、気象署は警報をまだ発表していない。", "why": "海上警報が21日夜に発表されれば、漁船の操業、離島への航路、東部沿岸の活動がまず影響を受け、陸上警報や職場・学校の休みの判断は、進路がはっきりしてからになる。進路は太平洋高気圧の強さに左右され、高気圧が弱まれば台風は早めに北上し、強まれば台風が台湾に近づく度合いが高まる。この二つの場合では、22日以降の風雨の範囲が大きく異なる。19日にピークを迎えた後の強さの変化も、台湾に近づく際の風雨の強さに影響する。", "me": "ここ数日はまず、毎日更新される気象署の予報を確認し、23日と24日の外出、飛行機、鉄道の予定には、変更できる余地を残しておくとよい。海に出る人、離島便に乗る人、東部や北部で活動する人は、21日夜から海上警報に注意する。家の排水口、ベランダ、車の駐車位置は、風雨が来る前に点検しておく。", "a": "報道は気象署の予報官の話として、22日前後に太平洋高気圧が大きく弱まれば、台風は台湾の東の海上で北上に転じ、台湾は主に外側の循環の影響を受け、雨は北部と東部に集中するとしている。この立場は、22日前後の高気圧の変化を、北上するかどうかの鍵とみる。", "b": "別の報道は気象専門家の話として、北上の可能性は低く、薔琵は強烈台風の勢力のまま台湾に接近し、予報は次第に上陸寄りになっているとする。高気圧が強いままなら進路は西寄りになり、台湾は台風の中心により近くなる。この立場は、北上より西寄りの可能性が高いとみる。", "say": "確認されているのは、勢力のピークが19日と予想されること、海上警報が早ければ21日夜に発表されること、そして23日と24日の影響が最も目立つことだ。未確認なのは、22日以降に北上するか西へ進むかだ。きょうから21日にかけては、太平洋高気圧の変化、各予報が収束するか、21日夜に海上警報が出るかを見る必要がある。", "src": "自由時報（薔琵、早ければ水曜に海上警報、陸上警報の可能性も排除せず、10月18日）· 公視（気象署：木曜に海上警報の可能性も排除せず、10月18日）· 聯合報、中国時報、ETtoday、三立ニュースネット（進路と勢力、10月16日から18日）· 中央社（Focus Taiwan、10月18日）· Philstar（フィリピン側の予報、10月17日）"},
+    "s2":{"kick": "社会 · 健康保険 · ✓ 3社 · 施行細則、開始日、財源は不明", "title": "老人福祉法の改正が三読で可決、条件を満たす65歳以上の健康保険料は中央が全額補助", "what": "立法院は16日、『老人福祉法』第22条の改正案を三読で可決した。65歳以上の高齢者本人またはその法定の扶養義務者について、直近1年の総合所得の合計が申告基準に満たない、または総合所得税の税率が20%に満たない場合、健康保険料は中央の主管機関が全額を補助する。民報、自由時報、三立ニュースネットによると、採決結果は60票対39票で、改正は民衆党団が主導し、国民党と民衆党の両党が協力して進めた。再議案は賛成39票、反対60票で否決された。衛生福利部長の石崇良氏は反対を表明し、15歳から64歳の人口が負担する場合は1人当たり年平均3000元余りの増加、税収で賄う場合は1世帯当たり年平均約8000元余りの増加になると試算した。台湾医院協会など医療界の7団体は共同声明で反対した。行政院長の卓栄泰氏は、韓国瑜立法院長が野党議員による違憲行為の主導を放置していると批判した。", "why": "健康保険料が中央の補助に切り替わると、金がどこから出るかが、だれが負担するかを決める。ほかの年齢層の保険料で吸収するなら働く世代の保険料が上がり、中央の予算に計上するなら、ほかの政府支出と競うことになる。法律は補助の原則を定めただけで、補助の対象、項目、基準は中央の主管機関が別途定めるため、実際の金額も開始日もまだ決まっていない。", "me": "家に65歳以上の高齢者がいる人は、細則が公表されてから、高齢者と扶養義務者の直近1年の所得と税率が条件の範囲に入っているかを照合するとよい。会社員は、衛生福利部と健康保険署が今後公表する財源と保険料の説明に注意しておくとよい。細則が公表されるまでは、保険料の金額と納付方法は健康保険署の告知を基準にする。", "a": "改正を進めた側は、高齢者の健康保険料は中央が予算を組んで補助すべきで、若者に追加で徴収すべきではないと主張し、三読で可決された後も再議案を受け入れなかった。", "b": "石崇良氏と医療界の7団体は、これが応能負担と相互扶助の原則を崩すものであり、財政試算と影響評価も欠けていると考える。卓栄泰氏は改正を違憲だと述べ、行政院は合憲的な対応をとるとした。", "say": "確認されているのは、三読の結果、60対39という票数、20%という税率の基準、そして石崇良氏の試算だ。未確認なのは、補助の細則、開始日、財源だ。これから見るべきは、行政院が公表する対応と、中央の主管機関が定める細則だ。", "src": "中央社（立法院が老人福祉法の改正を三読で可決、10月16日）· 自由時報（国民党が若者負担説に反論、頼総統が態度表明、10月18日）· 民報（衛生福利部長の試算、10月16日）· 三立ニュースネット（採決結果、10月16日）"},
+    "s3":{"kick": "政治 · 選挙 · ✓ 5社 · 選対本部の幹部名簿と役割分担は未公表", "title": "盧秀燕氏、蒋万安氏の選対本部の主任委員就任を認める　選挙チームはきょう午後2時に幹部名簿を発表", "what": "台中市長の盧秀燕氏は18日、新竹市で高虹安氏の選対本部の設立大会に出席した際の取材で、3日前に台北市長の蒋万安氏の選対本部の主任委員を引き受けると約束していたことを認めた。聯合報によると、蒋万安氏も同じ日に自らこの手配を認めた。ETtodayと聯合報によると、蒋万安氏の選対本部は19日午後2時に記者会見を開き、盧秀燕氏の主任委員就任を発表するとともに、選挙チームの主要幹部の名簿を公表する予定だ。世界日報は「中間層への訴求力を発揮」の見出しでこの人事を報じた。盧秀燕氏は8月1日にすでに、国民党の台中市長選候補・江啓臣氏の選対本部の主任委員を務めており、中央社は、その際、江啓臣氏は後継の最適な人選だと語ったと報じた。", "why": "蒋万安氏は再選を目指し、対抗するのは民進党の候補・沈伯洋氏だ。現職の台中市長が別の都市で同じ党の候補の選対本部の主任委員になることは、中部の政治的資源と知名度を台北の選挙戦に持ち込むことにほかならない。盧秀燕氏が台中と台北で同時に主任委員を務めることで、日程と役割も報道の関心の対象になっている。", "me": "台北市民は、19日午後2時の記者会見のあとで、選対本部が公表する幹部名簿と主張を見るとよい。台中市民は、盧秀燕氏の二つの都市での日程の組み方に注意するとよい。投票前には、応援に立つ顔ぶれだけでなく、各候補の公約を見比べることを勧める。", "a": "世界日報は「中間層への訴求力を発揮」の見出しでこの人事を報じ、盧秀燕氏の加入を中間層への訴求とみている。", "b": "ETtodayの見出しは、19日の記者会見を盧秀燕氏と蒋万安氏の「合体」で「洋流」に対抗すると書き、沈伯洋氏の陣営の「台北大洋流」の車掃の活動と対比させた。盧秀燕氏は8月1日にも、江啓臣氏の台中での選対本部の主任委員を務めている。", "say": "確認されているのは、盧秀燕氏と蒋万安氏の双方がともに認めており、記者会見が19日午後2時に設定されていることだ。未確認なのは、選対本部の幹部名簿と役割分担だ。きょう午後は、名簿のなかの総幹事などの重要ポストと、盧秀燕氏が台北と台中の時間をどう配分するかを見る必要がある。", "src": "中央社（江啓臣氏：能力のある人は多く働く、全力で支持、10月18日）· 自由時報（盧秀燕氏、新竹市で選対本部の主任委員就任を認める、10月18日）· 聯合報、ETtoday（19日の記者会見、10月18日）· 世界日報（中間層への訴求力、10月18日）· 中央社（8月1日、江啓臣氏の選対本部の主任委員に就任）"},
+    "s4":{"kick": "国際 · 欧州 · ✓ 3社 · 暴力の原因と死傷の詳細は不明", "title": "フランスの物価高抗議デモが暴力に発展　パリ警察「パリ首都圏で855人逮捕」", "what": "フランス内務省のヌニェス大臣は、17日の物価高抗議デモが各地で暴力的な衝突に発展したと述べ、AP通信は全国で約55万人が参加したと報じた。全国の逮捕者数は報道によって異なる。AP通信は少なくとも1800人、ユーロニュースはヌニェス内務相が2000人超と述べたと報じた。パリ警察は、パリ首都圏で855人が逮捕されたとした。負傷者については、AP通信がヌニェス氏の話として、警察官、憲兵、消防士500人超が負傷したと報じ、ユーロニュースは600人超と報じた。後者は暫定の数字である。ユーロニュースは、パリ、マルセイユ、ボルドー、ニース、ストラスブールなどで商店が略奪され、リモージュでは市庁舎に放火されたと報じた。ヌニェス氏は暴力を、数千人の極左勢力のせいだとした。", "why": "全国の逮捕者数は、報道によって少なくとも1800人から2000人超までと幅があり、警察は引き続き集計を進めているため、数字はさらに更新される可能性がある。デモの要求は生活費だったが、暴力がどの集団によるものかが事件のその後の焦点となり、事件は国内の治安の問題であると同時に、社会的な抗議の話題にもなっている。", "me": "近く、パリ、マルセイユ、リヨン、ボルドーへ行く旅行者は、出発前に現地の自治体や外交部の渡航情報を見て、デモが集まる場所と時間帯を避けるとよい。台湾の読者にとっても、この事件は、物価と生活費がどの国でも大規模な街頭行動を引き起こしうることを示している。", "a": "ヌニェス氏は暴力を数千人の極左勢力のせいだとし、意図的かつ集団で混乱を起こすことは抗議の権利ではないと述べた（ユーロニュース）。", "b": "ヌニェス氏は同時に、抗議は基本的な権利だと述べ、AP通信は全国で約55万人が参加し、暴力はそのうちの少数の集団によるものだと報じた。", "say": "確認されているのは、パリ警察による855人の逮捕と、全国の逮捕者数が少なくとも1800人、2000人を超える可能性があることだ（AP通信、ユーロニュース）。未確認なのは、暴力における各集団の割合と死者数だ。これから見るべきは、更新される逮捕者数、司法の対応、そしてマクロン氏が約束した警察の対応の調査だ。", "src": "自由時報（フランスのデモが全国的な暴動に、1200人超が逮捕、10月18日）· 公視（百年の市庁舎が焼かれる、10月18日）· 米国ニュース＆ワールド・レポート（US News、10月17日）· ABC News（AP通信、10月18日）· ユーロニュース（10月18日）"},
+    "s5":{"kick": "経済 · エネルギー · ✓ 4社 · 立法院の審議結果と電気料金の調整は未定", "title": "行政院の追加予算1809億が審議待ち　経済部、中東情勢を受けエネルギー価格の安定への支持を呼びかけ", "what": "行政院は10月1日に追加予算案を可決した。総額は1809.35億元で、うち台湾中油に1014.31億元、台湾電力に711.04億元を補填し、ほかに84億元を関連の石油事業者に充てる。台視ニュースと新頭殼によると、卓栄泰行政院長は、立法院に11月末までの三読での可決を呼びかけた。経済部は18日にあらためて支持を呼びかけ、自由時報と聯合報によると、経済部は台湾中油と台湾電力が油・ガスの船便と燃料の調整を担い、物価上昇を防ぐ最前線の「波消しブロック」の役割も担っていると述べた。経済部は、戦前と比べ、ブレント原油の価格は66%上昇し、台湾のガソリン価格は14%、軽油は12%上がったと指摘した。台湾電力は今年4月と10月の2回の電気料金審議でいずれも当面の値上げ見送りを決め、家庭向けの天然ガスとボンベ入りガスは年末まで据え置く。", "why": "追加予算は立法院の三読を経てはじめて執行できる。油と電気の価格を当面据え置く間は、コストをまず台湾中油と台湾電力が負担し、のちに予算で補填するため、予算が通るかどうかは、電気料金と油価が調整されるかに連動する。1809.35億元は台湾中油、台湾電力、石油事業者への補填の合計額で、審議の速さは、各社がいつ資金を受け取るかも左右する。", "me": "一般家庭の電気料金は今のところ上がっておらず、家庭向けの天然ガスとボンベ入りガスは年末まで据え置かれる。立法院の審議結果が出てはじめて電気料金を調整するかどうかが再び決まるため、家庭や小さな店は、年末までの電気料金の告知に注意しておくとよい。車やバイクに乗る人は、ガソリンと軽油の価格は台湾中油が掲示する価格を基準にする。", "a": "経済部と行政院は、国際的な油・ガス価格が年度予算を編成したときの見積もりを大きく上回っており、追加予算がなければ、台湾中油と台湾電力が物価を安定させる役割を担い続けるのは難しいと述べ、日本と韓国もすでに補助策をとっていると指摘した。", "b": "経済部は同時に別の連動関係も説明している。電気料金を調整するかどうかは立法院での追加予算の審議の状況を見るというもので、つまり電気料金と予算の審議はつながっている。台湾電力は今年4月と10月の2回の電気料金審議でいずれも当面の値上げ見送りを決めた。", "say": "確認されているのは、1809.35億元という総額と配分、行政院が11月末までの三読を望んでいること、そして経済部の価格の数字だ。未確認なのは、立法院がいつ審議するか、各会派の立場、そして電気料金が最終的に調整されるかだ。これから見るべきは、立法院の審議日程の組み方と、経済部による電気料金についての次の説明だ。", "src": "中央社（経済部：油・ガスの供給は年末まで問題なし、追加予算への支持を望む、10月18日）· 自由時報（立法院が23日に卓栄泰氏を招き追加予算の報告を求める、10月16日）· 聯合報、台視ニュース、新頭殼（予算の内容、10月1日から18日）"},
+    "i1":{"kick": "✓ 4社", "title": "トランプ氏、ネタニヤフ氏の再選を公然と支持　イスラエル総選挙は27日に投票", "what": "トランプ氏は18日、Truth Socialへの投稿で、イスラエルのネタニヤフ首相の再選を公然と支持し、「偉大な戦士の首相」と呼んだ。さらに、イスラエルがネタニヤフ氏以外の指導者に代われば、米国はこの仕事を自分でやらねばならなくなるが、自分はそうするつもりはない、と書いた。内容はイランに関わるものだ。イスラエルは27日に総選挙を行う。主な対抗馬のアイゼンコット氏は、だれが首相になるかを決められるのはイスラエルの国民だけだと述べ、この支持表明を止めようと働きかけたと語った。Axiosは、トランプ氏がここ数カ月、何度も態度表明を渋っていたと報じた。ネタニヤフ氏はXでトランプ氏に謝意を示し、二人で任務をやり遂げると書いた。", "why": "イスラエル総選挙の9日前に、米国大統領が公然と態度を示し、米国との関係とイラン問題を選挙戦に持ち込んだ。報道ではトランプ氏が支持表明をイランと結びつけており、有権者は、米国とイスラエルの関係と、イスラエル人自身が決めることとの間で、どちらを取るかを問われることになる。", "me": "台湾の読者は、米国が同盟国の選挙にどう公然と介入するかを見る一例として受け止め、27日の開票結果が中東情勢に及ぼす影響に注意するとよい。台湾の追加予算案はまさに中東の紛争によるエネルギー価格の圧力に対応するもので、情勢の変化は油価に連動する。", "a": "トランプ氏の主張は、ネタニヤフ氏は強く、勇敢で、聡明であり、強い反対のなかでも国を率いており、代われば米国はイラン問題を単独で処理せねばならなくなる、というものだ。", "b": "アイゼンコット氏の主張は、首相を決められるのはイスラエルの国民だけだというもので、同時にトランプ氏への敬意を示し、トランプ氏がイスラエルのためにしたことも認めている。", "say": "確認されているのは、トランプ氏の18日の投稿の内容、27日という総選挙の日付、そしてアイゼンコット氏の反応だ。未確認なのは、この支持表明が有権者の投票に与える実際の影響だ。これから見るべきは、選挙前の世論調査と27日の開票結果だ。", "src": "FinancialJuice（トランプ氏、Truth Socialでネタニヤフ氏を支持、10月18日）· エルサレム・ポスト、ユダヤ通信社、Axios、Media Line（イスラエル総選挙、10月18日）"},
+    "i2":{"kick": "✓ 4社", "title": "ウクライナのドローンがサンクトペテルブルクを攻撃、石油ターミナルと油槽所で火災　少なくとも1人死亡", "what": "ウクライナは18日、サンクトペテルブルクとレニングラード州に大規模なドローン攻撃をかけた。サンクトペテルブルクのアレクサンドル・ベグロフ（Alexander Beglov）州知事は、少なくとも1人が死亡し5人が負傷したと述べ、消防隊員がサンクトペテルブルクの石油ターミナル、Ruchi油槽所、コルピノ地区の工業倉庫で大火災の消火にあたった。ロシア国防省は夜間に1015機のウクライナ軍ドローンを迎撃したとし、レニングラード州知事は同州上空で145機を撃墜したと述べた（フランス24は同州で144機撃墜と報道）。約2万人が停電した。アルジャジーラは、タス通信がこれを同地域で4年来最大の攻撃としたと報じ、フランス24は、ロシアの官製メディアがこれを2022年の開戦以来この市で最大の攻撃としたと報じた。これらの数字と規模の説明はいずれもロシア側のもので、独立した確認はない。Ozonの物流センターが出火し、レニングラード州にあるVKのデータセンターが被害を受けた。", "why": "石油ターミナルと油槽所はエネルギーの輸出と供給の結節点で、出火はロシア国内の燃料供給と輸出の手配に響く。ドローンの機数、死傷者、損害の数字は現在おもにロシアの当局者に由来し、説明の違いが各報道の言い回しにそれぞれ留保をもたらしている。", "me": "台湾の追加予算案はまさに中東の紛争によるエネルギー価格の圧力に対応するもので、ロシア・ウクライナ戦争も同じく国際油価に響く。台湾の読者は、油価の動きと、台湾中油の掲示価格が国際相場に応じて調整されるかに注意するとよい。", "a": "ロシア側の説明は、国防省が1015機のドローンを迎撃し、タス通信がこれを同地域で4年来最大の攻撃としたというもの（アルジャジーラ）。ベグロフ州知事は死者の発生と施設の出火を確認した。", "b": "フランス24は同州で144機撃墜、アルジャジーラは145機と報じ、ロシアの官製メディアがこれを2022年の開戦以来この市で最大の攻撃としたと報じている。1015機という全体の数字と規模の説明はいずれもロシア側のもので、独立した確認はない。", "say": "確認されているのは、少なくとも1人の死亡、5人の負傷、石油ターミナルと油槽所の出火だ。未確認なのは、ドローンの総数と攻撃の規模の説明だ。これから見るべきは、出火した施設がいつ稼働を回復するか、そしてウクライナ側の説明だ。", "src": "アルジャジーラ（サンクトペテルブルク、ウクライナのドローン群に攻撃される、10月18日）· フランス24、モスクワ・タイムズ、NBC News（石油ターミナルの出火と死傷、10月18日）"},
+    "i3":{"kick": "✓ 4社", "title": "カナダ・アルバータ州の軍基地で火災、カーニー首相「軍人4人が死亡」", "what": "カナダのカーニー首相は、アルバータ州のWainwright（ウェインライト）カナダ軍基地で火災が起き、軍人4人が死亡、数十人が重傷を負ったと述べた。PBS、NBC、CNNによると、火は17日深夜、強風にあおられて急速に広がり、出火場所は訓練区域だった。カーニー氏はこれを平時の軍にとって国内で最悪級の悲劇の一つと呼び、連邦政府の建物は半旗を掲げた。軍はテロ攻撃の兆候はなく、出火原因は調査中だとしている。負傷者はWainwright、エドモントン、レッドディア、カルガリーで治療を受け、影響を受けた中には予備役の軍人とプリンセス・パトリシア・カナダ軽歩兵連隊の将兵が含まれる。Castanetは、負傷者の正確な人数はまだ確定していないと報じた。", "why": "死傷者は全国の各基地から来てWainwrightで訓練に参加していたため、追悼と調査の影響は複数の部隊に及ぶ。出火原因と負傷者数がまだ明らかでないことから、その後の調査結果と補償の手配がこれからの焦点になる。", "me": "カナダ軍や、アルバータ州に親族や友人がいる台湾の読者は、カナダ国防省が今後公表する死傷者名簿に注意するとよい。一般の読者にとっても、この件は大規模な訓練場が強風の日に抱える火災のリスクを思い起こさせる。", "a": "カーニー氏と軍の説明は、事件の重大さと追悼を強調している。平時の軍にとって国内で最悪級の悲劇の一つであり、最悪の条件のなかで消火にあたった消防隊員に敬意を表した。", "b": "軍の説明は調査に重点を置く。テロ攻撃の兆候はないが、出火原因も負傷者の正確な人数もまだ確定しておらず、警察は火が訓練区域で発生したと述べた。", "say": "確認されているのは、軍人4人の死亡、数十人の重傷、出火場所だ。未確認なのは、出火原因と負傷者の正確な人数だ。これから見るべきは、軍が公表する調査の進み具合と死傷者名簿だ。", "src": "自由時報（カナダの軍基地で大火、重大な死傷の情報、10月18日）· PBS NewsHour、NBC News、CNN、Castanet（カーニー首相、4人の死亡を確認、10月17日から18日）"},
+    "i4":{"kick": "✓ 6社", "title": "台湾シリーズ、味全ドラゴンズが中信ブラザーズに3対1で連勝、シリーズ2勝0敗に", "what": "台湾シリーズ第1戦は17日、台北ドームで、味全ドラゴンズが中信ブラザーズを3対0で完封した。先発の蒋銲は8回、100球を投げ、被安打は2本、三振6つで、鏡週刊、中央社、華視ニュースネットは、ブラザーズが全試合で安打2本だけだったと報じた。第2戦の18日は、味全ドラゴンズが3対1でブラザーズを破り、曾聖安が5回裏に逆転3ランを放って、シリーズは味全ドラゴンズが2勝0敗となった。曾聖安は7回裏にゴロを打って一塁へ走り込むとき倒れ、チームメートに背負われて退場した。味全の球団は左太もものけいれんと説明し、王順和が守備を引き継いだ。聯合報によると、ブラザーズは最初の2試合で合計1点しか取れていない。", "why": "台湾シリーズは7戦4勝制で、味全ドラゴンズが2勝0敗とリードしている。7試合はすべて台北ドームで組まれ、味全のホームが5試合、ブラザーズが2試合だ。報道は歴史的な統計を引き、最初の2戦を連勝したチームは過去に17回優勝している。曾聖安が出場できるかは、味全ドラゴンズの外野守備と打線の組み方に影響する。", "me": "シリーズの今後の日程を知りたいファンは、中華職棒の公式サイトが公表する試合日程とチケット情報を見るとよい。曾聖安のけがの状態を知りたい人は、SNSのうわさだけでなく、味全ドラゴンズ球団の今後の告知に注意するとよい。", "a": "歴史的なデータでは、最初の2戦を連勝したチームは過去に17回優勝しており、味全ドラゴンズはホームの設定も握っているため、報道はドラゴンズを優勝の有力候補とみている。", "b": "シリーズは7戦4勝制で、ブラザーズにはなお5試合の逆転の機会がある。球団は曾聖安は左太もものけいれんだと説明したが、その後の出場の可否と回復の状況は公表されていない。", "say": "確認されているのは、2試合のスコア、曾聖安の逆転3ラン、球団のけいれんの説明だ。未確認なのは、彼のこれからの出場の状況だ。これから見るべきは、第3戦の先発とけがの最新情報、そしてブラザーズの打線が上向くかだ。", "src": "自由時報（台湾シリーズ第2戦の戦況、10月18日）· 三立ニュースネット、聯合報、中国時報、中央社、華視ニュースネット（味全ドラゴンズ3対1、10月17日から18日）"},
+    "i5":{"kick": "✓ 2社", "title": "台南の鉄道地下化が開通、新台南駅と国定古跡の旧駅を広場で結ぶ", "what": "台南の鉄道地下化が開通し、新台南駅が開業した。中央社と聯合報によると、新駅は低く抑えた設計で国定古跡の旧駅に場所を譲り、新旧の駅は沈み込み式の広場でつなぎ、将来は旧駅舎へ直接行ける。工事は全長8.23キロ、総事業費は約412億元で、台南駅を地下駅に建て替えるほか、林森と南台南の2カ所に地下の通勤駅を新設する。鉄道局は、林森駅は2029年末の開業、南台南駅は2030年の開通を予定しているとし、この2駅は現行の台鉄の営業軌道の下に位置するため、地下での開通に切り替えた後に掘り下げる必要がある。", "why": "鉄道が地下に移れば、地上で線路に分断されていた市街地がつながり、新旧の駅を広場で結ぶことで、古跡の旧駅も市街の景観に残される。林森と南台南の2カ所の通勤駅はまだ工事段階にあり、沿線の住民が使えるのは2029年末と2030年になってからだ。", "me": "台南の通勤者や旅行者は、まず台鉄の告知を見て、新台南駅の出入口と乗り換え動線を確認するとよい。他の地域から来る旅行者は、乗車前に新駅の出入口を探す時間を見込み、列車が新駅に停車するかも確認するとよい。", "a": "中央社の報道の説明は、街を縫い合わせることを強調している。百年の鉄道が街を分断してきた歴史に別れを告げ、新駅は古跡の旧駅に場所を譲り、二つの駅は広場でつながる。", "b": "鉄道局の説明は、工事がまだすべて完了していないことを示す。林森駅と南台南駅は地下での開通後に掘り下げる必要があり、それぞれ2029年末と2030年に開業を予定する。", "say": "確認されているのは、新台南駅の開業、新旧の駅の広場での連結、2カ所の通勤駅の予定時期だ。開通の正確な日付の書き方は報道によって少し食い違っており、実際の日付は鉄道局の告知による。これから見るべきは、新駅の当初の乗り換えと出入口の利用状況だ。", "src": "中央社（台南の鉄道地下化、開通して新駅に入る、10月16日）· 公視（地上の最終列車が走り去る、10月16日）· 聯合報（新駅と旧駅、10月11日から18日）"}
+  };
+  const G = {
+    "薔琵":{"f": "気象", "d": "本報道の台風の名称。", "w": "強烈台風と報じられ、19日に勢力のピークに達する見通し。"},
+    "気象署":{"f": "機関", "d": "中央気象署。台湾の気象を所管する機関。", "w": "海上台風警報は早ければ21日夜に発表されると指摘した。"},
+    "海上台風警報":{"f": "気象", "d": "気象署が海上の船舶と海域に向けて発表する台風警報。", "w": "早ければ21日（水曜）夜に発表される。"},
+    "太平洋高気圧":{"f": "気象", "d": "台風の進路に影響する亜熱帯高気圧。", "w": "強弱が、薔琵が北上するかに関わる。"},
+    "強烈台風":{"f": "気象", "d": "台風の強さの区分のうち、強烈な台風。", "w": "報道は薔琵を強烈台風と呼んでいる。"},
+    "老人福祉法":{"f": "法規", "d": "高齢者の福祉に関する事項を定める法律。", "w": "第22条の改正案が三読で可決された。"},
+    "応能負担":{"f": "健康保険", "d": "健康保険料を負担能力に応じて計算する原則。", "w": "石崇良氏は、改正がこの原則を崩すと述べた。"},
+    "民衆党団":{"f": "政治", "d": "民衆党の立法院での会派。", "w": "報道は、改正は民衆党団が主導したとしている。"},
+    "再議案":{"f": "議事", "d": "すでに採決で可決された議案について、あらためて議決を求める提案。", "w": "本件の再議案は39対60で否決された。"},
+    "選対本部":{"f": "選挙", "d": "候補者の選挙運動の指揮の拠点。", "w": "盧秀燕氏が蒋万安氏の選対本部の主任委員に就く。"},
+    "追加予算":{"f": "財政", "d": "年度予算が成立した後に、別に提出する予算。", "w": "行政院は1809.35億元の追加予算を提出した。"},
+    "台湾中油":{"f": "企業", "d": "台湾の国営石油会社で、油・ガスの供給を担う。", "w": "予算で1014.31億元を補填する。"},
+    "台湾電力":{"f": "企業", "d": "台湾電力公司。電力の供給を担う。", "w": "予算で711.04億元を補填する。"},
+    "ブレント原油":{"f": "エネルギー", "d": "国際的な原油価格の主な指標の一つ。", "w": "経済部は、戦前と比べ66%上昇したと述べた。"},
+    "憲兵":{"f": "治安", "d": "フランスで治安を担う軍の警察組織の隊員。", "w": "ヌニェス氏は、警察官、憲兵、消防士が負傷したと述べた。"},
+    "内務省":{"f": "機関", "d": "フランスの内務省。治安と地方の事務を担う。", "w": "ヌニェス内務相は、全国の逮捕者は2000人超と述べた（ユーロニュース）。"},
+    "ネタニヤフ":{"f": "人物", "d": "イスラエルの首相。", "w": "トランプ氏が再選への出馬を公然と支持した。"},
+    "サンクトペテルブルク":{"f": "地名", "d": "ロシア北西部の都市。", "w": "ウクライナのドローンに攻撃され、油の施設で火災が起きた。"},
+    "国定古跡":{"f": "文化", "d": "文化財のうち、法律で保護される古跡の区分。", "w": "台南の旧駅は国定古跡で、新駅とつながる。"},
+    "台湾シリーズ":{"f": "スポーツ", "d": "中華職棒の年間の優勝決定シリーズ。", "w": "味全ドラゴンズが2勝0敗でリードしている。"},
+    "味全ドラゴンズ":{"f": "スポーツ", "d": "中華職棒の球団。", "w": "2試合とも中信ブラザーズを破った。"},
+    "中信ブラザーズ":{"f": "スポーツ", "d": "中華職棒の球団。", "w": "最初の2戦で合計1点しか取れていない。"},
+    "ヌニェス":{"f": "フランス", "d": "フランスの内務大臣、ローラン・ヌニェス（Laurent Nuñez）", "w": "デモの逮捕者数"},
+    "パリ首都圏":{"f": "地名", "d": "パリ市と周辺の県で構成される都市圏", "w": "855人が逮捕"},
+    "石油ターミナル":{"f": "エネルギー", "d": "港で原油や石油製品を積み降ろし、貯蔵する施設", "w": "サンクトペテルブルクが攻撃された"},
+    "アルバータ州":{"f": "地名", "d": "カナダ西部の州", "w": "軍基地の火災"},
+    "カーニー":{"f": "人物", "d": "カナダの首相、マーク・カーニー（Mark Carney）", "w": "4人の死亡を確認"},
+    "北上":{"f": "気象", "d": "台風の進む向きが西から北へ変わること", "w": "薔琵の進路が割れている"},
+    "法定の扶養義務者":{"f": "法律", "d": "民法に基づき目上の親族を扶養する責任を負う人、たとえば子", "w": "健康保険の補助の資格"},
+    "車掃":{"f": "選挙", "d": "候補者が車で通りを回り、有権者にあいさつする選挙運動", "w": "台北大洋流"},
+    "補填":{"f": "財政", "d": "政府が予算で国営企業の赤字を埋め合わせること", "w": "台湾中油、台湾電力"},
+    "申告基準":{"f": "税務", "d": "総合所得税の申告が必要になる所得の基準", "w": "健康保険料の補助の条件"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

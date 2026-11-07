@@ -1,0 +1,358 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>47,111.26</b>加権指数 · 16日終値 · 0.30%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>32.428</b>米ドル対台湾ドル · 16日終値</div>
+    </div>
+    <div class="dateline"><span>第14号 · 朝刊</span><b>2026年10月18日 日曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">天気 · 台風<span>✓ 5社 · 実際の進路と強さは未定</span></div>
+      <h2 class="hl">薔琵、けさ中度台風に発達　気象署「来週木曜が北上か台湾襲来かの分かれ目」</h2>
+      <p class="deck">複数の報道が、薔琵の急速な発達を一斉に伝えた。専門家はあす強烈台風に発達すると見ており、進路は北上と台湾襲来の二通りが残る。影響が最も激しいのは来週の金曜と土曜とされる。</p>
+      <div class="body">
+        <p>薔琵（ジャンミ）台風は18日早朝、中度台風に発達したと報じられた。国内の少なくとも5本の報道が、「急速に発達」「循環が拡大」という言葉でその様子を同時に伝えている。メディアが引く専門家の見方では、薔琵はあす再び強烈台風に発達する可能性があり、その後は大型の強烈台風になる可能性もある。構造はかなり整っていると形容され、台湾が受ける脅威の度合いも、ここ数日より高まった。現在の数字はいずれも報道の引用に基づくもので、気象署の正式な警報が出るまでは修正されうる。</p>
+        <p>進路は、各報道の見方が最も割れている部分だ。中央気象署の説明では、来週木曜が重要な転換点で、台風は北上することも、台湾に近づくこともありうる。別の報道は専門家の推定として、現在は台湾を襲う進路が二つあり、北上も選択肢として残っているとし、台湾への影響が最も激しい時間帯は来週の金曜と土曜になるとする。言い換えれば、強さについては見方が近く、進路についてはまだ収束していない。</p>
+        <p>各報道の語調の違いも注目に値する。見出しで「大型の強烈台風」や「台湾襲来の確率上昇」を強調するものもあれば、「北上の可能性もある」に重点を置くものもあり、同じ予報が異なる読み方に分けられている。より堅実な読み方は、気象署の元の説明に立ち返ることだ。強さは強まり続け、進路は来週木曜の前後になってようやく確定しやすくなる。その間も、予報モデルごとの進路には差がある。</p>
+        <p>複数の報道が、来週の連休中の天気が崩れる可能性に触れている。旅行や帰省、屋外活動の予定に影響が出そうだ。現時点では、海上警報も陸上警報も発表した機関はなく、職場や学校の休み（停班停課）を発表した県市もない。これらの決定は、台風との距離と暴風域の範囲がはっきりしてから、気象署と各県市政府が手続きに従って公表する。</p>
+        <p>台風予報の不確実性は、日数が延びるほど大きくなる。台湾まで5～7日の段階では、進路の誤差が影響範囲を変えるほど大きくなりうる。このため、読者にとって最も現実的なのは、きょうから来週木曜までを準備期間とみなすことだ。外出や交通に余裕を持たせ、家の排水と台風用の備蓄を点検し、毎日決まって中央気象署の最新予報を確認する。ひとりの専門家の進路図だけで判断してはならない。</p>
+        <p>一般の家庭にとっては、きょうは慌てる必要はないが、連休の予定が決まったものと考えるのも禁物だ、ということになる。すでに航空券や乗車券、民宿を予約した人は、まずキャンセルと変更の規定を確認できる。まだの人は、取り消し・変更できるプランを先に選ぶとよい。マンションなどの管理組合や学校も、台風がまだ海上にいるうちに、排水溝や樹木を前もって点検し、強風と豪雨での被害を減らせる。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>中度台風</b><span>けさ引き上げられた強さの階級</span></div>
+        <div><b>来週木曜</b><span>気象署が示す進路の転換点</span></div>
+        <div><b>金・土曜</b><span>報道が影響最大と見る時間</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">社会 · 健康保険<span>✓ 5社 · 実際の財源と施行日は不明</span></div>
+      <h3 class="hl">条件を満たす高齢者の健康保険料を免除、改正が三読で可決　民間団体は「財政規律に欠ける」と批判</h3>
+      <div class="one">
+        <p>立法院は今週、条件を満たす高齢者の健康保険料を免除する改正案を三読で可決した。少なくとも5本の報道がこの件を同時に伝えている。民間団体はその後、改正には財政規律が欠けていると述べ、資格基準の再検討を呼びかけた。別の弁護士は、若者が資産や年金のある人の分を肩代わりすることになると公に述べた。 争点は、補助を誰が負担するのかだ。行政院側の説明は、65歳以上の高齢者の健康保険料は中央が補助するため、若い世代の負担が増えうるというもの。これに対し、国民党の立法院党団の書記長・許宇甄氏は反論した。党団が求めているのは、中央政府が予算を組んで高齢者の元の自己負担分の保険料を補助することであり、若者から追加で徴収するものではない。しかも、子どもは親の分の健康保険料を負担する必要が減る、という。双方とも「若者」を論拠の中心に据えるが、同じ計算は公表していない。 現在の公開報道が説明し切れていない点には、条件を満たす具体的なしきい値、毎年必要な経費、中央予算と健康保険基金それぞれの負担額、そしていつ施行されるか、がある。これらの数字が、改正が一回限りの政策的配慮なのか、長期の財政圧力なのかを決める。公式発表までは、どちらの数字もそれぞれの試算としか見なせない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>奇萊山屋、平日は1人1泊800元と予告　排雲山荘は480元から1000元へ</b><em>国家公園署は奇萊山屋の休日料金を1人1泊1200元と予告し、玉山の排雲山荘の料金基準の改定も予告した。現在は予告期間中。</em><span>生活 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>米2026会計年度の財政赤字、2兆米ドル近くに拡大　2021年以来の高水準</b><em>米政府は金曜にデータを公表し、財政赤字は2兆米ドル近くに膨らんだ。中央社と自由時報がこの数字を同時に報じた。</em><span>経済 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>エヌビディアとFRBのウォーシュ議長が投資家をなだめ、欧州株は金曜に上昇</b><em>AIチップ大手のエヌビディアとFRBのウォーシュ議長が、ともに投資家をなだめる動きに出た。中央社はロンドンで外電をまとめて伝え、欧州株は同日、上昇して引けた。</em><span>経済 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>陳秉軒・李威霆組、日本ペアをストレートで破る　台湾、世界ジュニア男子ダブルスで初の金</b><em>二人はカイロの決勝で15対10、15対9と日本ペアの奥真優、山城政人組を退けた。台湾の男子ダブルスは、これまで世界ジュニアで3度決勝に進んでいる。</em><span>スポーツ · ✓ 1社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>ローマ教皇レオ14世、肺腺がん手術後に退院　大勢の信者が病院の外で出迎え</b><em>教皇は土曜午後に退院し、報道は術後の回復は良好だと伝えている。大勢の信者が手作りの贈り物や祈願のカードを持って病院の外で出迎えた。</em><span>国際 · ✓ 1社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">経済 · 株式<span>✓ 2社 · 台湾株の来週の動きは不明</span></div>
+      <h3 class="hl">AI・ハイテク株に売り、ナスダックは2%超の急落　台指期の夜間取引は1144ポイント安</h3>
+      <div class="body">
+        <p>Yahoo!株式など2社の報道によると、米国株は金曜に下落して引け、ナスダック指数は2%を超えて下げた。AI・ハイテク株への売りが続き、メモリー大手は全社が下落した。台指期の夜間取引も同時に軟化し、1144ポイント下げた。</p>
+        <p>台湾株の加権指数は金曜（16日）に47,111.26ポイントで引け、前営業日より0.30%上昇した。夜間取引で下落する前につけた値である。つまり来週月曜の寄り付きで台湾株が向き合うのは、金曜の日中取引の終値の後に、米国株と夜間取引がすでに織り込んだ下げ幅だ。</p>
+        <p>中央社の別の報道によると、エヌビディアと米連邦準備制度理事会（FRB）のウォーシュ（Kevin Warsh）議長がともに投資家をなだめる動きに出て、欧州株は同日、これを受けて上昇して引けた。米政府が同じ日に公表したデータでも、2026会計年度の財政赤字は2兆米ドル近くに膨らみ、2021年以来の高水準となった。これらのニュースが綱引きをして、AI投資の熱気と金利の行方に対する市場の見方はさらに割れた。</p>
+        <p>全体として、今週の市場の情報は綱引きの様相を呈している。一方は米国のハイテク株とメモリー関連株の下落、他方は企業と中央銀行の発言を受けた欧州株の上昇で、これに米国の財政赤字の高水準が加わり、投資家は金利とAI収益の両面で再評価を迫られている。金曜の台湾株の小幅な上昇はこれらのニュースより前のことで、月曜の寄り付きでどう反応するかは、夜間取引の下げが続くか、そして外国人投資家の売買の方向次第だ。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">政治 · 選挙<span>✓ 1社（自由時報）· 国民投票の結果と世論調査は不明</span></div>
+      <h3 class="hl">国民党が員林で決起集会、11月28日の原発国民投票を前面に　台北市長選に「洋流」</h3>
+      <div class="body">
+        <p>国民党は土曜（17日）午後、彰化県員林市で、国民投票と中彰投雲4県市の合同決起集会を開いた。この陣営として初めての1万人規模の集会で、主題は「非核家園」の廃止と原発の再利用、そして有権者に11月28日の国民投票で原発支持に一票を投じるよう呼びかけることだった。以下の経緯はいずれも自由時報の複数の報道に基づいており、現時点で第2の媒体による独立した確認はない。</p>
+        <p>登壇者の顔ぶれは整っていた。まもなく退任する台中市長の盧秀燕氏は、民進党が原発を止めた後、台中火力発電所の石炭使用量が5割増えたと批判した。台中市長候補の江啓臣氏は、中部の人々を「肺で発電する」日々から解放すると語った。党主席の鄭麗文氏と盧秀燕氏は、ともに「AIのために、原子力を倍に」を訴えた。公務があると表明していた彰化県長の王恵美氏も、イベント開始前に姿を見せ、県長候補の魏平政氏と約10分間、並んで立った。</p>
+        <p>もう一つの政治の線は台北にある。民進党の台北市長候補・沈伯洋氏は世論調査でなお後れを取っているが、自由時報が引く青陣営の関係者の分析では、ここ1カ月に現れた「洋流」で一部の中間層が動いた。ただし、他県市の薄い青、白陣営、中間層には、まだ及んでいない。市長の蒋万安氏は児童虐待防止の催しを欠席し、沈伯洋氏は現場で改善策を示して、台北市の児童保護の仕組みは穴だらけだと批判した。双方に言い分がある。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">国際 · 欧州<span>✓ 1社（自由時報がロイターを転載）· 死傷者と損失の集計は不明</span></div>
+      <h3 class="hl">フランスで物価高への抗議が暴力衝突に発展　イタリア、ベルギーなど各国でも同時デモ</h3>
+      <div class="body">
+        <p>フランスの土曜（17日）の全国デモは、複数の大都市で暴力衝突に発展した。デモ隊は破壊、放火、商店の略奪を行い、政府機関や警察署にも押し入り、警察は催涙ガスと放水車を出動させて鎮圧した。同夜までに、全国で400人超が逮捕された。抗議する人々の要求は物価高と、本来は基本的な機会と安全を提供するはずの社会福祉制度が次第に崩れていることだ。</p>
+        <p>ロイター通信によると、イタリア、ベルギー、ポルトガル、アルバニアでも同日、生活費の高騰や教育問題に抗議するデモが同時に開かれ、各地で警官と市民の暴力衝突が起きた。イタリアのミラノ大聖堂周辺でも衝突の映像がある。アルバニアの首都ティラナの反政府抗議は5日連続で衝突となり、警察が初めてゴム弾を使った。ラマ首相はデモ参加者の声に耳を傾けると述べた。</p>
+        <p>これらの衝突が台湾のメディアに注目されるのは、物価と社会福祉の問題には各国で似た背景があるためだ。現在の報道は各国の死傷者と財産損失の集計を示しておらず、デモに統一した組織があるかも説明していない。そのため、より正確な言い方は、多くの国で同じ日に同じテーマの街頭抗議が起き、暴力の度合いはフランスが最も高かった、ということになる。各国政府がその後どう対応するかは、なお見守る必要がある。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>奇萊山屋の料金引き上げを予告<span>内政部国家公園署は、奇萊山屋の平日料金を1人1泊800元、休日を1200元とし、排雲山荘を480元から1000元に改定すると予告した（中央社、自由時報）。</span></li>
+        <li>中国が米国債をさらに削減<span>サウスチャイナ・モーニング・ポスト（南華早報）によると、中国の8月の米国債保有は18年ぶりの低水準に落ち、金の買い増しは23カ月連続、累計で2400トンに達した（自由時報）。</span></li>
+        <li>バドミントン世界ジュニアで台湾初の金<span>陳秉軒、李威霆組がエジプトのカイロで日本ペアをストレートで破り、台湾の世界ジュニア男子ダブルス初の金メダルを獲得した（自由時報）。</span></li>
+        <li>教皇レオ14世が退院<span>教皇は肺腺がんの手術後の回復が良好で、土曜午後に退院し、信者が病院の外で出迎えた（中央社）。</span></li>
+        <li>全民運動会が開幕<span>民国115年全民運動会が土曜夜に桃園で開幕し、李灝宇氏が聖火をともし、選手の夜には芸能人が出演した（自由時報）。</span></li>
+        <li>米の財政赤字が高水準に<span>米国の2026会計年度の財政赤字は2兆米ドル近くに拡大し、2021年以来の最高水準となった（中央社、自由時報）。</span></li>
+        <li>中国の銀行がローンで社会保険料を納める案<span>一部の銀行がローンで社会保険料を納める方案を打ち出し、中国のネットの検索ランキング上位で批判を呼んだ（自由時報）。</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>薔琵は必ず台湾を直撃し、来週の連休は全面休業になる。</b> <span>気象署は、来週木曜が進路の転換点で、北上も台湾襲来もありうると述べているだけで、休業の発表はまだない。</span></div>
+        <div><b>65歳以上の健康保険料が免除されれば、若者の保険料は必ず上がる。</b> <span>国民党団は、補助は中央が予算を組み、若者から追加で徴収はしないと述べている。引き上げるかどうかは、公式の財源の発表を待つ必要がある。</span></div>
+        <div><b>フランスのデモで大量の死者が出た。</b> <span>自由時報がロイター通信を転載して報じたのは、400人超の逮捕と警官との衝突だけで、死者数には触れていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/18（日）</b><span>薔琵が強烈台風に発達した後の進路予報を追い、気象署が海上警報を出すかに注意する。</span><b>今週</b><span>来週月曜の台湾株の寄り付きで、金曜の米国株の下落と夜間取引の下げに、ハイテク株がどう反応するかを見る。</span><b>その後</b><span>11月28日の原発国民投票と、奇萊山屋、排雲山荘の料金基準が予告期間の終了後に確定するか。</span><b>読者へ</b><span>台風も投資も公的な資料を基準にし、確認されていない進路図や情報は転送しない。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "天気 · 台風 · ✓ 5社 · 実際の進路と強さは未定", "title": "薔琵、けさ中度台風に発達　気象署「来週木曜が北上か台湾襲来かの分かれ目」", "what": "薔琵台風は18日早朝に中度台風に発達したと報じられ、少なくとも5本の報道がこの件を同時に伝えた。複数の報道は専門家の話として、薔琵はあす強烈台風に発達し、その後は大型の強烈台風になる可能性があり、循環は拡大を続け、構造は整っているとしている。中央気象署は、来週木曜が進路の重要な転換時期で、台風が北上する場合と台湾に近づく場合のどちらも予報の範囲内だと述べた。別の報道は専門家の推算として、現在は台湾を襲う進路が二つあり、影響が最も激しいのは来週の金曜と土曜だとしている。報道は、来週の連休中の天気が悪化するとも伝えている。報道の時点では、海上警報も陸上警報も発表されておらず、職場や学校の休み（停班停課）を発表した県市もない。", "why": "進路は5日後でもなお割れており、各地の台風対策の時期が同じではないことを意味する。北部と東部はまず風雨が到達する時間を確認する必要があり、南部と離島は台風が西に進むかどうかを見る必要がある。連休の旅行、航空便、台鉄・高鉄の予約も、来週木曜に進路が定まってから答えが出る。民宿、漁業、屋外イベントを営む人にとって、台風が来週の金・土曜に近づけば、出漁も開業・開幕の日程も前倒しで調整する必要があり、収益のリスクはこの数日に集中する。農家は収穫の時期を見極め、強風豪雨の前に作物が畑に残らないようにする必要がある。", "me": "きょうのうちに、来週の金曜から日曜の予定に代案を書き出しておくとよい。例えば、取り消し・変更できる宿泊や乗車券を選び、家の排水口とベランダに物が積まれていないか確認する。あすから毎日一度、中央気象署の予報と公式発表を見る。SNSで転送される単一の進路図で判断してはならない。モバイルバッテリー、飲料水、懐中電灯もそろえ、家族と連絡方法と避難先を決めておけば、警報が水曜になってようやく出ても慌てずに済む。", "a": "", "b": "", "say": "強さについては大きな論争はなく、進路こそが本当の未知数だ。来週木曜までは、予定に余裕を持たせるのが最も割に合う備えだ。", "src": "薔琵台風関連の報道5本、中央気象署の説明"},
+    "s2":{"kick": "社会 · 健康保険 · ✓ 5社 · 実際の財源と施行日は不明", "title": "条件を満たす高齢者の健康保険料を免除、改正が三読で可決　民間団体は「財政規律に欠ける」と批判", "what": "立法院は今週、条件を満たす高齢者の健康保険料を免除する改正案を三読で可決した。少なくとも5本の報道がこの件を同時に伝えた。民間団体は改正後に意見を発表し、改正には財政規律が欠けていると指摘して、資格基準の見直しを呼びかけた。ある弁護士は、若者が資産や年金のある人の分を肩代わりすることになると公に述べた。頼政権の説明は、65歳以上の高齢者の健康保険料は中央が補助するため、若者の負担が増えるというもの。国民党の立法院党団の書記長・許宇甄氏は、党団が求めているのは中央政府が予算を組み、高齢者の元の自己負担分の保険料を補助することで、子どもも親の分の健康保険料を負担する必要が減ると述べた。現在の公開報道には、具体的なしきい値、年度の経費、施行日の記載がない。", "why": "健康保険の財政は保険料、政府補助、基金の残高が支えており、免除の対象が広がれば、不足分は中央予算か料率の調整で埋めるしかない。会社員は将来の料率が上がるかを気にし、高齢者のいる家庭は資格がどう判定されるかを気にしており、両者の懸念は同じものではない。65歳に近い中年にとって、この改正は退職後の固定支出を左右し、いま保険料を払っている若者にとっては、料率や政府予算の圧迫に関わる。両者の利益は逆に見えるが、実際には財源が税収なのか、基金なのか、料率の引き上げなのかで決まる。", "me": "自分や家の年長者が条件を満たすか知りたいなら、衛生福利部と健康保険署が施行細則を公表してから、健康保険署の公式サイトか窓口で照合するとよく、SNSの投稿で判断してはならない。会社員は、毎年の健康保険料率の審議の際に、財務報告で補助の経費が別枠で計上されているかを確かめることもできる。施行細則の公表前に、家に年長者がいる人は、その所得、財産、保険の資料を整理しておくと、後の資格照合に役立つ。ネット上の試算を見て、あわてて保険を見直したり申告を変えたりしないこと。", "a": "", "b": "", "say": "免除政策の良し悪しは、金がどこから来るのかの帳簿が広げられてはじめて計算できる。いまは双方とも、どちらが若者のために話しているかを競うだけで、同じ計算式を先に出した者はいない。", "src": "立法院三読の報道、民間団体の声明、国民党団の説明（計5本の報道）"},
+    "s3":{"kick": "経済 · 株式 · ✓ 2社 · 台湾株の来週の動きは不明", "title": "AI・ハイテク株に売り、ナスダックは2%超の急落　台指期の夜間取引は1144ポイント安", "what": "Yahoo!株式など2社の報道によると、米国株は金曜に下落して引け、ナスダック指数は2%超下げた。AI・ハイテク株への売りが続き、メモリー大手の株価は全て下落した。台指期の夜間取引は1144ポイント下げた。台湾株の加権指数は金曜（16日）に47,111.26ポイントで引け、前営業日より0.30%上昇した。この終値は、米国株と夜間取引の下落より前のものである。中央社は別に、エヌビディアとFRBのウォーシュ議長がともに投資家をなだめる動きに出て、欧州株は同日上昇して引けたと報じた。米政府が同じ日に公表した財政赤字は2兆米ドル近くで、2021年以来の高水準だ。", "why": "台湾の輸出と台湾株の時価総額の重みは、AIサーバーとメモリーのサプライチェーンに高度に集中しており、米国のハイテク株が下がれば、夜間取引と外国人投資家の売り越し・買い越しを通じて月曜の寄り付きに直接伝わる。TSMC、メモリー関連株、関連ETFを持つ投資家が受ける影響が最も直接的だ。メモリーとAIのサプライチェーンは台湾の輸出と台湾株の時価総額の中核で、米国株のたった一晩の下げでも、ファンドや外国人投資家の発注のリズムを変えるのに十分だ。このため個人投資家は、寄り付き前の夜間取引の数字に最も驚かされやすい。", "me": "月曜の寄り付き前に台指期の夜間取引と米国株の終値を確認し、ハイテク株とレバレッジ商品の保有比率を点検しておく。寄り付きの数分前に成行注文で追いかけてはならない。積立投資なら、単日の下げで計画を変えず、引き落としのペースを維持できる。信用取引やレバレッジのポジションがある人は、先に維持率を確認し、手を付けない現金を取っておく。さらに、保有するETFの構成銘柄で、AIとメモリー関連の割合が当初の想定を超えていないかも見るとよい。", "a": "", "b": "", "say": "金曜の0.30%上昇は前のページで、来週月曜の寄り付きが次のページだ。夜間取引の1144ポイントが、すでに市場のために書き出しを書いてしまった。", "src": "Yahoo!株式、中央社の経済報道（2社）、台湾証券取引所の終値データ"},
+    "s4":{"kick": "政治 · 選挙 · ✓ 1社（自由時報）· 国民投票の結果と世論調査は不明", "title": "国民党が員林で決起集会、11月28日の原発国民投票を前面に　台北市長選に「洋流」", "what": "国民党は土曜（17日）午後、彰化県員林市の圓林園で、国民投票と中彰投雲4県市の合同決起集会を開いた。同党として初めての1万人規模の集会だった。集会は「非核家園」の廃止と原発の再利用を前面に掲げ、有権者に11月28日の原発国民投票への支持を呼びかけた。盧秀燕氏は、原発停止後、台中火力発電所の石炭使用量が5割増えたと述べた。江啓臣氏は、中部の住民は長く大気汚染を被ってきたので、「肺で発電する」日々から抜け出したいと述べた。彰化県長の王恵美氏はイベント開始前に姿を見せ、県長候補の魏平政氏と約10分間、壇上で並んだ。以上の内容はいずれも自由時報の複数の報道に基づいており、第2の媒体による独立した確認はない。", "why": "国民投票と地方選挙が同時に進み、政党は原発のテーマで中部の有権者を動員しつつ、県市長候補の知名度も押し上げている。中彰投雲の有権者は国民投票の票と県市長の票に同時に向き合うため、双方の訴えが混ざりやすい。県市長候補も国民投票の場で地方組織を示すため、集会の規模自体が政治的なシグナルとなる。この集会の機能は国民投票の動員だけでなく、年末の県市長選の前に、各陣営の声量と組織を試すことでもある。原発が大気汚染、電気代、AIの電力需要と一つの物語に結び付けられ、有権者は主張を一つずつ検証しにくくなる。", "me": "原発の問題を判断するには、国民投票の公告にある設問の文面と、所管機関のエネルギー需給報告を直接見て、各方面が引く石炭使用量や発電比率と照らし合わせることを勧める。決起集会の数字は出所が一つのものが多く、元の統計を調べてから決めるのがよい。投票前に、国民投票の文面、政府の電力需給データ、民間の環境保護団体の主張を並べて読んでから、立場を決める。SNSで石炭使用量や大気汚染の数字を引く投稿を見たら、まず統計の年と単位を確認する。", "a": "", "b": "", "say": "原発が語るのは電気で、決起集会が語るのは票だ。二つを分けて見てはじめて、同じ催しにひとまとめにされずに済む。", "src": "自由時報の複数の報道（単一の媒体、第2の情報源なし）"},
+    "s5":{"kick": "国際 · 欧州 · ✓ 1社（自由時報がロイターを転載）· 死傷者と損失の集計は不明", "title": "フランスで物価高への抗議が暴力衝突に発展　イタリア、ベルギーなど各国でも同時デモ", "what": "フランスの土曜（17日）の全国デモは、複数の大都市で暴力衝突に発展した。デモ隊は破壊、放火、商店の略奪を行い、政府機関や警察署にも押し入った。警察は催涙ガスと放水車を出動させて鎮圧し、同夜までに全国で400人超が逮捕された。抗議する人々の要求は、物価高と、基本的な社会福祉制度が次第に崩れていることだ。ロイター通信によると、イタリア、ベルギー、ポルトガル、アルバニアでも同日同時にデモが開かれ、イタリアのミラノ大聖堂周辺で警官と市民の衝突が起きた。アルバニアの首都ティラナの反政府抗議は5日連続で衝突となり、警察は初めてゴム弾を使い、ラマ首相はデモ参加者の声に耳を傾けると述べた。以上の内容の多くは、自由時報がロイター通信を転載したものだ。", "why": "物価高と福祉制度の崩れという訴えが複数の国で同時に現れたことは、欧州の人々の生活費の圧力に共通性があることを示すが、各国政府の対応の仕方と時間軸は同じではない。台湾への直接の影響は、欧州旅行の交通と治安、そして欧州の小売とエネルギー価格との連動だ。台湾の企業や旅行者にとって、欧州のデモによるストライキや交通の中断は、貨物、航空便、展示会の日程に影響し、物価への抗議は欧州の消費力への圧力も映している。台湾が欧州に輸出する製品の需要は、長期的には現地の景気に左右される。", "me": "近く、フランス、イタリア、ベルギーへ旅行する人は、出発前に外交部領事事務局の渡航警告を確認し、大規模な集会の場所を避け、旅行傷害保険の証明書と緊急連絡先の電話番号を用意しておく。行程中の乗り継ぎと宿泊は、日程を変更できる余裕を残すことを勧める。すでに予約済みなら、出発の1週間前にもう一度、航空便と現地の鉄道の告知を調べ、パスポートのコピーと保険証券をスマートフォンに保存しておく。必須の行程でなければ、デモのある地域に入る時期をずらすことも考えられる。", "a": "", "b": "", "say": "デモは見出しより順序を見る価値がある。まず物価、次に福祉、最後に街頭に出た。", "src": "自由時報がロイター通信の報道を転載（単一の媒体）"},
+    "i1":{"kick": "✓ 2社", "title": "奇萊山屋、平日は1人1泊800元と予告　排雲山荘は480元から1000元へ", "what": "内政部国家公園署は金曜、太魯閣国家公園の奇萊山屋の使用料基準案を予告した。平日は1人1泊、新台湾ドルで800元、休日は1200元。国家公園署は同時に、玉山国家公園の排雲山荘の料金基準の改定も予告した。排雲山荘は現行で1人1泊480元で、1000元に改定される予定。中央社と自由時報がともにこの予告を報じた。案は現在も予告段階で、確定していない。報道に施行予定日の記載はない。", "why": "山小屋の料金が上がれば登山のコストが直接押し上がる。人気ルートの繁忙期はもともと寝床が取りにくく、価格が上がれば、客層と予約のリズムも変わる。山小屋の維持とごみ搬出の費用が、料金基準を改める主な説明事項である。料金が改まれば、山岳会やガイド業者の見積もりも更新され、ツアー料金が連動して動く可能性がある。登山者団体と山小屋の運営者にとって、使用料の引き上げは登山の安全と環境保全の資金源に関わり、一般の登山客にとっては旅程全体の予算の増加となる。同じ予告は意見募集と公告の手続きを経てはじめて発効するため、現段階ではまだ確定ではない。", "me": "年末までに玉山や奇萊に登るつもりの人は、まず予告期間の意見募集の期限に注意し、費用を節約するため平日出発も考えるとよい。出発前に国家公園署の公告をもう一度調べ、最終の料金を確認する。あわせて予約システムの受付開始日にも注意し、あらかじめアカウントを作り、身分証明書を用意しておくと、寝床の確保で時間を取られずに済む。料金について意見があれば、予告期間中に国家公園署へ書面で提出できる。山仲間を募って交通費や宿泊費を分担し、総支出を元の予算内に抑えることもできる。", "a": "", "b": "", "say": "山小屋が高くなっても眠る時間は増えないが、予約の順序は変わる。", "src": "中央社、自由時報（国家公園署の予告）"},
+    "i2":{"kick": "✓ 2社", "title": "米2026会計年度の財政赤字、2兆米ドル近くに拡大　2021年以来の高水準", "what": "米政府は金曜にデータを公表し、2026会計年度の財政赤字が2兆米ドル近くに膨らんだと示した。これは2021年以来の最高の記録だ。中央社はワシントンで外電をまとめて報じ、自由時報が同時に掲載した。両社とも、支出と税収の内訳は挙げていない。報道は、財務省や議会予算局の完全な報告も引いていない。数字は過去1年、つまり会計年度の全体を対象にしている。中央社の報道はワシントン発で、見出しも同時に、赤字が2021年以来の高水準になったと指摘している。", "why": "赤字の拡大は、米政府がより多くの国債を発行しなければならないことを意味し、債券利回りとドル相場の双方に響く。台湾の生命保険業界と外貨準備は多額の米国債を保有しており、金利の変動は資産評価に表れる。同時に、赤字の数字は各国の中央銀行やファンドマネージャーの資産配分にも響く。財政状況が米国債への信認に影響するためだ。赤字の数字は一般の人には遠く見えても、実際には住宅ローン金利、為替、年金基金の収益に影響する。米国債の利回りが上がると、台湾の銀行の資金調達コストや企業の借入金利にも影響が及ぶ。", "me": "米ドル資産や米国債ETFを持つ人は、金利の変動が基準価額に及ぼす影響に注意し、分配金だけを見てはならない。外貨建て住宅ローンや留学の計画がある人は、分けて両替し、ある一時点の為替リスクを下げられる。追いたいなら、米財務省の月次予算報告を定期的に確認し、赤字と国債入札の結果を照らし合わせる。また、赤字、国債利回り、為替の3つの数字を簡単な表にして、月に1回更新するのもよい。留学、旅行、輸入品など家計の外貨支出を、月ごとに分散して両替し、自分のファンドや保険が長期の米国債に投資していないかも点検する。普段ニュースを見るときは、赤字と国債利回りを一緒に見る。", "a": "", "b": "", "say": "2兆米ドルは一つの数字だが、それを今後数年の利払いに換算したものこそが、本当の請求書だ。", "src": "中央社ワシントン外電まとめ、自由時報の経済報道"},
+    "i3":{"kick": "✓ 2社", "title": "エヌビディアとFRBのウォーシュ議長が投資家をなだめ、欧州株は金曜に上昇", "what": "AIチップ大手のエヌビディアと米連邦準備制度理事会（FRB）のウォーシュ議長は、ともに投資家をなだめる動きに出た。欧州株はこれを受けて金曜に上昇して引けた。中央社はロンドンで外電をまとめてこの件を報じ、自由時報が同時に掲載した。報道は、欧州株が同日、上昇して引けたと説明している。同じ日、米国株のナスダック指数は2%超下落した。報道は、エヌビディアとウォーシュ議長の動きの詳細を挙げていない。中央社のこの報道の発信地はロンドンで、金曜の欧州市場の終値の状況を扱っている。", "why": "欧州株が上昇し、米国のハイテク株が弱いことは、世界の資金がAIと金利に非常に敏感で、市場の見方がまだそろっていないことを示す。台湾株のサプライチェーンも、エヌビディアの受注とFRBの姿勢に合わせて揺れる。市場は材料を得ると直ちに値付けをやり直すため、1日の動きはしばしばファンダメンタルズより早く反応する。この種の発言は、多くの場合、気分を落ち着かせるだけで、株価を本当に左右するのは企業の決算とインフレ統計である。市場が企業と中央銀行の安心させる発言を待っているときは、資金のリスク許容度が低いことを意味し、株価は材料の前後で激しく揺れやすい。この揺れは短期売買の人にとってコストが最も高く、長期投資家への影響は小さい。", "me": "台湾株のAIサプライチェーンに注目する人は、来週はまずエヌビディアの業績見通しとFRB高官の講演日程を見るとよく、1日の動きだけを見ないようにする。保有を分散し、すべての資金を同じ産業チェーンに置くことも避ける。個別企業や中央銀行の発言は参考にとどめ、唯一の根拠とせず、値動きの激しいときの自分の売買が当初の計画に沿っているかを記録しておく。人気の個別株を1銘柄だけ持つ人は、利益確定と損切りの価格を分けて設定し、感情的な判断を避けられる。月曜の寄り付き前に、短期に使う必要のある資金を株式に置いていないか確認する。あれば、その分を定期預金かマネーファンドに替えておくと、短期の振れで損切りに追い込まれずに済む。", "a": "", "b": "", "say": "なだめるのは鎮痛剤であって処方箋ではない。本当の答えは決算と金利のデータを待つ必要がある。", "src": "中央社ロンドン外電まとめ、自由時報の経済報道"},
+    "i4":{"kick": "✓ 1社", "title": "陳秉軒・李威霆組、日本ペアをストレートで破る　台湾、世界ジュニア男子ダブルスで初の金", "what": "陳秉軒と李威霆は、エジプトのカイロで行われた世界ジュニアバドミントン選手権の男子ダブルス決勝で、15対10、15対9のストレートで日本ペアの奥真優、山城政人組を破った。台湾チーム史上初の世界ジュニア男子ダブルスの金メダルだ。台湾の男子ダブルスは過去に世界ジュニアで3度決勝に進んでいる。二人は中租大同バドミントンチームに所属する。試合はエジプトのカイロで行われた。以上の内容は自由時報の2本の報道に基づく。決勝のスコアは15対10と15対9で、2ゲームとも台湾ペアが取った。自由時報の報道の一つの発信時刻は土曜深夜で、もう一つは日曜未明だ。", "why": "世界ジュニアの金メダルは、若手選手が国際的な成人の大会へ進む足がかりで、その後の補助や出場資格にも影響する。バドミントンは台湾の強みで、男子ダブルスの突破は、選手育成に出口が一つ増えたことを意味する。この成績で、日本と台湾のバドミントンのジュニア大会での競争関係もいっそう注目され、今後の大会結果が次世代選手への外部の期待に影響するだろう。男子ダブルスの突破は台湾のバドミントン環境に指標としての意味があり、世界ジュニアはのちの成人大会の前哨であることが多く、日本ペアを破ったことは自信をいっそう高める。コーチやチームも、この成績を使って企業にスポンサーや練習場所の資源を求められる。", "me": "バドミントンに関心がある人は、二人の次の成人大会と代表選考を追うとよい。学校やチームも、その練習の組み立てを参考にできる。家にバドミントンをやっている子がいるなら、この話題を機に子どもと試合の映像を見て、点数だけでなく、フットワークとダブルスの呼吸を話し合うこともできる。学校のクラブがコーチに大会に備えた経験を話してもらえば、より多くの生徒がダブルスの戦術を知るきっかけになる。バドミントン好きの人は、大会の中継を見たり、地元の体育館で講座に申し込んだり、学校のチームを応援したりして、若い人がコートに立つ機会を増やせる。メダルを取ったときだけ注目するのではなく。", "a": "", "b": "", "say": "金メダルは結果で、3度の決勝進出こそが過程だ。", "src": "自由時報（2本の報道、単一の媒体）"},
+    "i5":{"kick": "✓ 1社", "title": "ローマ教皇レオ14世、肺腺がん手術後に退院　大勢の信者が病院の外で出迎え", "what": "ローマ教皇レオ14世は、肺腺がんの手術を受けた後、土曜午後に退院した。大勢の信者が病院の外に詰めかけ、沿道で出迎えた。手作りの贈り物や祈願のカードを持つ人もいた。ある市民は中央社に、教皇が病院から出てくるのを自分の目で見て、このうえない喜びを感じたと語った。報道は、教皇の術後の回復は良好だと伝えている。教皇の退院後の公式日程は、報道では説明されていない。中央社には、現場の市民への取材も別にあり、その取材が群衆の集まった様子を伝えている。", "why": "教皇の健康に関する知らせは、世界の10億人超のカトリック信者に関わり、バチカンの外交や大規模なミサの手配にも影響する。台湾のカトリック団体もこの知らせを特に気にかけている。健康状態が良くなれば、教会の日程、謁見、訪問の計画も組み直されるため、信者は正式な発表を待つ時間が必要だ。カトリックの重要な祝日や大規模なミサは数カ月前から準備が必要で、健康の知らせは年間の日程に響く。教皇の健康状態は、カトリック教会の意思決定のテンポや重大な典礼の手配に影響し、各国の教会の司牧計画にも関わる。台湾の信者にとっては、教皇の公式日程が、巡礼団がいつ出発できるかも左右する。", "me": "バチカン巡礼を計画している人は、出発前に公式発表の行事と開館時間を確認するとよい。情報を知りたいなら、バチカン報道室と中央社を見て、確認されていない話の転送は避けることを勧める。教会の団体やネットのコミュニティが伝える際は、出所と日付を添えて、古い話が新しい話として扱われないようにするとよい。信仰団体が行う祈願行事は、この件を気にかける人が自由に参加できるが、会場の収容人数と公共の秩序には注意してほしい。SNSで教皇の病状に関する話を見たら、まずバチカン報道室と主要通信社の報道と照らし合わせてから転送する。教会で教皇のために祈りたい場合は、地元の教区にミサの時間を尋ねるとよい。", "a": "", "b": "", "say": "退院は一つの節目であって、結論ではない。", "src": "中央社（教皇退院の報道、単一の媒体）"}
+  };
+  const G = {
+    "薔琵":{"f": "気象", "d": "今週発生して発達した台風の名称。", "w": "けさ中度台風に発達したと報じられた。"},
+    "中央気象署":{"f": "機関", "d": "台湾の気象を所管する機関。", "w": "来週木曜が進路の転換点だと指摘した。"},
+    "強烈台風":{"f": "気象", "d": "台風の強さの区分の一つで、中度台風より強い。", "w": "薔琵はあす引き上げられると見込まれる。"},
+    "大型の強烈台風":{"f": "気象", "d": "暴風域が大きい強烈台風。", "w": "専門家は、薔琵が大型の強烈台風になる可能性があると述べた。"},
+    "暴風域":{"f": "気象", "d": "台風の周囲で風力が7級以上に達する範囲。", "w": "警報の範囲を左右する。"},
+    "三読":{"f": "立法", "d": "法案が立法院で最後の審議を終えて可決される段階。", "w": "高齢者の健康保険料免除の改正が三読で可決された。"},
+    "健康保険料":{"f": "社会", "d": "全民健康保険に加入する人が納める保険料。", "w": "改正で、条件を満たす高齢者は免除される。"},
+    "ナスダック":{"f": "金融", "d": "米国のハイテク株が中心の株式市場。", "w": "指数は金曜に2%超下落した。"},
+    "メモリー":{"f": "産業", "d": "データを記憶する半導体チップ。", "w": "メモリー大手の株価は全て下落した。"},
+    "台指期":{"f": "金融", "d": "台湾株の加権指数を対象にした先物。", "w": "夜間取引で1144ポイント下げた。"},
+    "エヌビディア":{"f": "企業", "d": "米国のAIチップ設計会社。", "w": "投資家をなだめる動きに出た。"},
+    "FRB":{"f": "機関", "d": "米国の中央銀行で、略称はFed。", "w": "ウォーシュ議長が市場をなだめた。"},
+    "財政赤字":{"f": "財政", "d": "政府の支出が収入を上回る差額。", "w": "米国の会計年度の赤字は2兆米ドル近く。"},
+    "国民投票":{"f": "政治", "d": "市民が特定の議題について直接投票すること。", "w": "11月28日に原発の国民投票が行われる。"},
+    "非核家園":{"f": "エネルギー", "d": "民進党政権のエネルギー政策の目標で、原発を段階的に廃止する。", "w": "国民党は廃止を主張している。"},
+    "洋流":{"f": "政治", "d": "メディアが沈伯洋氏への注目の高まりを指して使う呼び方。", "w": "台北市長選の変数と見られている。"},
+    "放水車":{"f": "警察", "d": "警察が群衆を排除するために使う、高圧の水を噴射する車両。", "w": "フランスの警察が使用した。"},
+    "ロイター通信":{"f": "メディア", "d": "本社がロンドンにある国際通信社。", "w": "フランスのデモに関する情報の主な出所。"},
+    "排雲山荘":{"f": "登山", "d": "玉山国家公園内の山小屋。", "w": "480元から1000元への改定が予告された。"},
+    "世界ジュニア":{"f": "スポーツ", "d": "世界ジュニアバドミントン選手権。", "w": "台湾が男子ダブルスで初の金を獲得した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

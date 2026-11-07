@@ -1,0 +1,8 @@
+import { tokenList, clusterItems } from '/home/user/Playground_01/feed/worker/src/cluster.js';
+const P=[["Andhra loses Supreme Court battle over 34% Backward Classes quota in local polls","West Bengal SIR: Supreme Court mulls having tribunals first hear deleted voters seeking re-inclusion","en"],
+["M62 shut LIVE as motorway crash leaves multiple injured with long traffic delays - updates - Manchester Evening News","M6 LIVE as lanes shut after 'multiple lorries' crash amid long delays - updates - Manchester Evening News","en"],
+["Salman Khan's Monster to get a sol Eid 2027 Release; Prabhas' Fauzi shifts to March 18 – - MovieTalkies","Salman Khan's 'Kala Hiran' Suit: Delhi High Court Issues Notice On Producer Amit Jani's Jurisdiction... - LiveLawBiz","en"],
+["Prime Minister Andy Burnham has paid his own tribute to sporting fundraiser Tony Steenson who has died aged 78","Andy Burnham announces £48m research fund after death of his father - Wales Online","en"],
+["Künstliche Intelligenz: KI zum Kuscheln: Wozu sind «Moflins» gut?","Künstliche Intelligenz: Seit dieser Rolle nutzt Andrew Garfield kein Chat-GPT mehr","de"],
+["Prix Nobel de la paix : Donald Trump, Mykola Kuleba, Mark Carney… Qui sont les favoris ? - Ouest-France","Le Nobel de littérature décerné à Anne Carson fait la « fierté » du Canada, selon le premier ministre Mark Carney - Le Figaro","fr"]];
+for(const [a,b,l] of P){const A=tokenList(a,l),B=new Set(tokenList(b,l));const s=A.filter(x=>B.has(x));const cl=clusterItems([{title:a,link:'x1',source:'s1',lang:l,region:'GB'},{title:b,link:'x2',source:'s2',lang:l,region:'GB'}]);console.log(cl.length===1?'MERGED':'split',JSON.stringify(s),'|',a.slice(0,30))}

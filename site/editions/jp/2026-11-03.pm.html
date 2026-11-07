@@ -1,0 +1,338 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>63,081.86</b>日経平均 · 11/2終値 · 前日比-0.33%(3日は文化の日で東京市場は休場)</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,541.40</b>S&amp;P 500 · 11/2終値 · 前日比-0.51%</div>
+    </div>
+    <div class="dateline"><span>No. 30 · 夕刊</span><b>2026年11月3日(火)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">経済 · サイバー攻撃<span>✓ 3媒体 · 流出した情報の悪用の有無は未確認</span></div>
+      <h2 class="hl">メール配信「アララ」に不正アクセス、メールアドレス約7700万件が流出 カード会社を装う不審メールは最大713万通</h2>
+      <p class="deck">法人向けメール配信サービス「アララ メッセージ」への不正アクセスで、約7700万件のメールアドレスが流出した。カード会社を装う不審メールは最大約713万通に上る。</p>
+      <div class="body">
+        <p>運営会社のアララは11月2日、不正アクセスでメールアドレス約7700万件が外部に流出したと明らかにした。氏名、電話番号、住所なども流出を確認したが、決済情報は同社が保有しておらず、漏れていないという。7700万件は利用企業ごとの件数を足したもので、重複を含む可能性がある。10月28日から30日にかけて、このサービスの2つの環境から、クレジットカード会社を装った不審メールが最大約713万通送られた。件名は「利用内容確認のご依頼」などで、アララは31日に状況を把握し、同日のうちにサービスの提供を止めて警察に届け出た。</p>
+        <p>利用企業への影響も出始めた。大阪市は3日、行政オンラインシステムの利用者のメールアドレスや氏名が漏れた可能性があると発表した。アララは、ウェブサーバーの脆弱性(システムの弱点)に加え、システム環境の問題も関わっているとみて原因を調べている。不審メールを実際に受け取った人の数や、流出した情報が悪用されたかどうかは確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">国際 · 安全保障<span>✓ 2媒体 · 北朝鮮の発表内容の独立した検証は未確認</span></div>
+      <h3 class="hl">北朝鮮、巡航ミサイル搭載のクラスター弾頭を試験 「5〜6ヘクタール壊滅」と主張、年内に4種類の運用へ</h3>
+      <div class="one">
+        <p>北朝鮮のミサイル総局は11月2日、戦略巡航ミサイルに載せるクラスター弾頭の威力を確かめる試験と、垂直に攻撃する飛行の特性を確かめる試験を行ったと発表した。クラスター弾頭は、一つの弾から多数の小さな爆弾をまき散らす兵器だ。弾頭を研究する部門は、5〜6ヘクタールの標的区域を極めて高い密度で壊滅させられると主張した。5〜6ヘクタールは、サッカー場7〜8面ほどの広さにあたる。 ミサイル総局長は、クラスター弾頭を用途別に4種類に分け、年内に部隊が作戦の目的や標的に応じて全種類を選んで使えるようにする方針を示した。北朝鮮は10月31日にも、弾道ミサイルに載せるクラスター弾頭の試験を行ったとし、12〜13ヘクタールを焦土化できると主張している。数字はいずれも北朝鮮側の自己評価で、独立した検証は出ていない。実際の飛行距離や発射場所は明らかにされていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>オーストラリア中銀が政策金利を4.85%に引き上げ、18年ぶりの高水準</b><em>25ベーシスポイントの利上げで、今年5回目となる。理事会の採決は6対3に割れ、3人は据え置きを主張した。</em><span>金融 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>秋の叙勲3861人、トヨタの豊田章男会長ら7人に旭日大綬章</b><em>旭日章は895人、瑞宝章は2966人が受ける。俳優の松坂慶子さんは旭日小綬章に選ばれた。</em><span>社会 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>韓国大統領夫妻ら168人の旅券情報が有料サイトに流出、外交部が再発行</b><em>大統領専用機の搭乗者名簿が約5カ月、ネット上で閲覧できる状態だった。李在明大統領は対策の抜本強化を指示した。</em><span>国際 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>アップルの7〜9月期は売上高1145億ドルで12%増 iPhone好調も中華圏は予想届かず</b><em>iPhoneの売上高は576億ドルで17%増えた。12月期の粗利益率の見通しは45〜46%で、メモリー価格の上昇を織り込んだ。</em><span>企業 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>スペイン高速列車事故で日本人2人の死亡を確認、死者69人全員の身元が判明</b><em>事故は10月28日に起きた。スペイン当局は、犠牲者69人全員の身元確認が終わり、日本人は2人だったと発表した。</em><span>国際 · ✓ 3媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">国際 · ウクライナ<span>✓ 3媒体 · 行方不明者を含む最終的な死者数は未確認</span></div>
+      <h3 class="hl">ウクライナ南部の学校と避難所にロシア軍が空爆、26人死亡 支援物資の配布拠点</h3>
+      <div class="body">
+        <p>ロシア軍が11月2日、ウクライナ南部ザポリージャ州コミシュバハの学校とその近くのシェルターを航空爆弾で攻撃し、非常事態庁によると少なくとも26人が死亡、5人が負傷した。学校は人道支援物資の配布拠点として使われており、死者には救急隊員2人と警察官4人が含まれる。ゼレンスキー大統領は、学校への攻撃のあと、シェルターに逃げ込んだ住民に9発の誘導爆弾が使われたと説明した。</p>
+        <p>ゼレンスキー氏は、ヘルソン州オレシュキで人道支援のための局地停戦が進んでいた中での攻撃だとし、ロシアは「真の正義も望んでいない」ことを裏付けるものだと非難した。避難した人を続けて狙う手法は「ダブルタップ」と呼ばれる。死傷者の数は今後変わる可能性がある。ロシア側の説明は確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">スポーツ · サッカー<span>✓ 3媒体 · 新日程へのFIFAの承認は未確認</span></div>
+      <h3 class="hl">サッカーのアジアカップ、来年12月に延期 サウジの情勢悪化でAFCが発表、新日程は12月23日から</h3>
+      <div class="body">
+        <p>アジアサッカー連盟(AFC)は11月3日、サウジアラビアで来年1月に開幕する予定だったアジアカップを延期し、来年12月23日から2028年1月21日に開くと発表した。開催国の情勢の悪化が理由で、AFCは地域の動きに伴う移動や運営の難しさを挙げた。大会は24チームが出る。当初はリヤドで来年1月7日に開幕し、2月5日までの日程だった。</p>
+        <p>開催をめぐっては、イエメンの武装組織フーシ派による攻撃を受けて疑問の声が出ていたが、大会組織委員会は10月27日、準備は予定どおり進んでいるとして試合日程を公表したばかりだった。1週間ほどで方針が変わった形だ。日本代表の日程への影響や、組み合わせ抽選の扱いは明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">国際 · 和平交渉<span>✓ 3媒体 · 参加者と議題の詳細は未確認</span></div>
+      <h3 class="hl">ウクライナとロシアの実務者協議、11月10〜11日にアブダビで 米特使が仲介を発表</h3>
+      <div class="body">
+        <p>米国のウィトコフ特使は11月2日、ウクライナとロシアの実務者協議を、11月10日と11日にアラブ首長国連邦のアブダビで仲介すると明らかにした。協議では、戦争が終わったあとの安全保障の枠組み、緊張を和らげる措置、人道支援、和平に向けた次の段取りが話し合われる。米側の交渉団は今週、ブリュッセルでフランス、ドイツ、英国、EU、NATOの代表とも会う。</p>
+        <p>米国、ロシア、ウクライナの3者は1月にもアブダビで高官協議を開いたが、領土問題での隔たりは埋まらなかった。これまでの協議では、ロシアがウクライナ軍にドネツク州の約5分の1からの撤退を求めていることや、停戦後に国際的な部隊を置くかどうかが争点として残っている。今回の協議の参加者の顔ぶれは、今のところ詳しく示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>11月10〜11日</b><span>アブダビでの実務者協議の日程</span></div>
+        <div><b>3者</b><span>米国・ロシア・ウクライナが関わる協議</span></div>
+        <div><b>4項目</b><span>議題(戦後の安全保障、緊張緩和、人道支援、次の段取り)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>日本政府が防衛費を5年で70〜80兆円とする案を検討している、という話がある</b> <span>政府は金額を公式に発表していない。年末にかけて与党との調整が続いている段階で、案の中身は現時点で確認できていない。</span></div>
+        <div><b>暗号資産取引所バイナンスから約63億ドルが盗まれた事件は北朝鮮のハッカーによるもの、という指摘がある</b> <span>北朝鮮政府は関与を「でっち上げ」と否定している。捜査当局が攻撃者を特定したという発表は、現時点で確認できていない。</span></div>
+        <div><b>イランがホルムズ海峡を2日で再開する、という話がある</b> <span>イランのアラグチ外相は、再開は同国の条件を受け入れるかどうかにかかっていると述べている。米国の制裁の解除前は再開できないという趣旨の発言も出ており、再開の時期は確認できていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 火 11月3日</b><span>文化の日で東京市場は休場。米国で中間選挙の投票が続き、アララの不審メールをめぐる利用企業の案内と大阪市の確認も続く。</span><b>今週</b><span>4日朝から米中間選挙の開票が日本時間で順次進み、東京市場は4日に再開する。10日と11日にはアブダビでウクライナとロシアの実務者協議が開かれる。</span><b>後で</b><span>アジアカップの新日程の扱い、北朝鮮の巡航ミサイルの運用の動き、防衛費の規模をめぐる与党の調整が続く。</span><b>読者に</b><span>カード会社を名乗るメールで利用内容の確認を求められても、リンクは開かず、公式サイトやアプリから自分で確認する。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "経済 · サイバー攻撃 · ✓ 3媒体 · 流出した情報の悪用の有無は未確認", "title": "メール配信「アララ」に不正アクセス、メールアドレス約7700万件が流出 カード会社を装う不審メールは最大713万通", "what": "メール配信サービス「アララ メッセージ」への不正アクセスで、運営会社のアララは11月2日、メールアドレス約7700万件の流出を明らかにした。氏名、電話番号、住所なども流出を確認している。決済情報は同社が保有しておらず、漏れていないとしている。10月28日から30日にかけて、2つの環境からカード会社を装った不審メールが最大約713万通送られた。件名は「利用内容確認のご依頼」などだった。アララは31日に状況を把握し、同日にサービスの提供を止めて警察に届け出た。7700万件は利用企業ごとの件数の合計で、重複の可能性がある。大阪市は3日、行政オンラインシステムの利用者のメールアドレスや氏名が漏れた可能性があると発表した。", "why": "メール配信業者は、多くの企業の顧客リストを預かる「共通の入り口」になっている。1社が破られると、取引先の企業の名前で偽メールを送れてしまうため、受け取る側は本物と見分けにくい。被害が一つの会社にとどまらず、広い範囲の利用者に及ぶ構造だ。", "me": "カード会社や通販を名乗るメールで、利用内容の確認や本人確認を急かすものは、本文のリンクを開かない。確認が必要なら、ブラウザのブックマークや公式アプリから自分で会員ページに入る。同じパスワードを複数のサービスで使い回している場合は、今日のうちに変えておく。", "a": "利用企業の責任を重くみる立場は、顧客の情報を預ける以上、委託先の安全性を点検するのは発注した企業の務めだとする。公表が遅れれば、被害の把握も遅れると考える。", "b": "事業者の側に重い責任があるとみる立場は、サーバーの弱点を放置した配信業者の管理体制が問われるとする。利用企業は業者が示す安全対策を信頼して契約しており、すべてを点検するのは現実的でないと考える。", "say": "確認できているのは、流出の規模と不審メールの送信数、サービス停止と警察への届け出だ。流出した情報が実際に悪用されたかどうか、原因の全体像はまだ確認できていない。今日見たいのは、利用企業が次々に出す公表の中身と、不審メールの被害報告の広がりだ。", "src": "NHK(メール配信サービス「アララ」700万通超の不審メール確認, 11/2) · 朝日新聞(713万通超の不審メール確認, 11/2) · 読売新聞(アララ、メールアドレス7700万件流出, 11/2)"},
+    "s2":{"kick": "国際 · 安全保障 · ✓ 2媒体 · 北朝鮮の発表内容の独立した検証は未確認", "title": "北朝鮮、巡航ミサイル搭載のクラスター弾頭を試験 「5〜6ヘクタール壊滅」と主張、年内に4種類の運用へ", "what": "北朝鮮のミサイル総局は11月2日、戦略巡航ミサイルに載せるクラスター弾頭の威力を確かめる試験と、垂直に攻撃する飛行の特性を確かめる試験を行ったと発表した。弾頭を研究する部門は、5〜6ヘクタールの標的区域を極めて高い密度で壊滅させられると述べた。ミサイル総局長は、クラスター弾頭を用途別に4種類に分け、2026年中に部隊が全種類を選んで使えるようにする方針を示した。北朝鮮は10月31日にも、弾道ミサイルに載せるクラスター弾頭の試験を行ったとしている。このときは12〜13ヘクタールを焦土化できると主張した。実際の飛行距離や発射場所は公表されていない。", "why": "クラスター弾は、広い面を一度に制圧できる一方、不発弾が残って民間人の被害が長引く。巡航ミサイルは低い高度を飛び、弾道ミサイルと迎撃の仕方が違う。弾頭の種類を増やして使い分けるとなると、相手が備えるべき状況が増える。", "me": "日本に直接の避難行動が求められる発表ではない。ミサイルの発射情報は、政府の緊急情報やニュース速報で確認できるようにしておく。今回のような試験は、発射の報告がない日にも行われうる点を知っておくとよい。", "a": "威嚇の色合いが強いとみる立場は、10月31日と11月2日に続けて試験を公表した点に注目する。年内の運用開始という期限まで示し、周辺国に能力を見せつけていると考える。", "b": "数字を割り引いて受け止める立場は、ヘクタール単位の威力や運用の時期は北朝鮮側の自己評価にすぎないと考える。実戦で通用するかは、独立した検証がなければ判断できないと考える。", "say": "確認できているのは、北朝鮮が11月2日に試験を行ったと発表したことと、10月31日にも別の試験を発表していることだ。威力や配備の時期は、まだ北朝鮮の主張にとどまる。今日見たいのは、日本や韓国の政府がこの試験をどう分析するかと、次の発射の有無だ。", "src": "NHK(北朝鮮が巡航ミサイルの発射実験を実施, 11/3) · 毎日新聞(北朝鮮、巡航ミサイルでもクラスター弾試験, 11/3)"},
+    "s3":{"kick": "国際 · ウクライナ · ✓ 3媒体 · 行方不明者を含む最終的な死者数は未確認", "title": "ウクライナ南部の学校と避難所にロシア軍が空爆、26人死亡 支援物資の配布拠点", "what": "ウクライナの非常事態庁は11月2日、南部ザポリージャ州コミシュバハの学校がロシア軍の空爆を受け、少なくとも26人が死亡し、5人が負傷したと発表した。学校は人道支援物資の配布拠点として使われていた。死者には救急隊員2人と警察官4人が含まれる。ゼレンスキー大統領は、学校への攻撃のあと、近くのシェルターに逃げた住民に9発の誘導爆弾が使われたと説明した。ゼレンスキー氏は、ヘルソン州オレシュキで人道支援のための局地停戦が進んでいた中での攻撃だと述べ、ロシアは「真の正義も望んでいない」ことを裏付けるものだと非難した。ロシア側の説明は確認できていない。", "why": "学校や支援物資の配布拠点のように、民間人が集まる場所への攻撃は、戦時の国際法が禁じてきた分野にあたる。救助に駆けつけた人を巻き込む二度目の攻撃は、救援活動そのものを止める。停戦や和平の協議が動く時期に起きたことで、交渉の空気にも影響する。", "me": "日本から遠い出来事だが、人道支援や寄付に関わる情報は、団体の公式サイトで受け入れ先と使い道を確かめてから動く。災害時と同じく、被害の数字は発表のたびに変わるため、速報の数字だけで判断しない。", "a": "ロシアの攻撃を重大な戦争犯罪としてとらえる立場は、人道支援の拠点とシェルターを続けて狙った点を重く見る。国際社会が追及を強めるべきだと考える。", "b": "和平交渉の行方を重くみる立場は、翌週に実務者協議が予定される中で、双方の不信が深まることを懸念する。攻撃の責任の所在は、独立した調査を待つべきだという慎重な立場もある。", "say": "確認できているのは、非常事態庁が発表した26人の死亡と5人の負傷、学校が支援物資の配布拠点だったことだ。死者数が確定したかどうか、ロシア側がどう説明するかはまだ確認できていない。今日見たいのは、死傷者数の更新と、10日からの協議への影響だ。", "src": "読売新聞(ウクライナの学校にロシア軍が空爆、26人死亡, 11/3) · 朝日新聞(「学校と避難所が標的に」ロシア軍の攻撃で26人死亡, 11/3) · AFP通信(局地停戦終了直後に学校空爆、26人死亡, 11/3)"},
+    "s4":{"kick": "スポーツ · サッカー · ✓ 3媒体 · 新日程へのFIFAの承認は未確認", "title": "サッカーのアジアカップ、来年12月に延期 サウジの情勢悪化でAFCが発表、新日程は12月23日から", "what": "アジアサッカー連盟(AFC)は11月3日、サウジアラビアで来年1月に開幕する予定だったアジアカップを延期し、来年12月23日から2028年1月21日に開くと発表した。当初の日程は来年1月7日から2月5日までで、リヤドで開幕する予定だった。AFCは、地域の動きに伴う運営や移動の難しさを延期の理由に挙げた。大会には24チームが出る。大会組織委員会は10月27日、準備は予定どおり進んでいるとして試合日程を公表していた。その後、イエメンの武装組織フーシ派による攻撃を受けて、開催に疑問の声が出ていた。", "why": "国際大会は、会場や航空路、選手と観客の安全が確保できなければ開けない。開催国の情勢が悪化すれば、日程を動かすしかない。延期で、各国の代表チームの年間日程や、クラブとの選手の調整にも影響が及ぶ。", "me": "サッカーの代表戦を観戦するために旅行や休みの予定を立てていた人は、開催時期が約11か月先に動いたことを前提に、航空券や宿の取り消しの条件を確かめておく。新しい日程の詳細は、これから決まる。", "a": "延期を妥当とみる立場は、選手と観客の安全が最優先だと考える。大会の直前まで粘るより、早めに決めることで、各国が準備し直す時間を残せると考える。", "b": "決定の遅さを問題視する立場は、1週間前に予定どおりの開催を示しながら方針を変えた点を挙げる。各国の協会や放送局、スポンサーが日程を押さえていたため、混乱が大きいと考える。", "say": "確認できているのは、AFCが新しい日程を発表したことと、延期の理由に地域の情勢が挙げられたことだ。国際サッカー連盟(FIFA)の承認や、日本代表の日程への影響は、まだ確認できていない。今日見たいのは、日本サッカー協会など各国の協会の反応だ。", "src": "時事通信(サッカーのアジア・カップ、来年12月に延期, 11/3) · ロイター(Asian Cup postponed until December 2027, AFC says, 11/3) · The Japan Times(Asian Cup postponed until December 2027 due to Saudi Arabia unrest, 11/3)"},
+    "s5":{"kick": "国際 · 和平交渉 · ✓ 3媒体 · 参加者と議題の詳細は未確認", "title": "ウクライナとロシアの実務者協議、11月10〜11日にアブダビで 米特使が仲介を発表", "what": "米国のウィトコフ特使は11月2日、ウクライナとロシアの実務者協議を、11月10日と11日にアラブ首長国連邦のアブダビで仲介すると明らかにした。協議では、戦争が終わったあとの安全保障の枠組み、緊張を和らげる措置、人道支援、和平に向けた次の段取りが話し合われる。米側の交渉団は今週、ブリュッセルでフランス、ドイツ、英国、EU、NATOの代表とも会う。米国、ロシア、ウクライナの3者は1月にもアブダビで高官協議を開いたが、領土問題での隔たりは埋まらなかった。ロシアがウクライナ軍にドネツク州の約5分の1からの撤退を求めていることや、停戦後に国際的な部隊を置くかどうかが争点として残っている。", "why": "実務者協議は、首脳が決める前に、停戦の監視や支援の通し方などの細部を詰める場だ。ここで具体案がまとまらなければ、首脳級の合意も難しくなる。同じ時期に攻撃が続く中で協議が開かれることで、双方の言い分が試される。", "me": "原油や小麦の価格、為替には、停戦の見通しが影響する。生活への影響は間接的だが、エネルギーや食料の値動きを気にする人は、協議の日程を頭に入れておくとよい。", "a": "協議に前向きな立場は、対話の窓口が続くこと自体に意味があるとみる。攻撃が続く中でも、人道支援や捕虜の扱いなど具体的な課題を前に進められると考える。", "b": "慎重な立場は、領土と安全の保証をめぐる双方の主張が大きく離れたままだと指摘する。前回までの協議でも大きな進展がなかったため、日程が決まっただけでは成果は見通せないと考える。", "say": "確認できているのは、日程と場所、議題の枠組みを米側の特使が示したことだ。ロシアとウクライナがそれぞれ誰を送るのか、各国政府がこの日程を確認しているのかはまだ確認できていない。今日見たいのは、両政府の公式な反応だ。", "src": "ロイター(US to hold trilateral talks with Ukraine, Russia in Abu Dhabi next week, 11/2) · 47NEWS(米、ロシア、ウクライナ3者協議10日開催, 11/3) · Kyiv Post(US Sets Nov. 10–11 Ukraine-Russia Talks in Abu Dhabi, 11/3)"},
+    "i1":{"kick": "豪中銀", "title": "オーストラリア中銀が政策金利を4.85%に引き上げ、18年ぶりの高水準", "what": "オーストラリア準備銀行(中央銀行)は11月3日の理事会で、政策金利を25ベーシスポイント引き上げ、4.60%から4.85%にした。2008年後半以来の高さで、18年ぶりの高水準にあたる。今年の利上げは5回目だ。採決は6対3に割れ、3人は据え置きを主張した。声明は、中東情勢と原油価格の上昇、高止まりするインフレを理由に挙げた。一方で、経済の減速や住宅価格の下落、失業率の上昇にも触れた。", "why": "政策金利は、銀行の貸出金利や住宅ローンの金利の土台になる。物価の上昇を抑えるために金利を上げると、家計や企業の借入の負担が増え、景気の勢いは弱まりやすい。経済の弱さが出る中での利上げは、判断が割れやすい。", "me": "日本の生活に直接の影響は小さいが、豪ドルを持つ人や、オーストラリアへの留学や旅行を予定している人は、為替の動きを確かめておく。海外の中央銀行が利上げを続けると、日本でも金利や円相場の議論に影響することがある。", "a": "利上げを支持する立場は、インフレの高止まりを放置すれば家計の負担が大きくなると考える。早めに抑え込むほうが、後の景気の落ち込みを小さくできると考える。", "b": "据え置きを主張する立場は、経済の減速や住宅価格の下落が出ている中での利上げは重すぎると考える。借入の多い家計が打撃を受け、失業率がさらに上がることを懸念する。", "say": "確認できているのは、金利の水準と票割れ、声明が挙げた理由だ。追加の利上げがあるかどうかは、まだ分からない。今日見たいのは、次の理事会までの物価の数字だ。", "src": "時事通信(豪中銀、政策金利4.85%に 18年ぶり高水準, 11/3) · ABC News(RBA lifts interest rates to highest level in 18 years, 11/3) · SBS News(RBAの利上げ決定の速報, 11/3)"},
+    "i2":{"kick": "叙勲", "title": "秋の叙勲3861人、トヨタの豊田章男会長ら7人に旭日大綬章", "what": "政府は秋の叙勲の受章者3861人を発表した。内訳は旭日章が895人、瑞宝章が2966人だ。旭日大綬章はトヨタ自動車会長の豊田章男さん(70)、元三井住友銀行頭取の奥正之さん(81)、元最高裁判事の宇賀克也さん(71)、元厚生労働相の武見敬三さん(74)ら7人が受ける。俳優の松坂慶子さんは旭日小綬章に選ばれた。受章者のうち女性は400人で全体の10.4%、民間人は1832人で47.4%を占める。大綬章は天皇陛下が、重光章は高市首相が10日に皇居で授ける。豊田さんは「これからも仲間とともに未来への挑戦を続け、我が国の産業と社会の発展に少しでも貢献して参りたい」と述べた。", "why": "叙勲は、国が長年の功績をたたえる制度で、年に春と秋の2回発表される。誰が選ばれるかは、その時代に何が評価されるかを映す。受章者の顔ぶれの男女比や民間人の割合は、制度の開かれ方を見る目安になる。", "me": "自分の身の回りの地域や職場にも、受章者がいるかもしれない。都道府県の発表や自治体の広報で、名前を確認できる。叙勲そのものは暮らしの手続きに影響しないが、制度の仕組みを知っておくと、ニュースが読みやすくなる。", "a": "制度を評価する立場は、長年の地道な仕事に光を当てる場だとみる。現場の仕事を担ってきた人が、国の評価を受ける機会として意味があるという考えだ。", "b": "見直しを求める立場は、女性が全体の1割程度にとどまる点を挙げる。官僚や企業の要職経験者に偏りがちで、選考の基準をもっと開くべきだと考える。", "say": "確認できているのは、受章者の総数と内訳、旭日大綬章を受ける7人のうちの主な顔ぶれだ。来年以降も同じ傾向が続くかどうかは分からない。今日見たいのは、10日の伝達式の日程と、受章者本人のコメントだ。", "src": "読売新聞(トヨタ会長の豊田章男さんら7人に旭日大綬章, 11/2) · 朝日新聞(トヨタの豊田章男会長に旭日大綬章, 11/3) · 中日新聞(松坂慶子さんら秋の叙勲, 11/2)"},
+    "i3":{"kick": "韓国", "title": "韓国大統領夫妻ら168人の旅券情報が有料サイトに流出、外交部が再発行", "what": "韓国の李在明大統領夫妻や閣僚ら計168人分の旅券情報が、有料サイト上で閲覧できる状態だったことが分かった。流出したのは、今年6月に大統領専用機に乗った人の名簿のファイルで、旅券の情報や生年月日が記載されていた。ネット上に約5カ月間置かれていた。外交部は、李大統領夫妻らの旅券を再発行していると明らかにした。外交部は、ハッキングではなく流出とみて、警察庁などと経緯を調べている。ファイルは掲載後に削除された。李大統領は、攻撃の兆候を事前に検知するシステムの構築などセキュリティー対策の抜本的な強化を指示した。", "why": "旅券の番号や生年月日は、航空券の不正予約や身元のなりすましに使われるおそれがある。国家元首や閣僚の情報は、外国での警護や行動の予測にもつながる。発見が遅れた点は、情報を扱う手続きそのものの問題を示す。", "me": "自分の旅券や会員情報を、ウイルス検査の無料サイトなどに安易にアップロードしない。名簿のようなファイルを共有するときは、必要な人だけに限り、使い終えたら削除する習慣をつける。", "a": "個人の注意不足が背景にあるとみる立場は、機密に近い名簿を外部の検査サイトに置いた判断を問題視する。研修や手順の徹底で防げたという考えだ。", "b": "制度の欠陥とみる立場は、5カ月も気づかなかった政府の点検体制の弱さを重く見る。個人の過失だけに帰せず、情報の管理を仕組みで変えるべきだと考える。", "say": "確認できているのは、168人分の情報が流出していたことと、旅券の再発行、大統領の対策強化の指示だ。誰がなぜファイルを掲載したか、悪用の有無はまだ確認できていない。今日見たいのは、警察庁の調査結果の発表時期だ。", "src": "朝日新聞(韓国大統領夫妻らの旅券情報が有料サイトに流出, 11/3) · 聯合ニュース(李大統領や閣僚らの個人情報流出 韓国政府「旅券を再発行」, 11/3) · 共同通信(韓国大統領らの個人情報流出 専用機搭乗の168人分, 11/3)"},
+    "i4":{"kick": "アップル", "title": "アップルの7〜9月期は売上高1145億ドルで12%増 iPhone好調も中華圏は予想届かず", "what": "米アップルが11月2日に発表した2026年7〜9月期の決算は、売上高が1145億ドルで前年より12%増えた。iPhoneの売上高は576億ドルで17%増えた。中華圏の売上高は市場予想に届かなかった。同社は12月期の粗利益率を45〜46%と見込み、メモリー価格の上昇を織り込んだ。時間外取引では売買が交錯した。", "why": "アップルの決算は、世界のスマートフォン需要と、半導体の部品価格の影響を同時に映す。メモリーの価格が上がり続ければ、製品の価格や利益率に響く。中華圏の弱さは、同社の成長が一つの地域に頼りきれないことを示す。", "me": "アップル製品の買い替えを考えている人は、部品価格の上昇で値上げが起きる可能性を頭に入れておく。投資信託や年金を通じて米国株に関わる人は、4日の東京市場の再開後に値動きを確かめる。", "a": "好調を評価する立場は、売上高が12%増え、iPhoneの売上高が17%伸びた点を挙げる。需要が強いため、年末商戦も底堅いと考える。", "b": "先行きを心配する立場は、中華圏の予想割れと、メモリーの値上がりによる粗利益率の圧迫を挙げる。売上が伸びても利益が伸びにくくなる局面だと考える。", "say": "確認できているのは、売上高とiPhoneの売上、12月期の粗利益率の見通しだ。中華圏の不振が一時的なものか、メモリー価格の上昇がいつまで続くかはまだ確認できていない。今日見たいのは、4日の取引でアップル株と部品メーカーの株価がどう動くかだ。", "src": "ロイター(Apple results beat Wall Street expectations on strong iPhone sales, 11/2) · MacRumors(Apple Reports 4Q 2026 Results, 11/2)"},
+    "i5":{"kick": "スペイン", "title": "スペイン高速列車事故で日本人2人の死亡を確認、死者69人全員の身元が判明", "what": "スペイン中部で10月28日に起きた高速列車の追突事故で、当局は犠牲者69人全員の身元確認が終わったと発表した。日本人は2人で、先に1人の死亡が確認され、新たに1人の死亡が確認された。身元の確認が残っていた3人は外国籍とみられていた。事故は、首都マドリードと南部セビリアを結ぶ高速鉄道の路線上に止まっていた列車に、別の列車が追突したものだ。日本政府は、身元の確認と家族の支援に全力で取り組む考えを示している。事故の原因は調べが続いている。", "why": "海外の大規模な交通事故では、国籍の異なる犠牲者の身元確認に時間がかかる。家族への連絡や遺体の引き渡しは、各国の大使館と現地当局の連携が欠かせない。高速鉄道の安全管理や設備の老朽化も、今後の検証の対象になる。", "me": "海外旅行の前に、外務省の海外安全情報と、渡航先の在外公館の連絡先を確かめておく。旅行保険の補償範囲や、家族に旅程を伝えておくことも、万一のときの対応を早める。", "a": "安全管理の検証を求める立場は、設備や運行システムの点検に不備がなかったかを重く見る。鉄道網の拡張が進む中で、老朽化への対応が追いついていないと考える。", "b": "原因の特定を待つべきだとする立場は、追突に至った経緯が明らかになる前に責任を論じるのは早いと考える。現地当局の調査結果が出るまで、判断を保留する姿勢だ。", "say": "確認できているのは、死者が69人で、全員の身元が判明したことと、日本人が2人であることだ。事故の原因は、まだ確認できていない。今日見たいのは、現地当局の調査の進み具合と、日本政府による遺族への支援の発表だ。", "src": "NHK(スペイン列車事故 新たに日本人1人の死亡確認, 11/3) · 時事通信(邦人2人目も死亡確認 スペイン列車事故, 11/3) · 朝日新聞(スペイン列車事故、新たに日本人1人の死亡確認, 11/3)"}
+  };
+  const G = {
+    "不正アクセス":{"f": "セキュリティ", "d": "他人のID・パスワードの悪用やシステムの穴を突いて、許可なく中に入ること。", "w": "アララのサービスが破られた。"},
+    "脆弱性":{"f": "セキュリティ", "d": "ソフトウェアやサーバーの設計・設定にある弱点。攻撃者に突かれると侵入や情報の流出につながる。", "w": "アララはウェブサーバーの弱点を原因の一つとみている。"},
+    "戦略巡航ミサイル":{"f": "安全保障", "d": "低い高度を飛ぶ長射程の誘導ミサイルで、遠くの重要な標的への攻撃に使うもの。", "w": "北朝鮮が弾頭の試験を行った。"},
+    "クラスター弾頭":{"f": "安全保障", "d": "一つの弾の中に多数の小さな爆弾を入れ、空中で広範囲にまき散らす弾頭。不発弾が残りやすい。", "w": "北朝鮮は5〜6ヘクタールを壊滅できると主張した。"},
+    "誘導爆弾":{"f": "安全保障", "d": "航空機から投下したあと、翼や誘導装置で目標に向けて飛ぶ爆弾。", "w": "シェルターへの攻撃に9発が使われたという。"},
+    "局地停戦":{"f": "安全保障", "d": "戦争全体ではなく、特定の地域や期間だけ戦闘を止める取り決め。", "w": "ヘルソン州オレシュキで人道支援のために行われていた。"},
+    "ダブルタップ":{"f": "安全保障", "d": "最初の攻撃のあと、駆けつけた救助者や避難した人を狙って、続けて攻撃する手法。", "w": "避難した人への続けての攻撃を指す言葉。"},
+    "実務者協議":{"f": "外交", "d": "首脳や閣僚ではなく、担当の官僚や専門家が細部を詰める協議。", "w": "アブダビで10日と11日に開かれる。"},
+    "仲介":{"f": "外交", "d": "対立する当事者の間に入って、話し合いを取り持つこと。", "w": "米国がウクライナとロシアの協議を仲介する。"},
+    "政策金利":{"f": "金融", "d": "中央銀行が決める、金融政策の基本となる短期の金利。銀行の貸出金利などの土台になる。", "w": "オーストラリアが4.85%に引き上げた。"},
+    "利上げ":{"f": "金融", "d": "中央銀行が政策金利を引き上げること。物価の上昇を抑える目的で行う。", "w": "今年5回目となった。"},
+    "ベーシスポイント":{"f": "金融", "d": "金利の変化を表す単位。1ベーシスポイントは0.01%で、25ベーシスポイントは0.25%。", "w": "4.60%から4.85%への引き上げ幅を表す。"},
+    "叙勲":{"f": "制度", "d": "国が功績のあった人に勲章を授けること。春と秋の年2回、受章者が発表される。", "w": "秋の叙勲で3861人が選ばれた。"},
+    "旭日大綬章":{"f": "制度", "d": "旭日章のうち最も上の等級の勲章で、国家や社会に特に功績のあった人に贈られる。", "w": "豊田章男さんら7人が受ける。"},
+    "粗利益率":{"f": "会計", "d": "売上高のうち、原価を引いた粗利益が占める割合。製品の稼ぐ力を示す。", "w": "アップルは12月期を45〜46%と見込む。"},
+    "メモリー":{"f": "技術", "d": "スマートフォンやパソコンでデータを一時的に記憶する半導体。生成AIの普及で需要が増えている。", "w": "価格の上昇がアップルの利益率を圧迫する。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

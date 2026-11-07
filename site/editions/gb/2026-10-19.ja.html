@@ -1,0 +1,355 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開する。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>10,881.9</b>FTSE100 · 10月16日（金）の終値、+0.38%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,659.44</b>S&amp;P 500 · 10月16日（金）の終値、-1.09%</div>
+    </div>
+    <div class="dateline"><span>第15号 · 朝刊</span><b>2026年10月19日（月）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · リフォームUK<span>報道照合 ✓ 6社 · 全編に映る他の人物のうち何人が処分を受けるかは明記されていない</span></div>
+      <h2 class="hl">リフォームUK、ITVの潜入映像を受け議員志望のジェイソン・パウエル氏を停職に　議員・候補者らを撮影</h2>
+      <p class="deck">ITVの1年にわたる調査は日曜に全編が放送される予定で、リフォームの関係者が人種差別的で暴力的な言葉を使う様子を映している。同党は、特定された全員が停職になったか離党したと述べている。</p>
+      <div class="body">
+        <p>ITV Exposure（ITVエクスポージャー）はハードキャッシュ・プロダクションズと組み、1年かけてイングランドとウェールズのリフォームUKの議員や候補者を撮影した。UKファクトチェックはこう報じ、映像には彼らが人種差別的、イスラム嫌悪的、性差別的な言葉を使う様子が映っているとしている。同社によると、全編のドキュメンタリー『Undercover: A Year in Reform』は10月18日（日）の放送予定だった。土曜にはITVニュースが「Inside Reform」と題した報道を流し、移民のための「強制収容所」を求める議員志望のリフォーム関係者を取り上げた。ヤフーニュースとブリット・ブリーフは、この人物を、国会議員候補への応募者である活動家のジェイソン・パウエルと特定している。両媒体は、彼が「イスラム教徒で英国人であることはできない。水と油のようなものだ」と語る場面が撮影されたこと、母国に送還できない不法移民は「強制収容所」に収容すべきだと述べたことを伝えている。ガーディアンは日曜、彼が停職になったと報じ、ブリット・ブリーフは、党が内部調査の間、党員資格を停止したとしている。</p>
+        <p>映像のほかの発言は、別の媒体が報じている。ミラーによると、映像にはリフォームの議員が、グルーミング・ギャング犯罪の加害者を「機関銃で撃ちたい」と語る場面がある。UKファクトチェックは、アラン・フィーニー氏が地方議会の議席を辞したこと、ディーン・ミラー氏が、録音されたときは障害があり強い薬を服用していたと述べたことも伝えている。リフォームの回答は、UKファクトチェックの引用では「停職になった例もあり、適正な手続きを踏まなければならない」というものだ。同社は、党が候補者審査を改善し優先してきたとし、ときに「私たちの価値観を共有しない少数の人物が、最初は審査を通ってしまう」と述べたと報じている。UKファクトチェックによると、リフォームは、映像に出た議員全員が停職になったか離党したと確認した。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">政治 · 緑の党<span>報道照合 ✓ 5社 · 党がより早く修正に至る道を見つけるかは明記されていない</span></div>
+      <h3 class="hl">ザック・ポランスキー氏、緑の党の「シオニズムは人種差別」動議を覆そうとはしないが修正する考えと表明</h3>
+      <div class="one">
+        <p>緑の党のザック・ポランスキー党首は10月18日、BBC Oneの「サンデー・ウィズ・ローラ・クーンスバーグ」で、10月4日にブライトンの党大会で可決された「シオニズムは人種差別」動議について「私はこれを覆そうとはしない」と語った。GBニュースとエクスプレス&amp;スターは、この動議が1,022票対813票で可決されたと伝えている。ポランスキー氏は採決に加わらず、修正されない限り賛成しなかっただろうと述べている。ジューイッシュ・クロニクルは、彼がこの政策を論争的ではないと述べたと報じた。BBCは、彼が最初の機会に修正したいと述べたこと、動議が2028年まで有効であることを伝えている。GBニュースとイブニング・スタンダードは、党首としての支持率が最悪の水準に落ちたと報じている。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>アーリング・ハーランドが2得点、マンチェスター・シティがプレミアリーグ首位で勝ち点差6に</b><em>フランス24とドーンが10月17日（土）のハーランドの2得点を報じた。マレー・メールはシティのリーグ7連勝と伝え、アーセナルは翌日に差を3に縮めた。</em><span>スポーツ · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>アーセナル、終盤のノニ・マドゥエケの得点でノッティンガム・フォレストに1対0　シティと勝ち点差3を維持</b><em>The42は、後半からの交代出場のマドゥエケが残り約10分で決めたと伝え、Arsenal.comは前半に枠内シュートが両チームともなかったとしている。</em><span>スポーツ · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>イベット・クーパー氏、緊急ケアに1億4000万ポンドを発表　NHSは例年より厳しい冬になると警告</b><em>ヤフーニュースUKとワン・ニュース・ページは、猛暑の夏を経ての警告だと伝えている。スカイニュースの報道では資金は14の事業に回るが、別の報道は25か所に言及している。</em><span>医療 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>ウクライナのドローン攻撃でサンクトペテルブルクとレニングラード州の石油施設で火災、1人死亡</b><em>ロイター、モスクワ・タイムズ、USニュースは10月18日の死者1人を伝え、キーウ・インディペンデントは標的の被害を確認できなかったとしている。</em><span>世界 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>ブライトン、クリスタル・パレスに5対0　ディエゴ・ゴメスがパレス陣内に入ってすぐの位置から決める</b><em>スカイスポーツ、ESPN、FotMobが10月18日（日）の勝利を報じた。ブライトンは10分以内に3対0とし、ESPNはゴメスのゴールを2017年以降のプレミアリーグで最長距離としている。</em><span>スポーツ · ✓ 4社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">スポーツ · ボクシング<span>報道照合 ✓ 7社 · デュボアの次の相手と、試合を止めたのが誰かは、報道で一致していない</span></div>
+      <h3 class="hl">ダニエル・デュボア、再戦でファビオ・ウォードリーを2ラウンドでストップしWBOヘビー級王座を防衛</h3>
+      <div class="body">
+        <p>ダニエル・デュボアは10月17日（土）、ロンドンのO2アリーナでファビオ・ウォードリーを2ラウンドでストップし、WBOヘビー級王座を防衛した。スカイスポーツ、NBCニュース、ヤフー・スポーツが報じている。ブリーチャー・レポートは決着を2ラウンド2分21秒とし、NBCニュースは、そのラウンドの残りが39秒の時点で終わったと伝えている。ヤフー・スポーツによると、デュボアは1ラウンドの序盤、右でウォードリーからダウンを奪った。NBCニュースは、レフェリーが試合を止めたと述べ、ファイトマグは、ウォードリー陣営のコーナーが止めたと報じている。NBCニュースとファイトマグは、デュボアの戦績を24勝3敗としている。スカイスポーツとCBSスポーツは、デュボアが5月にマンチェスターのコープ・ライブで、11ラウンドにウォードリーをストップして王座を獲得したと伝えている。ガーディアンによると、デュボアは試合後、フィリップ・フルゴビッチを標的に挙げ、「今は俺の時代だ」と語った。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">医療 · NHSの記録<span>報道照合 ✓ 8社 · 救急隊員2人が規則に違反したかどうかは調査中</span></div>
+      <h3 class="hl">ノッティンガムのトラスト、襲撃事件被害者の記録をめぐりさらに4人を解雇　保健相はアクセスを「恥」と非難</h3>
+      <div class="body">
+        <p>ノッティンガム大学病院NHSトラストは、2023年のノッティンガム襲撃事件の被害者の記録に不適切にアクセスしたとして、職員さらに4人を解雇した。これで解雇は計15人となり、5月の11人から増えた。ブリット・ブリーフ、タイム・ニュース、DataBreaches.netが報じている。ブリット・ブリーフによると、トラストは最終警告書を15件、第1段階の警告書を2件出しており、記録はバーナビー・ウェバー、グレース・オマリー＝クマール、イアン・コーツの各氏のものだった。これとは別に、ヤフーニュースUK、ヨークシャー・ライブ、ユニラッドは、ヨークシャー救急サービスの職員2人が、10月10日にヨークシャー・ワイルドライフ・パークで亡くなったウィリアム・チャップマン氏の記録に、正当な理由なくアクセスした、またはしようとしたとみられると伝えている。イベット・クーパー保健相はスカイニュースでこのアクセスを「全くの恥」と呼び、BBCは彼女がNHSのデータ漏えいを「恥」と呼んだと報じている。彼女は、違反が確認されれば職員は解雇されるべきで、調査の間は停職にすべきだと述べた。ブリット・ブリーフによると、トラストは違反の可能性を検知する仕組みを導入しており、情報コミッショナー事務局とノッティンガムシャー警察に報告した。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">英国 · 警察<span>報道照合 ✓ 5社 · 現場を離れた男女の身元は示されていない</span></div>
+      <h3 class="hl">ノッティンガムシャー警察の警察官、市中心部で2人に声をかけた後エンジェル・ロウで足を撃たれる</h3>
+      <div class="body">
+        <p>ノッティンガムシャー警察の警察官が10月18日（日）の午前4時50分の少し前、ノッティンガム市中心部のエンジェル・ロウで2人に声をかけた後、足を撃たれた。ノッティンガムシャー警察、BBC、ガーディアンが報じている。BBCによると、警察官は足の負傷で病院で治療を受けており、ブリット・ブリーフは容体は安定していると伝えている。GBニュースとブリット・ブリーフは、男女が現場を離れ、まだ見つかっていないと報じている。警察は、銃器を回収したと述べている。クレア・ルカス副本部長は、衝撃的な事件であり、警察官が直面する危険を改めて痛感させるものだと述べ、情報のある人は名乗り出るよう呼びかけた。警察は、一般市民への脅威が広がっていることを示す情報はないとしている。エンジェル・ロウは日曜も封鎖されたままだった。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>エド・デイビー氏、自由民主党の党首交代の動きが、チャーリー・メイナード議員の幹部辞任後に実現せず、地位を保つ。<span>ITV News, Irish News, Guardian</span></li>
+        <li>アイルランド・ウォーターフォードの放火で亡くなった一家4人の遺体が、葬儀を前に教会に到着。<span>Sky News, Irish Examiner</span></li>
+        <li>マンチェスター・ユナイテッドはリーズと1対1の引き分け。ユナイテッドの得点はブライアン・ムベウモ、リーズの同点弾はドミニク・カルバート＝ルーウィン。<span>Sky Sports, TheJournal.ie</span></li>
+        <li>政府顧問ジョナサン・パウエル氏の妻サラ・ヘルム氏のパレスチナ・アクションをめぐる投稿について、警察はこれ以上の措置を取らないと発表。<span>BBC News, Reuters</span></li>
+        <li>アンディ・バーナム氏が市長だった時期のマンチェスター・ライフ住宅事業で、マンチェスター・シティのアブダビの所有者に出た5500万ポンドの融資を、下院の精査委員会が調べる。首相は全面的な透明性を約束。<span>Guardian, Reuters</span></li>
+        <li>研究者らが、戯曲『エドワード3世』の主な作者はシェイクスピアだと「疑いなく」結論づける。<span>The Guardian</span></li>
+        <li>クラクトンのキャラバンパークで起きた暴行致死事件で、男が殺人罪で起訴される。<span>Sky News</span></li>
+        <li>チェルシーのGKエミリアーノ・マルティネス、頭部の衝突で念のための検査のため病院へ。<span>BBC</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>ITVの映像に出たリフォームの関係者は全員、党から追放された。</b> <span>正確ではない。UKファクトチェックによると、リフォームは特定された全員が停職になったか離党したと述べており、党自身も、一部の例では適正な手続きを踏まなければならないと述べている。</span></div>
+        <div><b>この週末、NHS職員さらに15人がノッティンガムの記録をめぐり解雇された。</b> <span>違う。ブリット・ブリーフとDataBreaches.netは、新たに解雇されたのは4人で、計15人となり、5月の11人から増えたと報じている。</span></div>
+        <div><b>ザック・ポランスキー氏は、緑の党の「シオニズムは人種差別」動議を撤回しようとしている。</b> <span>違う。BBCによると、彼は動議を覆そうとはせず、最初の機会に修正したいと述べ、動議は2028年まで有効だ。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/19 月</b><span>ITVの全編映像に対するリフォームの対応、エンジェル・ロウを離れた2人についてのノッティンガムシャー警察からの続報、ヨークシャー救急サービスの調査結果に注目。</span><b>今週</b><span>動議をめぐる緑の党の次の動き、デュボアの次の試合の日程、緊急ケアの1億4000万ポンドの対象となる施設の一覧に注目。</span><b>その先</b><span>同党の2年ルールでは、緑の党の動議の修正は2028年より前には見込まれていない。</span><b>読者へ</b><span>エンジェル・ロウの発砲事件について情報のある人は、ノッティンガムシャー警察に連絡できる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "政治 · リフォームUK · 報道照合 ✓ 6社 · 全編に映る他の人物のうち何人が処分を受けるかは明記されていない", "title": "リフォームUK、ITVの潜入映像を受け議員志望のジェイソン・パウエル氏を停職に　議員・候補者らを撮影", "what": "ITV Exposure（ITVエクスポージャー）はハードキャッシュ・プロダクションズと組み、1年かけてイングランドとウェールズのリフォームUKの議員や候補者を撮影したと、UKファクトチェックは報じている。同社によると、全編のドキュメンタリー『Undercover: A Year in Reform』は10月18日（日）の放送予定だった。ヤフーニュースとブリット・ブリーフは、国会議員候補に応募した活動家のジェイソン・パウエルが、「イスラム教徒で英国人であることはできない。水と油のようなものだ」と語る場面が撮影されたと報じている。同じ2媒体は、送還できない不法移民は「強制収容所」に収容すべきだと彼が述べたこと、リフォームが内部調査の間、彼の党員資格を停止したことも伝えている。ミラーによると、映像にはリフォームの議員が、グルーミング・ギャング犯罪の加害者を「機関銃で撃ちたい」と語る場面がある。UKファクトチェックは、リフォームが、映像に出た議員全員が停職になったか離党したと述べたと報じている。", "why": "多くの地方議席を急に獲得した政党は、候補者を選ぶ前の確認に頼ることになる。撮影された発言は、その確認が見落としたものを示している。停職は調査が行われる間、本人を党内にとどめる措置で、除名とは別の段階だ。この件がどう終わるかは、党のその後の対応で決まる。", "me": "リフォームの議員がいる選挙区に住んでいるなら、まず読むべきは、議会が公表している議員名簿と、その人物についての党の声明だ。ここにある引用は、ITVの全編映像を自分で見るまでは、伝聞として扱うこと。", "a": "UKファクトチェックの報道によると、リフォームの立場は、候補者審査を改善し優先してきたこと、価値観を共有しない少数の人物が最初は審査を通ってしまうことがあるというものだ。党は、適正な手続きを踏まなければならないと述べている。", "b": "映像の内容は逆を指している。ヤフーニュース、ブリット・ブリーフ、ミラーが伝える言葉は人種差別的で暴力的だ。UKファクトチェックによると、アラン・フィーニー氏は地方議会の議席を辞した。", "say": "複数の媒体で確認できる点は、パウエル氏が停職になったこと、そしてリフォームが、特定された全員が停職になったか離党したと述べていること。確認できない点は、ほかの議員がさらに停職になるのかどうか。全編放送後の党の声明と、停職になった人物が復帰するかどうかに注目したい。", "src": "ITV News, UK Fact Check, Yahoo News, Brit Brief, Guardian, Mirror, 10月16〜18日"},
+    "s2":{"kick": "政治 · 緑の党 · 報道照合 ✓ 5社 · 党がより早く修正に至る道を見つけるかは明記されていない", "title": "ザック・ポランスキー氏、緑の党の「シオニズムは人種差別」動議を覆そうとはしないが修正する考えと表明", "what": "緑の党員は10月4日のブライトンの党大会で、「シオニズムは人種差別」動議を1,022票対813票で可決したと、GBニュースとエクスプレス&スターは報じている。党首のザック・ポランスキー氏は採決に加わらず、修正がなければ賛成しなかっただろうと述べている。10月18日のBBC Oneの「サンデー・ウィズ・ローラ・クーンスバーグ」で、彼は「私はこれを覆そうとはしない」と語った。ジューイッシュ・クロニクルは、彼がこの政策を論争的ではないと述べたと伝えている。彼はBBCに、最初の機会に修正したいと語り、BBCは動議が2028年まで有効だと報じている。GBニュースとイブニング・スタンダードは、党首として最悪の支持率に落ちたと報じている。", "why": "党大会で可決された動議は党首だけでなく党を拘束する。そのため、党首が文言に異議を唱えても、撤回はできない。党大会で決めた政策の有効期間が2年と報じられていることで、文言をめぐる争いは長く世間の目にさらされる争いになる。", "me": "緑の党に投票している人、検討している人は、党自身の政策ページで、動議が今どう書かれているか、いつ修正案を出せるかを確認できる。見出しの言葉と文書は同じではないので、動議の本文そのものを読むこと。", "a": "BBCとジューイッシュ・クロニクルの報道によると、ポランスキー氏の立場は、この政策は論争的ではなく、覆そうとはしない一方、最初の機会に修正したいというものだ。", "b": "GBニュースとイブニング・スタンダードは、この騒ぎを支持率の低下とあわせて報じ、GBニュースはこれを新たな世論調査での最低と呼んでいる。", "say": "確認できる点は、採決の票数、彼が動議を覆さないと述べたこと、BBCが伝える2028年という期限。確認できない点は、党がより早く修正に至る道を見つけるかどうか、そして支持率の下落がこの騒ぎによるものかどうか。党幹部や党員がもっと早い採決を求めて動くかどうかに注目したい。", "src": "BBC, Jewish Chronicle, GB News, Express & Star, Evening Standard, 10月4〜18日"},
+    "s3":{"kick": "スポーツ · ボクシング · 報道照合 ✓ 7社 · デュボアの次の相手と、試合を止めたのが誰かは、報道で一致していない", "title": "ダニエル・デュボア、再戦でファビオ・ウォードリーを2ラウンドでストップしWBOヘビー級王座を防衛", "what": "ダニエル・デュボアは10月17日（土）、ロンドンのO2アリーナでファビオ・ウォードリーを2ラウンドでストップし、WBOヘビー級王座を防衛したと、スカイスポーツ、NBCニュース、ヤフー・スポーツは報じている。ブリーチャー・レポートは決着を2ラウンド2分21秒とし、NBCニュースは、そのラウンドの残りが39秒の時点で終わったと伝えている。ヤフー・スポーツによると、デュボアは1ラウンドの序盤、右でウォードリーからダウンを奪った。NBCニュースとファイトマグによると、デュボアの戦績は24勝3敗。NBCニュースは、レフェリーが試合を止めたと述べ、ファイトマグは、ウォードリー陣営のコーナーが止めたと報じている。スカイスポーツとCBSスポーツによると、5月にマンチェスターのコープ・ライブで、デュボアは11ラウンドのストップでウォードリーから王座を奪った。ガーディアンによると、デュボアは試合後、フィリップ・フルゴビッチを標的に挙げ、「今は俺の時代だ」と語った。", "why": "1ラウンドのダウンと早い決着は、僅差の判定よりも再戦の決着をはっきりさせ、王者が次の試合の条件を話し合うときの立場を強くする。フルゴビッチとの対峙が報じられていることは、その交渉がどこから始まりうるかを示している。", "me": "次のデュボアの試合を観るつもりなら、日程と放送局が確定してから予約や支払いをすること。対峙は、契約が結ばれたということではない。", "a": "ガーディアンは、デュボアが試合後にフルゴビッチを標的に挙げ、「今は俺の時代だ」と語ったと伝えている。", "b": "決着の経緯は報道で食い違っている。NBCニュースはレフェリーが止めたとし、ファイトマグはウォードリー陣営のコーナーが止めたとしている。", "say": "複数の媒体で確認できる点は、結果、ラウンド、会場、そして5月の前回の勝利。確認できない点は、試合を止めたのがレフェリーなのかウォードリー陣営なのか、そして次の相手。フルゴビッチやほかの相手との試合についてプロモーターが何を述べるかに注目したい。", "src": "Sky Sports, NBC News, Bleacher Report, Yahoo Sports, Guardian, CBS Sports, FightMag, 5月9日〜10月18日"},
+    "s4":{"kick": "医療 · NHSの記録 · 報道照合 ✓ 8社 · 救急隊員2人が規則に違反したかどうかは調査中", "title": "ノッティンガムのトラスト、襲撃事件被害者の記録をめぐりさらに4人を解雇　保健相はアクセスを「恥」と非難", "what": "ノッティンガム大学病院NHSトラストは、2023年のノッティンガム襲撃事件の被害者の記録に不適切にアクセスしたとして、職員さらに4人を解雇した。これで解雇は計15人となり、5月の11人から増えたと、ブリット・ブリーフ、タイム・ニュース、DataBreaches.netは報じている。同じ報道によると、トラストは最終警告書を15件、第1段階の警告書を2件出している。記録はバーナビー・ウェバー、グレース・オマリー＝クマール、イアン・コーツの各氏のものだった。これとは別に、ヤフーニュースUK、ヨークシャー・ライブ、ユニラッドは、ヨークシャー救急サービスの職員2人が、10月10日にヨークシャー・ワイルドライフ・パークで亡くなったウィリアム・チャップマン氏の記録に、正当な理由なくアクセスした、またはしようとしたとみられると伝えている。イベット・クーパー保健相はスカイニュースでこのアクセスを「全くの恥」と呼び、違反が確認されれば職員は解雇されるべきだと述べた。ブリット・ブリーフによると、トラストは違反の可能性を検知する仕組みを導入している。", "why": "医療記録は多くの職員が開けるので、主な防御は、誰が見たかを確かめて対処するかどうかにある。解雇の総数が5月の11人から今の15人に増えたことは、こうした調査がどれだけ長引きうるかを示している。", "me": "かかりつけの診療所や病院のトラストに、自分の記録に誰がなぜアクセスしたかを尋ねることができる。懸念があれば、トラスト自身が報告した情報コミッショナー事務局にも訴えられる。", "a": "BBCとヤフーニュースUKの報道によると、保健相の見方は、この違反は「恥」であり、「全くの恥」であって、理由なく見た職員は解雇され、調査の間は停職にされるべきだというものだ。", "b": "ブリット・ブリーフが伝えるトラストの説明は、ノッティンガムの違反を自らが見つけ、違反の可能性を検知する仕組みを導入しているというものだ。ヨークシャー・ライブとユニラッドは、救急サービスが調査を始めたと報じている。", "say": "確認できる点は、解雇の累計が15人であること（新たに15人が解雇されたのではない）と、ヨークシャー救急サービスで調査が行われていること。確認できない点は、救急隊員が規則に違反したかどうか。職員は記録にアクセスしたと「みられる」にとどまるためだ。救急サービスの調査結果に注目したい。", "src": "BBC, Sky News, Brit Brief, Time News, DataBreaches.net, Yahoo News UK, Yorkshire Live, Unilad, 10月17〜18日"},
+    "s5":{"kick": "英国 · 警察 · 報道照合 ✓ 5社 · 現場を離れた男女の身元は示されていない", "title": "ノッティンガムシャー警察の警察官、市中心部で2人に声をかけた後エンジェル・ロウで足を撃たれる", "what": "ノッティンガムシャー警察の警察官が10月18日（日）の午前4時50分の少し前、ノッティンガム市中心部のエンジェル・ロウで2人に声をかけた後、足を撃たれたと、ノッティンガムシャー警察、BBC、ガーディアンは報じている。BBCによると、警察官は足の負傷で病院で治療を受けている。ブリット・ブリーフは容体は安定していると伝えている。男女が現場を離れ、まだ見つかっていないと、GBニュースとブリット・ブリーフは報じている。警察は、銃器を回収したと述べている。クレア・ルカス副本部長は、衝撃的な事件であり、警察官が直面する危険を改めて痛感させるものだと述べ、情報提供を呼びかけた。警察は、一般市民への脅威が広がっていることを示す情報はないとしている。エンジェル・ロウは日曜の午後も封鎖されたままだった。", "why": "早朝の市中心部での発砲は、武装した人物をどう見つけるか、警察官をどう守るかという疑問を生み、2人の行方の捜索を捜査の最初の時間に持ち込む。", "me": "日曜の午前4時50分ごろにエンジェル・ロウの近くにいた人や、周辺で撮影した映像がある人は、ノッティンガムシャー警察が情報を求めており、その呼びかけが提供の窓口になる。", "a": "警察は、一般市民への脅威が広がっていることを示す情報はないとしている。", "b": "ルカス副本部長は、この発砲を衝撃的な事件であり、警察官が直面する危険を改めて痛感させるものだと呼んだ。", "say": "確認できる点は、発砲、足の負傷、回収された銃器。確認できない点は、2人の身元と、どのように銃が撃たれたのか。逮捕と、銃器についての発表に注目したい。", "src": "Nottinghamshire Police, BBC, Guardian, GB News, Brit Brief, 10月18日"},
+    "i1":{"kick": "スポーツ · ✓ 4社", "title": "アーリング・ハーランドが2得点、マンチェスター・シティがプレミアリーグ首位で勝ち点差6に", "what": "アーリング・ハーランドは10月17日（土）、マンチェスター・シティで2得点を挙げたと、フランス24とドーンは報じている。マレー・メールは、この結果をシティのプレミアリーグ7連勝と表現している。ガーディアンによると、シティは首位で勝ち点差を6に広げた。The42によると、その後、アーセナルがノッティンガム・フォレストに勝って差を3に縮めた。", "why": "リーグ7連勝という流れは、追う側のクラブが、差を縮めるには全試合に勝つしかないことを意味する。アーセナルの結果が示したように、6ポイントのリードは週末のうちに3ポイントに縮みうる。", "me": "優勝争いを追っているなら、見るべきは毎週末のあとの順位表の数字だ。差は土曜と日曜の間で変わった。", "a": "ガーディアンによると、シティは首位で勝ち点差を6に広げた。", "b": "The42によると、アーセナルは翌日に差を3に縮めた。", "say": "確認できる点は、ハーランドの2得点と、土曜のあとのシティのリード。確認できない点は、シティがこの差を保てるかどうか。アーセナルが日曜に差を3に縮めたためだ。次の節に注目したい。", "src": "France 24, Malay Mail, Dawn, Guardian, 10月17〜18日"},
+    "i2":{"kick": "スポーツ · ✓ 3社", "title": "アーセナル、終盤のノニ・マドゥエケの得点でノッティンガム・フォレストに1対0　シティと勝ち点差3を維持", "what": "アーセナルは10月18日（日）、シティ・グラウンドでノッティンガム・フォレストに1対0で勝ったと、The42とサンデー・ガーディアン・ライブは報じている。後半から交代出場したノニ・マドゥエケが、マッツ・セルスに当たって方向が変わったシュートで、残り約10分に決めた。アーセナルは7試合で勝ち点18、首位マンチェスター・シティと3差だと、The42は伝えている。Arsenal.comによると、前半には枠内シュートが両チームともなかった。", "why": "接戦での終盤の決勝点は、ほかの結果が助けにならないとき、優勝争いを近いまま保つ。チームの出来が悪いときも勝ち点を動かす。", "me": "アーセナルを応援しているなら、シティとの差は3ポイントで、次の試合がそれを保てるかどうかを決める。", "a": "The42によると、アーセナルは7試合で勝ち点18、首位マンチェスター・シティと3差だ。", "b": "Arsenal.comによると、前半は枠内シュートが両チームともなかったため、終盤のゴールが試合を決めた。", "say": "確認できる点は、スコア、得点者、勝ち点の合計。確認できない点は、正確な時間で、媒体によって80分とも81分とも伝えている。勝ち点差を見るために、アーセナルの次のリーグ戦に注目したい。", "src": "The42, Arsenal.com, Sunday Guardian Live, 10月18日 · BBC (Madueke's strike enough as Arsenal win at Forest, 10月18日)"},
+    "i3":{"kick": "医療 · ✓ 4社", "title": "イベット・クーパー氏、緊急ケアに1億4000万ポンドを発表　NHSは例年より厳しい冬になると警告", "what": "イベット・クーパー保健相は、猛暑の夏を経て、NHSは例年より厳しい冬を迎えると述べたと、ヤフーニュースUKとワン・ニュース・ページは報じている。UKファクトチェックによると、彼女はイングランドの緊急ケアに1億4000万ポンドを発表した。スカイニュースの報道では、資金は14の事業に回り、新しい緊急ケアセンター、救急車の車両、救急外来の改修などが含まれる。UKファクトチェックが引く別の報道は、新設または拡張される緊急ケアの25か所に言及している。ヤフーニュースUKによると、彼女はNHSイングランドに、子どもの廊下での治療をなくすための計画を急ぎ求めた。", "why": "緊急ケアセンターは、救急外来の負担を一部引き受ける。需要が増える冬にはそれが最も重要になる。事業の数え方が2通りあることは、計画の詳細がまだ報じられている途中だと示している。", "me": "地元のトラストの冬の計画を確かめ、新しい緊急ケアの拠点が自分の近くにあるかを見ておこう。", "a": "ヤフーニュースUKによると、クーパー氏の主張は、きびしい夏を経て、NHSには今、追加の資金が必要だというものだ。", "b": "UKファクトチェックは、事業の数の報じられ方が、ある報道では14、別の報道では25と食い違っていると記している。", "say": "確認できる点は、1億4000万ポンドという額、冬への警告、子どもの廊下での治療への要請。確認できない点は、数が14の事業なのか25の拠点なのかで、両者は別のものかもしれない。資金が回る拠点の一覧に注目したい。", "src": "Yahoo News UK, UK Fact Check, One News Page, Sky News, 10月18日"},
+    "i4":{"kick": "世界 · ✓ 4社", "title": "ウクライナのドローン攻撃でサンクトペテルブルクとレニングラード州の石油施設で火災、1人死亡", "what": "10月18日未明のウクライナによるサンクトペテルブルクとレニングラード州へのドローン攻撃で1人が死亡したと、ロイター、モスクワ・タイムズ、USニュースは報じている。サンクトペテルブルク石油ターミナルと石油貯蔵施設で火災が起きたと、キーウ・インディペンデントとモスクワ・タイムズは伝えている。VKは、レニングラード州のデータセンターが攻撃されたが、サービスは通常どおり利用できたと述べたと、キーウ・インディペンデントは伝えている。ロシア国防省は、一晩で1,015機のドローンを撃墜したと発表したと、ロイターは報じている。負傷者数の報道は媒体によって異なる。", "why": "石油ターミナルへの攻撃は、ロシアの燃料輸出とエネルギー部門に及び、ドローンの数の規模は、一晩にどれだけ発射されるかを示している。", "me": "エネルギー価格を追っているなら、供給について結論を出す前に、独立した情報源から被害の確かな数字が出るのを待つこと。", "a": "ロイターによると、ロシア国防省は一晩で1,015機のドローンを撃墜したとしている。", "b": "キーウ・インディペンデントは、標的と被害の程度を独自には確認できなかったとしている。", "say": "確認できる点は、死者1人と石油施設の火災。確認できない点は、負傷者数（ロイターと知事で数字が異なる）と、被害の程度。衛星画像や公的機関による被害の評価に注目したい。", "src": "Reuters, Moscow Times, Kyiv Independent, US News, 10月18日"},
+    "i5":{"kick": "スポーツ · ✓ 4社", "title": "ブライトン、クリスタル・パレスに5対0　ディエゴ・ゴメスがパレス陣内に入ってすぐの位置から決める", "what": "ブライトンは10月18日（日）、クリスタル・パレスに5対0で勝ったと、スカイスポーツ、ESPN、FotMobは報じている。ディエゴ・ゴメスが、パレス陣内に入ってすぐの位置から、ゴールキーパーのウォルター・ベニテスが前に出ていたところを突いて決め、2017年以降のプレミアリーグで最も遠い距離のゴールだったと、ESPNとFotMobは伝えている。ブライトンは、ジェイディー・カンボのオウンゴールと、ヤシン・アヤリの方向が変わったシュートで、10分以内に3対0とした。ハーフタイム後に、ハラランボス・コストゥラスとジャック・ヒンシェルウッドが残りの得点を加えた。フランス24によると、ファビアン・ヒュルツェラーは、ゴメスをよく働く選手だと述べた。", "why": "ダービーでの大勝は、チームの調子が議論されている週に、監督に明確な結果を与える。その距離からのゴールは、記録と比べられるほど珍しい。", "me": "そのゴールを見たいなら、クラブ自身のハイライト動画と、プレミアリーグの公式チャンネルで見られる。", "a": "フランス24によると、ファビアン・ヒュルツェラーは、ゴメスをよく働く選手だと述べた。", "b": "ESPNとFotMobは、距離を基準に、2017年以降のプレミアリーグで最も遠いゴールと位置づけているが、正確な距離は媒体によって異なる。", "say": "確認できる点は、スコアと、ロングシュートの得点者。確認できない点は、媒体によって異なる正確な距離。調子が続くかどうか、ブライトンの次の試合に注目したい。", "src": "France 24, Sky Sports, ESPN, FotMob, 10月18日 · Guardian (Gómez halfway-line wondergoal, 10月18日)"}
+  };
+
+  const G = {
+    "リフォームUK":{"f": "政治", "d": "ナイジェル・ファラージ氏が率いる、英国の政党。", "w": "同党の議員や候補者がITVの映像に登場する。"},
+    "ITVエクスポージャー":{"f": "メディア", "d": "ITVの調査報道の枠。", "w": "1年にわたる潜入映像を制作した。"},
+    "ハードキャッシュ・プロダクションズ":{"f": "メディア", "d": "独立系の制作会社。", "w": "リフォームの調査を共同制作した。"},
+    "ジェイソン・パウエル":{"f": "政治", "d": "国会議員候補に応募したリフォームの活動家。", "w": "党員資格を停止された。"},
+    "候補者審査":{"f": "政治", "d": "候補者を選ぶ前に行う確認。", "w": "リフォームは審査を改善したと述べている。"},
+    "緑の党":{"f": "政治", "d": "ザック・ポランスキー氏が率いる、英国の政党。", "w": "「シオニズムは人種差別」動議を可決した。"},
+    "サンデー・ウィズ・ローラ・クーンスバーグ":{"f": "メディア", "d": "BBC Oneの日曜の政治番組。", "w": "ポランスキー氏が10月18日に語った番組。"},
+    "党大会":{"f": "政治", "d": "政党が毎年開く党員の会合。", "w": "ブライトンで動議を可決した。"},
+    "WBO":{"f": "スポーツ", "d": "世界ボクシング機構（World Boxing Organization）。認定団体。", "w": "デュボアはそのヘビー級王座を防衛した。"},
+    "O2アリーナ":{"f": "スポーツ", "d": "ロンドン南東部にある会場。", "w": "再戦が開かれた。"},
+    "コープ・ライブ":{"f": "スポーツ", "d": "マンチェスターにあるアリーナ。", "w": "5月の試合が開かれた。"},
+    "ノッティンガム大学病院NHSトラスト":{"f": "医療", "d": "ノッティンガムの病院トラスト。", "w": "職員さらに4人を解雇した。"},
+    "ヨークシャー救急サービス":{"f": "医療", "d": "ヨークシャーのNHS救急サービス。", "w": "職員2人が調査を受けている。"},
+    "イベット・クーパー":{"f": "政治", "d": "保健相。", "w": "このアクセスを「全くの恥」と呼んだ。"},
+    "ノッティンガムシャー警察":{"f": "警察", "d": "ノッティンガムシャーの警察。", "w": "撃たれた警察官の所属先。"},
+    "エンジェル・ロウ":{"f": "地名", "d": "ノッティンガム市中心部の通り。", "w": "警察官が撃たれた場所。"},
+    "プレミアリーグ":{"f": "スポーツ", "d": "イングランドのトップリーグ。", "w": "シティが首位に立つ。"},
+    "レニングラード州":{"f": "世界", "d": "サンクトペテルブルクを囲むロシアの州。", "w": "一晩の攻撃の対象になった。"},
+    "緊急ケア":{"f": "医療", "d": "命に別状はないが、すぐの対応が必要な症状のためのNHSのケア。", "w": "1億4000万ポンドが回る。"},
+    "ザック・ポランスキー":{"f": "政治", "d": "イングランド・ウェールズ緑の党の党首。", "w": "動議は覆さず、修正する考え。"},
+    "シオニズム":{"f": "政治", "d": "歴史的なイスラエルの地にユダヤ人国家をつくる運動。", "w": "緑の党の動議の主題。"},
+    "ローラ・クーンスバーグ":{"f": "メディア", "d": "「サンデー・ウィズ・ローラ・クーンスバーグ」のBBCの司会者。", "w": "ポランスキー氏に聞いた。"},
+    "フィリップ・フルゴビッチ":{"f": "スポーツ", "d": "クロアチア出身のヘビー級ボクサー。", "w": "デュボアが次の標的に挙げた。"},
+    "アーリング・ハーランド":{"f": "スポーツ", "d": "マンチェスター・シティのノルウェー人ストライカー。", "w": "2得点を挙げた。"},
+    "ノニ・マドゥエケ":{"f": "スポーツ", "d": "アーセナルでプレーするイングランド代表のウイング。", "w": "フォレスト戦で終盤の決勝点を決めた。"},
+    "ディエゴ・ゴメス":{"f": "スポーツ", "d": "ブライトンのパラグアイ人ミッドフィールダー。", "w": "ハーフウェイ付近から決めた。"},
+    "サンクトペテルブルク":{"f": "地名", "d": "バルト海に面した、ロシア第2の都市。", "w": "石油施設がドローンの攻撃を受けた。"},
+    "バーナビー・ウェバー":{"f": "人物", "d": "2023年6月のノッティンガム襲撃事件で亡くなった3人のうちの1人。", "w": "被害者の記録がアクセスされた。"},
+    "グレース・オマリー＝クマール":{"f": "人物", "d": "2023年のノッティンガム襲撃事件で亡くなった医学生。", "w": "被害者の記録がアクセスされた。"},
+    "イアン・コーツ":{"f": "人物", "d": "2023年のノッティンガム襲撃事件で亡くなった学校の用務員。", "w": "被害者の記録がアクセスされた。"},
+    "情報コミッショナー事務局":{"f": "規制", "d": "英国のデータ保護の規制当局。", "w": "患者記録の違反を監督する。"},
+    "アラン・フィーニー":{"f": "政治", "d": "リフォームの元議員。", "w": "撮影された後に辞職した。"},
+    "ヨークシャー・ワイルドライフ・パーク":{"f": "地名", "d": "ドンカスター近郊の動物公園。", "w": "ウィリアム・チャップマン氏が10月10日にここで亡くなり、その記録にもアクセスがあった。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

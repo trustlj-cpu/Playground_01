@@ -1,0 +1,367 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>46,292.93</b>加権指数 · 20日終値 · 1.13%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,712.57</b>米S&amp;P500種指数 · 20日終値 · 0.28%上昇</div>
+    </div>
+    <div class="dateline"><span>第17号 · 朝刊</span><b>2026年10月21日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会 · 労災<span>✓ 7社 · 死者数の説明は各紙で異なり、事故原因は調査中</span></div>
+      <h2 class="hl">TSMC高雄・楠梓工場のP4新設現場で鉄骨が落下　外注業者の作業員4人が転落、3人死亡と報道、南科管理局が工事停止命令</h2>
+      <p class="deck">南科管理局によると、20日午後、クレーンで鉄骨を吊り上げていた際にボルトが折れた疑いがあり、作業員4人が高所から転落した。TSMCは関連工事を自主的に停止し、調査に協力すると述べた。</p>
+      <div class="body">
+        <p>TSMC高雄・楠梓園区のF22工場区にあるP4新設現場で、20日午後に労災事故があった。聯合新聞網と中国時報によると、クレーンで鉄骨を吊り上げていた際にボルトが折れた疑いがあり、溶接作業中だった外注業者の作業員4人が鉄骨ごと3階の高さから転落した。南科管理局の初期調査も同じ見方だ。事故現場は3階の鉄骨作業区で、負傷者はいずれも外注業者の人員であり、南科管理局は職員を派遣して労働検査を行うとしている。死傷者数は各紙で食い違う。聯合新聞網によると、南科管理局の夜の初期説明は、2人が病院到着前心肺機能停止（OHCA）、1人が重傷、1人が軽傷だった。ETtodayは「3人死亡、1人危篤」、民視財経網は「3人死亡、1人重傷」と伝え、自由時報の夜の見出しは「3人死亡の事故に」、聯合新聞網の夜の見出しは「鉄骨落下、3人死亡1人負傷」だった。</p>
+        <p>南科管理局は工事停止命令を出し、現場での作業中止と災害現場を動かさないことを求めた。今後は職業安全衛生法に基づき、関係する事業者と雇用主に違法性があるかを認定したうえで、処分を決める（聯合新聞網、中国時報）。TSMCは中央社と自由時報に対し、この現場は請負に出した範囲に当たり、関連工事は自主的に停止して、関係機関の調査に協力し、あわせて下請け業者に事後対応を促していると述べた。公視によると、転落した作業員4人のうち3人がOHCAだった。工商時報と自由時報によると、TSMCは事故原因はなお整理が必要だとし、下請け業者を促して支援し、遺族への事後対応も支援するとした。南科管理局は、負傷者の治療に引き続き注目し、犠牲者の遺族への弔問を支援するとしている。各紙は事故原因について、いずれもボルトが折れた「疑い」という言い方を使っており、調査結果はまだ公表されていない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">財経 · 株式<span>✓ 5社 · 外国人投資家のその日の売買超額と台湾ドルの終値は未確認</span></div>
+      <h3 class="hl">台湾株、20日は46,292.93点で終える　529.15点安、TSMCは15元安の2,405元</h3>
+      <div class="one">
+        <p>中央社によると、フィラデルフィア半導体指数が8日続落に歯止めをかけ、AI株が反発した。機関投資家は、台湾株が持ちこたえられるかは外国人投資家の動向次第とみる。台湾株は20日、安く寄り付き、上報と民視は寄り付きで300点超下げたと伝えた。中央社によると、TSMCは一時25元安の2,395元まで下げ、朝方の指数は400点超下げた。Yahoo株式によると、指数は取引時間中に一時V字反転してプラス圏に浮上し、アナリストは売り圧力はまだ収まっていないと注意を促した。自由時報によると、寄り付きは電子株と金融株の2本柱がともに失速し、指数は280点超下げた。自由時報はまた、金融監督管理委員会（金管会）が、今回の調整は台湾株だけではないとして、当面は介入しないと述べたと伝えた。中央社はまた、10月限の台湾株先物が385点安で終え、台湾ドルが昼に1.6角超下げ、外国人投資家の売り圧力は止めにくいと伝えた。引けについて、中央社とETtodayは、加権指数が46,292.93点で終え、529.15点下げ、下落率は約1.13%、TSMCは15元安の2,405元だったと伝えた。聯合新聞網によると、指数は再び季線まで下げた。Yahoo株式によると、聯發科（MediaTek）と鴻海は1%超下げ、台達電（デルタ電子）は2.13%の大幅安となった。公視によると、台湾株は取引時間中に一時4万6千点を割り、台湾ドルも同時に下げた。中央社はまた、電子部品とプラスチック関連が活発に取引されたと伝えた。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>フランスのデモが暴動に発展　北部4都市が夜間外出禁止令を発表、欧州株は下落して引け</b><em>公視によると、フランスは北部4都市で夜間外出禁止令を実施すると発表し、デモの暴動化を防ぐ。中央社によると、暴動の広がりで公的債務への投資家の懸念が深まり、欧州株の主要指数は下落して引けた。</em><span>国際 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>ネット通販向け技術サービス会社91APPのデータベースが攻撃被害　デジタル発展部が行政検査を開始</b><em>自由時報によると、91APPはCommerce Cloudのデータベースが自動化された攻撃を受け、一部のデータが抜き取られたことが確認されたと公告した。中央社によると、デジタル発展部は個人情報への影響範囲を明らかにするとしている。</em><span>テクノロジー · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>米国、ウクライナへのパトリオットミサイル輸送を保留　ワシントン・ポスト、情報筋としてヘグセス氏を名指し</b><em>自由時報によると、ワシントン・ポストは19日、情報筋の話として、米戦争（国防）長官のヘグセス氏が輸送命令への署名を見送っていると伝えた。聯合新聞網によると、トランプ政権は引き渡しを拒否も承認もしていない。</em><span>国際 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>台湾シリーズ第3戦、味全ドラゴンズが中信ブラザーズを6対0で完封　シリーズ3勝0敗で王手</b><em>自由時報によると、ブラザーズは最初の3戦で1点しか取れず、リーグ最少記録となった。第4戦は21日夜に台北ドームで行われ、ブラザーズは鄭浩均、味全は黄暐傑が先発する。</em><span>スポーツ · ✓ 1社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>鄭麗文氏が嘉義市に電撃訪問、民衆党の市長選候補・張啓楷氏の後援会で応援</b><em>中央社によると、鄭麗文氏は20日夜、嘉義市の鎮天宮廟前で約10分間あいさつした。黄敏恵市長を大切に思うなら、藍白共同推薦の張啓楷氏に投票するよう呼びかけた。</em><span>政治 · ✓ 1社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">政治 · 司法<span>✓ 7社 · 呉俊立氏の立場（証人か被告か）について双方の説明が食い違う</span></div>
+      <h3 class="hl">台東の農道不正事件が拡大　前県長の呉俊立氏、20日に空港で連行、夜に台東地方検察署へ移送され再聴取</h3>
+      <div class="body">
+        <p>前台東県長の呉俊立氏は20日午前、航空機で台東豊年空港に到着した後、待合室で捜査員に連行され、取り調べを受けた（公視、聯合新聞網、中国時報、鏡週刊）。検察と捜査当局は同日、氏の自宅、ファミリーオフィス、妹で台東県議会議長の呉秀華氏の事務所を捜索した。報道によると、事件は台東県政府の農道拡幅工事に関わり、呉秀華氏の一族が出資する東映リゾートに利益誘導したとされる（聯合新聞網、公視）。上報によると、呉秀華氏は台東県長選の候補者だ。原視ニュースによると、これは知本農道拡幅事件の延長線上の捜査だ。</p>
+        <p>呉秀華氏の選挙対策本部は、呉俊立氏は証人として聴取を受けたと述べたが、自由時報の見出しは「検察：被告に指定」だった。自由時報によると、呉俊立氏は十数時間の取り調べを経て、夜9時ごろ台東地方検察署に連れて行かれ再聴取を受けた。民進党の台東県長選候補の陳瑩氏は呉秀華氏に「きちんと説明を」と呼びかけ、国民党団は司法は選択的に法を執行してはならないと述べた（自由時報）。自由時報はまた、呉俊立氏は空港で航空機に乗って北上しようとしたところを止められ、検察と捜査当局は同時に自宅で証拠を集めたと報じた。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">社会 · 司法<span>✓ 6社 · 被告ごとの金額と労務時間の記載が各紙で少し異なる</span></div>
+      <h3 class="hl">兵役逃れ事件で最初の判決　廖人帥、阿達、唐禹哲ら芸能人9人が全員執行猶予、国庫に30万〜130万元の納付を命じられる</h3>
+      <div class="body">
+        <p>新北地方法院は20日、兵役逃れ事件の第四波の自首した被告に第一審判決を言い渡した。聯合新聞網によると、芸能人9人と一般人5人の自首グループは、それぞれ懲役6カ月から1年10カ月で、13人が執行猶予となった。自由時報の見出しは「阿達、唐禹哲ら13人に執行猶予」だ。鏡報によると、芸能人9人はいずれも懲役1年以上、執行猶予3〜4年だった。</p>
+        <p>自由時報によると、芸能人9人の執行猶予には、国庫への30万〜130万元の納付と義務労務の履行が付いた。風傳媒は廖人帥が懲役1年10カ月で最も重いと伝え、CTWANTは同氏が国庫に130万元を納める必要があるとした。壹蘋新聞網は、芸能人9人が罪を認めたうえで全員が軽い執行猶予付き判決となったと伝えた。自由時報はまた、唐振剛が執行猶予で収監を免れ、公の場で回答したと報じた。各紙は被告ごとの労務時間の記載が少し異なり、また今回は第一審判決であり、なお控訴できる。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">国際 · 社会<span>✓ 6社 · 動機と二人の関係は、日本の警察が調査中</span></div>
+      <h3 class="hl">日本・河口湖のホテル殺人事件　38歳の台湾人女性旅行客が首を刺され失血死、同室の27歳の台湾人女性を逮捕</h3>
+      <div class="body">
+        <p>山梨県富士河口湖町のホテルで19日、ツアーに参加していた38歳の台湾籍の女性が客室で遺体で見つかった（自由時報、聯合新聞網）。自由時報と中央社によると、日本の警察は20日に司法解剖の結果を公表し、死因は失血過多で、首に少なくとも1カ所の深い刺し傷があることを確認した。</p>
+        <p>自由時報によると、日本メディアは逮捕された女の身元をすでに公表した。民視ニュースネットと聯合新聞網によると、同室の27歳の台湾籍の女が刃物を持っていたとして日本の警察に逮捕された。三立ニュースによると、女は事件への関与を認めたと伝えられている。中央社と自由時報によると、死亡した女性と逮捕された女は、それぞれ別に同じツアーに申し込んだもので、連れ立っての旅行ではなかった。東森ニュースによると、日本の警察は二人の関係と事件の経緯をなお調べている。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>38歳</b><span>死亡した台湾籍の女性旅行客の年齢</span></div>
+        <div><b>27歳</b><span>逮捕された同室の台湾籍の女</span></div>
+        <div><b>1カ所以上</b><span>首の深い刺し傷、警察の解剖結果</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>金正恩氏が脳出血で北京で病死した。</b> <span>自由時報によると、北朝鮮の官営メディアが写真を公表して否定した。聯合新聞網によると、官営メディアは氏が娘を連れて行事に出席した写真を公表した。写真の撮影時期と場所は独自に確認されておらず、死亡の知らせは公式にも主要通信社にも確認されていない。</span></div>
+        <div><b>ペンタゴンが、全米軍でモデルナのmRNAインフルエンザワクチンの調達と接種をすでに禁止した。</b> <span>行政院のニュースリリースは20日、疾病管制署の説明を転載し、このネット上のうわさは誤情報で事実ではないとして、信じたり転送したりしないよう呼びかけた。</span></div>
+        <div><b>TSMC高雄工場の敷地全体が、労災事故で全面停止した。</b> <span>中央社によると、TSMCが述べたのは関連工事の自主停止だ。自由時報の見出しは「P4鉄骨吊り上げ作業を停止」。報道で停止の対象はP4新設工事であり、TSMCは工場区の稼働や量産スケジュールへの影響をまだ公表していない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/21（水）</b><span>台湾シリーズ第4戦が夜に台北ドームで始まる。気象署は早ければ21日夜にも薔琵の海上台風警報を発表する。自由時報によると、21日は一部の離島航路が欠航する。南科管理局によるTSMC楠梓工場の事故の労働検査と調査結果。</span><b>今週</b><span>公視によると、薔琵は金曜（23日）、土曜（24日）に台湾へ最接近する。呉俊立氏と呉秀華氏の事件のその後の捜査。検察が勾留を請求するかどうかを含む。91APPの個人情報流出の影響範囲。</span><b>その後</b><span>新北・永和の川端橋の水上花火は台風のため10月30日に延期された（自由時報）。兵役逃れ事件のほかの被告の審理と、第一審判決の控訴。</span><b>読者へ</b><span>死傷者数、台風警報、株価・為替は、南科管理局、気象署、証券取引所の発表を基準にしてほしい。起訴、聴取、第一審判決はいずれも事件の確定を意味しない。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会 · 労災 · ✓ 7社 · 死者数の説明は各紙で異なり、事故原因は調査中", "title": "TSMC高雄・楠梓工場のP4新設現場で鉄骨が落下　外注業者の作業員4人が転落、3人死亡と報道、南科管理局が工事停止命令", "what": "聯合新聞網と中国時報によると、TSMC高雄・楠梓園区のF22工場区にあるP4新設現場で20日午後に労災事故があり、クレーンで鉄骨を吊り上げていた際にボルトが折れた疑いがあり、外注業者の作業員4人が鉄骨ごと3階の高さから転落した。聯合新聞網によると、南科管理局の夜の初期説明は、2人が病院到着前心肺機能停止（OHCA）、1人が重傷、1人が軽傷だった。ETtodayは3人死亡1人危篤、民視財経網は3人死亡1人重傷と伝え、自由時報と聯合新聞網の夜の見出しはいずれも3人死亡とした。南科管理局は工事停止命令を出し、現場での作業中止と災害現場を動かさないことを求め、職業安全衛生法に基づいて処分を科す方針だ。中央社と自由時報によると、TSMCはこの現場は請負に出した範囲に当たり、関連工事は自主的に停止して、調査に協力すると述べた。", "why": "大型工場の工事ではクレーン、鉄骨、高所での溶接作業が同時に進むため、接合部品が一つ壊れただけで、部材一式が作業員ごと落ちるおそれがある。TSMCは工事を請負業者に任せて施工させており、法律上の責任をどう分けるかは、所管機関が事業者、請負人、雇用主の義務をどう認定するかで決まる。", "me": "科学園区や大型の工事現場で働く人は、自分の現場でクレーンの吊り荷の経路の下に人が立ち入れないようになっているか、高所作業で安全帯と墜落防止設備がきちんと使われているかを確認できる。一般の読者は、死傷者数が事故当夜にしばしば変わることに留意し、所管機関のその後の発表を基準にしてほしい。", "a": "南科管理局の説明は、事故原因は調査中で、現段階ではまずボルトが折れた疑いと工事停止、現場を動かさないことを確認し、そのうえで法に基づいて違反の認定と処分を行う、というものだ（聯合新聞網、中国時報）。この立場の重点は、手続きと責任の認定にある。", "b": "TSMCの説明は、現場は請負に出した範囲で、すでに自主的に停止し、下請け業者に事後対応を促している、というものだ（中央社、自由時報）。この立場は、まず負傷者と遺族への対応を行い、調査に協力するというものだ。各紙で死傷者数が異なることも、外部の事故の深刻さの判断にずれを生んでいる。", "say": "確認されているのは、事故がP4新設現場で起き、外注業者の作業員4人が転落し、管理局が工事停止命令を出し、TSMCが自主的に停止したことだ。未確認なのは、最終的な死者数とボルトが折れた原因だ。今後は南科管理局の労働検査の結論と処分、TSMCが楠梓工場の建設スケジュールへの影響を説明するかどうかに注目する。", "src": "聯合新聞網（鉄骨落下で3人死亡1人負傷、工事停止命令、10月20日）· 自由時報（3人死亡の事故に、P4鉄骨吊り上げ作業を停止、10月20日）· 中央社（TSMC：関連工事は自主停止、10月20日）· 公視（4人転落、うち3人がOHCA、10月20日）· ETtoday（4人が鉄骨ごと転落、10月20日）· 民視財経網（3人死亡1人重傷、10月20日）· 中国時報（事故原因が明らかに、工事停止命令と処分へ、10月20日）"},
+    "s2":{"kick": "財経 · 株式 · ✓ 5社 · 外国人投資家のその日の売買超額と台湾ドルの終値は未確認", "title": "台湾株、20日は46,292.93点で終える　529.15点安、TSMCは15元安の2,405元", "what": "中央社によると、フィラデルフィア半導体指数が8日続落に歯止めをかけ、AI株が反発し、機関投資家は台湾株は外国人投資家の動向次第とみる。上報と民視によると、台湾株は20日、寄り付きで300点超下げた。中央社によると、TSMCは一時25元安の2,395元まで下げ、朝方の指数は400点超下げた。Yahoo株式によると、指数は取引時間中に一時V字反転してプラス圏に浮上した。引けについて、中央社とETtodayは、加権指数が46,292.93点で終え、529.15点下げ、TSMCは15元安の2,405元だったと伝えた。聯合新聞網によると、指数は再び季線まで下げ、Yahoo株式によると、台達電（デルタ電子）は2.13%の大幅安となった。中央社はまた、台湾ドルが昼に1.6角超下げたと伝えた。", "why": "台湾株の時価総額の比重はTSMCなどの電子大型株に集中しており、米国のハイテク株やフィラデルフィア半導体指数の方向が、寄り付きでこれらの銘柄にそのまま反映されることが多い。取引時間中にプラス圏に浮上しながら安く終えたのは、安値圏では買いが入ったものの、終盤の売り圧力のほうが大きかったことを意味する。このため引けの方向は、寄り付きの一瞬ではなく一日を通して見る必要がある。", "me": "台湾株のETFや積み立て投資をしている人にとって、単日で1%前後下がるのはよくある値動きで、投資計画を見直すかどうかは、単日の上げ下げではなく自分のリスク許容度に立ち返って考えるべきだ。信用取引やレバレッジ型商品を使っている人は、先に保証金の維持率を確認しておくとよい。", "a": "中央社が伝えた要点は、フィラデルフィア半導体指数が下げ止まり、AI株が反発し、機関投資家は外国人投資家の売り圧力が和らげば台湾株が持ちこたえる余地があるとみている、というものだ。この立場は、その日の安値を調整とみる。", "b": "Yahoo株式が伝えたアナリストの注意は、売り圧力はまだ収まっておらず、指数はすでに季線まで下げて再テストしており、取引時間中のV字反転の勢いは終盤に続かなかった、というものだ。この立場は、テクニカル面の下値支持線と外国人投資家の動向に注目する。", "say": "確認されているのは、20日に46,292.93点で終え、529.15点下げ、TSMCが2,405元で終えたことだ。未確認なのは、外国人投資家のその日の売買超額と、台湾ドルの終値だ。きょうはフィラデルフィア半導体指数が反発を続けるか、外国人投資家が買い越しに転じるか、指数が季線を守れるかを見る。", "src": "中央社（台湾株529.15点安、台湾ドル1.6角超安、10月20日）· ETtoday財経クラウド（台湾株529点安で引け、10月20日）· 公視（台湾株は安く寄り付き乱高下、4万6千点割れ、10月20日）· 聯合新聞網（台湾株の引け、季線まで下落、10月20日）· Yahoo株式（台湾株が惨敗529点安、台達電が2.13%の大幅安、10月20日）"},
+    "s3":{"kick": "政治 · 司法 · ✓ 7社 · 呉俊立氏の立場（証人か被告か）について双方の説明が食い違う", "title": "台東の農道不正事件が拡大　前県長の呉俊立氏、20日に空港で連行、夜に台東地方検察署へ移送され再聴取", "what": "公視、聯合新聞網、中国時報、鏡週刊によると、前台東県長の呉俊立氏は20日午前、航空機で台東豊年空港に到着した後、待合室で捜査員に連行され、取り調べを受けた。検察と捜査当局は同日、氏の自宅、ファミリーオフィス、妹で台東県議会議長の呉秀華氏の事務所を捜索した。報道によると、事件は台東県政府の農道拡幅工事に関わり、呉秀華氏の一族が出資する東映リゾートに利益誘導したとされる。報道は、県政府の前農業処長の許家豪氏、前科長の蔡明翰氏、呉秀華氏の事務所の助手の邱嘉平氏がすでに勾留されていることにも触れている。自由時報によると、呉俊立氏は十数時間の取り調べを経て、夜9時ごろ台東地方検察署に連れて行かれ再聴取を受けた。呉秀華氏の選挙対策本部は氏は証人だと述べ、自由時報の見出しは「検察：被告に指定」とした。", "why": "利益誘導事件の核心は、公務員や関係のある人が特定の相手に不正な利益を得させたかどうかにある。農道の拡幅は県政府が予算を組んで施工するもので、路線や時期が特定のリゾートに有利なら、検察と捜査当局は意思決定の過程と資金の流れを突き合わせる。呉俊立氏は前県長で、現職の議長の兄でもあり、その立場が事件を選挙と直結させている。", "me": "台東の有権者は投票前に、検察と捜査当局が具体的な証拠を示したかどうかと、候補者の公約や実績を分けて見ることができる。捜査段階の捜索や聴取は起訴を意味せず、有罪を意味することもない。", "a": "呉秀華陣営の選挙対策本部の説明は、司法を尊重し真相の解明を望むというもので、呉俊立氏は現在、証人だ（自由時報）。この立場は、捜査中も推定無罪を保つべきだと強調する。", "b": "陳瑩氏は呉秀華氏に「きちんと説明を」と呼びかけ、国民党団は司法は選択的に法を執行してはならないと述べ、双方が事件を選挙戦に持ち込んでいる（自由時報）。検察側については、自由時報が被告に指定したと報じている。", "say": "確認されているのは、呉俊立氏が20日に連行されて取り調べを受け、検察と捜査当局が複数か所を捜索し、夜に検察署へ移されて再聴取を受けたことだ。未確認なのは、最終的に勾留が請求されたのか保釈されたのか、そして検察が起訴するかどうかだ。今後は検察署が勾留を請求するかどうかの判断に注目する。", "src": "公視（東映リゾートの農道開発に不正の疑い、10月20日）· 自由時報（呉俊立氏を事情聴取、検察は被告に指定、今夜移送し再聴取、10月20日）· 聯合新聞網（検察と捜査当局が呉俊立氏を連行、事務所を捜索、10月20日）· 上報（呉秀華氏が捜索を受け、呉俊立氏が連行される、10月20日）· 中国時報（農道不正事件が拡大、10月20日）· 鏡週刊（呉俊立氏、飛行機を降りて連行、10月20日）· 原視ニュースネット（知本農道拡幅事件が拡大、10月20日）"},
+    "s4":{"kick": "社会 · 司法 · ✓ 6社 · 被告ごとの金額と労務時間の記載が各紙で少し異なる", "title": "兵役逃れ事件で最初の判決　廖人帥、阿達、唐禹哲ら芸能人9人が全員執行猶予、国庫に30万〜130万元の納付を命じられる", "what": "聯合新聞網によると、新北地方法院は20日、兵役逃れ事件の第四波について第一審判決を言い渡し、芸能人9人と一般人5人の自首グループはそれぞれ懲役6カ月から1年10カ月となり、13人が執行猶予となった。自由時報の見出しは「阿達、唐禹哲ら13人に執行猶予」で、鏡報は芸能人9人がいずれも懲役1年以上、執行猶予3〜4年と伝えた。自由時報によると、執行猶予には国庫への30万〜130万元の納付と義務労務が付いた。風傳媒と壹蘋新聞網は、廖人帥が懲役1年10カ月で、130万元を納める必要があり、芸能人9人の中で刑期が最も重いと伝えた。各紙は被告ごとの金額と労務時間の記載が少し異なる。", "why": "自首と罪の認めは、裁判所が執行猶予を付けるかを決める際の重要な考慮要素で、執行猶予に国庫への納付と義務労務を付けるのは、被告が収監されない場合でも責任を負わせるためだ。第一審判決のあと、検察も被告も控訴できるため、結果はまだ確定していない。", "me": "一般の人にとってこの件が思い出させるのは、兵役の義務は法に従って履行されるもので、兵役逃れの法的責任には刑事責任と社会的な評価が含まれるということだ。審理が続く芸能人と一般人は、その後も別の期日に判決が出る。", "a": "この判決を支持する見方は、被告が全員罪を認め自ら自首しており、裁判所が兵役妨害条例に基づいて有期懲役と執行猶予を言い渡し、国庫への納付と労務を付けたことで、責任と更生の機会の両方に配慮している、というものだ（自由時報、聯合新聞網）。", "b": "もう一つの見方は、刑期が1年以上なのに全員が執行猶予となれば、実際の負担が十分かどうか外部が疑うことになり、とくに廖人帥が納める130万元は他の人との差が大きい、というものだ（風傳媒、壹蘋新聞網）。", "say": "確認されているのは、20日に第一審判決が言い渡され、芸能人9人が全員執行猶予となり、国庫への納付額が30万〜130万元だったことだ。未確認なのは、検察が控訴するかどうかと、各被告の義務労務の正確な時間だ。今後は控訴期間内の動きと、同じ事件のほかの被告の審理に注目する。", "src": "自由時報（芸能人の兵役逃れ事件、判決出そろう、10月20日）· 聯合新聞網（兵役逃れ事件で最初の判決、13人に執行猶予、10月20日）· 鏡報（芸能人9人はいずれも懲役1年以上、執行猶予3〜4年、10月20日）· 風傳媒（兵役逃れ芸能人の判決者リスト、10月20日）· 壹蘋新聞網（兵役逃れ事件の第一審、最初の判決、10月20日）· CTWANT（廖人帥は130万元を納付、芸能人9人は全員執行猶予、10月20日）"},
+    "s5":{"kick": "国際 · 社会 · ✓ 6社 · 動機と二人の関係は、日本の警察が調査中", "title": "日本・河口湖のホテル殺人事件　38歳の台湾人女性旅行客が首を刺され失血死、同室の27歳の台湾人女性を逮捕", "what": "自由時報によると、山梨県富士河口湖町のホテルで19日、ツアーに参加していた38歳の台湾籍の女性が客室で遺体で見つかった。自由時報、中央社によると、日本の警察は20日に司法解剖の結果を公表し、死因は失血過多で、首に少なくとも1カ所の深い刺し傷があることを確認した。民視ニュースネットと聯合新聞網によると、同室の27歳の台湾籍の女が刃物を持っていたとして日本の警察に逮捕された。中央社と自由時報によると、死亡した女性と逮捕された女は、それぞれ別に同じツアーに申し込んだ。東森ニュースによると、日本の警察は二人の関係と事件の経緯をなお調べている。", "why": "ツアーでは面識のない一人参加の客を同室にすることがよくあり、この事件は旅行会社の相部屋の手配と突発事案への対応に外部の関心を集めた。事件は日本の警察が捜査しており、台湾側の役割は遺族の支援と領事業務で、事件の詳細は日本の警察と検察の発表を待つ必要がある。", "me": "自分でツアーに申し込む人は、出発前に旅行会社に相部屋のルールと緊急連絡窓口を確認しておくとよい。海外で緊急事態に遭ったら、現地の警察、添乗員、在外公館に最優先で連絡する。", "a": "現時点でメディアに共通する重点は死因と逮捕された人の身元で、各紙とも警察が公表した解剖結果と逮捕の事実を使っている（自由時報、中央社）。この立場は、すでに確認された事実を重くみる。", "b": "相部屋と申し込み方法に重点を置いた報道もあり、二人は連れ立っての旅行ではなかったと指摘している（中央社、自由時報）。この立場は旅行会社の手配とリスク管理を問うが、動機と二人の関係について警察の説明はまだない。", "say": "確認されているのは、死亡したのが38歳の台湾人女性で、死因が失血過多、同室の27歳の台湾人女性が逮捕されたことだ。未確認なのは動機と二人の関係だ。今後は日本の警察が殺人容疑で改めて捜査するかどうか、旅行会社と外交部が遺族への支援をどう説明するかに注目する。", "src": "自由時報（首の刺し傷で失血、それぞれ申し込んでツアー参加、10月20日）· 中央社（死亡した女性と逮捕された女は別々にツアーに申し込み、10月20日）· 聯合新聞網（河口湖のホテル殺人事件、10月20日）· 民視ニュースネット（同室の台湾の女を逮捕、10月20日）· 東森ニュース（河口湖の相部屋殺人事件、10月20日）· 三立ニュース（同室の台湾の女、包丁を持ち逮捕、10月20日）"},
+    "i1":{"kick": "✓ 3社", "title": "フランスのデモが暴動に発展　北部4都市が夜間外出禁止令を発表、欧州株は下落して引け", "what": "公視によると、フランスは北部の4都市で夜間外出禁止令を実施すると発表し、デモの暴動化を防ぐ。パリの一部地域でも夜間外出禁止令が実施されたとも伝えた。自由時報によると、デモは暴力的な衝突に発展し、北部の都市で部分的に夜間外出禁止令が出た。自由時報はまた、現場で略奪が起き、フリマサイトが盗品を削除したと伝えた。中央社によると、暴動の広がりで公的債務の高まりへの投資家の懸念が深まり、欧州株の主要指数は19日に下落して引けた。", "why": "夜間外出禁止令は、地方政府が夜間の人の集まりを制限する措置で、暴力事件が拡大する前に接触のリスクを下げることを目的とする。デモと公的債務の問題が同時に出てきたことで、市場は社会の不安定さと財政リスクをまとめて評価し、そのため株式市場が先に反応した。", "me": "フランスへ旅行や出張で行く人は、外交部の渡航警告と現地の夜間外出禁止の対象地域に注意できる。欧州株のファンドを持つ投資家は、フランス国債の利回りと欧州株の連動に注意できる。", "a": "フランス政府の対応は、安全対策と夜間外出禁止令を強化して暴動の拡大を抑えるというものだ（公視、自由時報）。この立場は秩序に重点を置く。", "b": "報道の中のもう一つの立場は暴動の構造的な背景に注目しており、自由時報にはデモがなぜ頻繁に暴動に発展するのかを三つの背景から整理した記事があり、社会の不満と公的債務の圧力に触れている。", "say": "確認されているのは、北部4都市の夜間外出禁止令と欧州株の下落だ。未確認なのは、暴動がいつ収まるかと、フランスの財政政策への影響だ。きょうはフランス政府のその後の措置と、欧州株の寄り付きを見る。", "src": "公視（フランス、北部4都市で夜間外出禁止令を発表、10月20日）· 自由時報（フランスのデモが暴力的衝突に発展、10月20日）· 中央社（フランスのデモ暴動が拡大、欧州株は下落して引け、10月20日）"},
+    "i2":{"kick": "✓ 2社", "title": "ネット通販向け技術サービス会社91APPのデータベースが攻撃被害　デジタル発展部が行政検査を開始", "what": "自由時報によると、ネット通販向け技術サービス会社の91APPは先ごろ、同社のCommerce Cloudプラットフォームのデータベースが自動化された攻撃を受け、一部の情報が無断で抜き取られたと公告した。報道によると、デジタル発展部デジタル産業署は事業者から個人情報事故の通報を受けて、行政検査を開始した。中央社によると、デジタル発展部は個人情報への影響範囲を明らかにするとしている。報道は現時点で、流出した件数とデータの種類を公表していない。", "why": "91APPは多くのブランドにECプラットフォームを提供しており、一つのプラットフォームのデータベースが攻撃されると、複数のブランドの会員データに同時に関わるおそれがある。行政検査は、所管機関が事業者の情報セキュリティ管理と通報の流れを確認するもので、刑事捜査とは別の手続きだ。", "me": "91APPを使うブランドのサイトに登録したことがある人は、ブランドからの通知メールに注意し、他のサイトと同じパスワードを使い回さないようにできる。認証コードやクレジットカード情報の提供を求めるSMSを受け取ったら、先にブランドの公式窓口で確認する。", "a": "事業者の説明は、すでに所管機関に通報し、対応措置を取っているというものだ（自由時報）。この立場は通報と処理に重点を置く。", "b": "所管機関の説明は、個人情報への影響範囲を明らかにするというもので（中央社）、この立場は、流出したデータの種類と件数、そしてコンプライアンス上の不備があったかどうかに注目する。", "say": "確認されているのは、プラットフォームのデータベースが自動化された攻撃を受け、一部のデータが抜き取られ、デジタル発展部が行政検査を開始したことだ。未確認なのは、流出件数とデータの種類だ。今後は事業者とデジタル発展部が公表する影響範囲に注目する。", "src": "自由時報（91APPのデータベースが攻撃被害、デジタル発展部が行政検査を開始、10月20日）· 中央社（91APPのデータベースに無断アクセス、10月20日）"},
+    "i3":{"kick": "✓ 2社", "title": "米国、ウクライナへのパトリオットミサイル輸送を保留　ワシントン・ポスト、情報筋としてヘグセス氏を名指し", "what": "自由時報によると、ワシントン・ポストは19日、政府の情報筋の話として、ウクライナがロシアの激しい空爆に直面するなか、米戦争（国防）長官のヘグセス氏（Pete Hegseth）が先進的なパトリオットミサイルシステムの輸送命令への署名を見送っていると伝えた。聯合新聞網の見出しは「ウクライナ、パトリオットミサイルは数発しか残っていないと伝えられる」で、トランプ政権は引き渡しを拒否も承認もしていないとも伝えた。報道は匿名の情報筋が中心で、米国側当局者の正式な説明は報道に見当たらない。", "why": "パトリオットシステムは弾道ミサイルと巡航ミサイルの迎撃に使われ、迎撃弾の消費は多く、補給は遅い。輸送命令に署名がなければ、ウクライナの防空の備蓄に直接影響する。命令は国防長官が署名するため、誰がなぜ見送っているのかは、米国のウクライナ支援の政治的な読み解きに影響する。", "me": "台湾の読者にとって、この報道は米国の軍事援助の決定の仕方を観察する例であり、台湾の防空ミサイルの調達スケジュールとも間接的に関係する。台湾の読者は、その後の米国側の正式な説明に注意したうえで、政策の方向を判断できる。", "a": "報道の一つの見方は、見送りは米国内でウクライナ支援のペースをめぐる意見の相違を反映している、というものだ（自由時報が引用するワシントン・ポスト）。", "b": "もう一つの見方は、トランプ政権が拒否も承認もしていないのはまだ評価中ということで、支援の打ち切りと直ちに読むべきではない、というものだ（聯合新聞網）。", "say": "確認されているのは、ワシントン・ポストが情報筋の話として伝えた報道の内容だ。未確認なのは、米国側が正式に説明するかどうかと、命令がいつ署名されるかだ。きょうはペンタゴンとホワイトハウスの反応を見る。", "src": "自由時報（ウクライナ、米国のパトリオットミサイル輸送を待ちわびる、10月20日）· 聯合新聞網（ウクライナの防空が危機に、パトリオット迎撃弾が底をつく、10月20日）"},
+    "i4":{"kick": "✓ 1社", "title": "台湾シリーズ第3戦、味全ドラゴンズが中信ブラザーズを6対0で完封　シリーズ3勝0敗で王手", "what": "自由時報によると、台湾シリーズ第3戦は20日夜、味全ドラゴンズが中信ブラザーズを6対0で完封し、シリーズ3勝0敗で王手をかけた。報道によると、中信ブラザーズは最初の3戦で1点しか取れず、リーグの過去最少記録を更新した。自由時報はまた、第4戦は21日夜に台北ドームで行われ、ブラザーズは鄭浩均、味全は黄暐傑が先発し、台湾シリーズ史上初めて、海外でプレーした経歴を持つドラフト1位指名の投手同士が同じ試合で先発して投げ合うと伝えた。", "why": "優勝決定シリーズが7戦4勝制の場合、3勝0敗はあと1勝で優勝を決めることを意味し、劣勢のチームは連勝しなければ逆転の機会がない。打線が3試合続けて得点が少なすぎたため、ブラザーズの采配の負担は第4戦の先発メンバーに集中している。", "me": "ファンは第4戦の中継とチケット情報に注意し、会場に行く前に交通と天気を確認しておくとよい。台風・薔琵の影響は金曜、土曜に最も大きくなると予想されており、21日夜の日程を変更するという報道はない。", "a": "味全の説明は、外国人投手3人の安定した投球がリードの理由だというものだ（自由時報）。", "b": "ブラザーズの説明は、窮地の一戦に全員で臨むというものだ（自由時報）。", "say": "確認されているのは、第3戦のスコアとシリーズの戦績、第4戦の先発投手だ。未確認なのは、シリーズの最終結果だ。ブラザーズは最初の3戦で1点しか取っておらず、打線が第4戦で立て直せるかが焦点だ。きょうは第4戦の打線と投手の継投を見る。", "src": "自由時報（台湾シリーズ第3戦と第4戦の先発、10月20日）"},
+    "i5":{"kick": "✓ 1社", "title": "鄭麗文氏が嘉義市に電撃訪問、民衆党の市長選候補・張啓楷氏の後援会で応援", "what": "中央社によると、民衆党の嘉義市長選候補の張啓楷氏は20日夜、嘉義市の鎮天宮廟前で後援会の発会式を開いた。国民党主席の鄭麗文氏は約10分間立ち寄ってあいさつし、黄敏恵嘉義市長を大切に思うなら、藍白共同推薦の張啓楷氏に投票すべきだと語った。報道は、民進党の候補者やほかの候補者の反応には触れていない。", "why": "藍白共同推薦とは、国民党と民衆党が同じ選挙区で同じ候補者を支持することで、票の分散を避けるのが目的だ。嘉義市は首長選の焦点の一つで、党主席が駆けつけて応援するのは、支持者に協力のシグナルを送るためだ。", "me": "嘉義市の有権者は、党派の協力の声の大きさだけでなく、候補者の市政の公約にも注目できる。選挙前の行事での発言は多くが選挙向けの訴えで、具体的な政策は候補者が示す公約で確かめる必要がある。", "a": "藍白の協力を支持する見方は、候補者を共同で推せば支持者をまとめて票の分散を避けられる、というものだ（中央社）。", "b": "もう一つの見方は、市政の選択はやはり候補者の行政能力に立ち返るべきで、陣営のラベルではない、というものだ。この立場は公約の細部に注目する。", "say": "確認されているのは、20日夜の後援会発会式と、鄭麗文氏のあいさつの内容だ。未確認なのは、この応援が選挙情勢に与える実際の影響で、黄敏恵氏本人が会場にいたという報道も見当たらない。今後は嘉義市長選の世論調査と、ほかの陣営の反応に注目する。", "src": "中央社（鄭麗文氏が嘉義市に電撃訪問、張啓楷氏の後援会発会式、10月20日）"}
+  };
+  const G = {
+    "南科管理局":{"f": "機関", "d": "南部科学園区管理局。園区内の工場や工事現場の行政と労働検査を所管する。", "w": "TSMC楠梓工場の工事現場に工事停止命令を出した。"},
+    "楠梓":{"f": "地名", "d": "高雄市楠梓区。TSMC高雄工場が置かれている園区。", "w": "事故はTSMCの楠梓園区で起きた。"},
+    "外注業者":{"f": "商業", "d": "発注元の工事を引き受ける下請けの業者。", "w": "転落した作業員4人は外注業者の人員だった。"},
+    "ボルト":{"f": "工事", "d": "鉄骨をつなぐ金属の締結部品。", "w": "ボルトが折れた疑いで鉄骨が落下した。"},
+    "鉄骨":{"f": "工事", "d": "鋼材で組んだ建築構造。", "w": "クレーンで鉄骨を吊り上げていた際に事故が起きた。"},
+    "OHCA":{"f": "医療", "d": "病院到着前心肺機能停止。搬送時にすでに呼吸も心拍もない状態を指す。", "w": "南科管理局は2人がOHCAだったと説明した。"},
+    "工事停止命令":{"f": "法律", "d": "所管機関が現場に作業の中止を求めること。", "w": "管理局は事故現場に工事停止命令を出した。"},
+    "職業安全衛生法":{"f": "法律", "d": "職場の安全と雇用主の責任を定める法律。", "w": "今後、これに基づいて違反の認定と処分を行う。"},
+    "請負":{"f": "法律", "d": "発注者が工事を他者に任せて完成させる契約関係。", "w": "TSMCは、この現場は請負に出した範囲だと述べた。"},
+    "TSMC":{"f": "企業", "d": "台湾の半導体受託製造の最大手で、台湾株で最も時価総額の大きい銘柄。", "w": "事故が起きたのはTSMCの新設現場。"},
+    "フィラデルフィア半導体指数":{"f": "財経", "d": "米国の半導体株の動きを追う指数。", "w": "8日続落に歯止めをかけた。"},
+    "加権指数":{"f": "財経", "d": "台湾証券取引所の全体の株価指数。", "w": "20日は46,292.93点で終えた。"},
+    "季線":{"f": "財経", "d": "直近60取引日の平均価格を結んだ線で、中期の下値支持線として見られることが多い。", "w": "指数は再び季線まで下げた。"},
+    "外国人投資家":{"f": "財経", "d": "外国の機関投資家。台湾株を売買するとき、資金の出入りに影響する。", "w": "機関投資家は外国人投資家の動向を見る必要があると述べた。"},
+    "機関投資家":{"f": "財経", "d": "証券市場の機関投資家や調査機関。", "w": "機関投資家は、持ちこたえられるかは外国人投資家次第とみる。"},
+    "台湾ドル":{"f": "財経", "d": "台湾の通貨。対米ドル相場は毎日動く。", "w": "昼に1.6角超下げた。"},
+    "V字反転":{"f": "財経", "d": "値動きがいったん急落してから回復し、形がV字に見えること。", "w": "指数は取引時間中に一時V字反転してプラス圏に浮上した。"},
+    "利益誘導":{"f": "法律", "d": "公務員や関係者が特定の相手に不正な利益を得させること。", "w": "農道事件は東映リゾートへの利益誘導が疑われている。"},
+    "東映リゾート":{"f": "地名", "d": "台東県のリゾート施設で、呉秀華氏の一族が出資しているとされる。", "w": "農道拡幅事件はこれとの関係が指摘されている。"},
+    "農道":{"f": "工事", "d": "農業用に整備または拡幅された道路。", "w": "農道の拡幅事件が不正の核心だ。"},
+    "台東地方検察署":{"f": "機関", "d": "台東地域の刑事捜査と起訴を担当する検察機関。", "w": "呉俊立氏は夜に連れて行かれ再聴取を受けた。"},
+    "再聴取":{"f": "法律", "d": "検察官が捜査の途中で被告や証人を改めて尋問すること。", "w": "夜に台東地方検察署へ連れて行かれ再聴取を受けた。"},
+    "証人":{"f": "法律", "d": "知っている事実を検察・警察や裁判所で述べる人で、被告とは立場が異なる。", "w": "選挙対策本部は呉俊立氏は証人だと述べた。"},
+    "議長":{"f": "機関", "d": "県や市の議会の長。", "w": "呉秀華氏は台東県議会の議長だ。"},
+    "新北地方法院":{"f": "機関", "d": "新北地方法院。新北地域の第一審事件を審理する。", "w": "兵役逃れ事件の判決を言い渡した。"},
+    "執行猶予":{"f": "法律", "d": "有罪判決のあと一定期間は刑を執行せず、その間に再び罪を犯さなければ収監されない制度。", "w": "芸能人9人はいずれも執行猶予となった。"},
+    "国庫":{"f": "法律", "d": "国の公金を管理する金庫。執行猶予の条件として被告に納付を求めることが多い。", "w": "30万〜130万元を納めなければならない。"},
+    "義務労務":{"f": "法律", "d": "執行猶予の条件の一つで、被告に無償の労務の提供を求めるもの。", "w": "判決には義務労務が付いた。"},
+    "自首":{"f": "法律", "d": "犯罪のあと自ら捜査機関に申し出て裁判を受けること。", "w": "被告の多くが自首を主張した。"},
+    "第一審":{"f": "法律", "d": "事件が最初に裁判所で審理され、判決が出ること。", "w": "20日に第一審判決が出たが、なお控訴できる。"},
+    "山梨県":{"f": "地名", "d": "日本の中部の県で、富士河口湖町が属する。", "w": "事件は山梨県で起きた。"},
+    "司法解剖":{"f": "法律", "d": "死因を調べるため、検察・警察の依頼で専門家が行う解剖。", "w": "日本の警察が解剖の結果を公表した。"},
+    "夜間外出禁止令":{"f": "治安", "d": "特定の時間帯に住民の外出を制限する措置。", "w": "フランス北部の4都市が夜間外出禁止令を発表した。"},
+    "公的債務":{"f": "財経", "d": "政府が積み上げた借入金の総額。", "w": "投資家は公的債務の高まりを懸念している。"},
+    "デジタル発展部":{"f": "機関", "d": "デジタル発展部。台湾でデジタルと情報セキュリティの政策を所管する機関。", "w": "91APPに行政検査を開始した。"},
+    "行政検査":{"f": "法律", "d": "所管機関が、事業者が規定を守っているかを法に基づいて検査すること。", "w": "デジタル発展部が91APPに行政検査を行っている。"},
+    "個人情報":{"f": "法律", "d": "個人を識別できる情報で、個人情報保護法の規制を受ける。", "w": "91APPの一部のデータが抜き取られた。"},
+    "パトリオットミサイル":{"f": "軍事", "d": "米国製の防空ミサイルシステムで、ミサイルや航空機を迎撃する。", "w": "ウクライナは輸送を待っている。"},
+    "ヘグセス":{"f": "人物", "d": "ピート・ヘグセス氏。報道に出てくる米戦争（国防）長官。", "w": "輸送命令への署名を見送ったとされる。"},
+    "ワシントン・ポスト":{"f": "メディア", "d": "米国の日刊紙で、政治と国家安全保障の報道で知られる。", "w": "情報筋の話として、輸送が保留されていると報じた。"},
+    "台湾シリーズ":{"f": "スポーツ", "d": "台湾プロ野球（中華職棒）の年間王者を決めるシリーズ。", "w": "味全ドラゴンズが3勝0敗とした。"},
+    "王手":{"f": "スポーツ", "d": "口語で、シリーズ優勝まであと1勝に迫ること。", "w": "味全ドラゴンズが王手をかけた。"},
+    "藍白共同推薦":{"f": "政治", "d": "国民党と民衆党が同じ選挙区で同じ候補者を支持すること。", "w": "嘉義市長選の張啓楷氏。"},
+    "民衆党":{"f": "政党", "d": "台湾民衆党。柯文哲氏が創設した。", "w": "張啓楷氏は民衆党の候補者だ。"},
+    "後援会":{"f": "政治", "d": "候補者のために支持者と資源を集める組織。", "w": "張啓楷氏が後援会の発会式を開いた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

@@ -1,0 +1,445 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開する。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>10,840.35</b>FTSE100 · 木曜の終値、+1.08%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>&mdash;</b>ポンド/ドル（GBP/USD） · 木曜の終値は未確認</div>
+    </div>
+    <div class="dateline"><span>第12号 · 朝刊</span><b>2026年10月16日（金）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="brand">
+      <div class="kick">英国 · 裁判<span>報道照合 ✓ 9社 · 法廷で述べられた主張であり、認定ではない。答弁は、先のニューヨーク・タイムズの報道による</span></div>
+      <h2 class="hl">ラッセル・ブランド氏の裁判で最初の女性が証言　同氏は無罪と推定されており、証言はまだ何も検証されていない</h2>
+      <p class="deck">木曜、同氏を告発する最初の女性が法廷で証言した。前日には検察側が同氏を「冷酷な」加害者だと述べていた。これまでの報道はすべて、一方の側の説明である。</p>
+      <div class="body">
+        <p>ロンドンの裁判所で開かれているラッセル・ブランド氏の裁判は2日目に入り、検察側の冒頭陳述から、同氏を告発する最初の女性の証言に移った。BBCは、女性が、申し立てられた暴行のせいで妊娠したのではないかと怖くなったと法廷で述べたと報じた。ガーディアンとイブニング・スタンダードは、その最中に同氏が「ただの楽しみだ」と言ったという彼女の説明を伝え、スタンダードの見出しは、申し立てられた出来事を労働党大会の後に位置づけている。テレグラフとタイムズは、同氏が事前に、下着姿の自分を撮影するよう彼女に頼んだと法廷で述べられたと報じ、オーストラリアのABCは、ホテルの部屋で上半身裸の同氏を写した写真が法廷で示されたと伝えた。ロイターは、彼女が自分を責めたと警察に話したと報じ、スタンダードは、声を封じられ、抵抗できなかったと感じたという彼女の説明を掲載した。性犯罪事件で被害を訴える人は生涯にわたって匿名が守られるため、ここでは名前を記さない。</p>
+        <p>水曜、検察側はブランド氏を「冷酷で」「計算高く人を操る」性的加害者だと述べた。ITVニュース、テレグラフ、デイリー・メール、ガーディアンが伝えた。メール紙とオランダ紙のデ・テレフラーフは、検察側が、5,000人の女性と関係を持つことを目標にしていたと述べたと報じ、メール紙だけが、同氏が標的にしたとされる6人の女性は互いに面識がなかったと報じた。木曜、同氏は「とても恵まれている」と述べて出廷したと、インデペンデントが報じた。同氏は先の段階で無罪を主張したと、木曜に私たちが引用したニューヨーク・タイムズの報道は伝えている。私たちが確認した期間の報道のうち、答弁を繰り返したものも、弁護側の反応を載せたものもなかった。冒頭陳述は、検察側が立証すると述べる内容の表明であって、証拠ではない。</p>
+        <p>この裁判は、過去1日で英国で最も広く報じられた話題で、少なくとも9社が取り上げており、審理が続く間、毎朝戻ってくる。注目点は、弁護側が反対尋問で最初の女性の証言をどう検証するか、そして、ほかの被害を訴える人たちの番が来たときに何を語るかだ。法廷の日程も、きょう開廷するかどうかも確認できなかったため、示さない。報道は、法廷で述べられたことの公正で正確な説明に限られ、そのため一方の言い分が先に聞かれる。1日分の証言から、どちらの向きであれ評決を読み取ってはならない。ブランド氏は、陪審が別の判断を下すまで無罪と推定される。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>0.1%</b><span>8月の英国経済の成長率、とBBCとフィナンシャル・タイムズが報じた</span></div>
+        <div><b>24億ポンド</b><span>テムズ・ウォーターが経営破綻を避けるために追加で求めている額、とガーディアンが報じた</span></div>
+        <div><b>≈ 5,000万ポンド</b><span>グレートブリテンの送電網の需給調整にかかる費用は1日5,000万ポンド近く、とガーディアンが報じた</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="drought">
+      <div class="kick">英国 · 環境<span>報道照合 ✓ 7社 · 「100年で最も乾燥した時期」という表現はミラー紙のみ</span></div>
+      <h3 class="hl">イングランドの一部で深刻な干ばつが宣言され、政府は消費者を守る計画を発動</h3>
+      <div class="one">
+        <p>木曜、イングランドの6地域で深刻な干ばつが宣言されたとガーディアンが報じ、BBCとスカイニュースはイングランド南部の一部だと伝えた。政府は消費者を守る計画を発動したと、GOV.UKが報じた。BBCは現在実施中のホース使用禁止の案内記事を掲載し、イブニング・スタンダードは水の供給が「非常に大きな圧力にさらされている」と伝えた。インデペンデントは干ばつを記録的な猛暑の夏と結びつけ、ミラー紙は100年以上で最も雨の少ない時期に続くものだと述べたが、この主張を載せていたのはこの新聞だけだった。ミラー紙は6つの州の一覧も掲載したが、ほかの報道機関の見出しは地域名を挙げていなかったため、自分が利用する水道会社に確認してほしい。ロンドンとテムズ川流域に水を供給するテムズ・ウォーターは、今年か2027年初めに経営破綻するのを避けるため、さらに24億ポンドを求めていると、ガーディアンが報じた。この金額は、私たちが確認した限りほかのどの報道機関も載せていない。ガーディアンのニルス・プラトリー氏は、業界の改革はそれほど速く進んでいないと書いた。これとは別に、オックスフォード・メールは、テムズ・ウォーターの水道管が破裂し、オックスフォードシャーの家庭で水がほとんど、またはまったく出なくなったと報じた。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>ホース使用禁止<i>環境</i></b><p>水道会社が出す一時的な規則で、庭の散水や洗車にホースを使うことを禁じるもの。BBCによれば、禁止はいま干ばつの地域で実施されている。水道水を節約するためのもので、供給が尽きたしるしではない。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="wards"><b>NHSイングランドの指針、患者を生まれたときの性別で病棟に配置</b><em>ガーディアン、スカイニュース、イブニング・スタンダード、テレグラフによると、トランスジェンダー女性は女性専用病棟に入れられなくなる。見出しは開始日を示していない。</em><span>英国 · 医療 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="reform"><b>ファラージ氏、人種差別的な発言を撮影された議員らをめぐり、リフォームの候補者審査を擁護</b><em>BBC、FT、ITVニュース、スタンダードが、リフォームUKの地方議員をめぐる騒動を報じている。バーナム氏は、党は直ちに対応すべきだと述べている。</em><span>英国 · 政治 · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="sussex"><b>ハリー王子とメーガン、英国に戻って初めて二人そろって公の場に</b><em>ロイター、BBC、ミラー紙、スタンダードによると、メーガンはノッティンガム訪問で「戻ってこられてうれしい」と語った。スタンダードは、二人がグレンフェルの女性たちと会ったと伝えている。</em><span>英国 · 王室 · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="equality"><b>平等監視機関、緑の党に書簡　「シオニズムは人種差別」の動議をめぐり</b><em>BBC、イブニング・スタンダード、デイリー・メールが書簡を報じた。メール紙は、労働党が地方での取り決めを打ち切ると警告していると加えているが、ほかの報道機関は伝えていない。</em><span>英国 · 政治 · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="selloff"><b>ハイテク株、AIへの債務懸念で再び下落　それでもFTSE100は1.08%高で引ける</b><em>ロイターとガーディアンが売りを報じ、ナスダック先物は1%下げ、CoreWeaveは下落した。ロンドンの終値は市場データによる。</em><span>市場 · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="budget">
+      <div class="kick">英国 · 経済<span>報道照合 ✓ 9社 · 予算案の詳細は関係筋の説明にとどまる。90億ポンドという数字はイブニング・スタンダードのみ</span></div>
+      <h3 class="hl">8月の英国経済は0.1%成長、ヒーリー氏の初の予算案を前に、財務相は銀行への増税を示唆</h3>
+      <div class="body">
+        <p>8月の経済は0.1%成長したと、BBCとフィナンシャル・タイムズが報じた。国家統計局が木曜午前7時に公表した数字による。スカイニュースは、当初の見方より強い予想外の成長だと伝え、シティAMは生産の伸びが押し上げたとした。シティAMの朝のライブブログは経済が縮小すると見込んでおり、テレグラフは同じ発表を予算案を前にした減速として描いたため、数字は同じでも報道の論調は分かれている。財務相のジョン・ヒーリー氏はIMFを訪れた際、予算案は「厳しい時期」を反映したものでなければならないと述べたと、イブニング・スタンダードが報じ、財政赤字の削減で「路線を守る」と約束したと、FTが報じた。財務省の発表は、国際的な逆風のなかで経済の回復力を守るのが自分の仕事だと同氏が述べたと引用した。</p>
+        <p>FTは、ヒーリー氏が予算案での銀行への課税を示唆したと報じ、ガーディアンは銀行への増税に踏み切る構えだと伝え、BBCは銀行側が打撃を覚悟していると述べた。私たちが確認した限り、財務省が税率や金額を示した報道はない。イブニング・スタンダードは労働組合による少なくとも90億ポンドの課徴金の要求を載せたが、この数字はスタンダードのみのものだ。ロビー活動はすでに始まっている。シティAMとスタンダードは、経営者らがロンドンの「オフィス税」の10億ポンド引き上げに反対を警告したと報じ、シティAMは、エンテインとランクが、増税は賭け屋の店舗と雇用を脅かすと警告していると伝えた。メール紙は、200人の経営者がビジネスレートの是正を求める書簡を送ったと報じた。スタンダードは、豪邸税の可能性についての解説を掲載したが、導入が計画されているという確認は得られていない。予算案は、今週初めに報じられたとおり、10月28日に予定されている。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="ukraine">
+      <div class="kick">世界 · ウクライナ<span>報道照合 ✓ 9社 · スターリンクと資産の主張は、FT、ガーディアン、キーウの関係筋の報道による</span></div>
+      <h3 class="hl">ストリーティング氏、ウクライナをめぐる英国の立場をワシントンで訴える　ゼレンスキー氏は製油所への新たな攻撃を命令、マスク氏はスターリンクをめぐり米国を名指し</h3>
+      <div class="body">
+        <p>国防相のウェス・ストリーティング氏は、スターリンクをめぐる騒動のあと、ワシントン訪問でウクライナを支援するよう米国に求めたと、ガーディアンが報じた。GOV.UKは、戦略国際問題研究所（CSIS）での同氏の演説を掲載した。水曜にはゼレンスキー大統領がロンドンを訪問しており、アンディ・バーナム首相が英国の支援は「変わらない」と述べたと、BBCが報じた。その後バーナム氏は、トランプ氏がウクライナを裏切ったと言うのを避けたと、イブニング・スタンダードが報じた。キーウは、スターリンクの制限でドローンが影響を受けていると述べている。イーロン・マスク氏は、制限の背後に米国政府がいるとほのめかしたと、ガーディアンとデイリー・メールが報じた。国防省の関係筋はキーウ・インディペンデントに対し、サービスは回復したと述べたが、私たちが確認した限りほかの報道機関にはない。</p>
+        <p>ゼレンスキー氏は、ウクライナがロシアの製油所への攻撃を再開すると述べたと、BBCとロイター（FTを引用）が報じ、ブルームバーグは、同氏が新たな攻撃を命じたと伝えた。ロイターは別に、地方知事によれば、ドローン攻撃でリャザンの製油所が火災になったと報じたが、見出しは両者を結びつけていない。FTは、ワシントンが和平協議を再開させるため、ロシアの資産の一部の凍結解除を持ち出したが、欧州の当局者はこの案を拒んでいると報じ、ロイターもこの報道を伝えた。クレムリンは、トランプ氏との取引を経てロシアがディーゼルの輸出を再開したと述べたと、ロイターが報じ、イタリアの報道機関は、ホワイトハウスがこの取引をジョルジャ・メローニ氏に対して擁護したと伝えた。FTはまた、EUの首脳がゼレンスキー氏に、トランプ氏への批判を抑えるよう促すと報じた。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="donaldson">
+      <div class="kick">英国 · 裁判 · 北アイルランド<span>報道照合 ✓ 6社 · 量刑はロイター、ガーディアン、ミラー紙、イブニング・スタンダードの報道による</span></div>
+      <h3 class="hl">元DUP党首ジェフリー・ドナルドソン氏、児童への性犯罪で禁錮15年</h3>
+      <div class="body">
+        <p>民主統一党の元党首ジェフリー・ドナルドソン氏は木曜、児童への性犯罪で禁錮15年の判決を受けたと、ロイター、ガーディアン、ミラー紙、イブニング・スタンダードが報じた。BBCはこの日の早い時間に、罪状にはレイプが含まれると伝えていた。裁判官は同氏の「壊滅的な転落と不名誉」と述べ、判決が言い渡されたとき同氏は感情を見せなかったと、スタンダードが報じた。スタンダードはまた、DUPが同氏は刑の「一日一日を受けて当然だ」と述べたと伝えた。スタンダードは、この判決を元議員の劇的な失墜の完結だと評した。</p>
+        <p>スタンダードは、「奪われた子ども時代」と述べる被害者の陳述と、有罪判決につながった証拠についての別の記事を掲載したが、私たちはそれを繰り返さない。私たちが確認した見出しには、釈放までに服役すべき最短期間も示されておらず、上訴に触れたものもなかったため、どちらも報じない。被害者は性犯罪に関する法律により名前を出せず、ここでは被害者が特定されるような記述はない。判決で刑事事件は終わる。DUP、そして北アイルランドのより広い統一派政党への政治的な影響は、私たちが確認した報道が取り上げていない点である。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>ヘンリー・ノワク氏を殺害した犯人の母親が早期に刑務所から釈放される見通しだと、テレグラフ、ITV、GBニュースが報じた。スタンダードは、国外退去になりうると伝えている<span>Telegraph · ITV · GB News</span></li>
+        <li>内務大臣、エリトリアにビザ上の制裁を警告<span>GOV.UK · Guardian</span></li>
+        <li>イングランド代表主将のハリー・ケイン、バイエルン・ミュンヘンと2029年までの新契約で原則合意<span>Sky Sports · Bavarian Football Works</span></li>
+        <li>リヨンがクリスタル・パレスに3-2で勝利、イーグルスにとってヨーロッパリーグ初のアウェー戦<span>BBC</span></li>
+        <li>マドゥロ氏、ニューヨークで拷問に関連する新たな罪状について無罪を主張<span>BBC · Reuters</span></li>
+        <li>トランプ氏、超党派の反発を受け、国防総省はフォートフッドの銃撃犯の死刑執行を生中継しないと述べる<span>AP · Reuters</span></li>
+        <li>教皇レオの肺は手術後の回復が良好で、術後の検査も正常だと医師らが述べる<span>AP</span></li>
+        <li>グレートブリテンの送電網の需給調整の費用が、1日5,000万ポンド近くに達した<span>Guardian</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「マンチェスター・シティが、PSGに喫した4-2の敗戦について法的な異議申し立てを起こした」</b> <span>私たちが確認した期間では、パディ・パワー・ニュースだけが報じた。BBCとガーディアンの試合レビューは結果を確定したものとして扱っており、申請があったと報じた報道機関は見当たらない。</span></div>
+        <div><b>「バーナム氏は、マンチェスター・シティの所有者との関係を隠した」</b> <span>メール紙は隠蔽と削除された申告を主張している。BBCは、首相が記録を手作業で洗い出すよう求めたと報じ、スカイニュースは、政府が同紙の言う「バーナム・アブダビ問題」の騒動のなかで資料を公表すると伝えている。私たちが確認した見出しのどれも、規則違反があったことを示していない。</span></div>
+        <div><b>「ウクライナでのスターリンクのサービスが回復した」</b> <span>キーウ・インディペンデントは国防省の関係筋を引いている。ガーディアンは、マスク氏が制限の責任を米国政府に帰していると報じており、私たちが確認した報道にはワシントンの返答がなかった。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/16 金</b><span>ロンドンでラッセル・ブランド氏の裁判が続く。弁護側はまだ最初の女性の証言を検証しておらず、法廷の日程も確認できなかった・ストリーティング氏のワシントンでの演説に対する米国の反応の有無と、キーウの製油所攻撃が続くかどうか・ホース使用禁止と政府の干ばつ計画、そしてテムズ・ウォーターの24億ポンドの要請に反応があるか・木曜のハイテク株の売りを受けたロンドン市場。この記事を書いた時点で、ウォール街の木曜の取引は終わっていなかった。</span><b>今週</b><span>バンコクでIMFと世界銀行の年次総会が今週開かれている・NHSイングランドが新しい病棟の指針をどう適用するかの詳細。私たちが確認した見出しには示されていなかった。</span><b>その先</b><span>10月28日の予算案・11月3日の米中間選挙・11月20日のブリュッセルでの英EU首脳会談。</span><b>読者へ</b><span>ホース使用禁止の地域に住んでいる人は、水道会社のウェブサイトで自分に適用される規則を確認してほしい。BBCが対象地域の案内を載せている。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    brand:{kick:"英国 · 裁判 · 報道照合 ✓ 9社",title:"ラッセル・ブランド氏の裁判で最初の女性が証言　同氏は無罪と推定されており、証言はまだ何も検証されていない",
+      what:"ロンドンで開かれているラッセル・ブランド氏の裁判の2日目に、同氏を告発する最初の女性が証言した。BBCは、女性が、申し立てられた暴行のせいで妊娠したのではないかと怖くなったと法廷で述べたと報じた。ガーディアンとイブニング・スタンダードは、同氏が「ただの楽しみだ」と言ったという彼女の説明を伝え、テレグラフとタイムズは、同氏が下着姿の自分を撮影するよう彼女に頼んだと法廷で述べられたと報じた。オーストラリアのABCは、ホテルの部屋で上半身裸の同氏を写した写真が法廷で示されたと伝えた。ロイターは、彼女が自分を責めたと警察に話したと報じた。水曜、検察側は同氏を「冷酷で」「計算高く人を操る」性的加害者だと述べたと、ITVニュース、テレグラフ、メール紙、ガーディアンが報じた。同氏は先の段階で無罪を主張したと、木曜に私たちが引用したニューヨーク・タイムズの報道は伝えている。私たちが確認した期間の報道のなかに、弁護側の反応を載せたものはなかった。",
+      why:"申し立てが、弁護士の説明ではなく証人によって検証されるのは、これが初めてだ。冒頭陳述は証拠ではない。宣誓した証言と反対尋問が証拠になる。この裁判は、過去1日で英国で最も広く報じられた話題でもある。",
+      me:"することは何もない。報道は法廷で述べられたことの公正で正確な説明に限られ、そのため一方の言い分が先に聞かれる。告発した女性の名前は記せない。ブランド氏は、陪審が判断を下すまで無罪と推定される。",
+      a:"公開の法廷での訴追を支持する側は、重大な申し立てはおおやけの場で検証されるのが最善で、被害を訴える人の証言を直接聞くことが公正な裁判の核心だと述べる。",
+      b:"弁護側は、一人の証人の説明は証明ではなく、彼女の証言は反対尋問で争われなければならず、報道が陪審に予断を与えてはならないと主張するだろう。",
+      say:"1日分の証言で決着するものは何もない。注目すべきは、最初の女性に対する弁護側の反対尋問、ほかの被害を訴える人たちの証言、そして何を報じてよいかについての裁判官の判断である。弁護側の主張が聞かれるまで、公正な要約は、重大な申し立てが法廷でなされ、争われている、ということだけだ。",
+      src:"BBC、The Guardian、Evening Standard、The Telegraph、The Times、ABC（オーストラリア）、Reuters、ITV News、Daily Mail、De Telegraaf、The Independent、The New York Times（先の報道） · 2026年10月14〜15日"},
+    drought:{kick:"英国 · 環境 · 報道照合 ✓ 7社",title:"イングランドの一部で深刻な干ばつが宣言され、政府は消費者を守る計画を発動",
+      what:"木曜、イングランドの6地域で深刻な干ばつが宣言されたとガーディアンが報じ、BBCとスカイニュースはイングランド南部の一部だと伝えた。政府が消費者を守る計画を発動したと、GOV.UKが報じた。BBCは現在実施中のホース使用禁止の案内記事を掲載し、イブニング・スタンダードは水の供給が「非常に大きな圧力にさらされている」と伝えた。インデペンデントは干ばつを記録的な猛暑の夏と結びつけた。ミラー紙は100年以上で最も雨の少ない時期に続くものだとし、6つの州の一覧を掲載したが、ほかの報道機関の見出しは地域名を挙げていなかった。テムズ・ウォーターが今年か2027年初めに経営破綻するのを避けるため、さらに24億ポンドを求めていると、ガーディアンが報じた。",
+      why:"干ばつは、水道会社が何を供給できるか、家庭がその水で何をしてよいか、そして供給する会社の財務に影響する。宣言が出ると計画が動き出し、庭や事業より先に家庭の蛇口から水が出続けるようにすることが意図されている。",
+      me:"お住まいの地域でホース使用禁止が適用されるかどうか、水道会社のウェブサイトで確認してほしい。いま水の使用を減らせば、貯水池の回復に役立つ。",
+      a:"運動家は、水不足が繰り返されるのは水道事業への投資が長年不足してきた証拠で、各社は利用者に節水を求める前に漏水を直すべきだと述べる。",
+      b:"水道会社と閣僚は、記録上で最も雨の少ない時期には需要を管理しなければならず、雨が降らないときには、使用禁止と干ばつ計画が適切な手段だと述べる。",
+      say:"天候と財務は切り分けて考えたい。干ばつは事実で、宣言は公の記録である。24億ポンドの要請はガーディアンだけのもので、認められるかどうかは分からない。対象地域が増えるか、そして政府がテムズ・ウォーターについて何と言うかに注目したい。",
+      src:"The Guardian、BBC、Sky News、GOV.UK、Evening Standard、The Independent、Mirror、Oxford Mail · 2026年10月15日"},
+    wards:{kick:"英国 · 医療 · 報道照合 ✓ 4社",title:"NHSイングランドの指針、患者を生まれたときの性別で病棟に配置",
+      what:"NHSイングランドの新しい指針により、トランスジェンダー女性はもはや女性専用の病棟に入れられず、患者は出生時の性別に従って配置されると、ガーディアン、スカイニュース、イブニング・スタンダード、テレグラフが報じた。テレグラフの見出しは、NHSがトランスジェンダー女性を女性の空間から「ようやく」締め出したとしており、ガーディアンの見出しはより中立的だ。私たちが確認した見出しは、開始日も、個室や例外がどう扱われるかの詳細も示していない。",
+      why:"性別の法的な意味をめぐって争いのあるなかで、イングランドのNHSの病院に一つの規則を定めるものだ。病院、職員、患者は、これを適用しなければならなくなった。",
+      me:"ご自身や家族がイングランドのNHSの病院に入院する予定なら、指針がどう適用されるか病棟に尋ねてほしい。私たちが確認した報道は、いつ始まるかを伝えていない。",
+      a:"指針を支持する側は、男女別の病棟が女性患者のプライバシーと尊厳を守ると述べる。",
+      b:"批判する側は、トランスジェンダー女性を、自らの生活に合ったケアから排除するもので、病院を避ける人が出かねないと述べる。",
+      say:"見出しは規則では一致しているが、論調では一致していない。重要になるのは、報道がまだ示していない詳細、つまり開始日、個室の扱い、苦情の処理の仕方である。",
+      src:"The Guardian、Sky News、Evening Standard、The Telegraph · 2026年10月15日"},
+    reform:{kick:"英国 · 政治 · 報道照合 ✓ 5社",title:"ファラージ氏、人種差別的な発言を撮影された議員らをめぐり、リフォームの候補者審査を擁護",
+      what:"ナイジェル・ファラージ氏は、地方議員らが人種差別的な発言をする様子が撮影されたことを受け、リフォームUKの候補者審査を擁護したと、BBCが報じた。FTは、映像に議員や候補者が人種差別的な発言をする様子が映っていたと報じ、ITVニュースは、ITVの「衝撃的な」調査を受けて、議員らが辞任を求められたと伝えた。イブニング・スタンダードは、ロンドンの議員が国王は「ひそかなイスラム教徒だ」と述べたと報じ、ファラージ氏が体制側は「われわれを締め出したがっている」と述べたと引用した。ミラー紙とスタンダードは、アンディ・バーナム首相がリフォームは人種差別に直ちに対応すべきだと述べたと報じた。デイリー・メールは、国王についての発言に関する別の主張を報じたが、私たちが確認した限りほかの報道機関にはない。",
+      why:"この騒動は、急成長する政党が地方選挙の候補者をどう審査するか、そして党首がどう対応するかを試すものだ。労働党と保守党が、リフォームを直接攻撃する道を選んでいることも示している。",
+      me:"お住まいの議会に、映像で名前が挙がったリフォームの議員がいる場合、地元で圧力が高まり、補欠選挙が行われる可能性がある。報道のどれも、法律を変えるものではない。",
+      a:"批判する側は、映像は偶発的な発言ではなく一つのパターンを示しており、候補者審査は手薄すぎると述べる。",
+      b:"リフォームの擁護派は、党は規則を破った個人に対して行動しており、体制側がこの件を党への攻撃に使っていると述べる。",
+      say:"試されるのは、党首が映像の前で何を言うかではなく、党が名指しされた人々に何をするかだ。辞任、資格停止、そして公表された審査手続きに注目したい。",
+      src:"BBC、Financial Times、ITV News、Evening Standard、Mirror、Daily Mail · 2026年10月15日"},
+    sussex:{kick:"英国 · 王室 · 報道照合 ✓ 5社",title:"ハリー王子とメーガン、英国に戻って初めて二人そろって公の場に",
+      what:"ハリー王子とメーガンが英国に戻って初めて二人そろって公の場に姿を見せたと、ロイター、BBC、ミラー紙、イブニング・スタンダード、タイムズが報じた。BBCは、訪問先はノッティンガムだったとし、ミラー紙は群衆が二人を歓迎したと伝えた。メーガンは「戻ってこられてうれしい」と述べたと、スタンダードとミラー紙が報じた。スタンダードは、グレンフェルの「女性たち」との再会と、カップケーキの飾り付けの催しを伝えた。ミラー紙とメール紙はこれを「王室公務ではない」訪問と呼び、ミラー紙は、夫妻がこうした公務を行うべきかどうかの世論調査を実施した。",
+      why:"二人の英国への帰還は、最も注目される王室の話題の一つで、二人の公的な役割の形はまだ定まっていない。",
+      me:"読者にとって変わることはない。この話は王室内の力学についてのもので、公共政策についてではない。",
+      a:"",
+      b:"",
+      say:"写真はニュースではない。重要なのは、公務が続くのか、だれが費用を出すのか、そして宮殿が二人の役割について何と言うかである。",
+      src:"Reuters、BBC、Mirror、Evening Standard、The Times、Daily Mail · 2026年10月15日"},
+    equality:{kick:"英国 · 政治 · 報道照合 ✓ 3社",title:"平等監視機関、緑の党に書簡　「シオニズムは人種差別」の動議をめぐり",
+      what:"平等監視機関は、緑の党の「シオニズムは人種差別」という方針の影響を調べるため、同党に書簡を送ったと、BBCとイブニング・スタンダードが報じた。デイリー・メールは、監視機関が、この動議により英国のユダヤ人が「脆弱だと感じている」と述べたと報じ、労働党が緑の党との地方での取り決めを打ち切ると警告しているとも伝えた。労働党の警告を報じたのはメール紙だけである。スタンダードは、この話を展開に合わせて1日に3回報じた。",
+      why:"規制当局が、政党の方針が平等法で保護される人々にどう影響するかを問うている。主流政党に対する異例の動きで、動議をめぐる騒動を続けさせている。",
+      me:"有権者にとって変わることはない。書簡は問いを投げかけるもので、判断を下すものではない。",
+      a:"動議を批判する側は、これはユダヤ人に敵対的で、党は説明しなければならないと述べる。",
+      b:"緑の党の擁護派は、動議はイスラエルに関する政治的立場であり、ユダヤ人への敵意ではないと述べる。",
+      say:"書簡は手続きの始まりにすぎない。緑の党の返答と、監視機関がどの法律を適用しているのか明らかにするかに注目したい。",
+      src:"BBC、Evening Standard、Daily Mail · 2026年10月15日"},
+    selloff:{kick:"市場 · 報道照合 ✓ 2社",title:"ハイテク株、AIへの債務懸念で再び下落　それでもFTSE100は1.08%高で引ける",
+      what:"ロイターは、米国の半導体株が、今回の売りを経て時価総額で約2兆ドルを失う見通しで、AI関連の売りが債務懸念で深まるなかナスダック先物が1%下げ、CoreWeaveの株と債券が下落したと報じた。ガーディアンのビジネスブログは、市場が英国の成長統計を待つなか売りが強まっていると伝え、シティAMの朝のブログはロンドン株の小幅安を予想していた。市場データによれば、FTSE100は木曜、1.08%高の10,840.35で引けた。ポンドの木曜の終値は2つの情報源で確認できなかったため、ポンド・ドルの相場は示していない。ロイターは、米国のデータ配信に影響したナスダックのネットワーク障害も報じた。",
+      why:"世界のハイテク株が市場を牽引しており、英国の年金基金や投資家もそれを保有している。ロンドンの指数は石油、銀行、鉱業に偏っているため、ハイテク株が下げても上がりうる。",
+      me:"年金や個人貯蓄口座（ISA）が世界株のインデックスファンドを保有している場合、今週は値動きの荒い展開を覚悟してほしい。短期の動きは、長期の計画を変える理由にはならない。",
+      a:"",
+      b:"",
+      say:"FTSEの上昇は、私たちが責任を持てる数字だ。ウォール街の木曜の取引は、この記事を書いた時点で終わっていなかったため、米国の数字は示さない。AIをめぐる債務の懸念が、債券や銀行に波及するかに注目したい。",
+      src:"Reuters、The Guardian、City AM、市場データ · 2026年10月14〜15日"},
+    budget:{kick:"英国 · 経済 · 報道照合 ✓ 9社",title:"8月の英国経済は0.1%成長、ヒーリー氏の初の予算案を前に、財務相は銀行への増税を示唆",
+      what:"8月の経済は0.1%成長したと、BBCとフィナンシャル・タイムズが報じた。木曜に公表された国家統計局の数字による。スカイニュースは予想外の成長と呼び、シティAMは生産の伸びが押し上げたとし、テレグラフは同じ発表を減速として描いた。財務相のジョン・ヒーリー氏はIMF訪問中に、予算案は「厳しい時期」を反映したものでなければならないと述べたとスタンダードが報じ、財政赤字をめぐって「路線を守る」と約束したと、FTが報じた。FTは、同氏が予算案で銀行を狙い撃ちにすることを示唆したと報じ、ガーディアンとBBCも同じ見方を伝えた。イブニング・スタンダードは、労働組合による銀行への少なくとも90億ポンドの課徴金の要求を載せたが、この数字をほかの報道機関は示していない。経済団体は、ロンドンの10億ポンドの「オフィス税」引き上げに反対を警告したと、シティAMとスタンダードが報じた。",
+      why:"好調な成長は財務相の計算を楽にするが、1か月の0.1%は小さく、改定されうる。銀行への課徴金は大半の世帯に触れずに財源を生むが、銀行がコストを転嫁する可能性もある。",
+      me:"10月28日の予算案までは何も変わらない。預金者や借り手は、銀行が課税に対して金利を変えるかに注意してほしい。",
+      a:"銀行課徴金を支持する側は、銀行は健全な利益を上げており、もっと払えると述べる。",
+      b:"批判する側は、課徴金は貸し出しを減らし、顧客のコストを引き上げかねず、企業には減税とビジネスレートの是正が必要だと述べる。",
+      say:"0.1%は事実で、予算案の詳細は関係筋の説明にとどまる。確認したいのは、財務省が銀行への税率か金額を示すかどうかと、追加の借り入れなしに数字が合うかどうかだ。",
+      src:"BBC、Financial Times、Sky News、City AM、The Telegraph、Evening Standard、The Guardian、Daily Mail、HM Treasury · 2026年10月15日"},
+    ukraine:{kick:"世界 · ウクライナ · 報道照合 ✓ 9社",title:"ストリーティング氏、ウクライナをめぐる英国の立場をワシントンで訴える　ゼレンスキー氏は製油所への新たな攻撃を命令、マスク氏はスターリンクをめぐり米国を名指し",
+      what:"国防相のウェス・ストリーティング氏はワシントン訪問で、ウクライナを支援するよう米国に求めたと、ガーディアンが報じ、GOV.UKは戦略国際問題研究所での同氏の演説を掲載した。ゼレンスキー氏は、ウクライナがロシアの製油所への攻撃を再開すると述べたと、BBCとロイター（FTを引用）が報じ、ブルームバーグは同氏が攻撃を命じたと伝えた。イーロン・マスク氏は、ウクライナでのスターリンクの制限の背後に米国政府がいるとほのめかしたと、ガーディアンとメール紙が報じた。キーウ・インディペンデントは、国防省の関係筋の話として、サービスは回復したと伝えた。FTは、ワシントンが和平協議を再開させるため、ロシアの資産の一部の凍結解除を持ち出したが、欧州の当局者はこの案を拒んでいると報じた。クレムリンは、トランプ氏との取引を経てロシアがディーゼルの輸出を再開したと述べたと、ロイターが報じた。",
+      why:"ウクライナ軍は米国の情報とスターリンクに頼っている。これらが制限されれば、欧州の支援はその穴を埋めなければならないが、すぐには埋められないと、ロイターは今週初めに伝えた。製油所への攻撃は、ロシアの燃料輸出を直撃するため、交渉上の駆け引きでもある。",
+      me:"日々の暮らしに直接の変化はない。燃料価格や、戦争が納税者に負わせる費用は、戦争がどれだけ続くか、防空の費用をだれが負担するかによる。",
+      a:"バーナム氏の支持者は、米国が揺れるなか、ウクライナへの公の支持とワシントンでの閣僚のロビー活動こそキーウが必要とするものだと述べる。",
+      b:"懐疑派は、言葉は撤回された米国の支援の代わりにはならず、欧州の首脳らはトランプ氏を公に批判することをためらっていると述べる。",
+      say:"確認されたことと争われていることを分けよう。確認されたのは、ストリーティング氏の演説、ゼレンスキー氏の発表、マスク氏の発言。争われているのは、スターリンクの制限をだれが決めたのか、そしてサービスが回復したのかどうかだ。米国の返答と、ロシアの資産をめぐる動きに注目したい。",
+      src:"The Guardian、GOV.UK、BBC、Reuters、Bloomberg、Financial Times、Evening Standard、Daily Mail、Kyiv Independent、Mirror · 2026年10月14〜15日"},
+    donaldson:{kick:"英国 · 裁判 · 北アイルランド · 報道照合 ✓ 6社",title:"元DUP党首ジェフリー・ドナルドソン氏、児童への性犯罪で禁錮15年",
+      what:"民主統一党の元党首ジェフリー・ドナルドソン氏は木曜、児童への性犯罪で禁錮15年の判決を受けたと、ロイター、ガーディアン、ミラー紙、イブニング・スタンダードが報じた。BBCは先に、罪状にはレイプが含まれると伝えた。裁判官は同氏の「壊滅的な転落と不名誉」と述べ、DUPは同氏が刑の「一日一日を受けて当然だ」と述べたと、スタンダードが報じた。スタンダードはまた、「奪われた子ども時代」と述べる被害者の陳述を掲載した。私たちが確認した見出しは、最短服役期間も、上訴への言及も示していなかった。",
+      why:"北アイルランドで最もよく知られた政治家の一人に対する刑事事件が終わる。DUPが判決は当然だと述べているため、党の立場への疑いもなくなる。",
+      me:"読者にとって変わることはないが、この事件を機に、虐待とその報じ方について考える人もいるかもしれない。影響を受けた人は、警察や医師に相談できる。",
+      a:"",
+      b:"",
+      say:"事実は判決と裁判官の言葉である。見出しからは、同氏がどれだけ服役するのか、上訴するのかは分からず、私たちは推測しない。何より大切なのは、被害者の言葉である。",
+      src:"Reuters、The Guardian、Mirror、Evening Standard、BBC · 2026年10月15日"}
+  };
+
+  const G = {
+    "被害を訴える人":{f:"法",d:"犯罪の被害を受けたと述べて訴えを起こした人。性犯罪事件では、生涯にわたって匿名が法的に守られる。",w:"証言した最初の女性は、名前を記せない。"},
+    "検察側":{f:"法",d:"イングランドとウェールズで訴追を担う国家。事件は王権（Crown）の名で提起される。",w:"検察側は水曜、ブランド氏に対する主張を始めた。"},
+    "無罪と推定":{f:"法",d:"罪に問われた人は、裁判所が有罪と認めるまで無罪として扱われるという原則。",w:"ブランド氏にも適用される。"},
+    "反対尋問":{f:"法",d:"法廷で、相手側が証人に質問し、その証言を検証すること。",w:"弁護側は最初の女性を反対尋問する。"},
+    "陪審":{f:"法",d:"イングランドの重大な刑事裁判で有罪かどうかを決める、一般市民12人。",w:"ブランド氏の事件を判断する。"},
+    "ITVニュース":{f:"メディア",d:"英国の放送局ITVのニュース部門。",w:"裁判とリフォームの映像の両方を報じた。"},
+    "デ・テレフラーフ":{f:"メディア",d:"オランダの日刊紙。",w:"検察側の冒頭陳述にあった、5,000人の女性という主張を報じた。"},
+    "深刻な干ばつ":{f:"環境",d:"降水量と水位が通常をかなり下回り続けるときに出される正式な認定。公的な干ばつ計画の発動につながる。",w:"イングランドの6地域で宣言された。"},
+    "ホース使用禁止":{f:"環境",d:"水道会社が定める一時的な規則で、庭の散水や洗車にホースを使うことを禁じる。",w:"BBCによれば、実施されている。"},
+    "テムズ・ウォーター":{f:"ビジネス",d:"ロンドンとテムズ川流域に水を供給する水道会社。経営難が続いている。",w:"さらに24億ポンドを求めている。"},
+    "GOV.UK":{f:"機関",d:"英国政府の公式ウェブサイト。発表や記録を掲載する。",w:"干ばつ計画とストリーティング氏の演説を掲載した。"},
+    "国家統計局":{f:"機関",d:"成長率、物価、雇用などの統計を公表する英国の公式統計機関。",w:"8月の成長率を公表した。"},
+    "財務相":{f:"政治",d:"税と歳出を決める英国の閣僚。ジョン・ヒーリー氏がその職にある。",w:"初の予算案を準備している。"},
+    "予算案":{f:"経済",d:"政府が毎年、税と歳出の計画を示す声明。10月28日に予定されている。",w:"銀行への課税をめぐる関係筋の説明は、これに先立って出ている。"},
+    "IMF":{f:"機関",d:"国際通貨基金。各国政府に融資し、世界経済について助言する。",w:"ヒーリー氏はIMFを訪れた際に発言した。"},
+    "財政赤字":{f:"経済",d:"1年間に政府が使う額が、税収を上回る差額。",w:"ヒーリー氏は削減で路線を守ると約束した。"},
+    "ビジネスレート":{f:"経済",d:"店舗、オフィスなど事業用の建物にかかる税。",w:"経営者らは制度の是正を求めている。"},
+    "豪邸税":{f:"経済",d:"高額な住宅に追加でかける税の案。",w:"スタンダードが解説を掲載した。計画は確認されていない。"},
+    "シティAM":{f:"メディア",d:"ロンドンの無料のビジネス紙で、ウェブサイトも運営する。",w:"生産の伸びと10億ポンドの警告を報じた。"},
+    "戦略国際問題研究所":{f:"機関",d:"ワシントンにある米国のシンクタンクで、政策に関する演説の場を提供する。",w:"ストリーティング氏はそこで演説した。"},
+    "国防相":{f:"政治",d:"軍を所管する英国の閣僚。ウェス・ストリーティング氏がその職にある。",w:"同氏はワシントンにいる。"},
+    "スターリンク":{f:"テクノロジー",d:"スペースXの衛星インターネットサービス。ウクライナ軍が前線で使っている。",w:"その制限が主な不満である。"},
+    "製油所":{f:"エネルギー",d:"原油をガソリン、ディーゼルなどの燃料にする工場。",w:"ウクライナはロシアの製油所への攻撃を再開する。"},
+    "凍結解除":{f:"法",d:"制裁による資金や財産の凍結をやめ、所有者が再び使えるようにすること。",w:"FTは、ワシントンがロシアの資産の一部についてこれを持ち出したと報じた。"},
+    "クレムリン":{f:"政治",d:"モスクワにあるロシア大統領の執務機関で、政府の所在地。",w:"ロシアがディーゼルの輸出を再開したと述べた。"},
+    "キーウ・インディペンデント":{f:"メディア",d:"ウクライナを拠点とする英語のニュースメディア。",w:"スターリンクについて国防省の関係筋を引いた。"},
+    "民主統一党":{f:"政治",d:"英国との連合を支持する北アイルランドの政党。DUPとして知られる。",w:"ドナルドソン氏が率いた。"},
+    "DUP":{f:"政治",d:"民主統一党。英国との連合を支持する北アイルランドの政党。",w:"同党は、同氏は刑に値すると述べた。"},
+    "リフォームUK":{f:"政治",d:"ナイジェル・ファラージ氏が率いるポピュリスト政党。",w:"その議員らが、ITVの調査で撮影された。"},
+    "候補者審査":{f:"政治",d:"政党が候補者を選ぶ前に、その人の経歴や考え方を調べること。",w:"ファラージ氏はリフォームのそれを擁護した。"},
+    "平等監視機関":{f:"機関",d:"平等人権委員会。グレートブリテンで平等法を執行する。",w:"緑の党に書簡を送った。"},
+    "シオニズムは人種差別":{f:"政治",d:"緑の党の大会で可決された動議。批判する側は反ユダヤ的だと呼び、党首は党の立場を擁護している。",w:"監視機関はこれについて書簡を送った。"},
+    "NHSイングランド":{f:"機関",d:"イングランドの医療サービスを運営する組織。",w:"その指針は病院の病棟に関わる。"},
+    "グレンフェル":{f:"地名",d:"2017年の火災で72人が亡くなったロンドンの高層住宅。",w:"スタンダードによれば、二人はその地域の女性たちと会った。"},
+    "AI":{f:"テクノロジー",d:"人工知能。文章作成や画像認識などをこなすソフトウェアで、巨額の投資が集まっている。",w:"AI企業をめぐる債務懸念がハイテク株を直撃した。"},
+    "ナスダック":{f:"市場",d:"多くのハイテク企業が上場する米国の株式取引所。",w:"その先物は1%下げた。"},
+    "CoreWeave":{f:"ビジネス",d:"AI向けの計算能力を貸し出す米国企業。多額の債務を抱えている。",w:"その株と債券が下落した。"},
+    "FTSE100":{f:"市場",d:"ロンドン証券取引所に上場する時価総額上位100社の株価指数。",w:"1.08%高の10,840.35で引けた。"},
+    "フォートフッド":{f:"地名",d:"テキサス州にある米陸軍の大規模な基地。",w:"短信は、その銃撃犯の死刑執行について伝えている。"},
+    "マドゥロ":{f:"政治",d:"ベネズエラを率いた、ニコラス・マドゥロ氏。現在は米国で訴追されている。",w:"ニューヨークで無罪を主張した。"},
+    "ヨーロッパリーグ":{f:"スポーツ",d:"チャンピオンズリーグに次ぐ、欧州のクラブサッカー大会。",w:"リヨンはその試合でクリスタル・パレスに勝った。"},
+    "エリトリア":{f:"地名",d:"アフリカの角にある一党支配の国。",w:"内務大臣がビザ上の制裁を警告している。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
