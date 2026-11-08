@@ -1,0 +1,338 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>57,434.77</b>日経平均 · 11/6(金)終値 · 前日比-5.96%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,376.86</b>S&amp;P500 · 11/6(金)終値 · 前日比+0.31%</div>
+    </div>
+    <div class="dateline"><span>No. 35 · 夕刊</span><b>2026年11月8日(日)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="herzog">
+      <div class="kick">国際 · イスラエル<span>✓ 5媒体 · 組閣の成否は未確認</span></div>
+      <h2 class="hl">イスラエル大統領、野党のアイゼンコット党首に組閣を委任 ネタニヤフ首相の対抗馬</h2>
+      <p class="deck">ヘルツォグ大統領は7日夜、総選挙で第2党となった野党のアイゼンコット党首に新政権づくりを委ねた。期限は28日間で、過半数の61議席を固められるかが焦点になる。</p>
+      <div class="body">
+        <p>イスラエルのヘルツォグ大統領は7日夜(現地時間)、野党のアイゼンコット党首に新政権の組閣を委ねると発表した。組閣とは、首相候補が議会で過半数の支持を得られる連立の枠組みをつくる作業を指す。アイゼンコット氏は先の総選挙で第2党になった野党の党首で、大統領が各党から意見を聞いた協議では、議員の推薦はアイゼンコット氏がネタニヤフ首相を上回った。首相を推薦したのは与党リクードなど右派・宗教右派の各党で、アイゼンコット氏を推したのは野党各党とアラブ系の政党だった。超正統派の政党は、どちらも推薦しなかった。</p>
+        <p>組閣に使える期間は28日間で、必要なら14日間延ばせる。失敗すれば、大統領が別の人物に委ねる。議会は120議席で過半数は61だが、どちらの陣営も単独では届いていない。ヘルツォグ大統領は、推薦ではアイゼンコット氏が明確に上回ったものの、各党が互いに協力を拒んでいるため、政権をつくれるかどうかは分からないとの認識を示していた。リクードのキシュ氏は、アラブ系の政党に頼る政権をつくらせないよう、大統領に警告していた。委任は首相の座が決まったことを意味せず、連立の協議はこれから本格化する。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="jishin2">
+      <div class="kick">社会 · 防災<span>✓ 5媒体 · 最終の人数・建物被害は未確認</span></div>
+      <h3 class="hl">愛知で震度5強の地震、けが人は集計で19〜24人 県内の5強は29年ぶり</h3>
+      <div class="one">
+        <p>8日午前1時4分ごろの静岡県西部を震源とする地震(マグニチュード5.7)で、愛知県を中心にけが人が出ており、豊田市や常滑市などで確認されている。けが人の数は集計によって19人から24人と幅があり、最終の人数は確定していない。愛知県内で震度5強を観測したのは、1997年の愛知県東部の地震以来、29年ぶりになる。気象庁は引き続き、今後1週間程度は同程度の揺れの地震に注意するよう呼びかけている。けがの程度、建物の被害、道路や鉄道の復旧の見通しは、8日夕方の時点で確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="paraguay"><b>パラグアイ大統領が罷免、大手銀行の破綻で混乱続く</b><em>大手銀行の破綻を受けて、ペーニャ大統領は議会の弾劾手続きで7日に罷免された。国内の混乱は続いている。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kumamoto"><b>熊本県天草・芦北地方でM4.3、最大震度4 津波の心配なし</b><em>8日午前10時53分ごろ、熊本県天草・芦北地方を震源とする地震があった。震源の深さは約10キロで、規模はマグニチュード4.3と推定される。</em><span>防災 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="bomb"><b>欧州各地で爆破予告が相次ぐ、報道機関の事務所にも届く</b><em>欧州の複数の国で爆破予告が出ており、報道機関の事務所にも届いた。航空便に対する偽の爆破予告が増えていたことに続く動きである。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="dow"><b>NYダウ、6日は213ドル高の5万1983ドルで3営業日ぶりに上昇</b><em>6日のNY株式市場でダウ平均は213ドル上がった。3営業日ぶりの値上がりで、終値は5万1983ドルだった。</em><span>市場 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="noguchi"><b>農口尚彦さん、日本酒の杜氏として初めて人間国宝に認定へ</b><em>石川県小松市の農口尚彦さん(93)が、吟醸造りの保持者として認定される見通しだ。日本酒の杜氏としては初めてとなる。</em><span>文化 · ✓ 2媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="trumpstaff">
+      <div class="kick">国際 · 米国<span>✓ 2媒体 · ホワイト氏が引き受けるかは未確認</span></div>
+      <h3 class="hl">トランプ氏、UFCのホワイト氏に大統領報道官就任を公に要請 本人の返答は未確認</h3>
+      <div class="body">
+        <p>トランプ米大統領は7日、自身のSNSへの投稿で、総合格闘技UFCのダナ・ホワイト最高経営責任者に大統領報道官を引き受けるよう公に求め、「どうか引き受けてほしい」と呼びかけた。報道官は、大統領の発言や政権の方針を記者会見などで内外に伝える役職である。民間の企業経営者に、SNSで公に就任を呼びかける形になった。同じ日にはホワイトハウスの幹部人事も明らかにされていたが、報道官をめぐる呼びかけはそれとは別に出された。ホワイト氏が引き受けるかどうかは、本人の公式な説明がなく確認できていない。ホワイトハウスからも、就任の手続きや時期についての発表は出ていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="doj">
+      <div class="kick">国際 · 米国<span>✓ 4媒体 · 司法省の対応は未確認</span></div>
+      <h3 class="hl">トランプ氏、民主党の弾劾の動きを「恐喝」と投稿 司法省に調査を指示</h3>
+      <div class="body">
+        <p>トランプ米大統領は7日、自身のSNSへの投稿で、民主党が司法長官らに弾劾をちらつかせて圧力をかけていると主張し、この動きを「恐喝」と呼んだ。弾劾とは、議会が政府高官などの責任を問い、職を解くかどうかを判断する手続きである。大統領は投稿で、弾劾に値する行為はなく、民主党もその理由がないことを認めているとの趣旨を書いたうえで、司法省に民主党議員らの調査を指示した。</p>
+        <p>調査の対象となる議員の範囲や、司法省がどう動くかは、確認できていない。弾劾をちらつかせたとされる民主党側の具体的な発言も、投稿の範囲では示されていない。投稿は中間選挙のあとに出されたもので、議会で民主党が力を持つ場面での政権との対立が、今後の焦点になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="fluor">
+      <div class="kick">社会 · 環境<span>✓ 3媒体 · 発火事故の件数は未確認</span></div>
+      <h3 class="hl">蛍光灯の製造禁止、2027年末に迫る 水俣条約で決定、LED化率は約6割</h3>
+      <div class="body">
+        <p>蛍光灯の製造が、2027年末までに国際的に禁止される。2023年の水俣条約の締約国会議で、一般照明用の蛍光灯の製造と輸出入を2027年末までにやめることが決まった。蛍光灯には水銀が使われており、水俣条約は水銀による健康被害や環境汚染を防ぐための国際条約である。種類によって時期は異なり、一部の電球形などはそれより前から規制の対象になっている。禁止のあとも、手元にある蛍光灯や在庫の使用と売買はできる。</p>
+        <p>LEDへの切り替えは進んでおり、日本照明工業会の調べでは、2024年7月時点のLED化率は約6割だった。パナソニックは2024年10月、蛍光灯の生産を2027年9月末までに終えると発表している。残る約4割の器具の更新が課題で、蛍光灯用の器具にLEDランプを付け替えて起きた発火事故もある。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2027年末</b><span>蛍光灯の製造・輸出入を禁じる期限</span></div>
+        <div><b>約6割</b><span>LED化率(2024年7月時点)</span></div>
+        <div><b>2027年9月末</b><span>パナソニックが蛍光灯の生産を終える時期</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>愛知の地震は、南海トラフ地震の前触れだ</b> <span>気象庁は津波の心配はないと発表し、今後1週間程度は同程度の地震に注意するよう呼びかけている。南海トラフ地震との関連は、示されていない。</span></div>
+        <div><b>ダナ・ホワイト氏は、すでに報道官を引き受けた</b> <span>トランプ大統領は投稿で引き受けを求めた段階である。ホワイト氏本人の公式な返答は、確認できていない。</span></div>
+        <div><b>アイゼンコット氏の首相就任が決まった</b> <span>ヘルツォグ大統領が委ねたのは組閣の作業で、期間は28日間である。過半数の61議席を確保できるかは決まっていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 日 11月8日</b><span>愛知の地震でけがをした人の数や、建物・道路の被害について、県や自治体からの追加の発表を見る。イスラエルでは、アイゼンコット氏が各党との協議を始める。</span><b>明日以降</b><span>9日(月)に東京市場が開き、COP31が始まる。11日(水)には参議院で消費減税法案の審議が始まる予定だ。</span><b>あとで</b><span>イスラエルの組閣は約4週間の期限の中で進む。ホワイト氏が報道官を引き受けるかも、本人の説明を待つ。蛍光灯は2027年末の禁止に向けて、器具の更新が続く。</span><b>読者へ</b><span>けが人の人数や人事の話は、発表した自治体や当事者の説明で確かめてから受け止めたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "herzog":{"kick": "国際 · イスラエル · ✓ 5媒体 · 組閣の成否は未確認", "title": "イスラエル大統領、野党のアイゼンコット党首に組閣を委任 ネタニヤフ首相の対抗馬", "what": "イスラエルのヘルツォグ大統領は7日夜(現地時間)、野党のアイゼンコット党首に新政権の組閣を委ねると発表した。アイゼンコット氏は総選挙で第2党になった野党の党首である。大統領が各党から意見を聞いた協議では、議員の推薦はアイゼンコット氏がネタニヤフ首相を上回った。首相を推薦したのはリクードや宗教右派の各党で、アイゼンコット氏を推したのは野党各党とアラブ系の政党だった。超正統派の政党はどちらも推薦しなかった。組閣の期間は28日間で、必要なら14日間延ばせる。議会は120議席で、過半数は61である。", "why": "推薦の数で上回っても、それだけで首相になれるわけではない。議会で61議席の支持を得る連立をつくれなければ、期限が来て別の人に権限が移る。アラブ系の政党の協力をどう扱うかで野党側の結束が割れれば、ネタニヤフ首相に再び機会が回りうる。", "me": "中東情勢に関わる企業の社員や、原油・為替の動きが気になる人は、政権の形が決まるまで外交や安全保障の方針が変わるかを見ておきたい。日本から現地へ出張や旅行をする人は、外務省の海外安全情報を確かめる。", "a": "推薦で大きく上回ったアイゼンコット氏に委ねるのは、慣例に沿った判断だと受け止める人がいる。大統領自身も、推薦の差は明確だったと述べている。", "b": "リクードのキシュ氏は、アラブ系の政党に頼る政権をつくらないよう大統領に警告していた。右派の陣営には、首相を推薦した議員の数も無視できないとの立場がある。", "say": "確認できたのは、大統領がアイゼンコット氏に組閣を委ねたこと、期間が28日間であること、どちらの陣営も単独では61議席に届かないことである。組閣が成功するかは分からない。今日は、アイゼンコット氏が最初にどの党と協議するかを見たい。", "src": "NHK(組閣を要請へ、11/8) · 時事通信(大統領が組閣を指示、11/8) · 毎日新聞(アイゼンコット氏に組閣要請、11/8) · BBC(大統領が組閣を委任、11/8) · Al-Monitor(推薦の集計、11/5)"},
+    "jishin2":{"kick": "社会 · 防災 · ✓ 5媒体 · 最終の人数・建物被害は未確認", "title": "愛知で震度5強の地震、けが人は集計で19〜24人 県内の5強は29年ぶり", "what": "8日午前1時4分ごろ、静岡県西部を震源とする地震があり、愛知県知多市で震度5強、静岡県浜松市で震度5弱を観測した。マグニチュードは5.7である。この地震で、愛知県を中心にけが人が出ている。けが人の数は集計によって19人から24人と幅があり、豊田市や常滑市などで確認されている。愛知県内で震度5強を観測したのは、1997年の愛知県東部の地震以来となる。気象庁は津波の心配はないと発表し、今後1週間程度は最大で震度5強程度の揺れを伴う地震に注意するよう呼びかけている。最終の人数と建物の被害は、8日夕方の時点で確認できていない。", "why": "夜中の1時台に起きた地震で、就寝中の人が転倒や落下物でけがをした可能性がある。震度5強は家具が動いたり物が落ちたりする揺れで、体に被害が出る人が一定数いても不思議ではない。けが人の人数は集計によって異なり、最終の数字は確定していない。", "me": "愛知・静岡・岐阜・三重などに家族や取引先がある人は、安否を公的な情報で確かめたい。寝室の家具の固定、枕元の靴や懐中電灯、飲料水の置き場所を、この1週間のうちに見直しておく。", "a": "津波がなく、揺れの強さのわりに人的被害は限られているとして、備えを点検する機会にしたいと話す人がいる。", "b": "多数がけがをしており、夜間の地震への備えが足りていなかったと受け止める人もいる。余震が続くおそれがあるため、住宅の安全の確認を急ぐべきだとの声がある。", "say": "確認できたのは、けが人が出ており、人数は集計で19人から24人と幅があること、愛知県で震度5強が29年ぶりであること、気象庁が1週間の注意を呼びかけていることである。確認できていないのは、最終の人数、けがの程度、建物の被害だ。今日は県や自治体の追加の発表を見たい。", "src": "Yahoo!ニュース(愛知県で震度5強 20人超がけが、11/8) · 47NEWS(震度5強地震、20人以上けが、11/8) · 中日新聞(豊田市や常滑市などでけが人、11/8) · 朝日新聞(愛知で5強は29年ぶり、11/8) · 日刊スポーツ(M5.7、けが20人以上、11/8)"},
+    "trumpstaff":{"kick": "国際 · 米国 · ✓ 2媒体 · ホワイト氏が引き受けるかは未確認", "title": "トランプ氏、UFCのホワイト氏に大統領報道官就任を公に要請 本人の返答は未確認", "what": "トランプ米大統領は7日、自身のSNSへの投稿で、UFCのダナ・ホワイト最高経営責任者に大統領報道官を引き受けるよう求め、「どうか引き受けてほしい」と呼びかけた。報道官は、大統領の発言や政権の方針を記者会見などで内外に伝える役職である。投稿は公開の場で出された。ホワイト氏が報道官を引き受けるかどうかは、本人の公式な説明がなく確認できていない。ホワイトハウスから、就任の手続きや時期についての発表は出ていない。", "why": "報道官は大統領の発言を内外に伝える役目で、格闘技団体のトップに公の場で打診した形は異例である。本人の返答がないまま呼びかけが先に公になったため、実際に就任するかどうかが不透明なままになっている。", "me": "米国の関税や外交の方針に影響を受ける企業の社員や、為替・株価を見ている人は、政権の発信役が誰になるかで政策の伝わり方が変わるかを見ておきたい。日米の交渉に関わる分野では、窓口となる人物が変わることにも注意する。", "a": "知名度の高い人物に発信役を求めたことを、政権の発信力を高める動きだと歓迎する支持者がいる。話題づくりになるという声もある。", "b": "報道官を公の場で呼びかける進め方に、疑問を示す声がある。民間の経営者が引き受けるかどうかが分からないまま公表したことへの批判もある。", "say": "確認できたのは、報道官を引き受けるよう大統領が公に呼びかけたことである。ホワイト氏が引き受けるかは、本人の説明がなく確認できていない。今日は、ホワイト氏の返答と、ホワイトハウスの正式な発表を見たい。", "src": "時事通信(報道官を打診、11/8) · PBS(ホワイト氏に報道官を要請、11/7)"},
+    "doj":{"kick": "国際 · 米国 · ✓ 4媒体 · 司法省の対応は未確認", "title": "トランプ氏、民主党の弾劾の動きを「恐喝」と投稿 司法省に調査を指示", "what": "トランプ米大統領は7日、自身の投稿で、民主党が司法長官らに弾劾などの処分をちらつかせて脅していると主張した。投稿には、弾劾に値する行為はなく、民主党もその理由がないことを認めているとの趣旨が書かれている。大統領はこの投稿で、司法省に民主党議員らの調査を指示した。投稿では、民主党の動きを「恐喝」と呼んでいる。調査の対象となる議員の範囲や、司法省の対応は、今回確認できた範囲では分かっていない。", "why": "大統領が司法省に特定の政党の議員の調査を求めると、捜査の独立が保たれるのかという論点が生まれる。中間選挙のあとで、議会で民主党が力を持つ場面では、政権と議会の対立が深まる可能性がある。", "me": "米国の政治は、関税や為替、日米の交渉の進み方に影響する。株や為替を見ている人は、政権と議会の対立が政策の実現にどう響くかを見ておきたい。", "a": "根拠のない弾劾の動きには強く対抗すべきだとして、大統領の対応を支持する人がいる。", "b": "司法省に政治的な調査を求めるのは、捜査の独立を損なうとして批判する声がある。", "say": "確認できたのは、大統領の投稿と、司法省に調査を指示したことである。確認できていないのは、司法省が実際に動くかどうかだ。今日は、司法省の正式な発表を見たい。", "src": "Reuters(司法省に調査を指示、11/7) · Newsweek(民主党への調査を指示、11/7) · The Times of India(「恐喝」と非難、11/7) · Infoseek(弾劾の動きを非難、11/8)"},
+    "fluor":{"kick": "社会 · 環境 · ✓ 3媒体 · 発火事故の件数は未確認", "title": "蛍光灯の製造禁止、2027年末に迫る 水俣条約で決定、LED化率は約6割", "what": "2023年の水俣条約の締約国会議で、一般照明用の蛍光灯の製造と輸出入を2027年末までにやめることが決まった。蛍光灯には水銀が使われている。水俣条約は、水銀による健康被害や環境汚染を防ぐための国際条約である。種類によって時期は異なり、一部の電球形などはそれより前から規制の対象になっている。禁止のあとも、手元にある蛍光灯や在庫の使用と売買はできる。日本照明工業会の調べでは、2024年7月時点のLED化率は約6割だった。パナソニックは2024年10月、蛍光灯の生産を2027年9月末までに終えると発表している。蛍光灯用の器具にLEDランプを付け替えて起きた発火事故もある。", "why": "蛍光灯は長く家庭や職場の標準の照明だったため、使う人が多い。LEDの方が電気代が安く寿命も長いが、古い器具にそのまま付けられる製品と、器具ごとの交換が必要な製品がある。時期が迫ると、駆け込みの在庫確保や、交換の費用負担が問題になる。", "me": "自宅や職場の照明が蛍光灯なら、器具の型を確かめ、交換の時期を決めておきたい。LEDランプの付け替えは、器具の種類によっては発火のおそれがあるため、説明書を確かめるか、電気工事の業者に相談する。", "a": "水銀の使用を減らせるため、環境を守る面で歓迎すべきだと考える人がいる。LEDは消費電力が小さく、電気代の節約にもなる。", "b": "器具の更新には費用がかかり、特に事務所や学校など器具の数が多い場所の負担は重い。交換の工事が間に合うのかを心配する声もある。", "say": "確認できたのは、2027年末までの製造・輸出入の禁止、LED化率が約6割であること、パナソニックの生産終了の時期である。確認できていないのは、発火事故の件数だ。今日は、自宅の器具の型を確かめておきたい。", "src": "朝日新聞(蛍光灯の製造禁止、27年末に迫る、11/8) · MONOist(パナソニックが蛍光灯の生産終了、2024/10) · 家電 Watch(規制の時期、2026/1)"},
+    "paraguay":{"kick": "国際 · ✓ 1媒体", "title": "パラグアイ大統領が罷免、大手銀行の破綻で混乱続く", "what": "南米パラグアイで、大手銀行が破綻した。ペーニャ大統領は議会の弾劾手続きで7日に罷免された。国内の混乱は続いている。銀行の預金者への対応は、大統領が辞めたあとも続いている。後任の就任の時期や、今後の政権の枠組みは、確認できた範囲では分かっていない。", "why": "銀行の破綻が大統領の進退に直結したのは、預金者が口座にアクセスできなくなり、国民の怒りが大きくなったためである。政権の交代が続くと、通貨や金融の安定への信頼にも響く。後任が決まるまでの間は、銀行の処理や預金者への対応が政治の争点になりやすい。", "me": "日本からの距離が遠い国だが、南米で事業をする企業や、新興国の債券を持つ人は、金融不安が周辺の国に広がるかを見ておきたい。現地に出張や旅行をする人は、外務省の海外安全情報を確かめる。", "a": "早期に責任を問い、政治を立て直すべきだと考える人がいる。", "b": "大統領の交代が続くことで、政治の混乱がさらに長引くとの懸念もある。預金者への対応が遅れれば、国民の不満が政権に向かうとの声もある。", "say": "確認できたのは、大手銀行の破綻と、大統領の罷免である。確認できていないのは、今後の政権の枠組みだ。今日は、後任の就任と、預金者の対応を見たい。", "src": "NHK(大統領が罷免され混乱続く、11/7)"},
+    "kumamoto":{"kick": "防災 · ✓ 1媒体", "title": "熊本県天草・芦北地方でM4.3、最大震度4 津波の心配なし", "what": "8日午前10時53分ごろ、熊本県天草・芦北地方を震源とする地震があった。震源の深さは約10キロで、地震の規模を示すマグニチュードは4.3と推定される。最大震度は4を観測した。津波の心配はない。震度4は、ほとんどの人が驚くほどの揺れで、眠っている人の多くが目を覚ます程度とされる。愛知県で震度5強を観測した8日未明の地震とは、震源が離れている。けが人や建物の被害は、今回確認できた範囲では分かっていない。", "why": "九州では、規模の小さな地震が続くことがある。震度4は物が落ちたり、棚の中の物が動いたりする揺れで、家具が固定されていないと被害が出る。同じ日に別の地域でも地震が起きたことで、備えを意識する人が増えている。", "me": "熊本や九州に家族や取引先がある人は、公的な情報で状況を確かめたい。家具の固定や、非常用の水、懐中電灯の置き場所を見直すきっかけにする。", "a": "規模が小さく津波もないため、過度に心配する必要はないと受け止める人がいる。", "b": "揺れの強さは場所によって違うため、地域ごとに被害を確かめるべきだとの声もある。", "say": "確認できたのは、震源地、規模、最大震度、津波の心配がないことである。確認できていないのは、被害の有無だ。続報があるまで、気象庁の発表を確かめたい。", "src": "NHK(熊本で震度4、津波の心配なし、11/8)"},
+    "bomb":{"kick": "国際 · ✓ 2媒体", "title": "欧州各地で爆破予告が相次ぐ、報道機関の事務所にも届く", "what": "欧州の複数の国で、爆破予告が相次いでいる。報道機関の事務所にも予告が届いた。欧州では、航空便に対する偽の爆破予告が増えていた。今回の動きは、その流れの中で起きている。予告の発信元や目的は、公式には示されていない。実際に爆発物が見つかったかどうかも、今回確認できた範囲では分かっていない。各国の警察の対応の詳細は、今回確認できた範囲では分かっていない。", "why": "偽の予告でも、避難や運航の見合わせが必要になり、社会的な費用が大きい。報道機関への予告は、報道の自由や、報道に携わる人の安全にも関わる。発信元が分からないうちは、特定の国や組織の仕業と決めつけることは難しい。", "me": "欧州へ旅行や出張をする人は、搭乗する便の運航情報を事前に確かめたい。現地の空港で遅れが出ることを見込み、時間に余裕を持つ。", "a": "偽の予告が続く背景に、組織的な動きがあるのではないかと警戒する人がいる。", "b": "発信元が分からないまま原因を決めつけるのは危ういとして、警察の調べを待つべきだとの声もある。", "say": "確認できたのは、欧州の複数の国で爆破予告が出ていることと、報道機関にも届いたことである。確認できていないのは、発信元と目的、実害の有無だ。今日は、各国の警察の発表を見たい。", "src": "The Japan Times(報道機関に爆破予告、11/8) · Yahoo!ニュース(欧州各地で爆破予告、11/8)"},
+    "dow":{"kick": "市場 · ✓ 1媒体", "title": "NYダウ、6日は213ドル高の5万1983ドルで3営業日ぶりに上昇", "what": "6日のニューヨーク株式市場で、ダウ工業株30種平均の終値は前日より213ドル高い5万1983ドルだった。ダウ平均が値上がりしたのは3営業日ぶりである。同じ日のS&P500は7,376.86で、前日比0.31%上昇した。日経平均は同じ6日に5.96%下落して終えており、日米で動きが分かれた。", "why": "株価指数は、市場に参加する人の売り買いの結果で決まる。前の2営業日の下げのあとに値上がりしたため、下げが続くかどうかを見る材料になる。ただし、1日の動きだけでは方向は決まらない。", "me": "投資信託や新NISAで米国株に連動する商品を持つ人は、基準価格が米国の終値に連動して動くことを確かめておきたい。数日単位の値動きで売り買いを判断せず、積み立ての計画を見直すかどうかを考える。", "a": "3営業日ぶりに上昇したことを、持ち直しの兆しと受け止める人がいる。", "b": "1日の上昇だけでは判断できず、次の週の動きを見たいという声がある。", "say": "確認できたのは、6日のダウ平均が213ドル高の5万1983ドルで、3営業日ぶりに上昇したことである。上昇の理由は、確認できる範囲で公式な説明がない。今日は、週明けの東京市場の動きを見たい。", "src": "読売新聞(ダウ終値、11/8)"},
+    "noguchi":{"kick": "文化 · ✓ 2媒体", "title": "農口尚彦さん、日本酒の杜氏として初めて人間国宝に認定へ", "what": "石川県小松市の農口尚彦さん(93)が、吟醸造りの保持者として人間国宝に認定される見通しになった。文化審議会が2026年10月16日に、「吟醸造り」など3件を重要無形文化財に新たに指定するよう、文部科学相に答申している。日本酒の杜氏としては初めてで、食文化の担い手の認定も初となる。農口さんは杜氏を60年以上続け、「酒造りの神様」とも呼ばれる。1980年代以降の吟醸酒ブームを支えた人物である。正式な認定の日付は、今回確認できた範囲では分かっていない。", "why": "酒造りの技が、工芸や芸能と並んで国の文化財として認められるのは大きな意味がある。杜氏の技は人から人へ受け継がれるため、保持者の認定は、技の継承を後押しする。", "me": "日本酒を飲む人は、造り手や蔵の違いに目を向けるきっかけになる。蔵元の見学や、地酒の飲み比べをしてみるのもよい。", "a": "伝統の技が国に認められ、継ぐ人が増えることを期待する声がある。", "b": "認定を機に価格が上がり、手に入りにくくなるとの心配もある。", "say": "確認できたのは、文化審議会の答申と、日本酒の杜氏として初の認定であることである。正式な認定の時期は、今回確認できた範囲では分かっていない。官報の告示を待ちたい。", "src": "The Japan Times(初の人間国宝、11/8) · 熊本日日新聞(食の人間国宝、初認定へ、10/16)"}
+  };
+  const G = {
+    "組閣":{"f": "政治", "d": "首相候補が、閣僚を決めて政権の顔ぶれをつくること。議会で過半数の支持を得る見通しが前提になる。", "w": "アイゼンコット氏に委ねられた作業。"},
+    "連立":{"f": "政治", "d": "複数の政党が協力して政権をつくること。", "w": "組閣には連立の枠組みが必要になる。"},
+    "議席":{"f": "政治", "d": "議会で議員が持つ席の数。政党の力を表す。", "w": "議会は120議席で、過半数は61。"},
+    "過半数":{"f": "政治", "d": "全体の半分を超える数。議会では、政権を支えるのに必要な議席数になる。", "w": "61議席が過半数にあたる。"},
+    "推薦":{"f": "政治", "d": "議員や政党が、組閣を任せる人物として名前を挙げること。", "w": "アイゼンコット氏への推薦がネタニヤフ首相を上回った。"},
+    "超正統派":{"f": "宗教", "d": "ユダヤ教の戒律を厳格に守る人々の立場。独自の政党を持つ。", "w": "どちらの候補も推薦しなかった。"},
+    "震度":{"f": "防災", "d": "ある場所での揺れの強さを0から7までの階級で表したもの。5と6には弱と強がある。", "w": "愛知県で5強を観測した。"},
+    "マグニチュード":{"f": "防災", "d": "地震そのものの規模を表す数字。数字が1大きいと、エネルギーは約32倍になる。", "w": "愛知の地震は5.7だった。"},
+    "震源":{"f": "防災", "d": "地震の揺れが最初に発生した地下の場所。", "w": "静岡県西部が震源だった。"},
+    "津波":{"f": "防災", "d": "地震などで海面が大きく持ち上がり、陸に押し寄せる波。", "w": "今回は心配がないとされた。"},
+    "報道官":{"f": "行政", "d": "政府や大統領の考えを、記者会見などで内外に伝える役職。", "w": "ホワイト氏に打診された。"},
+    "中間選挙":{"f": "政治", "d": "米国で、大統領選挙の中間の年に行われる連邦議会の選挙。", "w": "人事は中間選挙のあとに行われた。"},
+    "司法省":{"f": "行政", "d": "米国で、捜査や訴追を担う政府機関。長は司法長官。", "w": "大統領が調査を求めた。"},
+    "弾劾":{"f": "政治", "d": "議会が、重大な違法行為などがあった高官を罷免するために行う手続き。", "w": "民主党の動きを大統領が非難した。"},
+    "水俣条約":{"f": "環境", "d": "水銀による健康被害や環境汚染を防ぐための国際条約。", "w": "蛍光灯の製造禁止の根拠になった。"},
+    "水銀":{"f": "環境", "d": "常温で液体の金属。蛍光灯などに使われ、人体や環境に害を与える。", "w": "蛍光灯には水銀が使われている。"},
+    "罷免":{"f": "法律", "d": "公職にある人を、任期の途中でやめさせること。", "w": "ペーニャ大統領が罷免された。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
