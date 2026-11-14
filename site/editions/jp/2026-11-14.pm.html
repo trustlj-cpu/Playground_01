@@ -1,0 +1,334 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>61,142.35</b>日経平均 · 11/13終値 · 前日比+0.53%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,561.67</b>S&amp;P500 · 11/13米国終値 · 前日比-0.40%</div>
+    </div>
+    <div class="dateline"><span>No. 41 · 夕刊</span><b>2026年11月14日(土)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="sanshu">
+      <div class="kick">国際 · 米中ロ<span>✓ 3媒体 · 中国・ロシア側の確認、開催地は未確認(米側の発表に基づく)</span></div>
+      <h2 class="hl">米側の発表によると、米中ロの3首脳が19日に初の会談へ 核軍縮とイラン協議が議題、ウクライナは扱わず 中国・ロシアは未確認</h2>
+      <p class="deck">米ホワイトハウスは、トランプ大統領、習近平国家主席、プーチン大統領による3か国の首脳会談を19日に開くと明らかにした。3か国の首脳がそろうのは初めてで、米側は核兵器の削減を議題に挙げている。中国とロシアは、この日程や議題をまだ確認していない。</p>
+      <div class="body">
+        <p>14日、米政府は、トランプ大統領、中国の習近平国家主席、ロシアのプーチン大統領の3人による首脳会談を、今月19日に開くと明らかにした。3か国の首脳がそろって会談するのは初めてだ。これは米側の発表で、中国とロシアはまだ確認していない。開催地は中国南部の深センと伝えられている。米政権の高官は、議題は核軍縮とイランをめぐる協議が中心で、ウクライナは取り上げない考えを示した。報道官は、会談は米国の利益を前進させるものだと述べた。核軍縮とは、各国が持つ核兵器の数を減らすための話し合いをいう。</p>
+        <p>3人の会談をめぐっては、10月に、プーチン大統領が米ロの電話会談で提案したと伝えられ、トランプ大統領も記者団の前で前向きな考えを語っていた。今回の発表で、日程と議題の大枠が初めて示された形だ。一方で、中国とロシアは、この日程と議題を確認していない。両国がどう受け止めているのか、開催地が正式に決まったのかは、現時点で確認できていない。会談で具体的に何が決まるのかは、19日を待つことになる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="ukr">
+      <div class="kick">国際 · ウクライナ和平<span>✓ 2媒体 · 次回協議の日程、米国・ロシア側の受け止めは未確認</span></div>
+      <h3 class="hl">ウクライナ和平の次回協議に、英仏独伊ポーランドの5か国とEUが加わる見通し 欧州の首脳が合意</h3>
+      <div class="one">
+        <p>13日、アイルランドの首都ダブリンで開かれたEUの非公式首脳会議で、欧州の首脳は、ロシアとウクライナの和平をめぐる米国仲介の次回協議に、英国、フランス、ドイツ、イタリア、ポーランドの5か国とEUの代表が加わることで合意した。EUのコスタ大統領は、欧州は明確で、一つにまとまった声を上げなければならないと述べた。これまでの協議は、米国も交えた3か国で進められ、欧州は席に着いていなかった。非公式首脳会議とは、正式な決定を伴わない形で、EU加盟国の首脳が集まって意見をすり合わせる会合をいう。 次回協議の日程は、まだ示されていない。仲介役の米国と当事者のロシアが、この顔ぶれでの欧州の参加をどう受け止めているのかも、確認できていない。和平の条件づくりでは、停戦後の安全の保証や国境の扱いなど、欧州の安全保障に直接かかわる事柄が焦点になる。安全の保証とは、停戦のあとに再び攻められないよう、どの国がどのように守りを約束するかという取り決めをいう。5か国とEUの代表が実際に協議の場に入るかどうかは、日程の発表と、関係国の対応で決まる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="ekiden"><b>高校駅伝・中国地区、男子は世羅が23年連続、女子は銀河学院が4年連続で全国大会へ</b><em>中国地区の高校駅伝で、男子は世羅が3位で23年連続56回目、女子は銀河学院が優勝して4年連続4回目の全国大会出場を決めた。</em><span>スポーツ · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="cop"><b>笹川環境相、来週始まるCOP31の閣僚級会合に出席へ 「主要な交渉に参加する」</b><em>トルコで開かれている国連の気候変動会議の閣僚級会合が、来週から始まる。笹川環境相は日本の考えを国際社会に訴える意向を示した。</em><span>環境 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kuma"><b>クマの目撃や出没、10月は神奈川県で前年の5.4倍 埼玉県は1.4倍</b><em>10月の目撃や出没の件数は、神奈川県で前年の同じ月の5.4倍、埼玉県で1.4倍になった。2県のうち神奈川県の増え方が大きい。</em><span>社会 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="awa"><b>徳島県阿波市長らの詐欺事件、市職員と会社員が釈放される 勾留の請求は却下</b><em>阿波市長らをめぐる詐欺事件で、市職員と会社員が釈放された。勾留を求める請求が却下されたためで、事件の全体像は確認できていない。</em><span>社会 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="tqdef"><b>トルコとカタールが相互防衛協定に署名 中東の安全保障の枠組みに変化の可能性</b><em>両国が相互防衛協定に署名した。中東の安全保障の枠組みが変わる可能性があると伝えられたが、協定の詳しい中身は確認できていない。</em><span>国際 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="flight">
+      <div class="kick">国際 · 航空<span>✓ 3媒体 · 解除までの時間(4～5時間で食い違い)、欠航・遅延の規模は未確認</span></div>
+      <h3 class="hl">米国で全国の出発が一時停止、解除まで4～5時間と報道が分かれる 運輸長官は通信機器の過負荷が原因と説明したと報道</h3>
+      <div class="body">
+        <p>米連邦航空局(FAA)は、米東部時間の13日午後4時ごろ、航空交通管制の通信障害を理由に、全米のすべての空港で航空機の出発を止めた。全国の出発停止措置は、2023年1月以来だ。措置は日本時間の14日に解除されたが、解除までにかかった時間は、報道によって4～5時間と食い違っている。報道によると、ショーン・ダフィ運輸長官は、原因は通信を中継するスイッチとルーターが過負荷で止まったことで、通信やレーダーが完全に途絶えたわけではないと説明した。ルーターとは、データを行き先へ振り分けて送る機器をいう。管制とは、航空機が安全に飛べるよう、地上から離着陸の順番や高度を指示する仕事をいう。</p>
+        <p>解除後も、各地で欠航や遅れが続いている。欠航や遅延の正確な数は、確認できていない。国土安全保障省のマークウェイン・マリン長官は、サイバー攻撃などの証拠は今のところないと述べた。機器の過負荷が、全国の出発停止に至った経緯をどこまで説明するのかは、米当局の追加の説明を待つ必要がある。解除後に運航がどこまで元に戻るかは、今日の運航情報で分かる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="keisei">
+      <div class="kick">社会 · サイバー<span>✓ 1媒体 · 実際に持ち出された件数と原因は未確認</span></div>
+      <h3 class="hl">京成電鉄で最大337万件、京阪HDで最大22万人余の情報流出か 予約システムとLINE委託先に不正アクセス</h3>
+      <div class="body">
+        <p>京成電鉄は14日、成田空港と都内を結ぶ特急「スカイライナー」の座席予約システムが不正アクセスを受け、利用者の氏名、電話番号、メールアドレスなど最大337万件の情報が、第三者に取得された可能性があると発表した。不正アクセスとは、権限のない人が、他人のIDやシステムの弱点を使って内部に入り込む行為をいう。337万件は上限の数字で、実際に持ち出された件数は確認できていない。</p>
+        <p>京阪ホールディングスも同じ14日、LINEの公式アカウントの管理を委託している会社が不正アクセスを受け、最大22万人余りの情報が流出した可能性があると発表した。流出したおそれがあるのはユーザーIDで、一部は氏名も含まれるという。どちらも、原因と不正アクセスの範囲は調査の途中だ。個人情報の取り扱いを委ねた先から漏れる形で、利用者に届く連絡を装った迷惑メッセージには注意が要る。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="tamaoff">
+      <div class="kick">経済 · 保険<span>✓ 1媒体 · 不正請求の範囲と、損保各社が申し入れを受け入れたかは未確認</span></div>
+      <h3 class="hl">タマホーム、保険代理業の廃業を損保各社に申し入れ 全店舗の社内調査を進め、外部調査も検討</h3>
+      <div class="body">
+        <p>住宅メーカーのタマホームは14日、火災保険の保険金を不正に請求していた疑いが出ている問題で、保険代理業を廃業する方針を、損害保険各社に申し入れたことを明らかにした。全店舗を対象に進めている社内の調査に加えて、外部調査も検討しているという。13日の時点では、大手損保2社がタマホーム経由の新規販売をやめる方針を決め、もう1社も同じ方向だと伝えられていた。</p>
+        <p>今回は、販売を任されていたタマホームの側が、自ら代理業をやめる意向を示した。不正請求の疑いは、まだ認定されたものではなく、疑いの範囲も明らかになっていない。申し入れを損保各社が受け入れたのか、すでに結ばれた火災保険の契約がどう扱われるのか、外部調査をいつ始めるのかは、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>保険代理業<i>金融</i></b><p>保険会社から委託を受けて、保険商品を客に勧め、契約を結ぶ仕事。契約が成立すると、保険会社から手数料が支払われる。代理店が不正をすると、保険会社の信用にも響くため、委託元が販売を止めることがある。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>欧州5か国のウクライナ和平協議への参加に、ロシアも同意した</b> <span>合意を発表したのは欧州側の首脳で、EUのコスタ大統領が説明した。ロシア側の受け止めは、確認できていない。</span></div>
+        <div><b>米中ロの首脳会談では、ウクライナ和平も話し合われる</b> <span>米政権の高官は、議題は核軍縮とイランをめぐる協議で、ウクライナは取り上げないと説明している。中国とロシアの側の説明は確認できていない。</span></div>
+        <div><b>米国の出発停止は、サイバー攻撃が原因だった</b> <span>マリン国土安全保障長官は、サイバー攻撃などの証拠は今のところないと述べた。ダフィ運輸長官は、通信機器の過負荷が原因と説明している。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 土 11月14日</b><span>米中ロの首脳会談について、中国とロシアが日程や議題を確認するかを見る。京成電鉄と京阪HDの調査で実際に持ち出された件数が出るか、タマホームの申し入れに損保各社がどう応じるかも確かめる。</span><b>来週</b><span>19日に予定される米中ロの首脳会談の結果を、米側の発表どおりに開かれるかを含めて見る。トルコで開かれているCOP31では、来週から閣僚級会合が始まり、笹川環境相が出席する。</span><b>あとで</b><span>ウクライナ和平の次回協議の日程と、米国・ロシアが欧州の参加をどう受け止めるかを見る。タマホームの外部調査の進め方と、すでに結ばれた火災保険の契約の扱いも、今後の焦点になる。</span><b>読者へ</b><span>京成電鉄や京阪の名前で届くメールやメッセージは、リンクを開く前に、公式サイトの案内と照らして確かめる。米国経由で旅行する予定がある人は、航空会社の運航情報を出発前に確認する。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "sanshu":{"kick": "国際 · 米中ロ · ✓ 3媒体 · 中国・ロシア側の確認、開催地は未確認(米側の発表に基づく)", "title": "米側の発表によると、米中ロの3首脳が19日に初の会談へ 核軍縮とイラン協議が議題、ウクライナは扱わず 中国・ロシアは未確認", "what": "米側の発表によると、ホワイトハウスは14日、トランプ大統領、習近平国家主席、プーチン大統領の3人による首脳会談を19日に開くと発表した。3か国の首脳がそろう会談は初めてとされる。開催地は中国・深センと伝えられている。米政権の高官は、核軍縮とイランをめぐる協議が議題の中心で、ウクライナは取り上げないと説明した。報道官は、会談は米国の利益を前進させるものだと述べた。10月には、プーチン大統領が3者の会談を提案したと伝えられ、トランプ大統領も前向きな考えを示していた。中国とロシアは、この会談の開催を確認していない。両国の受け止めも、確認できていない。", "why": "核兵器の数や配備を決める話し合いは、持つ国が同じ場に集まらなければ進みにくい。中国は米ロより核弾頭の数が少ないとされ、これまで、数を縛る交渉には加わってこなかった。3人が直接向き合う場が開かれれば、その枠組みが変わるきっかけになりうる。", "me": "暮らしへの影響は、会談の結果が出てから現れる。ニュースで「核軍縮」や「イラン協議」という言葉が出たら、どの国の、何を減らす、あるいは話し合う話なのかを分けて聞くと追いやすい。", "a": "会談を前向きに見る立場は、3人が直接話すこと自体に意味があるという。核の数の話し合いに中国が席を置くなら、これまで枠の外にいた国が加わることになる。", "b": "慎重に見る立場は、発表されたのは日程と米側の説明だけで、中国とロシアの側が議題に同意したのかは分からないという。ウクライナを扱わないという米側の説明に、ロシア側がどう応じるかも見えず、具体的な合意につながるかは読めない。", "say": "確認できたのは、米側が19日の開催と議題を明らかにしたところまで。中国とロシアの側の確認、開催地の正式な決定、合意の有無は未確認だ。今日は、両国から公式の反応が出るかを見る。", "src": "毎日新聞(米中ロ首脳会談の開催と米側の説明、11/14) · 時事通信(核軍縮とイラン協議、ウクライナは扱わず、11/14) · NHK(19日に初めて開催へ、11/14)"},
+    "ukr":{"kick": "国際 · ウクライナ和平 · ✓ 2媒体 · 次回協議の日程、米国・ロシア側の受け止めは未確認", "title": "ウクライナ和平の次回協議に、英仏独伊ポーランドの5か国とEUが加わる見通し 欧州の首脳が合意", "what": "13日、アイルランドのダブリンでEUの非公式首脳会議が開かれた。欧州の首脳は、ロシアとウクライナの和平をめぐる米国仲介の次回協議に、英国、フランス、ドイツ、イタリア、ポーランドの5か国とEUの代表が加わることで合意した。EUのコスタ大統領は、欧州は明確で、一つにまとまった声を上げなければならないと述べた。これまでの協議は、米国も交えた3か国で進められていた。次回協議の日程は、確認できていない。米国とロシアが、この顔ぶれでの参加を受け入れたかどうかも、確認できていない。", "why": "和平の条件は、停戦後の安全の保障や国境の扱いなど、欧州の安全保障に直接かかわる。欧州が席に着けば、その利害を直接伝える場ができる。", "me": "欧州の動きは、エネルギー価格や避難民の受け入れを通じて、日本の暮らしにも間接的に響く。協議の中身より先に、誰が席に着くのかが変わった点を押さえておく。", "a": "欧州の参加を前向きに見る立場は、安全の保障を受け持つことになる国が、条件づくりの段階から加わる意味が大きいという。", "b": "慎重に見る立場は、参加者が増えると意見の調整に時間がかかり、協議が進みにくくなる面があるという。ロシアの出方も分からないとみる。", "say": "確認できたのは、欧州の首脳が5か国とEUの代表団で合意したところまで。次回協議の日程と、米国・ロシアの受け止めは未確認だ。今日は、日程の発表と、ロシア側の説明を見る。", "src": "NHK(欧州5か国が和平協議に参加の見通し、11/14) · 時事通信(欧州5か国が和平交渉参加へ、首脳が合意、11/14)"},
+    "flight":{"kick": "国際 · 航空 · ✓ 3媒体 · 解除までの時間(4～5時間で食い違い)、欠航・遅延の規模は未確認", "title": "米国で全国の出発が一時停止、解除まで4～5時間と報道が分かれる 運輸長官は通信機器の過負荷が原因と説明したと報道", "what": "米連邦航空局は、米東部時間の13日午後4時ごろ、航空交通管制の通信障害を理由に、全米のすべての空港で航空機の出発を止めた。全国の出発停止措置は、2023年1月以来となる。措置は日本時間の14日に解除された。解除までにかかった時間は、報道によって4～5時間と食い違っている。報道によると、ショーン・ダフィ運輸長官は、原因は通信を中継するスイッチとルーターが過負荷で止まったことで、通信やレーダーが完全に途絶えたわけではないと説明した。マークウェイン・マリン国土安全保障長官は、サイバー攻撃などの証拠は今のところないと述べた。欠航や遅延の正確な数は、確認できていない。", "why": "管制の通信が止まると、航空機の位置や指示を地上と交わせなくなる。安全を守るために離陸を止める判断が出やすく、止まる範囲が全国に及ぶと、乗客の足止めが他の空港にも連鎖する。解除後も、機材と乗務員の配置が元に戻るまでは、欠航や遅れが続く。", "me": "米国を経由する旅程がある人は、航空会社の運航情報で、乗り継ぎ便が運航しているかを確かめる。欠航した場合の振り替えは、航空会社ごとに扱いが違う。", "a": "仕組みの弱さを問う立場は、通信障害一つで全国の離陸が止まる点に注目する。予備の回線や代替手段が十分だったのかが、原因の確認と合わせて問われるという。", "b": "安全を優先した判断だったとみる立場は、通信が不安定なまま離陸を続けるより、止めて確認する方が安全だったという。措置を解除できたことも、判断の一つの結果だとみる。", "say": "確認できたのは、全国の出発停止が出て解除されたこと、運輸長官が機器の過負荷を原因と説明したこと、国土安全保障長官がサイバー攻撃の証拠はないと述べたこと。解除までの時間(4～5時間で食い違い)と、欠航・遅延の規模は未確認だ。今日は、運航がどこまで戻るかを見る。", "src": "毎日新聞(全米で4時間超の離陸禁止解除、11/14) · NPR(FAA issues nationwide ground stop for all U.S. airports, 11/13) · CBS News(FAA issues nationwide ground stop, stranding thousands, 11/13)"},
+    "keisei":{"kick": "社会 · サイバー · ✓ 1媒体 · 実際に持ち出された件数と原因は未確認", "title": "京成電鉄で最大337万件、京阪HDで最大22万人余の情報流出か 予約システムとLINE委託先に不正アクセス", "what": "京成電鉄は14日、特急「スカイライナー」の座席予約システムが不正アクセスを受け、氏名、電話番号、メールアドレスなど最大337万件の情報が第三者に取得された可能性があると発表した。京阪ホールディングスも同日、LINE公式アカウントの管理を委託している会社が不正アクセスを受け、最大22万人余りの情報が流出した可能性があると公表した。京阪の対象はユーザーIDで、一部は氏名も含まれる。どちらも可能性の段階で、実際に持ち出された件数と原因、不正アクセスの範囲は確認できていない。", "why": "予約や連絡の窓口を外部の会社に任せていると、自社のシステムが無事でも、委託先から情報が漏れることがある。数百万件規模の氏名と連絡先は、本物らしい迷惑メッセージの材料になりやすい。", "me": "スカイライナーを使った人や、京阪のLINE公式アカウントを友だち登録している人は、会社の案内を待つ。会社を名乗るメールやメッセージのリンクは開かず、公式サイトや公式アプリから確かめる。", "a": "早く公表したことを重く見る立場は、可能性の段階でも知らせたことで、利用者が注意する時間が生まれるという。件数が上限の数字であっても、公表の意味は大きいとみる。", "b": "体制の見直しを求める立場は、情報を預かる側が、委託先の管理を含めて守る責任を負うという。件数が大きいほど、再発を防ぐ仕組みの説明が必要だとみる。", "say": "確認できたのは、両社が最大の件数を公表したところまで。実際に持ち出された件数、侵入の方法、被害の有無は未確認。今日は、会社から対象者への連絡と、調査の進み具合を見る。", "src": "NHK(京成電鉄の予約システムへの不正アクセス、京阪HDのLINE委託先への不正アクセス、11/14)"},
+    "tamaoff":{"kick": "経済 · 保険 · ✓ 1媒体 · 不正請求の範囲と、損保各社が申し入れを受け入れたかは未確認", "title": "タマホーム、保険代理業の廃業を損保各社に申し入れ 全店舗の社内調査を進め、外部調査も検討", "what": "住宅メーカーのタマホームは14日、火災保険の保険金を不正に請求していた疑いが出ている問題で、保険代理業を廃業する方針を損害保険各社に申し入れたことを明らかにした。全店舗を対象にした社内の調査を進めており、外部調査も検討している。13日の時点では、大手損保2社がタマホーム経由の新規販売をやめる方針を決め、もう1社も同じ方向だと伝えられていた。不正請求は疑いの段階で、認定されたものではない。申し入れを損保各社が受け入れたかは、確認できていない。", "why": "保険代理業は、保険会社から販売を任される仕事で、代理店の不正は、委託元の保険会社の信用にも響く。代理店が自らやめる意向を示すと、新規の販売だけでなく、すでに結んだ契約の窓口をどうするかが課題になる。", "me": "タマホームで火災保険を結んだ人は、契約している損保会社の案内を確認する。更新や保険金の請求の窓口が変わるかどうかは、今後の発表を待つ。", "a": "早い廃業の判断を評価する立場は、調査の途中でも代理業をやめる意向を示すことで、疑いの拡大を食い止められるという。外部調査を検討する姿勢も、透明性を高めるとみる。", "b": "実態の解明を優先する立場は、廃業で窓口が消えても、疑いの範囲と、顧客に不利益がなかったかは調べる必要があるという。調査が尽くされないまま幕引きになってはならないとみる。", "say": "確認できたのは、タマホームが廃業の方針を申し入れたところまで。不正請求の範囲、損保各社が申し入れを受け入れたか、既存の契約の扱いは未確認だ。今日は、外部調査の始め方と損保各社の説明を見る。", "src": "NHK(保険代理業の廃業を損保各社に申し入れ、全店舗の社内調査と外部調査の検討、11/14)"},
+    "ekiden":{"kick": "スポーツ · ✓ 1媒体", "title": "高校駅伝・中国地区、男子は世羅が23年連続、女子は銀河学院が4年連続で全国大会へ", "what": "14日、高校駅伝の中国地区大会が開かれた。男子は世羅が3位に入り、23年連続56回目となる全国大会への出場を決めた。女子は銀河学院が優勝し、4年連続4回目の全国大会出場を決めた。全国大会は、京都の都大路を走る全国高校駅伝で、各地区の上位校が出場する。順位以外の記録やタイム、他の出場校は、今回の情報では確認できていない。", "why": "全国大会に出るには地区大会で上位に入る必要があり、連続出場の回数は、その地区で毎年勝ち抜いてきた積み重ねを示す。男子の世羅は3位でも出場権を得ており、女子の銀河学院は優勝での出場になる。", "me": "地元の高校が出場する人は、全国大会の日程と中継の予定を確かめておくと、応援しやすい。大会は走る距離や区間の順番で展開が変わるので、記録が出てから結果を見るのがよい。", "a": "連続出場の記録を重く見る立場は、毎年の強化と選手の層の厚さが表れており、全国大会でも上位を狙える力があるという。", "b": "慎重に見る立場は、地区大会での順位と全国大会の成績は別で、全国ではコースや相手が変わるため、連続出場の回数だけでは力を測れないという。", "say": "確認できたのは、世羅の男子と銀河学院の女子が全国大会の出場を決めたところまで。タイムや他の出場校は未確認だ。今日は、他の地区の出場校が出そろうかを見る。", "src": "毎日新聞(世羅が23年連続56回目の都大路へ 高校駅伝男子・中国、11/14)"},
+    "cop":{"kick": "環境 · ✓ 1媒体", "title": "笹川環境相、来週始まるCOP31の閣僚級会合に出席へ 「主要な交渉に参加する」", "what": "トルコで開かれている国連の気候変動会議COP31で、来週から閣僚級会合が始まる。笹川環境相は、会合を前に、主要な交渉に参加し、日本の考え方を国際社会に訴えていくと述べた。閣僚級会合は、各国の大臣が出席して、事務レベルでまとまらなかった論点を話し合う場だ。出席する日程や、日本が訴える具体的な内容は、今回の発言では確認できていない。COP31は、国連の気候変動枠組み条約の締約国が集まる会議の31回目にあたる。", "why": "気候変動の対策は、排出削減の目標、途上国への資金支援、石炭などの扱いについて、各国の立場が分かれる。閣僚級会合は、そうした対立点に政治の判断を示す段階にあたる。", "me": "排出削減の目標や資金の負担は、電気料金や企業の設備投資を通じて、長い目で暮らしに響く。会合の結論は、各国の政策に反映される。", "a": "会合での積極的な発言を重く見る立場は、日本の技術や資金協力を示す機会になるという。", "b": "成果を慎重に見る立場は、各国の対立が深いため、会合で文書がまとまるかどうかは分からないという。", "say": "確認できたのは、笹川環境相が閣僚級会合に出席する意向を示したところまで。日本が訴える具体的な内容と会合の結論は未確認だ。来週の会合の議題を見る。", "src": "NHK(COP31の閣僚級会合に笹川環境相が出席へ、11/13)"},
+    "kuma":{"kick": "社会 · ✓ 1媒体", "title": "クマの目撃や出没、10月は神奈川県で前年の5.4倍 埼玉県は1.4倍", "what": "10月のクマの目撃や出没の件数が、神奈川県で前年の同じ月の5.4倍、埼玉県で1.4倍になったと伝えられた。2県のうち、神奈川県の増え方が大きい。件数の元になった数え方、他の都県との比較、人への被害の件数は、今回の情報では確認できていない。クマの目撃や出没が多い地域では、自治体が情報を公開して注意を呼びかけている。", "why": "クマの出没は、山の食べ物の量や、人里に近い環境の変化など、複数の要因が重なって増減する。ただ、今回の情報には原因を述べる箇所がなく、増えた理由は確認できていない。", "me": "山に近い地域に住む人や、ハイキングに出かける人は、自治体が出す出没情報を確認する。出没が多い地域では、早朝や夕方の行動に気をつける。", "a": "数字を重く見る立場は、前年の5倍を超える地域が出た以上、自治体の注意喚起や備えを早めに強めるべきだという。", "b": "数字を慎重に見る立場は、前年が少なかった場合は倍率が大きく見えるため、実際の件数と合わせて見る必要があるという。", "say": "確認できたのは、10月に神奈川県で5.4倍、埼玉県で1.4倍になったところまで。増えた理由、人への被害の件数、他の県の状況は未確認だ。今日は、自治体の出没情報を見る。", "src": "朝日新聞(10月のクマの目撃・出没件数、神奈川県5.4倍、埼玉県1.4倍、11/14)"},
+    "awa":{"kick": "社会 · ✓ 1媒体", "title": "徳島県阿波市長らの詐欺事件、市職員と会社員が釈放される 勾留の請求は却下", "what": "徳島県阿波市長らをめぐる詐欺事件で、市職員と会社員が釈放された。裁判所が、この2人について検察などが求めた勾留の請求を却下したためだ。勾留とは、逮捕された後に、逃げたり証拠を隠したりするおそれがあるときに、引き続き身柄を拘束する手続きをいう。釈放されたことは、疑いが晴れたことを意味しない。事件の全体像、市長の関与の有無、捜査の今後は、今回の情報では確認できていない。", "why": "勾留の請求が却下されると、逮捕された人は釈放されるが、捜査は在宅で続くことがある。市長や市職員がかかわる事件では、行政の信頼にも影響するため、手続きの経過が注目される。", "me": "阿波市の住民や市の手続きを利用する人は、市の説明や発表を確認する。事件の中身は、捜査や裁判の結果を待つ必要がある。", "a": "釈放を重く見る立場は、勾留の必要性が認められなかったことは、手続きが慎重に進められている表れだという。", "b": "捜査の継続を重く見る立場は、釈放されても疑いは残り、市長らの関与を含めて、事実関係の解明が必要だという。", "say": "確認できたのは、市職員と会社員が釈放され、勾留の請求が却下されたところまで。事件の具体的な内容、市長の関与、今後の捜査は未確認だ。今日は、市の説明と捜査の動きを見る。", "src": "朝日新聞(阿波市長らの詐欺事件、市職員と会社員を釈放、勾留請求を却下、11/14)"},
+    "tqdef":{"kick": "国際 · ✓ 1媒体", "title": "トルコとカタールが相互防衛協定に署名 中東の安全保障の枠組みに変化の可能性", "what": "トルコとカタールが、相互防衛協定に署名した。相互防衛協定は、一方が攻撃を受けたときに、もう一方が防衛に加わることを約束する取り決めをいう。中東の安全保障の枠組みが変わる可能性があると伝えられている。協定の詳しい中身、発効の時期、他の国との関係は、今回の情報では確認できていない。署名は14日に伝えられた。両国がどのような場合に防衛に加わるのかという条件も、確認できていない。", "why": "中東では、各国が米国などとの関係に加えて、地域の国どうしで安全保障を組み直す動きがある。2国の防衛の約束は、周辺国の判断にも影響しうる。協定の内容が明らかになれば、どの範囲の攻撃に対応するのかが判断の材料になる。", "me": "中東の情勢は、原油の価格や海上輸送を通じて、日本のガソリン代や電気料金にも響く。協定の影響は、すぐには出ず、各国の動きを見る必要がある。", "a": "協定を安定につながるとみる立場は、攻撃を思いとどまらせる抑止の効果があるという。", "b": "協定を警戒する立場は、地域の対立する陣営が固まり、緊張が高まるおそれがあるという。", "say": "確認できたのは、2国が署名したところまで。協定の中身、発効の時期、周辺国の反応は未確認だ。今日は、周辺国の反応と協定の条文の公表を見る。", "src": "毎日新聞(トルコとカタールが相互防衛協定に署名、11/14)"}
+  };
+  const G = {
+    "核軍縮":{"f": "安全保障", "d": "各国が持つ核兵器の数を減らすための取り組み。", "w": "米側の発表では、19日の米中ロ首脳会談の議題とされる。"},
+    "勾留":{"f": "法律", "d": "逮捕された人が、逃げたり証拠を隠したりするおそれがあるとき、引き続き身柄を拘束する手続き。", "w": "阿波市の事件で、請求が却下された。"},
+    "不正アクセス":{"f": "サイバー", "d": "権限のない人が、他人のIDやシステムの弱点を使って、内部に入り込む行為。", "w": "京成電鉄と京阪HDが、被害を公表した。"},
+    "保険代理業":{"f": "金融", "d": "保険会社から委託を受けて、保険を勧め、契約を結ぶ仕事。", "w": "タマホームが、廃業の方針を申し入れた。"},
+    "相互防衛協定":{"f": "安全保障", "d": "一方が攻撃を受けたら、もう一方が防衛に加わると約束する取り決め。", "w": "トルコとカタールが署名した。"},
+    "閣僚級会合":{"f": "外交", "d": "各国の大臣が出席して、事務レベルでまとまらなかった論点を話し合う会合。", "w": "COP31で、来週から始まる。"},
+    "管制":{"f": "航空", "d": "航空機が安全に飛べるよう、地上から離着陸の順番や高度を指示する仕事。", "w": "米国で、管制機能の通信障害が起きた。"},
+    "不正請求":{"f": "金融", "d": "事実と異なる内容や水増しした金額で、保険金や代金を請求すること。", "w": "タマホームで、疑いが出ている。"},
+    "外部調査":{"f": "経営", "d": "会社の外の専門家が、中立の立場で行う調査。", "w": "タマホームが、検討している。"},
+    "損害保険":{"f": "金融", "d": "火災や事故などで生じた損害を、保険金で補う保険。", "w": "タマホームの火災保険の引き受け元にあたる。"},
+    "COP31":{"f": "環境", "d": "国連の気候変動枠組み条約の締約国が集まる会議の31回目。", "w": "トルコで開かれている。"},
+    "和平協議":{"f": "外交", "d": "戦争を終わらせる条件を、当事者や関係国が話し合う場。", "w": "次回から欧州5か国とEUの代表が加わる見通し。"},
+    "出発停止措置":{"f": "航空", "d": "航空機の出発を、一定の範囲で止めるよう出す措置。", "w": "米国で、全国の空港に出され、解除までの時間は報道で4～5時間と食い違う。"},
+    "非公式首脳会議":{"f": "外交", "d": "正式な決定を伴わず、首脳が集まって意見をすり合わせる会合。", "w": "13日、EUの首脳が次回の和平協議への参加を合意した。"},
+    "安全の保証":{"f": "安全保障", "d": "停戦のあと再び攻められないよう、どの国がどう守りを約束するかという取り決め。", "w": "ウクライナ和平の条件づくりで焦点になる。"},
+    "ルーター":{"f": "情報技術", "d": "データを行き先へ振り分けて送る通信機器。", "w": "運輸長官は、スイッチとルーターの過負荷が原因と説明した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
