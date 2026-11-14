@@ -1,0 +1,334 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,290.53</b>KOSPI · 11/13(金) 終値 · 日曜は休場 · 前の取引日比-0.98%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>699.66</b>KOSDAQ · 11/13(金) 終値 · 日曜は休場</div>
+    </div>
+    <div class="dateline"><span>第42号 · 朝刊</span><b>2026年11月15日 日曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="us">
+      <div class="kick">国際 · 米中ロ会談<span>報道照合 ✓ 4社 · 中国政府の公式確認、会談の場所・時刻・議題は未確認</span></div>
+      <h2 class="hl">米ロ「19日にAPECを機に米中ロ3者首脳会談」…中国側の発表は確認されず</h2>
+      <p class="deck">米国が先に発表し、ロシアがこれに続いて確認した。北朝鮮問題が議論される可能性があると米国側は伝え、トランプ-キム・ジョンウン会談は予定されていないと明らかにした。</p>
+      <div class="body">
+        <p>米国政府とロシア政府は14日(現地時間)、19日に米国・中国・ロシアの首脳が3者会談を開くと、それぞれ明らかにした。米国がワシントンで先に発表し、ロシアがすぐに同じ日程を公式に確認したとの知らせが、韓国時間の15日未明に伝わった。アジア太平洋経済協力会議(APEC)首脳会議に合わせて設けられた場で、首脳会議は18日から19日まで中国で開かれる。ドナルド・トランプ米大統領は、来週フィリピンで開かれるASEAN首脳会議と、中国で開かれるAPECに続けて出席する。米国側は、この会談で北朝鮮問題が議論される可能性があると伝えつつ、トランプ大統領とキム・ジョンウン北朝鮮国務委員長の会談は予定されていないと明らかにした。習近平中国国家主席とウラジーミル・プーチン・ロシア大統領がともに出席する3者の形式だという点が、今回の発表の核心だ。</p>
+        <p>3者会談は、三つの国の首脳が一堂に会して協議する形式で、2カ国ずつ別々に会う2国間会談と区別される。だが、具体的な場所と時刻、議題はまだ公開されておらず、中国政府の公式発表も14日夜までに出なかった。韓国が協議から外れたまま朝鮮半島問題が扱われうるとの懸念が出され、1945年のヤルタ会談で、大国が当事国抜きで他国の運命を論じたことになぞらえ、「第2のヤルタ会談」という表現まで出た。米中の2国間会談も取り沙汰されるが、確定した日程は確認されていない。イ・ジェミョン大統領のASEAN・APEC歴訪の日程も同じ期間に続き、イ大統領は16日にマニラで、フィリピン、タイの首脳とそれぞれ2国間会談を行う。3者会談で合意文書が出るのか、出るなら何を盛り込むのか、韓国政府が事前にどんな説明を受けたのかは確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="cp">
+      <div class="kick">社会 · 個人情報<span>報道照合 ✓ 4社 · 流出項目・経路・時期は未確認</span></div>
+      <h3 class="hl">造幣公社のモバイル地域愛商品券プラットフォーム『チャク』で3083人の個人情報が流出</h3>
+      <div class="one">
+        <p>韓国造幣公社は14日、同公社が運営するモバイル地域愛商品券プラットフォーム『チャク』で、外部からの不正アクセスと個人情報の閲覧があったと明らかにした。流出した個人情報は3083人分だ。造幣公社は利用者に謝罪の意を示した。地域愛商品券は、地方自治体が発行し、その地域の中だけで使わせる商品券で、『チャク』はこれをアプリで購入して決済するサービスだ。不正アクセスは、許可を受けていない第三者がシステムに入り込んで情報を見たことを指す。どんな情報がどんな経路で漏れたのか、アクセスがいつ始まったのか、情報を見ただけなのかダウンロードしたのか、該当する利用者に個別の通知が行われたのかは、公開されていない。前号で取り上げた『みんなの創業』第2期の参加者の個人情報流出に続き、公共サービスでの流出がまた明らかになった形だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="tk"><b>国民の力、民主党の統一教疑惑に特検を要求…疑惑の事実関係は確認されず</b><em>国民の力の報道官は14日の論評で、特検で真相を明らかにすべきだと述べた。民主党内部で提起された統一教の関与疑惑は、まだ確認されていない。</em><span>政治 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="hc"><b>ハン・ドンフン氏とチェ・ミンヒ首席最高委員、二つの裁判の比較をめぐりSNSで応酬</b><em>ハン・ドンフン氏が「言い張れば醜い」と言うと、チェ・ミンヒ首席最高委員は「嘘をつくな」と応じた。「期限付きの大統領」「謀略裁判」といった表現も飛び交った。</em><span>政治 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="mm"><b>BTS3冠・エスパ2冠…メロンミュージックアワード初日の授賞式開かれる</b><em>14日にソウルの高尺スカイドームで開かれた授賞式に、1万8000人余りが集まった。BTSは「今年のアルバム」を含む3部門を受賞した。</em><span>文化 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="gj"><b>光州のマンション放火容疑の40代を拘束…治療中だった70代の警備員が死亡</b><em>11日、全南光州の北区のマンションに火をつけた疑いで、40代の男が拘束された。13階で見つかった70代の警備員は、治療中に死亡した。</em><span>社会 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="fr"><b>フランス、物価・教育環境に抗議する学生・労働者のデモが5週連続</b><em>14日(現地時間)、フランスで物価の急騰と劣悪な教育環境に抗議するデモが5週目も続いた。参加規模は確認されていない。</em><span>国際 · ✓ 報道1件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="dz">
+      <div class="kick">国際 · ウクライナ<span>報道照合 ✓ 4社 · 米国側の立場、「質問」か「提案」か表現が分かれる</span></div>
+      <h3 class="hl">ゼレンスキー「米国、NATO加盟の代わりにドンバス譲渡の意向を尋ねた」…米国側の立場は確認されず</h3>
+      <div class="body">
+        <p>ウォロディミル・ゼレンスキー・ウクライナ大統領は13日、記者団に対し、米国が仲介するロシアとの終戦交渉で、米国の交渉団が、ウクライナが北大西洋条約機構(NATO)に加盟する代わりに東部のドンバス地域を譲れるか尋ねたと明らかにした。ドンバスはドネツク州とルハンスク州にまたがるウクライナ東部の地域で、ロシアが一部を占領している。この発言は14日(現地時間)に伝わり、ゼレンスキー大統領は、NATOとの関係が再び交渉の議題に上ったとみていると述べた。</p>
+        <p>「尋ねた」という表現は、ゼレンスキー大統領本人の説明に従ったものだ。これを公式の提案として伝えた報道もあり、米国政府の立場は現時点で確認されていない。前号で取り上げた米国特使のプーチン大統領との面会後の交渉の流れで出た発言であり、ウクライナ政府がこの構想にどう答えたのかは確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="ms">
+      <div class="kick">技術 · クラウド障害<span>報道照合 ✓ 4社 · 障害の継続時間(24時間前後か36時間か)・詳しい原因は未確認</span></div>
+      <h3 class="hl">マイクロソフトの業務用サービス、世界的な障害が復旧…欧州の一部で公共業務にも支障</h3>
+      <div class="body">
+        <p>マイクロソフトの業務用サービスであるOutlookやTeamsなどで、13日から14日にかけて続いた世界的な障害が復旧した。Outlookはメール、Teamsはビデオ会議とメッセンジャーを担うサービスだ。マイクロソフトは、サービスが復旧したと明らかにし、今回の障害はサイバー攻撃や人工知能エージェントとは無関係の技術的な問題だったと説明した。障害がどれだけ続いたかは集計ごとに分かれ、24時間に近いとする見方と、36時間だとする見方がある。</p>
+        <p>欧州では、一部の国の政府・公共部門の業務に支障が出た。これを機に、欧州の一部では「米国の技術からのデトックスが必要だ」との声が出た。クラウドサービスを1社に頼る構造の危うさが、改めて取り沙汰された形だ。障害の詳しい原因と影響を受けた利用者数は公開されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="mz">
+      <div class="kick">保健 · 感染症<span>報道照合 ✓ 3社 · 地位を判定した機関・時期、患者数の集計は未確認</span></div>
+      <h3 class="hl">米国、26年ぶりに麻疹排除国の地位を失ったとの報道…保健当局の公式発表は未確認、最近患者数千人が発生</h3>
+      <div class="body">
+        <p>米国が26年ぶりに麻疹排除国の地位を失ったと報じられた。米国の保健当局の公式発表は確認されていない。排除国とは、麻疹が国内で持続的に広がらず、事実上撲滅されたと認められた状態を指す。米国は長く予防接種を着実に行って麻疹の管理に成功してきたが、最近数千人の患者が出て、この地位を守れなかったとされる。</p>
+        <p>米国は2000年に麻疹がなくなった国と認められた。麻疹は感染力がきわめて強く、接種率が一定の水準を下回ると集団免疫が崩れ、急速に広がる。接種率が下がったという報道も同時に出たが、今回の患者増加の原因を公的機関がどう説明したかは確認されていない。地位を判定した機関と正確な時期、患者数の最終集計も公開されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>26年</b><span>米国が麻疹排除国の地位を保てなくなった期間の基準</span></div>
+        <div><b>数千人</b><span>最近米国で発生した麻疹の患者(集計は未確定)</span></div>
+        <div><b>未確認</b><span>地位を判定した機関と正確な時期</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>米中ロ3者会談で、韓国が外れたまま朝鮮半島問題の結論が決まるという話が出回っている。</b> <span>米国側は、北朝鮮問題が議論される可能性があるとだけ伝えており、議題と場所は公開されていない。結論が決まるという根拠は確認されていない。</span></div>
+        <div><b>マイクロソフトの障害は、ハッキングのようなサイバー攻撃が原因だという話が出回っている。</b> <span>マイクロソフトは、今回の障害はサイバー攻撃や人工知能エージェントとは無関係の技術的な問題だったと説明した。詳しい原因は公開されていない。</span></div>
+        <div><b>造幣公社の商品券アプリの流出は、『みんなの創業』の流出と同じ経路だという話が出回っている。</b> <span>造幣公社は、外部からの不正アクセスと個人情報の閲覧があったとだけ明らかにし、経路は公開していない。二つの事故がつながっているという根拠は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 日 11月15日</b><span>KOSPI・KOSDAQは日曜日のため開かない。中国政府が19日の3者会談を公式に確認するか、会談の場所と時刻が公開されるかは、見ておく価値がある。日中の最高気温は21度まで上がって穏やかで、月曜の朝には気温が下がる。</span><b>今週</b><span>16日にイ・ジェミョン大統領がマニラで、フィリピン、タイの首脳とそれぞれ2国間会談を行う。17日(米国時間)にエヌビディアが決算を発表し、18日から19日までAPEC首脳会議が開かれる。19日には米中ロの3者会談が予定されている。</span><b>その後</b><span>造幣公社の個人情報流出の項目と経路、ドンバス譲渡の質問に対する米国側の立場、マイクロソフト障害の詳しい原因は、まだ公開されていない。</span><b>読者へ</b><span>『チャク』アプリを使っているなら、パスワードを変えてお知らせを確認しておこう。疑惑と確定した事実を分けて読み、片方の説明だけの発言を事実のように受け取らないのがよい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "us":{"kick": "国際 · 米中ロ会談 · ✓ 4社 · 中国政府の公式確認、会談の場所・時刻・議題は未確認", "title": "米ロ「19日にAPECを機に米中ロ3者首脳会談」…中国側の発表は確認されず", "what": "米国とロシアは14日(現地時間)、19日に米国・中国・ロシアの首脳が3者会談を開くと、それぞれ明らかにした。米国が先に発表し、ロシアがこれに続いて同じ日程を公式に確認した。会談は、18日から19日まで中国で開かれるAPEC首脳会議に合わせて行う。米国側は北朝鮮問題が議論される可能性があると伝え、トランプ大統領とキム・ジョンウン国務委員長の会談は予定されていないと明らかにした。会談の場所と時刻、議題は公開されていない。中国政府の公式発表は確認されていない。", "why": "米国・ロシア・中国はいずれも国連安全保障理事会の常任理事国であり、3カ国の首脳が一堂に会して合意する案件は、国際交渉の方向に影響を与える。朝鮮半島問題が議題に上りうるという点で、韓国にも直接関わる。中国の確認と議題が定まって初めて、会談の実際の性格が見えてくる。", "me": "韓国が直接出席しなくても、会談の結果は対北朝鮮政策や韓米・韓中関係に影響を与えうる。月曜に市場が開く前に、中国側の発表と会談の日程が出るかを確認しておく価値がある。", "a": "会談を前向きにとらえる側は、3大国の首脳が直接顔を合わせること自体が、緊張を和らげるきっかけになりうるとみる。北朝鮮問題をはじめとする懸案を、対話で扱う窓口ができるという見方だ。", "b": "慎重な側は、韓国が外れたまま朝鮮半島問題が扱われうる点を懸念する。外交部の高官が、中国側から韓国の利益は損なわれないとの返答を受けたと伝えたと知られるが、匿名の発言であり、政府の公式の立場とは確認されていない。", "say": "確認されたのは、米国とロシアの発表までだ。北朝鮮問題が議論される可能性とトランプ-キム・ジョンウン会談の不在は米国側の説明で、中国の確認と議題はまだ出ていない。きょうは、中国側の公式発表が出るか、会談の場所と時刻が公開されるかを見ておく価値がある。", "src": "聯合ニュース(米中ロ首脳会談19日開催の発表、11/14) · 韓国経済(米中ロ首脳会談が開かれる、11/14) · 朝鮮日報(第2のヤルタ会談への懸念、11/14) · ハンギョレ(米国、19日に中国で3者会談、11/14)"},
+    "cp":{"kick": "社会 · 個人情報 · ✓ 4社 · 流出項目・経路・時期は未確認", "title": "造幣公社のモバイル地域愛商品券プラットフォーム『チャク』で3083人の個人情報が流出", "what": "韓国造幣公社は14日、同公社が運営するモバイル地域愛商品券プラットフォーム『チャク』で、外部からの不正アクセスと個人情報の閲覧があったと明らかにした。流出した個人情報は3083人分だ。造幣公社は利用者に謝罪の意を示した。どんな情報がどんな経路で漏れたのか、アクセスがいつ始まったのかは公開されていない。前号で取り上げた『みんなの創業』第2期の参加者の個人情報流出は、中小ベンチャー企業部が14日に謝罪した別個の事故だ。", "why": "商品券アプリには名前・連絡先・決済手段の情報がたまりやすく、いったん破られると、ショートメッセージ詐欺やなりすましに使われる恐れが生じる。公的機関が運営するサービスだからと、利用者はセキュリティが整っていると信じて使うが、その信頼が揺らぐ。", "me": "『チャク』アプリを使っているなら、造幣公社の個別の案内を待たず、パスワードを変えてアプリのお知らせを確認しておこう。出所の不明なショートメッセージのリンクは押さないのが安全だ。", "a": "責任を強調する側は、公共のプラットフォームが利用者の情報を預かって運営している以上、アクセス統制や点検の甘さをまず問うべきだとみる。同じ時期に公共サービスの事故が相次いだ点も根拠に挙げる。", "b": "もう一方の側は、流出の規模が3083人と確認された以上、項目と経路を明らかにする調査が先だとみる。原因が明らかになる前に、システム全体がずさんだと断じるのは早いという見方だ。", "say": "確認されたのは、外部からの不正アクセスと3083人分の閲覧、造幣公社の謝罪だ。どんな情報が出たのかと経路は、まだ公開されていない。きょうは、造幣公社が流出項目と後続の案内を出すか、監督当局が調査に乗り出すかを見ておく価値がある。", "src": "聯合ニュース(造幣公社の地域愛商品券プラットフォームの個人情報流出、11/14) · 韓国経済(地域通貨アプリが破られた 3083人、11/14) · KBSニュース(3000人余りの個人情報流出、11/14) · 京畿日報(造幣公社の個人情報流出の続報、11/14)"},
+    "dz":{"kick": "国際 · ウクライナ · ✓ 4社 · 米国側の立場、「質問」か「提案」か表現が分かれる", "title": "ゼレンスキー「米国、NATO加盟の代わりにドンバス譲渡の意向を尋ねた」…米国側の立場は確認されず", "what": "ゼレンスキー・ウクライナ大統領は13日、記者団に対し、米国の交渉団が、ウクライナのNATO加盟を条件にドンバスを譲れるか尋ねたと明らかにした。この発言は14日に伝わった。ドンバスは、ドネツク州とルハンスク州にまたがるウクライナ東部の地域だ。ゼレンスキー大統領は、NATOとの関係が再び交渉の議題に上ったとみていると述べた。これを質問として伝えた報道もあれば、提案として伝えた報道もある。米国政府の立場は確認されていない。", "why": "ウクライナのNATO加盟は、ロシアがもっとも強く反対してきた案件で、ドンバスは戦争の核心の領土だ。二つの案件を引き換えにする構図が取り沙汰されたなら、終戦交渉の枠組みが変わりうるという意味だ。ただし、ゼレンスキー大統領1人の説明だという点が、解釈の限界だ。", "me": "国際情勢は原油・穀物価格や為替につながるので、交渉の流れが変わる兆しが出れば、エネルギー・穀物市場がまず反応する。韓国の対ロシア・対ウクライナ政策や、復興参加の議論にも影響が及びうる。", "a": "交渉を支持する側は、領土と安全保障をともにテーブルに載せたことが、終戦の現実的な枠組みだとみる。NATO加盟という安全保障があるなら、譲歩の見返りとして説明できるという見方だ。", "b": "反対する側は、占領されていない領土まで譲るのは、侵略に報いる前例になるとみる。NATO加盟が実際に保証されうるかも不確かだという指摘だ。", "say": "確認されたのは、ゼレンスキー大統領がそう述べたという事実までだ。米国側の説明とウクライナ政府の公式な回答は、まだ確認されていない。きょうは、米国とロシアの側からこの構想への反応が出るかを見ておく価値がある。", "src": "聯合ニュース(ゼレンスキーのドンバス譲渡案の質問、11/14) · 朝鮮日報(ドンバス譲渡案の提案、11/15) · BBC(US has floated Ukraine ceding Donbas, 11/14) · ロイター(US floated idea of Ukraine ceding Donbas, 11/14)"},
+    "ms":{"kick": "技術 · クラウド障害 · ✓ 4社 · 障害の継続時間(24時間前後か36時間か)・詳しい原因は未確認", "title": "マイクロソフトの業務用サービス、世界的な障害が復旧…欧州の一部で公共業務にも支障", "what": "マイクロソフトの業務用サービスであるOutlookやTeamsなどで、13日と14日にまたがって世界的な障害が続き、14日に復旧した。マイクロソフトは、サービスが復旧したと明らかにした。同社は、今回の障害はサイバー攻撃や人工知能エージェントとは無関係の技術的な問題だったと説明した。障害の継続時間は、24時間に近いという集計と、36時間だという集計が分かれている。欧州の一部の国では、政府と公共部門の業務に支障が出た。欧州の一部では「米国の技術からのデトックスが必要だ」との声が出た。", "why": "企業と政府がメール・会議・文書を1社のクラウドにまとめて使えば、その会社の障害がそのまま業務の麻痺につながる。障害が1日を超えたという点で、代替手段を備えているかが問題になる。", "me": "会社や学校でメールやビデオ会議を1つのサービスにだけ頼っているなら、障害のときに使う連絡手段をあらかじめ決めておこう。重要なファイルは1カ所にだけ置かず、別にダウンロードして保管しておくのがよい。", "a": "依存を減らそうという側は、1社に必須の業務を任せる構造が危ういとみる。欧州の一部の「デトックス」発言も、この文脈だ。", "b": "現実的な側は、ほかの業者に乗り換えるには費用と時間がかかり、会社が今回の障害をサイバー攻撃ではなく技術的な問題だと説明している以上、構造全体を変えようという主張には、さらに根拠が必要だとみる。", "say": "確認されたのは、障害の発生と復旧、そしてサイバー攻撃ではないという会社の説明だ。継続時間と詳しい原因は、集計によって異なるか、公開されていない。きょうは、マイクロソフトが原因分析を出すか、欧州各国の政府が対応策を明らかにするかを見ておく価値がある。", "src": "聯合ニュース(MS障害、36時間ぶりに復旧、11/14) · BBC(Microsoft deeply sorry for global outage, 11/14) · AP通信(Microsoft says services fully restored, 11/14) · ブルームバーグTV(Microsoft Struggles to Restore Access, 11/13)"},
+    "mz":{"kick": "保健 · 感染症 · ✓ 3社 · 地位を判定した機関・時期、患者数の集計は未確認", "title": "米国、26年ぶりに麻疹排除国の地位を失ったとの報道…保健当局の公式発表は未確認、最近患者数千人が発生", "what": "米国が26年ぶりに麻疹排除国の地位を失ったと報じられた。米国の保健当局の公式発表は確認されていない。排除国とは、麻疹が国内で持続的に広がらず、事実上撲滅されたと認められた状態を指す。米国は長く予防接種を着実に行って麻疹の管理に成功してきた。最近、数千人の患者が出た。接種率が下がったという報道も同時に出た。地位を判定した機関と正確な時期、患者数の最終集計は公開されていない。", "why": "麻疹は感染力がきわめて強い病気で、接種率が下がると集団免疫が崩れ、拡大が速くなる。排除国の地位を失ったという報道は、1つの国の防疫体制が一度取りこぼしたものを取り戻すには長い時間がかかるという信号だ。", "me": "海外旅行を計画しているなら、麻疹の接種記録を確認しておこう。乳幼児の子がいるなら、接種の予定を先送りしないのがよい。", "a": "防疫専門家の見方は、接種率の回復が最優先だという側だ。接種率の低い地域を探し、追いつき接種を行うのがもっとも早い道だとみる。", "b": "別の見方は、接種政策への不信そのものを解くべきだという側だ。接種義務を強めると反発が大きくなりうるので、信頼の回復が先だとみる。", "say": "確認されたのは、地位を失ったという報道と、最近数千人の患者が出たというところまでだ。増加の原因と判定機関は、公式の説明を確認できなかった。きょうは、米国の保健当局が患者数と対応策を発表するかを見ておく価値がある。", "src": "聯合ニュース(米国、26年ぶりに麻疹排除国の地位を喪失、11/14) · 韓国経済(ワクチン不信で崩れた麻疹防疫、11/14) · YTN(麻疹排除国の地位を喪失 接種率の低下、11/14)"},
+    "tk":{"kick": "政治 · ✓ 報道3件", "title": "国民の力、民主党の統一教疑惑に特検を要求…疑惑の事実関係は確認されず", "what": "国民の力のチョ・ヨンスル報道官は14日の論評で、民主党内部で提起された統一教の関与疑惑に関連し、特別検察官による捜査で真相を明らかにすべきだと述べた。論評は、民主党のチェ・ミンヒ首席最高委員が、非公開の党員懇談会で統一教に関する発言をしたという内容を問題にした。報道官は、民主党内部の権力争いとして覆い隠して済ませてはならないと述べた。これに先立ち、新天地疑惑をめぐる与野党の攻防も続いてきた。統一教の関与疑惑の事実関係は確認されておらず、捜査に着手したかどうかも確認されていない。", "why": "特検は、捜査の対象が政界のときに政党が要求する代表的な手段だ。疑惑が事実と確認される前に特検の要求が先に出れば、疑惑そのものが政争の材料として固まりかねない。", "me": "政治疑惑の報道を見るときは、誰がどんな根拠で語ったかと、捜査機関の確認があったかを分けて読もう。国会での議論が進めば、特検法の処理日程も確認しておく価値がある。", "a": "国民の力は、与党内部から出た発言があったのなら、内部の争いで覆うことではなく、捜査で明らかにすべきだとみる。", "b": "民主党の公式な反応は確認されていない。疑惑が立証されていない状態で、特検をまず要求するのが適切かどうかは、評価が分かれうる。", "say": "確認されたのは、国民の力の特検要求までだ。統一教の関与疑惑は、まだ事実と確認されていない。きょうは、民主党の公式な立場とチェ・ミンヒ首席最高委員の説明が出るかを見ておく価値がある。", "src": "韓国経済(新天地に続き統一教疑惑、特検を要求、11/14) · 朝鮮日報(民主党の統一教疑惑、特検を要求、11/14) · 聯合ニュースTV(国民の力の統一教疑惑、特検、11/14)"},
+    "hc":{"kick": "政治 · ✓ 報道4件", "title": "ハン・ドンフン氏とチェ・ミンヒ首席最高委員、二つの裁判の比較をめぐりSNSで応酬", "what": "ハン・ドンフン氏と共に民主党のチェ・ミンヒ首席最高委員が14日、イ・ジェミョン大統領の裁判とユン・ソンニョル前大統領の裁判を比較した発言をめぐり、SNSで応酬した。ハン・ドンフン氏は、チェ・ミンヒ首席最高委員に向けて「言い張れば醜い」という趣旨のことを述べた。チェ・ミンヒ首席最高委員は「嘘をつくな」と応じた。応酬の過程で、「期限付きの大統領」と「謀略裁判」という表現が飛び交った。どちらの発言が事実に合っているかは、この応酬だけでは確認できない。", "why": "イ大統領とユン前大統領の裁判はいずれも裁判所で進行中の案件であり、政治家のSNS発言が、判決に先立つ評価として読まれうる。二人の発言は、支持層の結集とも結びついている。", "me": "SNSの応酬は要約だけが広まりやすく、原文と文脈を確認しないと、一方の主張だけが残る。裁判の実際の争点は、裁判所の決定と公式資料で確認するのが正確だ。", "a": "ハン・ドンフン氏は、イ大統領とユン前大統領の裁判が同じだと述べたチェ・ミンヒ首席最高委員の言葉をめぐり、「言い張れば醜い」と述べた。", "b": "チェ・ミンヒ首席最高委員は、ユン前大統領は控訴審で有罪が確実で、イ大統領の事件の破棄差し戻しはこじつけだったという趣旨で反論した。", "say": "確認されたのは、二人がSNSで応酬し、それぞれの表現を使ったという点だ。二人の主張はそれぞれの評価であり、事実関係はこの応酬では見極められない。きょうは、二つの裁判の裁判所日程と追加の発言が出るかを見ておく価値がある。", "src": "ハンギョレ(ハン・ドンフン「言い張れば醜い」 チェ・ミンヒと応酬、11/14) · 天地日報(イ大統領・ユン前大統領の選挙法裁判の比較発言をSNSで応酬、11/14) · アイニュース24(ハン・ドンフン「言い張れば醜い」 チェ・ミンヒとSNSで舌戦、11/14) · 江原日報(期限付きの大統領 vs 謀略裁判、11/14)"},
+    "mm":{"kick": "文化 · ✓ 報道2件", "title": "BTS3冠・エスパ2冠…メロンミュージックアワード初日の授賞式開かれる", "what": "2026メロンミュージックアワード(MMA2026)初日の授賞式が14日午後、ソウルの高尺スカイドームで開かれた。1万8000人余りの観客が集まった。BTSは「今年のアルバム」「今年のステージ」「グローバルTOP10」の3部門を受賞した。3月に発売した正規5集『アリラン』とワールドツアーの成果が認められた。エスパは「今年のグローバルK-アーティスト」を含む2部門を受賞した。授賞式は初日に続き、2日目の日程が残っている。受賞部門と候補の選定方法、2日目の受賞者は、初日の結果では決まっていない。", "why": "ワールドツアー中の歌手が国内の授賞式の主要な賞を受けたという点は、海外活動の成果が国内の評価にもつながったことを示す。受賞部門は、アルバムやステージ活動などに分かれる。", "me": "好きな歌手の受賞のニュースや公演映像を探すなら、2日目の授賞結果も確認できる。", "a": "授賞式を歓迎する側は、K-POP歌手のグローバルな成果を国内のファンとともに確認する場だとみる。", "b": "批判的な側は、音源中心の授賞式が、アルバムの完成度や活動の多様性を十分に反映できていないとみる。", "say": "確認されたのは、初日の受賞結果までだ。2日目の授賞部門と結果は、まだ出ていない。きょうは、2日目の大賞の受賞者を見ておく価値がある。", "src": "聯合ニュース(BTS3冠 エスパ2冠 MMA2026初日、11/14) · 東亜日報(BTS MMA2026「今年のアルバム」3冠、11/14)"},
+    "gj":{"kick": "社会 · ✓ 報道2件", "title": "光州のマンション放火容疑の40代を拘束…治療中だった70代の警備員が死亡", "what": "11日、全南光州の北区のマンションで火事があり、放火の疑いがある40代の男が14日に拘束された。火が出たのは6階だ。70代の警備員が、火事のあった世帯を確認しようとマンションの中を見て回るうち、13階の踊り場で見つかり、治療を受けたが13日に死亡した。警備員は、煙を避けて上の階へ上がる途中で倒れたものと推定される。この火事で13人がけがをした。放火の動機と具体的な経緯は、捜査で明らかになることだ。", "why": "高層マンションの火事では、煙が階段を伝って上へ上がるため、上へ避難するのはかえって危険だ。今回の事故で亡くなった警備員は、住民の安全を確認しに出て被害に遭ったと伝えられている。", "me": "マンションの火事のときは、煙が階段を上がりやすいので、避難の要領をあらかじめ確認しておこう。家と建物の避難経路もあわせて見ておくのがよい。", "a": "厳正な対応を求める側は、放火による人的被害が大きかった点から、責任を重く問うべきだとみる。", "b": "予防を強調する側は、高層の建物で煙が広がる構造と、警備員のような労働者の避難案内体制を点検すべきだとみる。", "say": "確認されたのは、放火の疑いで拘束されたことと、死者1人、負傷者13人という被害だ。動機と具体的な経緯は、捜査で明らかになることだ。きょうは、警察の追加調査と、被害世帯への支援が出るかを見ておく価値がある。", "src": "東亜日報(マンション放火で重体の70代警備員、ついに死亡、11/14) · 聯合ニュース(光州のマンション放火犯を拘束、11/14)"},
+    "fr":{"kick": "国際 · ✓ 報道1件", "title": "フランス、物価・教育環境に抗議する学生・労働者のデモが5週連続", "what": "フランスで14日(現地時間)、物価の急騰と劣悪な教育環境に抗議する学生と労働者のデモが、5週連続で続いた。デモは、物価が上がるうえに学校の教育環境が悪いという不満から始まった。デモ隊は、政府が出した対策は不十分だと主張し、「パンくず」程度だと表現した。デモの参加規模と政府の追加対策の有無は、確認されていない。", "why": "物価と教育環境への不満が数週間続けば、政府の政策運営に負担がたまる。学生と労働者がともに立ち上がったデモなので、要求が一つにまとまらないこともありうる。", "me": "欧州旅行を計画しているなら、週末のデモで交通や都心の通行が影響を受けることがあるので、現地の案内を確認しておこう。欧州の景気や消費の流れを見る投資家なら、物価への不満が続くかどうかが参考になる。", "a": "デモ隊側は、政府の対策が「パンくず」程度だとみる。", "b": "政府の立場は確認されていない。対策の水準をめぐり、政府とデモ隊の評価が同じかどうかは知られていない。週末のデモが5週目も続いた点から、要求が短期間では解消されなかったという点だけが確認できる。", "say": "確認されたのは、14日のデモが5週連続で続いたという点だ。参加規模と政府の反応は確認されていない。きょうは、政府が追加の対策を出すか、来週末もデモが続くかを見ておく価値がある。", "src": "聯合ニュース(フランス、5週連続の週末デモ、11/15)"}
+  };
+  const G = {
+    "APEC":{"f": "外交", "d": "アジア・太平洋地域の国々が経済協力を話し合う首脳会議", "w": "米国とロシアは、19日の3者首脳会談をこの首脳会議に合わせて開くと明らかにし、中国政府の公式発表は確認されていない。"},
+    "ASEAN":{"f": "外交", "d": "東南アジア10カ国が集まった地域協力体", "w": "トランプ大統領は、来週フィリピンで開かれるこの協力体の首脳会議に出席すると伝えられている。"},
+    "国務委員長":{"f": "政治", "d": "北朝鮮の最高指導者が持つ公式の肩書", "w": "米国側は、トランプ大統領とキム・ジョンウン国務委員長の会談は予定されていないと明らかにした。"},
+    "不正アクセス":{"f": "セキュリティ", "d": "許可を受けていない人やシステムが、情報にアクセスすること", "w": "造幣公社は『チャク』で外部からの不正アクセスと個人情報の閲覧があったと明らかにし、経路は公開されていない。"},
+    "地域愛商品券":{"f": "経済", "d": "地方自治体が発行し、その地域の中だけで使わせる商品券", "w": "『チャク』は地域愛商品券をアプリで購入して決済するサービスで、3083人分の情報が閲覧されたと発表された。"},
+    "NATO":{"f": "安全保障", "d": "北大西洋条約機構。西側諸国の集団軍事同盟", "w": "ゼレンスキー大統領は、米国がNATO加盟を持ち出してドンバスの譲渡を尋ねたと明らかにし、米国側の立場は確認されていない。"},
+    "ドンバス":{"f": "安全保障", "d": "ウクライナ東部のドネツク州とルハンスク州にまたがる地域", "w": "ロシアが一部を占領しているこの地域をめぐり、米国がウクライナの意向を尋ねたと、ゼレンスキー大統領が語った。"},
+    "終戦交渉":{"f": "安全保障", "d": "戦争を終わらせるため、当事国が行う交渉", "w": "ロシアとウクライナの終戦交渉は米国が仲介しており、今回の発言はゼレンスキー大統領1人の説明だ。"},
+    "クラウド":{"f": "技術", "d": "自分のコンピューターではなく、インターネットで借りて使うサーバーとソフトウェアのサービス", "w": "マイクロソフトの業務用サービスの障害で、1社のクラウドに依存する構造の危うさが取り沙汰された。"},
+    "サイバー攻撃":{"f": "セキュリティ", "d": "ハッキングやマルウェアなどで、電算網を麻痺させたり情報を抜き取ったりする行為", "w": "マイクロソフトは、今回の障害はサイバー攻撃とは無関係の技術的な問題だったと説明した。"},
+    "麻疹排除国":{"f": "保健", "d": "特定の感染症が国内で持続的に広がらず、撲滅されたと認められた国", "w": "米国は26年ぶりに麻疹排除国の地位を失ったと報じられ、地位を判定した機関は確認されていない。"},
+    "集団免疫":{"f": "保健", "d": "住民の多くが免疫を持ち、感染症が広がりにくい状態", "w": "接種率が下がると集団免疫が崩れて麻疹が急速に広がりうるが、今回の患者増加の公式の原因は確認されていない。"},
+    "特検":{"f": "法", "d": "特別検察官。政治的に敏感な事件を担う独立した捜査制度", "w": "国民の力は統一教の関与疑惑に特検を要求し、疑惑そのものは確認されていない。"},
+    "首席最高委員":{"f": "政治", "d": "党指導部の最高委員会の最高委員のうち、最も高い役職", "w": "チェ・ミンヒ首席最高委員は、ハン・ドンフン氏とSNSで応酬し、二人の主張はそれぞれの評価だ。"},
+    "拘束":{"f": "法", "d": "捜査や裁判のために、裁判所の令状で身柄を一定期間とどめおく措置", "w": "放火の疑いがある40代の男が拘束され、有罪かどうかは裁判で判断される。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
