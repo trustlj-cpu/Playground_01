@@ -1,0 +1,15 @@
+import { clusterItems } from '/home/user/Playground_01/feed/worker/src/cluster.js';
+import fs from 'fs';
+const items = JSON.parse(fs.readFileSync('items_08.json','utf8'));
+const cl = clusterItems(items);
+const find = s => cl.find(c => c.items.some(i => i.title.includes(s)));
+let fail = 0;
+const sep = (a, b, name) => { const ok = find(a) !== find(b); console.log((ok?'PASS':'FAIL') + ' ' + name + ' separate'); if (!ok) fail++; };
+const tog = (a, b, name) => { const ok = find(a) === find(b); console.log((ok?'PASS':'FAIL') + ' ' + name + ' together'); if (!ok) fail++; };
+sep('Rubio on AI', 'Rubio: Iran has failed', '① Rubio AI/이란');
+sep('Rubio: Strong partnership with Greece', 'Rubio: Iran has failed', '① Rubio 그리스/이란');
+sep('Rubio on AI', 'Rubio: Energy relations with Greece', '① Rubio AI/그리스 에너지');
+sep('특별성과급 내년 3말4초', '실적 공개 하루 앞두고', '② 성과급/외인 매도');
+sep('특별성과급 내년 3말4초', 'AMD 리사 수, 삼성전자·SK하이닉스', '② 성과급/리사 수 회동');
+tog('특별성과급 내년 3말4초', '특별성과급 내년 3월말경 지급', '② 성과급 3건 유지');
+console.log('clusters', cl.length, 'fail', fail);

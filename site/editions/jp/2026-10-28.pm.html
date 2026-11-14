@@ -1,0 +1,340 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>63,954.19</b>日経平均 · 10/28 終値(前日比 +1.08%)</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>TOPIX · 10/28 終値 · 取得なし</div>
+    </div>
+    <div class="dateline"><span>No. 24 · 夕刊</span><b>2026年10月28日(水)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="teisu">
+      <div class="kick">政治 · 選挙制度<span>✓ 4媒体 · 法案の提出時期と条文の中身は未確認</span></div>
+      <h2 class="hl">衆院定数、比例31減で自民・維新・国民民主が足並み 3党で法案化の協議へ</h2>
+      <p class="deck">自民党の実務者が示した比例代表31議席の削減案に、維新と国民民主が賛成する意向を表明した。</p>
+      <div class="body">
+        <p>衆議院議員の定数削減を巡る与野党協議が28日に開かれ、日本維新の会と国民民主党が、自民党の実務者が示した比例代表で31議席を削減する案をもとに検討を進めることに賛成する意向を表明した。NHKは、自民党が「3党で法案を作成しよう」と呼びかけたと伝えた。朝日新聞は「衆院定数31減、自民・維新・国民民主が賛成 3党で法案化の協議へ」と見出しで報じ、維新と国民の賛成によって今国会での法案成立が可能になったとも伝えた。時事通信は、維新が定数31減を受け入れる方針を決めたと速報し、Yahoo!ニュースのトピックスは「衆院比例定数 31減案で自維国合意」と見出しで伝えた。</p>
+        <p>国民民主党は同日朝、賛成の方針を決めていた。NHKによると、党が主張した削減幅とは異なるものの、あわせて求めてきた選挙制度の見直しが追加で盛り込まれたことが理由だという。毎日新聞は、国民民主が自民の衆院選制度改革案に賛成へと報じた。朝日新聞は前日、自民が衆院比例で「統一名簿」と「ブロック統合」を提案し、国民民主が評価したと伝え、別の記事で「私どもの主張入った」との言葉を見出しに掲げた。ジャパンタイムズは、この案に複数の政党が比例代表の名簿を共同で作る仕組みの導入が含まれると報じた。読売新聞は、維新が賛同すれば今国会で定数削減関連法案が成立する可能性があると伝えていた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>統一名簿<i>選挙制度</i></b><p>複数の政党が比例代表選挙で共同の候補者名簿を作る仕組み。ジャパンタイムズは、自民案に複数政党が共同で名簿を作成できる制度の導入が含まれると伝えた。</p></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="gmo2">
+      <div class="kick">社会 · サイバー攻撃<span>✓ 4媒体 · 攻撃者側の再開設の有無と捜査の結論は未確認</span></div>
+      <h3 class="hl">GMO続報、個人情報を掲載した攻撃側のサイトのドメイン停止を確認 警視庁が捜査</h3>
+      <div class="one">
+        <p>GMOインターネットグループは28日、不正アクセスを巡り、関係事業者と連携して対応を進めた結果、利用者に関するとみられる個人情報が掲載されていたサイトのドメインが停止されたことを確認したと発表した。NHKとITmedia NEWSが伝えた。ITmediaによると、同社は今後、同様のサイトが新たに開設された場合も、確認次第、直ちにテイクダウン(削除)に向けた対応を行うとしている。毎日新聞は、個人情報を掲載していた攻撃者のサイトが削除されたと報じ、TBS NEWS DIGは、警視庁が不正アクセス禁止法違反などの疑いで捜査していると伝えた。 ITmediaは、27日に攻撃者からとみられる声明と利用者情報とされるデータがネット上で公開され、問題は新たな段階に入ったと解説した。毎日新聞は、攻撃側が客情報を毎日公開するとしていることなどをQ&amp;Aで説明した。朝日新聞は、公開された「顧客の個人情報」について、会社が「拡散しないで」と呼びかけ、法的措置を準備していると伝えていた。ブルームバーグは、セントラル短資FXの冨永氏の話として、個人投資家の外国為替取引の出来高は保たれており、口座を閉じる投資家もいるとした。読売新聞は、GMOの売上高が20年で8倍になったと報じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="aeon"><b>イオンモール熊本、食品売り場など一部再開を12月にも 遺族に意向を伝える</b><em>毎日新聞は食品売り場の再開を12月にも目指す意向を遺族に伝えたと報じた。Yahoo!ニュースは地震後の爆発で7人が犠牲になったと伝えた。</em><span>社会 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="doshin"><b>ロシア拘束の道新記者、メディア有志が即時解放を求める声明 官房長官も要求継続</b><em>毎日新聞はメディア有志が即時解放を強く求める声明を出したと報じた。読売新聞は官房長官が領事面会で健康状態に問題がないと確認したと伝えた。</em><span>国際 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="mac"><b>Appleが新チップ「M6」搭載の14インチMacBook Proを発表、33万9800円から11月6日発売</b><em>ITmedia NEWSはM6のCPUとGPUが12コアで、最大24時間駆動と報じた。GAME Watchは新型MacBook Proの発売決定を伝えた。</em><span>IT · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="bolso"><b>ブラジル大統領選で敗れたフラビオ・ボルソナロ氏が米国に到着、米側はビザ発給の方針</b><em>毎日新聞は資金洗浄の疑いで捜査対象の同氏が米国に着いたと報じた。時事通信は同氏の出国を、ブルームバーグは米国のビザ発給方針を伝えた。</em><span>国際 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kochi"><b>高知県の小学校教員採用試験、合格者の約6割が辞退し採用予定数を下回る</b><em>読売新聞は採用予定数の倍以上に合格を通知したが6割弱が辞退して定員割れになったと報じた。県教育長はさらなる辞退を予想すると述べた。</em><span>教育 · ✓ 3媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="takebe">
+      <div class="kick">政治 · 政治とカネ<span>✓ 3媒体 · 二重計上の有無は未確認</span></div>
+      <h3 class="hl">武部農相、選挙運動費の「二重計上」報道に「事実関係の詳細を確認中」</h3>
+      <div class="body">
+        <p>武部新農林水産大臣は28日の国会で、過去の衆議院選挙に要した選挙運動の費用を、陣営と後援会の収支報告書に二重に計上した疑いがあるなどと一部で報じられたことについて、「事実関係の詳細を確認中だ」と述べたとNHKが報じた。NHKは前日27日にも、衆議院農林水産委員会で、武部氏が2024年の衆院選で「運動員」として登録されたカメラマンに陣営が報酬を支払った疑いが一部で報じられたことに答え、報告書の訂正を依頼したと伝えている。</p>
+        <p>時事通信は27日、武部氏が農水委で、選挙運動費の報告を「訂正」し、振込依頼は削除したと説明したと報じた。毎日新聞は、武部氏が「事務的ミス」として北海道選管に修正と削除を届け出たと伝え、いずれも週刊誌の報道を受けた対応だとした。週刊文春は11月5日号の目次で、武部氏が衆院選で3000万円の裏金を作っていたと掲げている。NHKは、武部氏が28日の国会で二重計上の疑いについて詳細を確認していると述べた点を中心に伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="kuma">
+      <div class="kick">社会 · 災害<span>✓ 3媒体 · 在宅避難者の総数は未確認</span></div>
+      <h3 class="hl">熊本地震から3カ月、避難所に1000人余り 在宅避難の全容は行政もつかめず</h3>
+      <div class="body">
+        <p>ことし7月の熊本地震から28日で3カ月となった。NHKは、被災地では避難生活が長期化し、依然として1000人余りが避難所に身を寄せているほか、壊れた自宅で生活を送る人も数多くいて、これから冬を迎えるため、住まいの確保と在宅避難者への継続支援が課題だと伝えた。毎日新聞は「3カ月たっても続く『在宅避難』 行政も全容つかめず」と見出しで報じた。NHKは別の記事で、全壊した自宅の横の「納屋」で生活を続ける女性が「うちだけじゃないので。知り合いも倉庫で暮らしている」と話したと伝えた。</p>
+        <p>西日本新聞は、木原官房長官が28日の会見で、1000人超が仮設住宅に入ったと述べたうえで「取り組みは着実」と説明したと報じた。au Webポータルも同じ内容を配信した。NHKは、被災地で壊れた自宅に暮らす人たちが、さまざまな事情を抱えていると伝えている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="skhynix">
+      <div class="kick">経済 · 半導体<span>✓ 4媒体 · 通期見通しは未確認</span></div>
+      <h3 class="hl">SKハイニックス、7〜9月期の営業利益が7.3倍で過去最高更新 生成AI向け需要が拡大</h3>
+      <div class="body">
+        <p>韓国の半導体大手SKハイニックスは28日、9月までの3カ月の決算を発表し、営業利益は前の年の同じ時期の7.3倍となり、3カ月ごとの決算で過去最高を更新したとNHKが報じた。NHKは、生成AIの普及に伴って半導体の需要が拡大したことを背景に挙げた。日本経済新聞は「SKハイニックス純利益3倍 7〜9月期、AI高性能半導体が高騰」と見出しで伝え、Yahoo!ニュースは追加の株主還元策として60兆ウォン(約7兆円)規模を発表したと伝えた。ビジネス+ITは、7〜9月期の売上高が初めて100兆ウォンを超え、営業利益率が80%に達したと報じた。聯合ニュースは営業利益が83兆3338億ウォン、売上高が104兆6000億ウォンだったと伝えた。TBS NEWS DIGは、SKやキオクシアなどメモリー大手4社の決算が相次ぎ、AI業界の先行きを占う局面だと伝えた。</p>
+        <p>ブルームバーグTVは、SKハイニックスの利益が予想を上回ったことがAI関連株の反発に拍車をかけたと伝えた。別の報道でイーロン・マスク氏は、ロボット向けのメモリー需要が世界の他の全アプリの合計を超えると予測したと、BigGo ファイナンスが伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>7.3倍</b><span>営業利益の前年同期比(NHK)</span></div>
+        <div><b>3倍</b><span>純利益の前年同期比(日本経済新聞)</span></div>
+        <div><b>100兆ウォン超</b><span>7〜9月期の売上高、初(ビジネス+IT)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>GMOを攻撃した集団のサイトが止まったので、攻撃はもう終わった</b> <span>GMOは、今後同様のサイトが新たに開設された場合も確認次第、直ちにテイクダウンに向けた対応を行うとしている(ITmedia NEWS、10/28)。テレビ朝日は、GMOが攻撃側とみられるサイトの停止確認とともに「懸賞金」情報の募集を始めると伝えた。攻撃の終結を示す報道は確認されていない。</span></div>
+        <div><b>国民民主党は自民党の定数削減案に全面的に賛成した</b> <span>NHKは、国民民主が党の主張した削減幅とは異なるものの、あわせて求めてきた選挙制度の見直しが追加で盛り込まれたことで賛成の方針を決めたと伝えた(NHK、10/28)。SmartFLASHは、同党が以前「19減」案をまとめたと伝えていた。法案の中身は3党の協議が始まる段階にある。</span></div>
+        <div><b>ボルソナロ氏は米国に亡命した</b> <span>Yahoo!ニュースは「亡命か 米認める方針」と見出しで伝えたが、時事通信は「米国へ出国 資金洗浄疑いで捜査対象」、ブルームバーグは米国がビザを発給する方針と報じた(10/28)。dメニューニュースは、連邦警察の旅券提出要請に対し国外逃亡計画を否定していたと伝えた。亡命の申請や認定は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>明日 · 10月29日(木)</b><span>衆院定数削減で、自民・維新・国民民主の3党による法案化の協議がどこまで進むかを見る。GMOの不正アクセスは、警視庁の捜査と、攻撃側が新たなサイトを開設するかが焦点になる。</span><b>今週</b><span>ジャパンタイムズは、日銀が今週は追加の利上げを見送るとの市場の見方を伝え、12月の利上げは現実味があるとしている。武部農相の選挙運動費を巡る国会での追及も続く。</span><b>その先</b><span>ロシアで拘束された道新記者について、政府は即時解放をロシアに求め続けると木原官房長官が述べた。熊本地震の被災地では冬を前に、住まいの確保と在宅避難者への支援が課題になる。</span><b>読者へ</b><span>GMOを巡って、個人情報が掲載されたとされるサイトや投稿を見つけても拡散しない。会社は「拡散しないで」と呼びかけている。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "teisu":{"kick": "政治 · 選挙制度 · ✓ 4媒体 · 法案の提出時期と条文の中身は未確認", "title": "衆院定数、比例31減で自民・維新・国民民主が足並み 3党で法案化の協議へ", "what": "衆議院議員の定数削減を巡る与野党協議が10月28日に開かれ、日本維新の会と国民民主党が、自民党の実務者が示した比例代表で31議席を削減する案をもとに検討を進めることに賛成する意向を表明した。NHKは、自民党が3党で法案を作成するよう呼びかけたと伝えた。朝日新聞は、3党の賛成によって今国会での法案成立が可能になったと報じた。国民民主党は同日朝に賛成の方針を決めており、NHKは、党が主張した削減幅とは異なるが、求めてきた選挙制度の見直しが追加で盛り込まれたと伝えた。朝日新聞は前日、自民が衆院比例で「統一名簿」と「ブロック統合」を提案したと報じた。", "why": "定数削減は議席の配分と政党の勢力に直結するため、賛成する政党が増えるほど法案成立の可否が現実に近づく。今回は削減幅とあわせて比例代表の仕組みの見直しが加わった点が、賛成の理由として報じられている。", "me": "衆院選の投票先や選挙区の議席数に関わる制度の話であり、法案の条文が出た段階で、比例代表の名簿の仕組みがどう変わるかを確認できる。", "a": "自民党は3党での法案作成を呼びかけた。朝日新聞は、国民民主の取り込みを図った自民が「私どもの主張入った」との言葉を見出しに掲げて報じた。要望を一部取り入れて合意を広げたという見方だ。", "b": "国民民主党内の事情にも触れた報道がある。NHKは、党が主張した削減幅とは異なるものの、選挙制度の見直しが追加されたことを理由に賛成を決めたと伝えた。SmartFLASHは、同党が以前に「19減」案をまとめた際にSNSで批判が相次いだと伝えた。", "say": "確認されているのは、維新と国民民主が28日に31減案をもとに検討を進めることへの賛成を表明し、3党が法案化の協議に入ることだ。法案の提出時期、条文の中身、他の野党の対応は報道から確認できない。明日は3党協議の日程と、他の野党の反応を見る。", "src": "NHK(3党の賛成表明, 10/28) · 朝日新聞(3党で法案化の協議へ, 10/28) · 毎日新聞(国民民主の賛成, 10/28) · 時事通信(維新の受け入れ, 10/28)"},
+    "gmo2":{"kick": "社会 · サイバー攻撃 · ✓ 4媒体 · 攻撃者側の再開設の有無と捜査の結論は未確認", "title": "GMO続報、個人情報を掲載した攻撃側のサイトのドメイン停止を確認 警視庁が捜査", "what": "GMOインターネットグループは10月28日、関係事業者と連携して対応を進めた結果、利用者に関するとみられる個人情報が掲載されていたサイトのドメインが停止されたことを確認したとNHKが報じた。ITmedia NEWSによると、同社は今後、同様のサイトが新たに開設された場合も、確認次第、直ちにテイクダウンに向けた対応を行うとしている。毎日新聞は、個人情報を掲載していた攻撃者のサイトが削除されたと報じた。TBS NEWS DIGは、警視庁が不正アクセス禁止法違反などの疑いで捜査していると伝えた。朝日新聞は前日27日、攻撃者側が顧客の個人情報と称する氏名や住所などを公開し、会社が拡散しないよう呼びかけたと報じた。", "why": "個人情報を載せたサイトが止まれば、新たに見られる機会は減る。ただし、公開された情報はすでにコピーされている可能性があり、フィッシングなどの2次被害は別に起こり得る。", "me": "GMOのサービス利用者は、公式のお知らせに従い、不審なメールやSMSのリンクを開かない。公開された情報を見つけても共有しない。", "a": "対策が進んでいるとする見方がある。GMOはドメインの停止を確認し、同様のサイトは確認次第直ちにテイクダウンに向けて動くとした。テレビ朝日は、攻撃側とみられるサイトの停止確認とともに、情報提供を求める「懸賞金」の募集が始まると伝えた。", "b": "不安は残るとする見方もある。毎日新聞は攻撃側が客情報を毎日公開するとしていることをQ&Aで解説し、ITmediaは27日に声明とデータが公開され問題が新たな段階に入ったと伝えた。一方、ブルームバーグは、個人投資家の外国為替取引の出来高は保たれているとのセントラル短資FXの見方を伝えた。", "say": "確認されているのは、個人情報を掲載していたサイトのドメインが停止されたこと、警視庁が捜査していることだ。攻撃者の特定、情報が実際に何人分か、サイトの再開設の有無は報道から確認できない。明日は警視庁の捜査と、攻撃側が新たなサイトを開くかを見る。", "src": "NHK(ドメイン停止の確認, 10/28) · ITmedia NEWS(テイクダウンの方針, 10/28) · 毎日新聞(攻撃者サイトの削除, 10/28) · ブルームバーグ(外為取引への影響, 10/28)"},
+    "takebe":{"kick": "政治 · 政治とカネ · ✓ 3媒体 · 二重計上の有無は未確認", "title": "武部農相、選挙運動費の「二重計上」報道に「事実関係の詳細を確認中」", "what": "武部新農林水産大臣は10月28日の国会で、過去の衆議院選挙に要した選挙運動の費用を、陣営と後援会の収支報告書に二重に計上した疑いがあるなどと一部で報じられたことについて、事実関係の詳細を確認中だと述べたとNHKが報じた。NHKは27日、衆議院農林水産委員会で武部氏が、2024年の衆院選で運動員として登録されたカメラマンへの報酬を巡り、報告書の訂正を依頼したと説明したと伝えた。時事通信は、武部氏が選挙運動費の報告を訂正し、振込依頼は削除したと報じた。毎日新聞は、武部氏が事務的ミスとして北海道選管に修正と削除を届け出たと伝え、週刊誌の報道を受けた対応だとした。", "why": "選挙運動費の収支報告書は、候補者側が何にいくら使ったかを示す公的な記録だ。二重計上の疑いが出た場合は、報告書の訂正の内容と経緯が、閣僚としての説明責任に関わる。", "me": "収支報告書は誰でも閲覧できる公的書類であり、訂正された内容は選管の公表資料で確認できる。", "a": "武部氏側は、訂正を事務的なミスによるものと説明している。毎日新聞は、武部氏が北海道選管に修正と削除を届け出たと報じた。誤りを自ら訂正したという立場だ。", "b": "週刊誌の報道は、より重い疑いを指摘している。週刊文春は11月5日号の目次で、武部氏が衆院選で3000万円の裏金を作っていたと掲げた。訂正だけでは説明が尽きないという見方だ。", "say": "確認されているのは、武部氏が報告書の訂正を依頼し、28日に事実関係を確認中と述べたことだ。二重計上の有無、金額、週刊誌の指摘の真偽は報道から確認できない。明日以降は、武部氏が確認結果を国会で説明するかを見る。", "src": "NHK(国会での答弁, 10/27-28) · 時事通信(報告の訂正と振込依頼の削除, 10/27) · 毎日新聞(事務的ミスと修正削除, 10/27)"},
+    "kuma":{"kick": "社会 · 災害 · ✓ 3媒体 · 在宅避難者の総数は未確認", "title": "熊本地震から3カ月、避難所に1000人余り 在宅避難の全容は行政もつかめず", "what": "ことし7月の熊本地震から10月28日で3カ月となった。NHKは、被災地で避難生活が長期化し、依然として1000人余りが避難所に身を寄せているほか、壊れた自宅で生活を送る人も数多くいて、冬を迎えるため住まいの確保と在宅避難者への継続支援が課題だと伝えた。毎日新聞は、3カ月たっても在宅避難が続き、行政も全容をつかめていないと報じた。NHKは、全壊した自宅の横の納屋で生活を続ける女性の話を伝えた。西日本新聞は、木原官房長官が28日の会見で、1000人超が仮設住宅に入ったと述べ、取り組みは着実だと説明したと報じた。", "why": "避難所に入らず自宅や納屋、倉庫で暮らす人は、名簿などで把握しにくく、物資や相談の窓口が届きにくい。冬に入ると、寒さの中で暮らす環境の確保が急がれる。", "me": "被災地の知人や親族がいる人は、自治体の支援窓口や相談先の案内を共有できる。被災地への支援を考える人は、自治体や支援団体の募集を確認できる。", "a": "政府側は、取り組みは着実に進んでいると説明している。西日本新聞によると、木原官房長官は1000人超が仮設住宅に入ったことを挙げた。住まいの確保が進んでいるという見方だ。", "b": "現場の実情を伝える報道は、課題が残っていると指摘している。NHKは納屋で暮らす女性が「うちだけじゃない」と話したと伝え、毎日新聞は行政も在宅避難の全容をつかめていないと報じた。支援の網から漏れる人がいるという見方だ。", "say": "確認されているのは、地震から3カ月で避難所に1000人余りがいること、1000人超が仮設住宅に入ったことだ。在宅避難者の総数と、冬に向けた支援の具体策は報道から確認できない。明日以降は自治体の調査結果と支援策の発表を見る。", "src": "NHK(3カ月の課題と納屋の暮らし, 10/28) · 毎日新聞(在宅避難の全容, 10/28) · 西日本新聞(官房長官の会見, 10/28)"},
+    "skhynix":{"kick": "経済 · 半導体 · ✓ 4媒体 · 通期見通しは未確認", "title": "SKハイニックス、7〜9月期の営業利益が7.3倍で過去最高更新 生成AI向け需要が拡大", "what": "韓国の半導体大手SKハイニックスは10月28日、9月までの3カ月の決算を発表し、営業利益は前の年の同じ時期の7.3倍となり、3カ月ごとの決算で過去最高を更新したとNHKが報じた。NHKは、生成AIの普及に伴って半導体の需要が拡大したと伝えた。日本経済新聞は、純利益が3倍になったと報じ、AI向けの高性能半導体が高騰したと伝えた。Yahoo!ニュースは、追加の株主還元策として60兆ウォン(約7兆円)規模を発表したと伝えた。ビジネス+ITは、7〜9月期の売上高が初めて100兆ウォンを超え、営業利益率が80%に達したと報じた。聯合ニュースは営業利益が83兆3338億ウォン、売上高が104兆6000億ウォンだったと伝えた。", "why": "AI向けのメモリーの需要拡大が、メモリー大手の利益に直結している。SKハイニックスの数字は、他のメモリー大手の決算の見方にも影響する。", "me": "半導体関連の株式や投資信託を持つ人は、決算後の株価の動きを確認できる。AI関連の設備投資が続くかどうかは、パソコンやスマートフォンの価格にも波及し得る。", "a": "好決算を成長の持続と受け止める見方がある。ブルームバーグTVは、SKハイニックスの利益が予想を上回ったことが、AI関連株の反発の材料になると伝えた。", "b": "決算ラッシュの中で先行きを見極めようとする向きもある。TBS NEWS DIGは、SKやキオクシアなどメモリー大手4社の決算が相次ぎ、AI業界の先行きを占う局面だと伝えた。", "say": "確認されているのは、営業利益が前年同期の7.3倍で、金額は83兆3338億ウォンと聯合ニュースが伝えたこと、四半期の過去最高を更新したことだ。通期の見通しは報道から確認できない。明日は日本のメモリー関連企業の決算と株価の反応を見る。", "src": "NHK(営業利益7.3倍, 10/28) · 日本経済新聞(純利益3倍, 10/28) · ビジネス+IT(売上高100兆ウォン超, 10/28) · 聯合ニュース(営業利益83兆3338億ウォン・追加還元60兆ウォン, 10/28)"},
+    "aeon":{"kick": "社会 · ✓ 2媒体", "title": "イオンモール熊本、食品売り場など一部再開を12月にも 遺族に意向を伝える", "what": "毎日新聞は10月28日、熊本地震後の大規模爆発があったイオンモール熊本について、運営側が食品売り場などの一部を12月にも再開する意向を遺族に伝えたと報じた。Yahoo!ニュースは、地震後の大規模爆発で7人が犠牲になったと伝え、再開は可能なら12月にもと報じた。47NEWSは速報で、再開の可否を被害者に確認していると伝えた。日テレNEWSは、イオンが再開について、まず原因究明と補償をと語り、県への支援金にも触れたと報じた。", "why": "犠牲者が出た施設の再開は、遺族の意向と原因の究明が前提になる。地域の買い物の場でもあるため、再開の時期は周辺の暮らしにも関わる。", "me": "熊本市周辺で買い物をする人は、再開の範囲と時期を運営側の発表で確認できる。", "a": "再開に前向きな見方がある。毎日新聞は、運営側が食品売り場などの一部再開の意向を遺族に伝えたと報じた。地域の生活を支える機能を戻したいという立場だ。", "b": "原因と補償を優先する見方もある。日テレNEWSは、イオンが再開について、まずは原因究明と補償と語ったと報じた。再開より先に被害者への対応を置く立場だ。", "say": "確認されているのは、運営側が一部再開の意向を遺族に伝えたことだ。正式な再開日、原因究明の結果、補償の内容は報道から確認できない。明日以降は運営側の正式な発表を見る。", "src": "毎日新聞(遺族への意向, 10/28) · Yahoo!ニュース(7人が犠牲, 10/28)"},
+    "doshin":{"kick": "国際 · ✓ 3媒体", "title": "ロシア拘束の道新記者、メディア有志が即時解放を求める声明 官房長官も要求継続", "what": "ロシアで拘束された北海道新聞の記者について、毎日新聞は10月28日、メディア有志が即時解放を強く求める声明を出したと報じた。読売新聞は、木原官房長官が会見で、領事面会で記者の健康状態に問題がないと確認したと述べ、茂木外相が領事面会は第一歩だと語ったと伝えた。産経ニュースは、木原官房長官が即時解放を強く求めたと報じた。NHKは、外務省が記者と領事面会を行い、健康状態に問題はなかったと伝えた。毎日新聞は、拘束から2週間で初めての面会だったと報じた。", "why": "領事面会は、拘束された人の状態を確認し、本人と外部をつなぐ最初の手段になる。報道機関が声明を出すのは、取材活動に関わる拘束として注目が集まっているためだ。", "me": "海外で取材や渡航をする人は、拘束時に領事面会を求められることを確認できる。外務省の渡航情報で、ロシア渡航の注意が出ているかを確認できる。", "a": "日本政府は、解放に向けた働きかけを続けるとしている。読売新聞は官房長官が記者の健康状態に問題がないと確認したと伝え、時事通信は領事面会を一歩前進として、解放交渉を続けると報じた。", "b": "報道機関側は、拘束そのものに強く抗議している。毎日新聞は、メディア有志が声明で即時解放を強く求めたと伝えた。Yahoo!ニュースは、政府が記者を救うための構想を検討していると報じた。", "say": "確認されているのは、領事面会で健康状態に問題がなかったこと、政府とメディア有志が即時解放を求めていることだ。拘束の理由、起訴の有無、解放の見通しは報道から確認できない。明日は官房長官の会見と、ロシア側の対応を見る。", "src": "毎日新聞(メディア有志の声明, 10/28) · 読売新聞(健康状態の確認, 10/28) · 産経ニュース(即時解放の要求, 10/28)"},
+    "mac":{"kick": "IT · ✓ 2媒体", "title": "Appleが新チップ「M6」搭載の14インチMacBook Proを発表、33万9800円から11月6日発売", "what": "Appleは10月28日、新型チップ「M6」を搭載した14インチの「MacBook Pro」を発表したとITmedia NEWSが報じた。M6はCPUとGPUがともに12コアで、AI処理とグラフィックスの性能が向上し、Wi-Fi 7に対応し、最大24時間のバッテリー駆動を実現したという。日本での価格は33万9800円からで、11月6日に発売される。GAME Watchは、新型MacBook Proの発売決定を伝えた。Yahoo!ニュースは、M6を搭載した24型のiMacも発表され、24万9800円からだと伝えた。", "why": "パソコン向けのチップにAI処理の性能を載せることは、各社の競争の軸になっている。発売日と価格が示されたため、買い替えを検討する人は比較しやすくなった。", "me": "買い替えを考える人は、価格と発売日を目安に、手持ちの機種との性能差を比べられる。", "a": "AI処理の性能向上を評価する見方がある。ITmedia NEWSはM6でAI処理とグラフィックスが向上したと伝え、Yahoo!ニュースはiMacのAI処理がM4の最大5倍だと伝えた。", "b": "価格に着目する報道もある。ITmedia NEWSは日本の販売価格が33万9800円からだと伝え、ケータイ Watchは24型iMacを24万9800円からと報じた。購入には一定の費用が必要だという見方だ。", "say": "確認されているのは、14インチMacBook ProがM6を搭載して11月6日に発売されること、日本での価格が33万9800円からであることだ。実機の性能の比較やレビューは報道から確認できない。明日以降は各媒体のレビューを見る。", "src": "ITmedia NEWS(M6搭載の14インチ, 10/28) · GAME Watch(発売決定, 10/28)"},
+    "bolso":{"kick": "国際 · ✓ 4媒体", "title": "ブラジル大統領選で敗れたフラビオ・ボルソナロ氏が米国に到着、米側はビザ発給の方針", "what": "ブラジル大統領選の決選投票で敗れたフラビオ・ボルソナロ上院議員について、毎日新聞は10月28日、同氏が米国に到着したと報じた。NHKは27日、ブラジルのメディアが側近の話として、同氏が出国して米国に向かっていると伝えたと報じた。時事通信は、同氏が資金洗浄の疑いで捜査対象になっている中で出国したと伝えた。ブルームバーグは、米国が同氏と家族にビザを発給する方針だと報じた。BBCは、旅券が停止されたと伝えた。dメニューニュースは、連邦警察の旅券提出要請に対し国外逃亡計画を否定したと報じた。", "why": "捜査対象の政治家が国外に出ると、ブラジルの司法手続きや選挙後の政治に影響する。米国がビザを出す方針を示したことは、ブラジルと米国の関係にも波及し得る。", "me": "日本からは遠い話だが、選挙で敗れた候補者の動きが日米を含む外交関係に影響する例として確認できる。", "a": "米国側は受け入れの方針だ。ブルームバーグは、トランプ政権が同氏と家族にビザを発給する方針だと報じた。", "b": "ブラジルの司法は出国を問題視している。BBCは旅券の提出に応じず旅券が停止されたと伝え、ブルームバーグは最高裁の判事が外国からの支援の可能性を調べるよう連邦警察に命じたと報じた。", "say": "確認されているのは、同氏が出国して米国に到着したこと、米国がビザを発給する方針であることだ。亡命の申請の有無、資金洗浄の容疑の中身、今後の帰国の見通しは報道から確認できない。明日は米国とブラジル両政府の発表を見る。", "src": "毎日新聞(米国に到着, 10/28) · NHK(出国の報道, 10/28) · 時事通信(資金洗浄の疑いと出国, 10/28) · ブルームバーグ(ビザ発給の方針, 10/27)"},
+    "kochi":{"kick": "教育 · ✓ 3媒体", "title": "高知県の小学校教員採用試験、合格者の約6割が辞退し採用予定数を下回る", "what": "読売新聞は10月28日、高知県の小学校教員採用試験で、採用予定数の倍以上に合格を通知したところ、6割弱が辞退して定員割れになったと報じた。ｄメニューニュースは、高知さんさんテレビの報道として、合格者の辞退率が約6割になり、県教育長がさらなる辞退を予想していると伝えた。Yahoo!ニュースは、テレビ高知の報道として、2025年に引き続く水準だと伝え、安心して4月を迎えられる取り組みを求めた。RKC高知放送は、教員争奪戦の影響か、新年度に採用予定の小学校教員の約6割が辞退したと報じた。", "why": "合格者が他の自治体や職に流れると、採用予定数に届かず、学校の人員配置に影響する。教員の確保を各地が争う状況が、辞退率に表れていると報じられている。", "me": "高知県の子どもがいる家庭は、4月以降の担任の配置について、学校や教育委員会の説明を確認できる。", "a": "県側は辞退が続くことを見込んでいる。ｄメニューニュースによると、県教育長はさらなる辞退は予想されると述べた。", "b": "報道は、教員の確保が各地で競争になっている点に注目している。RKC高知放送は、教員争奪戦の影響を指摘した。テレビ高知は、安心して4月を迎えられる取り組みが必要だと伝えた。", "say": "確認されているのは、合格者の約6割が辞退し、定員割れになったことだ。最終的な採用人数と、4月以降の配置への影響は報道から確認できない。明日以降は県教育委員会の対応を見る。", "src": "読売新聞(合格通知と辞退, 10/28) · ｄメニューニュース(教育長の発言, 10/28) · RKC高知放送(教員争奪戦の影響, 10/28)"}
+  };
+  const G = {
+    "比例代表":{"f": "選挙制度", "d": "政党に投じられた票の数に応じて議席を配分する選挙の仕組み。衆院選では小選挙区と並んで行われる。", "w": "自民党の実務者が、比例代表で31議席を削減する案を示した。"},
+    "統一名簿":{"f": "選挙制度", "d": "複数の政党が比例代表選挙で共同の候補者名簿を作る仕組み。", "w": "朝日新聞は、自民が衆院比例で統一名簿を提案したと伝えた。"},
+    "ブロック統合":{"f": "選挙制度", "d": "比例代表の選挙区(ブロック)をまとめて数を減らす見直しのこと。", "w": "朝日新聞は、自民が統一名簿とあわせて提案したと伝えた。"},
+    "定数削減":{"f": "選挙制度", "d": "国会議員の議席数を減らすこと。議席の配分が変わり、政党の勢力にも影響する。", "w": "衆議院の定数削減を巡る協議で、3党が賛成を表明した。"},
+    "テイクダウン":{"f": "情報セキュリティ", "d": "不正なサイトや投稿を、運営事業者などに依頼して停止・削除させること。", "w": "GMOは、同様のサイトが新たに開設された場合も直ちにテイクダウンに向けて動くとした。"},
+    "ドメイン":{"f": "IT", "d": "インターネット上のサイトの住所にあたる名前。ドメインが停止されると、そのアドレスではサイトを開けなくなる。", "w": "個人情報が掲載されていたサイトのドメインの停止が確認された。"},
+    "不正アクセス禁止法":{"f": "法", "d": "他人のIDやパスワードを使うなどして、権限のないコンピューターに入り込む行為を禁じる法律。", "w": "警視庁が不正アクセス禁止法違反などの疑いで捜査していると伝えられた。"},
+    "収支報告書":{"f": "政治資金", "d": "政治家の陣営などが、お金の入りと出を選挙管理委員会などに届け出る公的な書類。", "w": "武部農相は、選挙運動費の報告書の訂正を依頼した。"},
+    "二重計上":{"f": "会計", "d": "同じ支出や収入を、2か所以上の帳簿や報告書に重ねて記載すること。", "w": "陣営と後援会の収支報告書に二重に計上した疑いが報じられた。"},
+    "運動員":{"f": "選挙法", "d": "選挙運動のために候補者の陣営で働く人。公職選挙法は報酬の支払いを原則として禁じ、一定の場合だけ認める。", "w": "武部氏の陣営が、運動員として登録されたカメラマンに報酬を支払った疑いが報じられた。"},
+    "在宅避難":{"f": "防災", "d": "避難所に入らず、被災した自宅や敷地内の小屋、車などで避難生活を続けること。人数や状況を行政が把握しにくい。", "w": "熊本地震から3カ月たっても在宅避難が続いている。"},
+    "仮設住宅":{"f": "防災", "d": "災害で自宅を失った人のために、行政が一時的に提供する住まい。", "w": "1000人超が仮設住宅に入ったと官房長官が述べた。"},
+    "営業利益":{"f": "会計", "d": "売上高から原価と販売費・管理費を引いた、本業の利益。", "w": "SKハイニックスの営業利益が前年同期の7.3倍になった。"},
+    "株主還元":{"f": "金融", "d": "企業が利益の一部を、配当や自社株買いで株主に戻すこと。", "w": "SKハイニックスは追加の株主還元策を発表した。"},
+    "領事面会":{"f": "外交", "d": "外国で拘束された自国民に、大使館などの領事官が会って状態を確認すること。", "w": "ロシアで拘束された道新記者に、領事面会が行われた。"},
+    "資金洗浄":{"f": "法", "d": "犯罪で得たお金の出どころを隠し、正当な資金に見せかける行為。マネーロンダリングとも呼ぶ。", "w": "ボルソナロ氏は資金洗浄の疑いで捜査対象になっている。"},
+    "ビザ":{"f": "外交", "d": "外国に入国するための許可証。発給する国が、入国の目的や滞在期間を審査して出す。", "w": "米国はボルソナロ氏と家族にビザを発給する方針だ。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

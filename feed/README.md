@@ -1,0 +1,50 @@
+# feed — 10분 자동 수집 → 웹 게시 → 1시간 취합
+
+```
+GitHub Actions (*/10)  →  feed/collect_fast.py  →  POST /ingest  →  Cloudflare Worker (dailydrop-feed) + D1
+                                                                        ├ GET /                  시간순 목록 페이지(디자인 없음)
+                                                                        ├ GET /items.json        원본 항목
+                                                                        ├ GET /hourly/latest.json  직전 1시간 취합본 ← 콘텐츠 제작 에이전트 입력
+                                                                        └ cron 매시 02분          hourly 테이블에 취합본 저장
+```
+
+## 켜는 법 (사장님, 1회)
+1. Cloudflare 대시보드 → 프로필 → **API 토큰** → "Cloudflare Workers 편집" 템플릿으로 생성 (D1 편집 권한 포함되어 있음).
+2. GitHub 저장소 → Settings → Secrets and variables → Actions:
+   - `CLOUDFLARE_API_TOKEN` = 1의 토큰
+   - `CLOUDFLARE_ACCOUNT_ID` = 대시보드 Workers & Pages 화면 오른쪽 "Account ID"
+3. Actions 탭 → `feed-worker-deploy` → Run workflow. 끝나면 `https://feed.dailydrop.kr` (= dailydrop-feed.trustlj.workers.dev) 가 열립니다.
+   이후 10분마다 `feed-collect-10min` 이 자동으로 채웁니다.
+
+비밀키(INGEST_KEY)는 배포 워크플로가 토큰에서 파생해 Worker 비밀로 넣고, 수집 워크플로가 같은 식으로 파생합니다. 따로 등록할 것 없음.
+
+## 소스 적용 순서
+`issuedrop/sources.yaml` + `feed/sources_extra.yaml` 을 읽은 뒤, main의 `codex-feed/source_policy.json`(교체·중단 정책, 사유 포함)이 **최종 적용**된다. 실제로 수집되는 소스 목록은 Actions 실행 로그의 요약이 기준.
+
+## 소스 추가 (Codex)
+`issuedrop/sources.yaml` 또는 `feed/sources_extra.yaml` 에 같은 형식으로 추가:
+```yaml
+sources:
+  - {id: yt_xxx, name: "유튜브 ○○ 채널", cat: 경제, region: KR, tier: C, type: rss, url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC..."}
+```
+tier: A 공식·1차자료 / B 주요 매체 / C 분석·블로그·유튜브 / D 커뮤니티·SNS(팩트체크 필수).
+
+## 취합본 경로
+`GET /hourly/YYYY-MM-DDTHH.json` 은 읽기 전용(저장본 없으면 404). 생성은 매시 02분 크론, `?rebuild=1`, 그리고 `/hourly/latest.json`에 저장본이 없을 때만.
+
+## 취합본 형식 (`/hourly/latest.json`)
+`{hour, hour_kst, n_items, by_field, sources[{source,n}], clusters[{topic, keywords, field, n_items, n_sources, tier_best, status, items[]}]}`
+status: `확인(독립 소스 2+)` → 1면 후보 / `단일 소스` → 원자료 확인 후 / `분석/블로그` / `미확인(커뮤니티·트렌드)`.
+
+## 깃허브 예약이 안 돌 때 (대체 스케줄러)
+Worker 크론 `*/10`이 `GH_DISPATCH_TOKEN`(fine-grained PAT, 이 저장소만, Actions: Read and write)이 있으면 `codex-feed-schedule.yml`을 workflow_dispatch로 호출한다. 토큰이 없으면 `cron_runs`에 `skipped(no token)`만 남기고 아무것도 하지 않는다.
+설정: Cloudflare 대시보드 → Workers & Pages → dailydrop-feed → Settings → Variables and Secrets → `GH_DISPATCH_TOKEN` 추가(Secret). 또는 `wrangler secret put GH_DISPATCH_TOKEN`.
+
+## 한도 (무료 플랜)
+D1 쓰기 10만 행/일 (예상 1~2만), Worker 요청 10만/일, Actions 월 2,000분 (10분 크론 ≈ 144회 × ~1.5분 = 월 6,500분 → **공개 저장소면 무제한, 비공개면 초과**). 비공개 유지 시 크론을 `*/20` 으로 낮추거나 저장소를 공개로.
+
+## 푸시 토큰 (앱)
+- `POST https://feed.dailydrop.kr/push/register` body `{"token":"<APNs/FCM token>","platform":"ios|android|web","app_version":"1.0.0"}` → `{ok:true}`. 같은 토큰 재등록은 last_seen 갱신.
+- `POST /push/unregister` body `{"token":"..."}` → active=0.
+- 저장: D1 `push_tokens(token PK, platform, app_version, created_at, last_seen, active)`. 토큰 외 개인정보 없음.
+- 발송(APNs HTTP/2 + FCM v1)은 다음 단계: 인증키(.p8)·서비스 계정은 Worker 시크릿으로만 보관, 저장소·파티에 올리지 않는다. 트리거는 site-deploy가 새 호를 올린 뒤 `POST /push/send`(INGEST_KEY) 예정.

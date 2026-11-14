@@ -1,0 +1,349 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,290.53</b>KOSPI · 11/13 終値 · 前日比 -0.98%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>699.66</b>KOSDAQ · 11/13 終値</div>
+    </div>
+    <div class="dateline"><span>第41号 · 夕刊</span><b>2026年11月14日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="nv">
+      <div class="kick">産業 · AI半導体<span>✓ 4社 · 辞任理由・提起された疑惑の事実関係は未確認</span></div>
+      <h2 class="hl">ジェンスン・フアン辞任後のエヌビディア、韓国へのGPU 26万枚供給の約束を維持と再確認</h2>
+      <p class="deck">科学技術情報通信部は13日、エヌビディア側と点検会議を開き、ペ・ギョンフン副首相は従来の発表どおり供給と協力を続けることにしたと明らかにした。</p>
+      <div class="body">
+        <p>エヌビディアは12日(米国現地時間)、ジェンスン・フアン最高経営責任者(CEO)の辞任と、コレット・クレス最高財務責任者(CFO)の暫定CEO就任を発表した。取締役会は後任を探す手続きに入った。辞任の背景をめぐっては、私生活に関わる疑惑と中国の情報機関との関与疑惑が提起されたが、これらの疑惑は捜査や公式調査で確認された事実ではなく、会社がこれを辞任理由として明らかにしたかどうかも確認されていない。米国の民主党の上下両院議員らは同じ日、エヌビディアの高性能チップの対中輸出統制に関する承認の過程を調べると表明した。13日のKOSPIは取引時間中に3.03%上昇して5,504.44まで上がったが、0.98%下げた5,290.53で取引を終えた。</p>
+        <p>韓国政府は13日午前、科学技術情報通信部の第2次官の主宰で、エヌビディア側と懸案点検会議を開いた。ペ・ギョンフン副首相兼科学技術情報通信部長官は同日、フェイスブックで、エヌビディアが先端GPU(AI計算用チップ)26万枚の供給と国内企業との協力を従来の発表どおり進める計画を再確認したと明らかにした。26万枚は実際のチップの個数ではなく、エヌビディアのB200というチップの演算能力に換算した数字だ。このうち政府が直接確保する約3万5千枚は、約2万1千枚が入ってきており、残りの約1万4千枚は2027年初めまでに入る。国産AI半導体をエヌビディアのプラットフォームとつなぐ課題と、エヌビディアの開発者イベントGTCの韓国開催の推進もそのまま続く。正式な後任CEOが誰かは、まだ発表されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>26万枚</b><span>韓国への供給の約束の規模(B200の演算能力に換算した基準)</span></div>
+        <div><b>5,290.53</b><span>13日のKOSPI終値、前日比0.98%下落</span></div>
+        <div><b>未定</b><span>エヌビディアの正式な後任CEO</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="fa">
+      <div class="kick">国際 · 航空<span>✓ 4社 · 障害の詳しい原因・欠航便数は未確認</span></div>
+      <h3 class="hl">米全土で航空機の離陸が一時全面停止…仁川発の米国行き一部欠航、14日午前に正常化</h3>
+      <div class="one">
+        <p>米連邦航空局(FAA)は13日午後4時ごろ(米東部時間、韓国時間14日午前6時ごろ)、航空交通の管制通信に障害が出たことを理由に、全国のすべての空港で航空機の出発を止めた。全国規模で出発便を止めたのは2023年1月以来初めてだ。措置は14日の韓国時間午前に解除され、かかった時間は報道ごとに4～5時間と食い違っている。報道によると、ショーン・ダフィ運輸長官は、原因はスイッチとルーター(データの道案内をする機器)が過負荷で止まったことで、通信とレーダーが完全に途絶えたわけではないと説明した。マークウェイン・マリン国土安全保障長官は、サイバー攻撃などの証拠は現時点でないと明らかにした。影響は韓国にも及んだ。14日午前に仁川空港を発つ予定だった米国行きの一部の便が欠航扱いになったが、離陸停止が解除されて欠航が取り消され、大韓航空・アシアナ航空の運航は正常化の段階に入った。欠航・遅延した便数は集計が出ておらず、米国内では遅延が続いた。正確な障害の原因と再発防止策を米当局がどこまで明らかにするかは、まだ出ていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2023年1月</b><span>全国の出発便停止が最後にあった時期</span></div>
+        <div><b>4～5時間</b><span>解除までにかかった時間(報道ごとに4～5時間と食い違い)</span></div>
+        <div><b>未定</b><span>欠航・遅延の便数と再発防止策</span></div>
+      </div></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="gk"><b>スペイン2部のGK、衝突で相手選手を死なせ12試合出場停止</b><em>スペインサッカー協会の懲罰委員会が、該当する規定の上限の12試合を選んだ。事故は今月初めの後半アディショナルタイムに起きた。</em><span>スポーツ · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="pp"><b>国民の力、14日に釜山で『捏造起訴特検法』を糾弾する院外集会…民主党が反発</b><em>国民の力は釜山駅前広場でこの法を糾弾し、大統領に拒否権の行使を促す。民主党は、予算国会を投げ出した集会だと批判した。</em><span>政治 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="nx"><b>来週の株式市場の変数はエヌビディアの決算発表とアンソロピックの上場</b><em>エヌビディアは米国時間17日の取引終了後に決算を出す。アンソロピックの新規株式公開(IPO)は米国時間19日に予定されている。</em><span>経済 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="hr"><b>村上春樹の新作『カホ』、教保文庫の総合ベストセラーで3週連続1位</b><em>教保文庫の11月第1週の集計で1位を守った。作家が女性を単独の主人公に据えた初の長編だ。</em><span>文化 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="ed"><b>オープンAIの報告書、欧州の中高生の79%が宿題にAIを活用</b><em>13～19歳の約5千人のうち79%が、宿題にAIを使うと答えた。韓国でも公教育でのAI活用の基準が必要だとの指摘が出ている。</em><span>教育 · ✓ 報道1件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="gh">
+      <div class="kick">政治 · 世論調査<span>✓ 3社 · 調査機関ごとの数値は比較不可</span></div>
+      <h3 class="hl">『捏造起訴特検法』に賛成44%・反対37%、意見保留は約20%…ハン・ドンフン復党は反対40%</h3>
+      <div class="body">
+        <p>韓国ギャラップが10～12日に全国の有権者1,002人に尋ねた結果、国会を通過したいわゆる『捏造起訴特検法』には賛成が44%、反対が37%で、残りの約20%は意見を保留した。100人に尋ねれば44人が賛成し、37人が反対し、20人ほどは判断を先送りしたという意味だ。ハン・ドンフン復党には賛成29%、反対40%だった。大統領の職務評価と政党支持率は、きのうの夕刊で伝えた同じ調査の数値だ。</p>
+        <p>この法は与野党が対立する案件で、国民の力は大統領に拒否権の行使を求めている。大統領が拒否権を使うかは、まだ明らかにされていない。標本調査なので誤差の範囲があり、この数字がそのまま全国民の考えというわけではない。調査機関ごとに方式と時点が異なり、ほかの機関の数値とはすぐには比べにくい。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="ob">
+      <div class="kick">産業 · 製薬<span>✓ 3社 · 価格・国内承認の時期は未確認</span></div>
+      <h3 class="hl">中国、イーライ・リリーの『飲む肥満薬』を初承認…1日1錠の錠剤</h3>
+      <div class="body">
+        <p>中国の国家薬品監督管理局が、イーライ・リリーの経口肥満治療薬オルフォグリプロンを承認した。承認は12日(現地時間)に行われ、1類新薬に分類された。中国での商品名は『ムーユーダー』だ。GLP-1は食欲と血糖を調節する腸のホルモンで、この系統の薬はこのホルモンをまねて体重を減らす。この薬は1日に1回飲む錠剤で、食事の有無にかかわらず飲める。カロリーを制限した食事と運動を併用しながら、肥満または過体重で、体重に関連する疾患が一つ以上ある成人が対象だ。</p>
+        <p>これまで中国で許可されたGLP-1系統の体重管理薬は注射剤だったため、飲む薬の初の承認という点が市場の関心を集めた。競合のノボ ノルディスクの飲む肥満薬は、中国で審査が進行中と伝えられている。韓国での承認と発売の時期、中国での販売価格は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>1日1回</b><span>錠剤の服用回数、食事とは無関係</span></div>
+        <div><b>12日</b><span>中国現地時間の承認日</span></div>
+        <div><b>未定</b><span>国内承認・発売の時期と中国での販売価格</span></div>
+      </div></div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="yk">
+      <div class="kick">社会 · 裁判<span>✓ 2社 · 判決時期・次回期日は未確認</span></div>
+      <h3 class="hl">ユン・ソンニョル職権乱用の1審初公判…特検は内乱の終了時点を弾劾可決と見て、ユン前大統領は容疑を否認</h3>
+      <div class="body">
+        <p>ユン・ソンニョル前大統領の職権乱用権利行使妨害の容疑の1審初公判が13日、ソウル中央地裁刑事合議38-1部で開かれた。特検は、ユン前大統領が12・3非常戒厳の直後に、国家安全保障室と外交部を通じて米国・英国・日本・EUなどに戒厳の正当性を説明するメッセージを伝えるよう指示したとみて、8月に起訴した。ユン前大統領側は公訴事実を全面的に否認し、具体的な指示はなく、英国・日本などには伝達を指示したことがないと主張した。これらはいずれも起訴された容疑と被告人側の主張であり、裁判所が判断した事実ではない。</p>
+        <p>争点は、内乱がいつ終わったのかへと広がった。総合特検は、内乱行為が終わった時点を戒厳の解除ではなく、大統領の弾劾訴追案の可決と見ている。ユン前大統領は「戒厳の状況がすべて解除されたのに、その後に内乱が存続するというのは理解しがたい」と反論した。裁判部は、この裁判はメッセージの伝達が内乱行為かどうかではなく、職権乱用が成立するかを問う場だと指摘した。裁判部は、同盟国に戒厳の趣旨を説明することはある程度避けられないように見えるとして、通常の外交業務を超えたという部分を特定し、起訴状を補完するよう特検に求めた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>職権乱用権利行使妨害<i>法</i></b><p>公務員が自分の権限を不当に使い、他の人が当然できることをできなくさせたり、義務のないことをさせたりした罪</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>エヌビディアのチップが中国へ迂回輸出され、そのためジェンスン・フアンが退いたという話が出回っている。</b> <span>米議会が輸出承認の過程を調べると表明した段階で、迂回輸出や輸出統制違反が確認されたという発表はない。エヌビディアが辞任理由をこのように明らかにしたことも確認されていない。</span></div>
+        <div><b>米国の航空大混乱がハッキング攻撃のせいだという話が出回っている。</b> <span>マリン国土安全保障長官はサイバー攻撃などの証拠は現時点でないと明らかにし、報道によると、ダフィ運輸長官はスイッチとルーターの過負荷を原因として説明した。</span></div>
+        <div><b>エヌビディアが韓国に約束したGPUの供給が減ったり遅れたりするという話が出回っている。</b> <span>ペ・ギョンフン副首相は、エヌビディアが26万枚の供給を従来の発表どおり進めると再確認したと明らかにした。新経営陣が今後も同じ約束を続けるかは確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 土 11月14日</b><span>午後、釜山駅前広場で国民の力の『捏造起訴特検法』糾弾集会が開かれる。米国発の航空便の遅延が韓国発着便にどれだけ残るかは、航空会社の案内で確かめる価値がある。</span><b>今週</b><span>17日(米国時間)にエヌビディアが決算を発表する。韓国時間では18日未明だ。アンソロピックの新規株式公開は米国時間19日に予定されている。</span><b>その後</b><span>エヌビディアの正式な後任CEO選任の日程は、まだ発表されていない。ユン・ソンニョル前大統領の職権乱用1審の次回公判の日程も確認されていない。</span><b>読者へ</b><span>米国行きの航空便があるなら、航空会社の運航案内をまず確認しよう。疑惑と確定した事実を分けて読み、投資判断は開示資料と公式発表を基準にしよう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "nv":{"kick": "産業 · AI半導体 · ✓ 4社 · 辞任理由・提起された疑惑の事実関係は未確認", "title": "ジェンスン・フアン辞任後のエヌビディア、韓国へのGPU 26万枚供給の約束を維持と再確認", "what": "エヌビディアは12日(米国現地時間)、ジェンスン・フアン最高経営責任者の辞任と、コレット・クレス最高財務責任者の暫定CEO就任を発表した。クレスCFOは、後任が決まるまでCFOの職と暫定CEOを兼ねる。取締役会は、内部と外部の候補の両方を対象に後任探しに入った。辞任の背景に関して、私生活の疑惑と中国の情報機関との関与疑惑が提起されたが、捜査や公式調査で確認された事実ではなく、会社がこれを辞任理由として明らかにしたかどうかも確認されていない。韓国の科学技術情報通信部は13日午前、第2次官の主宰でエヌビディア側と点検会議を開いた。ペ・ギョンフン副首相は、GPU 26万枚の供給と国内企業との協力を従来の発表どおり進める計画をエヌビディアが再確認したと明らかにした。26万枚はB200の演算量に換算した基準だ。13日のKOSPIは5,290.53で取引を終え、0.98%下げた。", "why": "エヌビディアは韓国のAIデータセンター構築に使われるチップを供給する会社なので、最高経営責任者の交代が供給日程や協力の約束に影響するかどうかが、政府と企業の関心事だ。政府が翌日すぐに点検会議を開いたのも、その不確実性を減らすための措置だ。米議会の輸出承認過程の調査は、対中輸出統制政策が今後どう動くかともつながる。", "me": "AIサービスや半導体関連への投資に関わりがあるなら、暫定体制のエヌビディアが次の決算発表で韓国への供給をどう説明するかを確認する価値がある。国内のAIサービスの速度とコストは、こうしたチップの供給日程に影響を受けることがある。", "a": "政府と国内企業の側は、今回のことを最高経営責任者個人の問題と見て、会社としての供給・協力計画はそのままだという点を強調する。政府がエヌビディアから再確認を受け、供給の数値も従来の発表と同じだというのが根拠だ。", "b": "慎重論は、暫定体制の新経営陣が同じ速度で約束を続けられるかは、まだ分からないと見る。後任の選任と米国の輸出承認調査の結果次第で、供給環境が変わりうるという見方だ。", "say": "確認されたのは、辞任と暫定CEOの選任、そして韓国政府が明らかにした供給の約束の再確認までだ。提起された疑惑は公式調査で確認されたものではないので、事実のように受け止めないのが妥当だ。今後見るべきは、正式な後任の選任日程と、新体制が初めて出す決算説明で韓国への供給がどう触れられるかだ。", "src": "聯合ニュース(ジェンスン・フアン退陣後の次期トップ、11月13日) · 京郷新聞(GPU 26万枚の点検、11月13日) · 東亜日報(GPU供給の維持、11月13日) · 電子新聞(点検会議での再確認、11月13日)"},
+    "fa":{"kick": "国際 · 航空 · ✓ 4社 · 障害の詳しい原因・欠航便数は未確認", "title": "米全土で航空機の離陸が一時全面停止…仁川発の米国行き一部欠航、14日午前に正常化", "what": "米連邦航空局は米東部時間13日午後4時ごろ、韓国時間14日午前6時ごろ、航空交通の管制通信の問題を理由に、全国のすべての空港で航空機の出発を止めた。全国規模の出発停止は2023年1月以来初めてだ。措置は14日の韓国時間午前に解除され、かかった時間は報道ごとに4～5時間と食い違っている。報道によると、ショーン・ダフィ運輸長官は、スイッチとルーターがデータの過負荷で止まったことが原因で、通信とレーダーが完全に途絶えたわけではないと説明した。マークウェイン・マリン国土安全保障長官は、サイバー攻撃などの証拠は現時点でないと明らかにした。14日午前、仁川発の米国行きの一部の航空便が欠航扱いになったが、解除後に欠航が取り消され、大韓航空・アシアナ航空の運航は正常化の段階に入った。欠航・遅延の便数は確認されていない。", "why": "米国は世界の航空網の中心なので、一国の管制通信の障害が、仁川を含む国際線の日程まで揺るがす。管制通信は管制官とパイロット、管制施設をつなぐ連絡なので、問題が生じれば安全のために出発から止めるしかない。機器の過負荷という説明が正しいなら、老朽設備の管理が今後の争点になる。", "me": "米国を行き来する航空便を予約してあるなら、航空会社の運航案内とメッセージを確認する価値がある。遅延が続けば乗り継ぎの日程が押されることがあり、接続便がある場合は特にそうだ。", "a": "当局側は、機器の過負荷による一時的な障害であり、ハッキングのような悪意ある行為の兆候はないという立場だ。通信とレーダーが完全に途絶えたわけではないので、安全は守られたという説明だ。", "b": "慎重論は、全国の出発が一斉に止まることが3年ぶりに繰り返された点を問題にする。設備の老朽化と二重化の対策が十分だったかを問う見方だ。", "say": "確認されたのは、出発停止と解除、運輸長官が明らかにしたと報じられた機器の過負荷という原因、マリン国土安全保障長官のサイバー攻撃の証拠なしという発言、仁川発の一部欠航の取り消しまでだ。正確な障害の経緯と欠航・遅延の規模は、まだ出ていない。きょうは、米当局の追加調査の発表と、航空便の遅延がどれだけ残るかを見る価値がある。", "src": "聯合ニュース(管制通信障害で全面ストップ、11月14日) · 京郷新聞(離陸の全面停止、11月14日) · 朝鮮日報(離陸停止の解除と運航再開、11月14日) · 韓国経済(仁川発の欠航取り消し、11月14日)"},
+    "gh":{"kick": "政治 · 世論調査 · ✓ 3社 · 調査機関ごとの数値は比較不可", "title": "『捏造起訴特検法』に賛成44%・反対37%、意見保留は約20%…ハン・ドンフン復党は反対40%", "what": "韓国ギャラップは10～12日に全国の有権者1,002人を調査し、13日に結果を発表した。国会を通過したいわゆる『捏造起訴特検法』には賛成44%、反対37%で、残りは意見を保留した。ハン・ドンフン復党には賛成29%、反対40%だった。同じ調査で、イ・ジェミョン大統領の職務の肯定評価は39%、否定評価は50%で、この結果はきのうの夕刊で伝えた。政党支持率は共に民主党39%、国民の力26%だった。民主党と国民の力の支持率の差は2週連続で誤差の範囲の外だ。", "why": "特検法への賛成は反対より7ポイント多いが、意見保留が約20%あるため、世論が一方に傾いたとは見がたい。この数値は、国会の対立と、大統領の拒否権行使をめぐる議論に影響しうる。ハン・ドンフン復党は反対が賛成より多く、政界のほかの争点ともつながる。", "me": "特検法と拒否権をめぐる論争は、予算審査など国会の日程にも影響しうるので、その後の立法の動きを確認する価値がある。世論調査の数字は標本調査なので誤差があるという点を踏まえて読むのがよい。", "a": "与党側は、支持率がわずかに動いただけで、政党支持率ではなお先んじていると見る。捏造起訴の疑惑を究明する必要があるという立場から、特検法の賛成が反対より多い点も根拠に挙げる。", "b": "野党側は、特検法は大統領関連の裁判を消そうとするものだとして、拒否権の行使を求める。賛成が過半数ではなく意見保留が多い以上、国民が十分に納得していないという見方だ。", "say": "確認されたのは、韓国ギャラップ1社の調査結果だ。賛成と反対の差7ポイントは、意見保留の割合を合わせて読む必要があり、原因を断定できない。今後見るべきは、大統領が特検法に拒否権を使うかと、ほかの機関の調査でも同じ流れが出るかだ。", "src": "京郷新聞(支持率39%とハン・ドンフン復党、11月13日) · 文化日報(支持率が1週で下落、11月13日) · 東亜日報(肯定39%・否定50%、11月13日)"},
+    "ob":{"kick": "産業 · 製薬 · ✓ 3社 · 価格・国内承認の時期は未確認", "title": "中国、イーライ・リリーの『飲む肥満薬』を初承認…1日1錠の錠剤", "what": "中国の国家薬品監督管理局は12日(現地時間)、イーライ・リリーの経口肥満治療薬オルフォグリプロンを承認した。1類新薬に分類され、中国での商品名はムーユーダーだ。GLP-1系統の低分子薬で、1日に1回飲む錠剤であり、食事の有無にかかわらず服用できる。カロリーを制限した食事と運動を併用しながら、肥満または過体重で、体重に関連する疾患が一つ以上ある成人が対象だ。中国でこれまでに許可されたGLP-1系統の体重管理薬は注射剤だった。韓国での承認と発売の時期、中国での販売価格は確認されていない。", "why": "注射ではなく錠剤は、注射を嫌がる患者のハードルを下げ、市場の大きさを変えうる。人口の多い中国で先に承認を受けたのは、競合より先に市場に入ったという意味だ。韓国でも肥満薬の需要が大きくなり、承認のニュースが国内発売の議論につながりうる。", "me": "肥満薬に関心があるなら、国内の承認手続きと処方基準がどう決まるかを確認する価値がある。この薬は医師の処方が必要な医療用医薬品なので、海外の販売広告だけを見て服用を決めるのは危険な場合がある。", "a": "肯定論は、1日1回の錠剤なので服用の負担が小さく、注射剤に抵抗があった患者まで治療を受けられると見る。中国の承認がほかの国の承認審査の参考にもなるという期待がある。", "b": "慎重論は、承認のニュースだけで効果と安全性が実証されたわけではないと見る。価格と保険適用、長期服用時の副作用がまだ知られていない点を指摘する。", "say": "確認されたのは、中国当局の承認と適応対象までで、国内発売の時期と価格は確認されていない。中国の承認がそのまま韓国の承認を意味するわけではない。今後見るべきは、国内の承認申請の有無と、競合製薬会社の飲む肥満薬の承認のニュースだ。", "src": "朝鮮日報(リリーの中国での経口肥満薬、11月13日) · 東亜日報(1日1錠の肥満薬が中国で承認、11月13日) · メディゲートニュース(リリーの飲む肥満薬が中国で承認、11月13日)"},
+    "yk":{"kick": "社会 · 裁判 · ✓ 2社 · 判決時期・次回期日は未確認", "title": "ユン・ソンニョル職権乱用の1審初公判…特検は内乱の終了時点を弾劾可決と見て、ユン前大統領は容疑を否認", "what": "ユン・ソンニョル前大統領の職権乱用権利行使妨害の容疑の1審初公判が13日、ソウル中央地裁刑事合議38-1部で開かれた。特検は、ユン前大統領が12・3非常戒厳の直後に、国家安全保障室と外交部を通じて米国・英国・日本・EUなどに戒厳の正当性を説明するメッセージを伝えるよう指示したとみて、8月に起訴した。ユン前大統領側は公訴事実を全面的に否認し、具体的な指示はなかったと主張した。総合特検は、内乱行為が終わった時点を大統領の弾劾訴追案の可決と見ている。ユン前大統領は、戒厳が解除されたのに内乱が存続するというのは理解しがたいと反論した。裁判部は、この裁判は職権乱用が成立するかを問う場だと指摘し、通常の外交業務を超えた部分を特定して起訴状を補完するよう特検に求めた。", "why": "内乱がいつ終わったのかは、戒厳後の政府の行為が内乱の一部なのか通常の業務なのかを分ける基準なので、ほかの裁判にも影響しうる。この事件は内乱の容疑ではなく職権乱用の容疑なので、裁判部が範囲を絞るよう求めたのは、裁判の争点がどこまでかを決めることだ。", "me": "裁判の結果がすぐ生活に影響するわけではないが、戒厳に関する裁判がどんな基準で判断されるかは、今後の政治日程とつながる。裁判のニュースは、起訴内容と裁判所の判断を分けて読むのがよい。", "a": "特検側は、戒厳後に続いた行為が一つの流れだと見て、弾劾訴追案が可決されるまで内乱が続いたという立場だ。戒厳の直後に海外へ正当性を知らせたことも、その流れの中で見るべきだという見方だ。", "b": "ユン前大統領側は、戒厳が解除されたのに内乱が続いたという主張は理屈に合わないと対抗する。同盟国に状況を説明するのは通常の外交業務なので、職権乱用は成立しないという立場だ。", "say": "確認されたのは、初公判で交わされた主張と裁判部の求めまでだ。起訴された内容と被告人側の主張は、裁判所が判断した事実ではない。今後見るべきは、特検が補完した起訴状でどの部分が具体化されるかと、次回の公判の日程だ。", "src": "京郷新聞(内乱の終了時点をめぐる攻防、11月13日) · 東亜日報(内乱の終了は弾劾可決との主張、11月13日)"},
+    "gk":{"kick": "スポーツ · ✓ 報道2件", "title": "スペイン2部のGK、衝突で相手選手を死なせ12試合出場停止", "what": "スペインサッカー協会の懲罰委員会は、FCアンドラのGKヘスス・オウォノに12試合の出場停止処分を科した。今月初めのラ・リーガ2のテネリフェ戦の後半アディショナルタイムに、空中戦を競ってオウォノとぶつかったテネリフェのヘスス・デ・ミゲルは、その後亡くなった。委員会は、試合中の乱暴な行為で相手に深刻な被害を与えた場合に適用する規定に従い、この規定の出場停止の範囲は4～12試合だ。委員会は、審判報告書をもとに、インプレーの状況で過度な力を使ったと判断した。試合は再開されず、2-2の引き分けで終わった。オウォノはSNSで、故意ではなかったという趣旨を明らかにした。事故の日付は報道ごとに2日と3日で食い違っている。", "why": "選手の死亡という結果が出た事故で、サッカー協会が科せる処分の水準がどこまでかを示している。協会の処分は刑事手続きとは別なので、競技場内の規則違反と法的責任は別々に扱われる。", "me": "サッカーを見る立場では、試合中の衝突の場面で選手保護の規定がどう適用されるかを考える契機だ。アマチュアや同好会の試合でも、GKとフォワードの衝突には同じ危険がある。", "a": "協会側の判断は、該当規定が認める上限を選んだので、これより重くできる水準はなかったというものだ。審判報告書に書かれた事実に基づいて決めたという点も強調される。", "b": "死亡という結果に比べて12試合は軽いと見る反応もある。規定自体を見直すべきだという見方と、意図のなかった事故に刑事責任まで問うのは難しいという見方が分かれる。", "say": "確認されたのは、協会の12試合出場停止の決定と、試合が再開されなかった点までだ。事故の日付は報道ごとに異なるので、一つに決めつけない。刑事捜査があるかは確認されておらず、今後見るべきは、協会の処分に対する異議申し立ての有無だ。", "src": "朝鮮日報(GKに12試合の出場停止、11月14日) · 東亜日報(GKの出場停止処分、11月14日)"},
+    "pp":{"kick": "政治 · ✓ 報道2件", "title": "国民の力、14日に釜山で『捏造起訴特検法』を糾弾する院外集会…民主党が反発", "what": "国民の力は14日、釜山駅前広場で、共に民主党が処理した『捏造起訴特検法』を糾弾する院外集会を開く。今回の集会は、この法をめぐって開かれる2回目の集会だ。国民の力はイ・ジェミョン大統領に拒否権の行使を促している。共に民主党は同日、国民の力が予算国会を投げ出して大統領を嘲弄していると批判した。韓国ギャラップの調査では、この法に賛成44%、反対37%だった。大統領の拒否権行使の有無は、まだ明らかにされていない。", "why": "法案の処理後に拒否権の期限がかかった状況で、与野党が院外に出たので、大統領の選択が政治日程の分水嶺になる。予算案の審査が続く時期なので、院外闘争が国会日程と絡み合っている。", "me": "予算国会が院外での対立で遅れれば、来年の予算の処理日程に影響が出うる。集会で釜山駅一帯の交通が混雑することがある。", "a": "国民の力側は、この法は大統領関連の裁判を消そうとする試みだとして、拒否権を使えと求める。国会内の採決では阻めないので、院外で世論を集めなければならないという立場だ。", "b": "共に民主党側は、捏造起訴の疑惑を究明するための法だと見て、国民の力が予算審査を後回しにして集会に出たと批判する。民生立法と予算が先だという見方だ。", "say": "確認されたのは、集会の開催と両党の相反する立場までだ。この法への評価は与野党が互いに違うように規定しており、どちらの主張も事実と断定できない。きょうは、集会の規模と大統領室の反応を見る価値がある。", "src": "京郷新聞(釜山で特検法糾弾集会、11月14日) · 聯合ニュース(国民の力の集会に与党が批判、11月14日)"},
+    "nx":{"kick": "経済 · ✓ 報道1件", "title": "来週の株式市場の変数はエヌビディアの決算発表とアンソロピックの上場", "what": "来週の株式市場の核心日程は、エヌビディアの決算発表とアンソロピックの新規株式公開だ。エヌビディアは米国時間17日の取引終了後に決算を発表し、韓国時間では18日未明だ。ジェンスン・フアンCEOが退いて初めて出る決算だ。アンソロピックの新規株式公開は米国時間19日に予定されている。米国の10月の小売売上高も17日に発表される。市場予想と企業価値の推計は集計ごとに異なり、一つに決めつけにくい。", "why": "エヌビディアの決算はAI半導体の需要が続くかを測る指標なので、サムスン電子・SKハイニックスのような国内の半導体株にも影響する日程だ。大型の新規株式公開は、AI業界にどれだけ資金が集まるかを示す。", "me": "半導体関連や米国株に投資しているなら、発表の時刻が韓国時間の未明なので、翌日の取引開始前に結果を確認することになる。発表の前後で価格の変動が大きくなりうるので、日程をあらかじめ知っておくのがよい。", "a": "楽観論は、AI投資の需要が続くかを確認する契機と見る。業績が期待を上回れば、経営の空白への懸念が減りうるという見方だ。", "b": "慎重論は、暫定体制という不確実性と金利の変数が一度に集中した週なので、変動性が大きくなりうると見る。一度の発表で方向を断定するのは難しいという立場だ。", "say": "確認されたのは、発表と上場の予定日程までだ。業績がどう出るか、株価がどう動くかは、まだ誰にも分からない。今後見るべきは、新経営陣が今後の業績見通しをどう説明するかだ。", "src": "韓国経済(エヌビディアの決算とアンソロピックのIPO、11月14日)"},
+    "hr":{"kick": "文化 · ✓ 報道1件", "title": "村上春樹の新作『カホ』、教保文庫の総合ベストセラーで3週連続1位", "what": "村上春樹の長編小説『カホ』が、教保文庫の11月第1週の総合ベストセラーで3週連続1位を守った。『カホ』は村上春樹が3年ぶりに出した長編だ。作家が女性を単独の主人公に据えた初の小説でもある。絵本作家のカホが経験する非現実的な状況を描いた作品だ。ゲームユーチューバーのチョンストの本が3位に入った。", "why": "教保文庫の週間集計は、読書市場の流れを示す代表的な指標だ。外国の小説が3週連続でトップを守ったのは、翻訳文学の根強い需要を示す。ユーチューバーの本が上位に入ったのは、映像クリエイターの影響力が出版につながった例だ。", "me": "読む本を選ぶとき、週間順位は参考指標だが、順位がそのまま作品の評価ではない。書店ごとに集計方式が異なる点も考慮する価値がある。", "a": "出版界では、村上春樹の新作の独走を、翻訳文学市場が健在だというシグナルと読む。長年の読者層がいる作家なので、初動の売れ行きが高いという説明だ。", "b": "慎重論は、1書店の週間集計なので全体の販売を代表できないと見る。新刊効果が過ぎれば順位が変わりうるという見方だ。", "say": "確認されたのは、教保文庫の集計での3週連続1位までだ。ほかの書店の順位や販売部数は確認されていない。今後見るべきは、来週の集計でも1位が続くかだ。", "src": "京郷新聞(『カホ』が3週連続でベストセラー首位、11月13日)"},
+    "ed":{"kick": "教育 · ✓ 報道1件", "title": "オープンAIの報告書、欧州の中高生の79%が宿題にAIを活用", "what": "オープンAIは『教育における責任あるAI』の報告書を最近発表した。欧州のシンクタンクが13～19歳の学生約5千人を調査した結果、宿題や課題にAIを活用するという回答が79%だった。韓国でも教育現場でのAI活用が増えると予想される。これを受け、AI活用の基準など法と制度を整えるべきだという指摘が出ている。韓国の公教育でのAI活用基準の実効性を高めるべきだという主張も併せて出た。", "why": "学生がAIで宿題をする割合が高ければ、宿題と評価の方式を変えるべきだという圧力が強まる。基準がなければ学校ごとに対応が異なり、公平性の問題が生じうる。", "me": "子どもがいるなら、学校のAI活用の案内と宿題の指針を確認してみる価値がある。AIを使った宿題をどこまで認めるかは、学校や教師ごとに異なりうる。", "a": "教育界の一部は、AIを防ぐよりも正しく使う方法を教える基準がまず必要だと見る。活用基準と法制度を整えれば、学校現場の混乱が減るという見方だ。", "b": "慎重論は、一つの調査だけでは学生全体の利用実態を断定できないと見る。利用割合が高くても、どんな方法で使うかによって学習効果は異なるという立場だ。", "say": "確認されたのは、報告書が引用した調査の数値と、韓国の基準づくりを求める声までだ。韓国の学生の実際の利用割合は、この調査にはない。今後見るべきは、教育当局がAI活用基準をどう具体化するかだ。", "src": "電子新聞(欧州の中高生のAI宿題調査、11月14日)"}
+  };
+  const G = {
+    "GPU":{"f": "半導体", "d": "AIの学習とサービスに使われる、大量計算用のチップ", "w": "韓国政府は、エヌビディアがGPU 26万枚の供給を従来どおり進めると明らかにした。"},
+    "B200":{"f": "半導体", "d": "エヌビディアのAI計算用チップの製品名", "w": "26万枚は実際の個数ではなく、B200の演算能力に換算した数字だ。"},
+    "輸出統制":{"f": "安保", "d": "先端技術・製品を特定の国に売れないよう制限する制度", "w": "米国の議員らがエヌビディアのチップの中国への輸出承認の過程を調べると表明したが、違反の有無は確認されていない。"},
+    "ルーター":{"f": "技術", "d": "データが進む道を決めて届けるネットワーク機器", "w": "運輸長官は、スイッチとルーターが過負荷で止まったことを原因として説明したと伝えられた。"},
+    "管制通信":{"f": "技術", "d": "管制官とパイロット、管制施設がやり取りする音声・データの連絡", "w": "この連絡に障害が起き、米国全土の出発が一時止まった。"},
+    "標本調査":{"f": "統計", "d": "一部の人を選んで尋ね、全体を推定する調査", "w": "ギャラップの調査は、有権者1,002人を対象にした標本調査だ。"},
+    "誤差の範囲":{"f": "統計", "d": "標本調査で数字が実際とずれうる幅", "w": "政党支持率の差13ポイントは、2週連続で誤差の範囲の外だ。"},
+    "意見保留":{"f": "統計", "d": "調査で賛否を決めず、答えを先送りした回答", "w": "特検法の調査で、約20%が意見を保留した。"},
+    "特検法":{"f": "法", "d": "特別検察官が捜査するよう定める法律", "w": "国会を通過した『捏造起訴特検法』は与野党が対立しており、大統領の拒否権行使の有無は明らかにされていない。"},
+    "拒否権":{"f": "制度", "d": "大統領が国会を通過した法律案を差し戻せる権限", "w": "国民の力は、特検法に大統領が拒否権を使うよう求めている。"},
+    "GLP-1":{"f": "医学", "d": "食欲と血糖を調節する腸のホルモン。これをまねた薬が肥満薬の系統", "w": "リリーの薬はGLP-1系統の錠剤で、中国で初めて承認された。"},
+    "経口":{"f": "医学", "d": "口から飲む方式の薬", "w": "これまで中国のGLP-1系統の体重管理薬は注射剤で、今回が経口薬の初承認だ。"},
+    "1類新薬":{"f": "制度", "d": "中国で新成分として分類され、最も厳しく審査される新薬の区分", "w": "オルフォグリプロンは、中国で1類新薬として承認された。"},
+    "職権乱用権利行使妨害":{"f": "法", "d": "公務員が権限を不当に使い、他人の正当な権利の行使を妨げた罪", "w": "ユン前大統領はこの容疑で起訴され、公訴事実を全面的に否認した。"},
+    "公訴事実":{"f": "法", "d": "検事が裁判所に裁判を求めて記した犯罪の内容", "w": "ユン前大統領側は初公判で公訴事実を全面的に否認した。"},
+    "起訴状":{"f": "法", "d": "検事が裁判を請求して裁判所に出す文書", "w": "裁判部は特検に起訴状を補完するよう求めた。"},
+    "弾劾訴追案":{"f": "法", "d": "国会が大統領などの罷免の審判を憲法裁判所に求めるために議決する案", "w": "総合特検は、内乱が終わった時点を弾劾訴追案の可決と見ている。"},
+    "1審":{"f": "法", "d": "裁判を最初に行う段階の判決", "w": "ユン前大統領の職権乱用容疑の1審は、初公判を終えた。"},
+    "新規株式公開(IPO)":{"f": "金融", "d": "会社が株式を初めて一般の投資家に売ること", "w": "アンソロピックの新規株式公開は、米国時間19日に予定されている。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

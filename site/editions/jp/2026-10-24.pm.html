@@ -1,0 +1,355 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>62,693.16</b>日経平均株価 · 10/23終値 · 前日比-0.34%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,623.68</b>S&amp;P500 · 10/23終値 · 前日比-0.52%</div>
+    </div>
+    <div class="dateline"><span>No. 20 · 夕刊</span><b>2026年10月24日（土）</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会 · 台風<span>✓ 4媒体 · 31号の進路と影響は未確認</span></div>
+      <h2 class="hl">台風30号が先島諸島で停滞、26日ごろ九州に接近の見込み 台湾で1人死亡、31号も発生</h2>
+      <p class="deck">大型で強い台風30号は24日、沖縄県の先島諸島を暴風域に巻き込んでほとんど停滞しており、26日ごろ九州に接近する見込みと各社が伝えた。</p>
+      <div class="body">
+        <p>NHKは24日朝、大型で強い台風30号が沖縄県の先島諸島を暴風域に巻き込んでほとんど停滞していると伝え、暴風や高波、高潮、土砂災害、低い土地の浸水に厳重に警戒するよう呼びかけた。NHKは23日夜に沖縄で2人がけがをしたと報じ、24日午前には気象庁が石垣島地方に「線状降水帯直前予測」を発表したと伝えた。台湾については、NHKが1人が死亡し、強風で街路樹が倒れるなどして350人がけがをしたと報じており、24日も台北などで休校の措置がとられているという。</p>
+        <p>TBS NEWS DIGは、台風30号と秋雨前線の影響で西日本や東日本でも長時間の雨となり、広範囲で警報級の大雨のおそれがあると報じた。FNNプライムオンラインは、30号が26日には九州にかなり接近して上陸する可能性があり、その後は温帯低気圧に変わって27日には関東に近づく予想だと伝えた。tenki.jpは、24日に台風31号（インファ）が発生して30号とともに「ダブル台風」になったと報じ、NHKも31号が日本のはるか南東の海上で発生したとして、今後の情報に注意するよう呼びかけた。31号の進路や日本への影響は、報じられた範囲では示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">国際 · 北朝鮮<span>✓ 4媒体 · 中国側の発表と訪問の目的は未確認</span></div>
+      <h3 class="hl">北朝鮮の金正恩総書記が中国・丹東入りと韓国メディア 開通した大橋を通過か、昨年9月以来の訪中</h3>
+      <div class="one">
+        <p>NHKは、韓国の聯合ニュースなど複数のメディアの報道として、北朝鮮の金正恩総書記が24日、中国東北部の遼寧省丹東に到着したと伝えた。NHKによると、金総書記の訪中は2025年9月に北京で開かれた軍事パレードに出席して以来となる。毎日新聞は、開通した大橋を利用したとみられると報じ、読売新聞は聯合ニュースの報道として、中朝を結ぶ「新鴨緑江大橋」を通って中国入りしたとみられると伝えた。 時事通信は「北朝鮮の金正恩氏が訪中」と伝えた。NHKは別の記事で、金総書記が軍の集会で演説し、「最強の軍隊を建設し、軍事革命を加速させよう」と述べて軍事力を強化していく姿勢を改めて示した一方、対立が深まっている韓国への言及はなかったと報じた。中国側の公式発表や訪問の目的、習近平国家主席との会談の有無は、報じられた範囲では確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>米国防総省が中国の孔子学院を安全保障上の脅威と認定、規制後も名称を変えて活動と発表</b><em>NHKは、国防総省が大学内の中国語教育施設について、規制後も名称を変えて活動を続けていると発表したと伝えた。産経ニュースは「偽装組織」と見出しに掲げた。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>ワールドシリーズが開幕、ブルワーズがレイズに3対2で先勝 ミジオロウスキーが5回1失点</b><em>NHKは、23日に開幕した第1戦でブルワーズがレイズに3対2で勝ったと伝えた。中日スポーツは、ブルワーズ先発で最速167キロのミジオロウスキーが5回を1失点に抑えたと報じた。</em><span>スポーツ · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>トランプ氏が「勝利なら全成人に80万円」「農業支援に1.3兆円」 劣勢の中間選挙で農業州に手当て</b><em>読売新聞は、トランプ氏の公約を「露骨にバラマキ」と見出しにした。西日本新聞は、燃料高で農業州が逆風にあり、票固めに腐心していると伝えた。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>歴代の米政権がスペースXにスターリンクの停止・再開を要請と報道 ウクライナ軍向けは時速161キロ超で作動</b><em>ジャパンタイムズは、バイデン、トランプ両政権がスペースXに複数回、サービスの停止や再開を求めたと報じた。キーウ・ポストは、ウクライナ国防省が時速161キロ超での作動を確認したと伝えた。</em><span>国際 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>中国共産党の中央委員会総会が26日から29日まで北京で開催へ 2027年の党大会を前に規律強化が焦点</b><em>ストレーツ・タイムズは、非公開の会議が26日から29日まで開かれ、2027年の党大会の前に人事も議論される可能性があると伝えた。ジャパンタイムズは次世代指導部の手がかりに言及した。</em><span>国際 · ✓ 3媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">社会 · 企業と環境<span>✓ 4媒体 · 出火原因と被害の公的数字は未確認</span></div>
+      <h3 class="hl">モンゴル草原火災でKDDI「法令違反ない」 当局は賠償請求を検討、保護区の8割に被害と産経</h3>
+      <div class="body">
+        <p>時事通信は24日、モンゴル東部の自然保護区で起きた大規模な草原火災をめぐり、モンゴル当局が賠償請求を検討していると伝えた。同通信によると、KDDIは「法令違反はない」と説明している。産経ニュースは、KDDI子会社の車両が火元で、保護区の8割が被害を受けたと報じた。読売新聞は、KDDI子会社の車列から出火したとみられ、モンゴル側は補償を求める考えだと伝えている。</p>
+        <p>NHKは、火災が10月8日に起きたと伝え、KDDIが火災に至る経緯を公表したと報じた。NHKによると、公表された経緯では、子会社の社員らがモンゴルの当局と保護区内を移動していたところ、とされている。出火の正確な原因、被害面積の公的な数字、賠償額は、報じられた範囲では確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">経済 · 米国の通商政策<span>✓ 4媒体 · 除外品目の全体像と開始時期は未確認</span></div>
+      <h3 class="hl">米政権が対カナダ50％関税を一部除外 包装資材や海藻類など、中間選挙の接戦州の共和党候補が要請</h3>
+      <div class="body">
+        <p>NHKは、トランプ政権がカナダからの特定の輸入品に課している50％の追加関税の対象から、包装資材や海藻類などを外すと発表したと伝えた。NHKによると、11月の中間選挙で接戦が伝えられている共和党の候補の要請を受けた措置で、時事通信は「一部撤廃」「中間選挙で候補者後押し」と報じた。</p>
+        <p>毎日新聞は、農業関連品が一部除外されたと伝え、「中間選挙対策か」と見出しに掲げた。読売新聞は、トランプ政権が激戦州の候補の要望を受け入れて「50％関税」の対象を見直したと報じ、物価高への不満が強まっていると伝えている。除外される品目の全体像と適用の開始時期は、報じられた範囲では確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">国際 · 中東情勢<span>✓ 3媒体 · 警告の時期と計画の内容は未確認</span></div>
+      <h3 class="hl">米情報機関がイランによる米政府職員の殺害計画を警告 国務省に伝達と報道</h3>
+      <div class="body">
+        <p>NHKは24日、米情報機関が、イランが中東地域で米政府職員を標的にした活動を強化し、殺害計画を進めているとして国務省に警告していたことがわかったと伝えた。47NEWSも速報で、米情報機関がイランの米職員殺害計画を警告したと報じた。警告が出された時期、対象となる職員、計画の具体的な内容は、報じられた範囲では示されていない。</p>
+        <p>Bloomberg Televisionは23日、「US, Israel Plan for Renewed Iran Strikes After Midterms」（米国とイスラエルが中間選挙後にイランへの攻撃再開を計画）、「US Pulls Diplomats From Saudi Arabia Over Rising Houthi Threat」（フーシ派の脅威の高まりで米国がサウジアラビアから外交官を引き揚げ）、「Iran Tells US 'Little Reason to Expect Progress Now'」（イランが米国に「今は進展を期待する理由がほとんどない」と伝えた）と題した映像を配信した。これらの映像と今回の警告との関係は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>国務省<i>政府</i></b><p>米国の外交を担う中央省庁。在外公館や外交官を所管する。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>台風30号と31号が同時に日本へ上陸する。</b> <span>FNNプライムオンラインは、30号が26日に九州にかなり接近して上陸する可能性があり、その後温帯低気圧に変わって27日に関東に近づく予想と伝えた。31号の上陸予想は、報じられた範囲では示されていない（10/24）。</span></div>
+        <div><b>金正恩総書記は習近平国家主席と会談した。</b> <span>NHKは韓国メディアの報道として丹東への到着を伝えたにとどまる。会談を伝える報道は見当たらず、中国側の発表も確認されていない（10/24）。</span></div>
+        <div><b>KDDIの違法行為が山火事の原因だった。</b> <span>時事通信は、KDDIが「法令違反はない」と説明し、モンゴル当局が賠償請求を検討していると伝えた。出火原因が確定したとの報道は見当たらない（10/24）。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今夜 · 10月24日（土）</b><span>台風30号は先島諸島でほとんど停滞しており、沖縄では暴風や高波、高潮に厳重な警戒が続く（NHK）。台風と秋雨前線の影響で、西日本や東日本でも警報級の大雨のおそれがある（TBS NEWS DIG）。</span><b>週明け</b><span>台風30号は26日に九州にかなり接近して上陸する可能性があり、その後温帯低気圧に変わって27日には関東に近づく予想（FNNプライムオンライン）。中国共産党の中央委員会総会が26日から29日まで北京で開かれる（ストレーツ・タイムズ）。</span><b>その先</b><span>モンゴル当局による賠償請求の検討と、KDDIの対応が焦点になる（時事通信）。対カナダ関税の除外品目と適用時期は、今後の発表が待たれる。</span><b>読者へ</b><span>台風30号と31号の最新の進路は気象庁の発表で確認できる（NHK）。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会 · 台風 · ✓ 4媒体 · 31号の進路と影響は未確認", "title": "台風30号が先島諸島で停滞、26日ごろ九州に接近の見込み 台湾で1人死亡、31号も発生", "what": "NHKは24日朝、大型で強い台風30号が沖縄県の先島諸島を暴風域に巻き込んでほとんど停滞していると伝えた。NHKは23日夜に沖縄で2人がけがをしたと報じ、24日午前には気象庁が石垣島地方に「線状降水帯直前予測」を発表したと伝えた。台湾では1人が死亡し350人がけがをしたとNHKは報じている。TBS NEWS DIGは、台風30号と秋雨前線の影響で西日本や東日本でも長時間の雨になり、広範囲で警報級の大雨のおそれがあると伝えた。FNNプライムオンラインは、30号が26日に九州にかなり接近して上陸する可能性があり、27日には関東に近づく予想だと報じた。tenki.jpは31号（インファ）の発生を伝えた。", "why": "NHKは台風30号がほとんど停滞していると伝えており、動きが遅いほど同じ地域に強い風と雨が長く続く。TBS NEWS DIGは台風と秋雨前線の組み合わせを大雨の要因として伝えており、台風から離れた地域にも影響が及ぶ構図になっている。", "me": "九州から関東にかけて住む人は、26日から27日にかけて雨風が強まる可能性がある。週末のうちに外出や荷物の発送の予定を確認し、停電や交通の乱れに備える余地がある。", "a": "備えを急ぐべきだとする視点。TBS NEWS DIGは広範囲で警報級の大雨のおそれを伝え、FNNプライムオンラインは九州への上陸の可能性を報じた。台湾の被害を伝えたNHKの報道も、台風の勢力の大きさを示している。", "b": "予報には幅があるとする視点。FNNプライムオンラインの報道は上陸が「可能性」であると伝え、tenki.jpとNHKが伝えた31号の進路や影響は示されていない。台風は動きが遅く、進路が変わる余地も残る。", "say": "確認できているのは、先島諸島での停滞、台湾での死者と負傷者、26日ごろの九州接近の見込み、31号の発生。確認できていないのは、31号の進路と、30号の上陸の有無や場所。今夜から明日にかけて、気象庁の進路予想が更新されるかを見たい。", "src": "NHK(先島諸島・台湾の被害、10/24) · TBS NEWS DIG(西・東日本の大雨、10/24) · FNNプライムオンライン(26日に九州接近、10/24) · tenki.jp(31号の発生、10/24)"},
+    "s2":{"kick": "国際 · 北朝鮮 · ✓ 4媒体 · 中国側の発表と訪問の目的は未確認", "title": "北朝鮮の金正恩総書記が中国・丹東入りと韓国メディア 開通した大橋を通過か、昨年9月以来の訪中", "what": "NHKは、韓国の聯合ニュースなど複数のメディアの報道として、北朝鮮の金正恩総書記が24日、中国東北部の遼寧省丹東に到着したと伝えた。NHKによると、金総書記の訪中は2025年9月に北京で開かれた軍事パレードに出席して以来となる。毎日新聞は、開通した大橋を利用したとみられると報じた。読売新聞は聯合ニュースの報道として、中朝を結ぶ「新鴨緑江大橋」を通って中国入りしたとみられると伝えた。時事通信は「北朝鮮の金正恩氏が訪中」と伝えた。NHKは別の記事で、金総書記が軍の集会で「最強の軍隊を建設し、軍事革命を加速させよう」と述べ、韓国への言及はなかったと報じた。", "why": "報道が事実なら、金総書記の訪中は昨年9月の北京訪問以来となる。読売新聞は中朝を結ぶ新鴨緑江大橋の通過に触れており、移動の経路も報道の焦点になっている。軍事力の強化を訴える演説と訪中の報道が重なったため、中国側との協議の内容に関心が向く。", "me": "日本から見ると、北朝鮮と中国の接触は周辺情勢を読む材料になる。中国側の発表や韓国メディアの続報が出るかを確かめる機会になる。", "a": "中朝の接触に注目する視点。毎日新聞と読売新聞は、開通した大橋の利用に触れて伝えた。NHKは前回の訪中が2025年9月だったことを挙げ、去年9月以来の訪中だと報じた。", "b": "情報はまだ限られているとする視点。NHKは韓国メディアの報道としてこの情報を伝え、中国側の発表には触れていない。訪問の目的や会談の有無は示されておらず、実際の日程は今後の確認を待つ必要がある。", "say": "確認できているのは、韓国メディアが丹東到着を報じたこと、前回の訪中が2025年9月だったこと。確認できていないのは、中国側の公式発表、訪問の目的、習近平国家主席との会談の有無。今夜から明日にかけて、中国側の発表や北京への移動の報道が出るかを見たい。", "src": "NHK(丹東到着の報道・軍の集会での演説、10/24) · 毎日新聞(開通した大橋、10/24) · 読売新聞(新鴨緑江大橋、10/24) · 時事通信(金正恩氏が訪中、10/24)"},
+    "s3":{"kick": "社会 · 企業と環境 · ✓ 4媒体 · 出火原因と被害の公的数字は未確認", "title": "モンゴル草原火災でKDDI「法令違反ない」 当局は賠償請求を検討、保護区の8割に被害と産経", "what": "時事通信は24日、モンゴル東部の自然保護区で起きた大規模な草原火災をめぐり、モンゴル当局が賠償請求を検討していると伝えた。同通信によると、KDDIは「法令違反はない」と説明している。産経ニュースは、KDDI子会社の車両が火元で、保護区の8割が被害を受けたと報じた。読売新聞は、KDDI子会社の車列から出火したとみられ、モンゴル側は補償を求める考えだと伝えた。NHKは、火災が10月8日に起きたと伝え、KDDIが火災に至る経緯を公表したと報じた。NHKによると、経緯では、子会社の社員らがモンゴルの当局と保護区内を移動していたところ、とされている。", "why": "時事通信は、KDDIが法令違反はないと説明する一方でモンゴル当局が賠償請求を検討していると伝えており、法令違反の有無と被害への賠償は別の論点として並んでいる。読売新聞はモンゴル側が補償を求める考えだと報じており、子会社の活動の責任をどこまで負うかが焦点になる。", "me": "KDDIの通信サービスの利用に直接の影響は、報じられた範囲では示されていない。海外の子会社の活動で起きた火災について、KDDIの説明と補償がどう進むかは、続報で確かめられる。", "a": "責任を重く見る視点。産経ニュースは保護区の8割が被害を受けたと伝え、読売新聞はモンゴル側が補償を求める考えだと報じた。時事通信は当局が賠償請求を検討していると伝え、被害の大きさを前面に出している。", "b": "事実関係の確定を待つ視点。時事通信はKDDIが「法令違反はない」としていると伝え、NHKは公表された経緯の中で当局と保護区内を移動していたと説明されていると報じた。出火の原因や被害面積の公的な数字は、まだ報じられていない。", "say": "確認できているのは、10月8日の火災、KDDIによる経緯の公表、モンゴル当局による賠償請求の検討。確認できていないのは、出火の正確な原因、被害面積の公的な数字、賠償額。今夜から明日にかけて、モンゴル当局の正式な請求やKDDIの追加説明が出るかを見たい。", "src": "時事通信(賠償請求を検討・KDDI「法令違反ない」、10/24) · 産経ニュース(保護区の8割が被害、10/23) · 読売新聞(車列から出火、10/23) · NHK(経緯の公表、10/24)"},
+    "s4":{"kick": "経済 · 米国の通商政策 · ✓ 4媒体 · 除外品目の全体像と開始時期は未確認", "title": "米政権が対カナダ50％関税を一部除外 包装資材や海藻類など、中間選挙の接戦州の共和党候補が要請", "what": "NHKは、トランプ政権がカナダからの特定の輸入品に課している50％の追加関税の対象から、包装資材や海藻類などを外すと発表したと伝えた。NHKによると、11月の中間選挙で接戦が伝えられている共和党の候補の要請を受けた措置である。時事通信は「対カナダ50％関税、一部撤廃」と見出しにし、中間選挙で候補者を後押しする狙いだと報じた。毎日新聞は農業関連品が一部除外されたと伝えた。読売新聞は、トランプ政権が激戦州の候補の要望を受け入れて対象を見直し、物価高への不満が強まっていると報じた。", "why": "読売新聞は物価高への不満が強まっていると伝えており、関税の対象を見直す判断は、負担感への対応という側面を持つ。NHKは接戦州の共和党の候補が要請したと伝えており、除外の対象が品目ごとに決まるため、どの品目が選ばれたかが選挙戦での説明材料になる。", "me": "日本への直接の影響は、報じられた範囲では示されていない。米国の関税政策が見直される動きとして、除外の範囲が今後広がるのかを続報で確かめる意味がある。", "a": "負担軽減として評価する視点。NHKは共和党の候補が要請したことを伝え、読売新聞は物価高への不満が強まっていると報じた。地元企業の声に応えた形だという見方に沿う内容である。", "b": "選挙を意識した措置とみる視点。毎日新聞は「中間選挙対策か」と見出しに掲げ、時事通信は候補者を後押しする措置と報じた。除外が一部にとどまる点も報道で示されている。", "say": "確認できているのは、50％関税の対象から包装資材や海藻類などを外す発表があったこと、共和党の接戦州の候補が要請したこと。確認できていないのは、除外品目の全体像と適用の開始時期。今夜から明日にかけて、米政府の正式文書や、カナダ政府の反応が出るかを見たい。", "src": "NHK(包装資材・海藻類を除外、10/24) · 時事通信(一部撤廃、10/24) · 毎日新聞(農業関連品を一部除外、10/24) · 読売新聞(激戦州候補の要望、10/24)"},
+    "s5":{"kick": "国際 · 中東情勢 · ✓ 3媒体 · 警告の時期と計画の内容は未確認", "title": "米情報機関がイランによる米政府職員の殺害計画を警告 国務省に伝達と報道", "what": "NHKは24日、米情報機関が、イランが中東地域で米政府職員を標的にした活動を強化し、殺害計画を進めているとして国務省に警告していたことがわかったと伝えた。47NEWSも速報で、米情報機関がイランの米職員殺害計画を警告したと報じた。Bloomberg Televisionは23日、「US, Israel Plan for Renewed Iran Strikes After Midterms」と題した映像を配信した。同局は「US Pulls Diplomats From Saudi Arabia Over Rising Houthi Threat」と題した映像も配信した。さらに「Iran Tells US 'Little Reason to Expect Progress Now'」と題した映像も流した。警告の時期と計画の具体的な内容は示されていない。", "why": "NHKは警告が国務省に向けて出されていたと伝えており、中東で活動する米政府職員が標的に含まれるとされている。警告の中身が公になっていないため、脅威の具体像は報道から読み取れる範囲にとどまる。", "me": "日本で暮らす人に直接の危険が及ぶとは、報じられた範囲では示されていない。中東をめぐる米国とイランの動きの続報を確かめる機会になる。", "a": "脅威を重く見る視点。NHKと47NEWSは、米情報機関がイランの殺害計画を警告したと伝えた。Bloomberg Televisionの映像の題名にも、外交官の引き揚げなど緊張を示す内容が並ぶ。", "b": "確認の材料が限られているとする視点。NHKの報道は、警告の時期や計画の具体的な内容を示しておらず、イランの反応も伝えていない。Bloomberg Televisionの題名の映像と今回の警告との関係は確認されていない。", "say": "確認できているのは、米情報機関が国務省にイランの殺害計画を警告していたと日本の複数の媒体が伝えたこと。確認できていないのは、警告の時期、対象の職員、計画の中身、イラン側の反応。今夜から明日にかけて、米政府やイランの公式な反応が出るかを見たい。", "src": "NHK(米情報機関の警告、10/24) · 47NEWS(速報、10/24) · Bloomberg Television(イラン関連の映像、10/23)"},
+    "i1":{"kick": "国際 · ✓ 2媒体", "title": "米国防総省が中国の孔子学院を安全保障上の脅威と認定、規制後も名称を変えて活動と発表", "what": "NHKは、米国防総省が国内の大学にある中国語の教育施設「孔子学院」について、規制後も名称を変えて活動を続けているとして、安全保障上の脅威となる機関に認定したと発表したと伝えた。産経ニュースは、国防総省が「孔子学院の偽装組織」を安全保障を脅かす機関に指定したと報じ、長官が「窃取、洗脳が目的」と述べたと見出しに掲げた。NHKは、認定の対象が規制後に名称を変えた施設であると伝えている。", "why": "NHKの報道では、認定の理由は規制後も名称を変えて活動を続けている点とされる。名称を変えた組織を同じ枠で扱う判断であれば、名称の変更だけでは対象から外れない扱いになる。", "me": "日本の読者に直接の影響は、報じられた範囲では示されていない。米国が大学内の教育施設を安全保障の対象として扱ったことが、今後ほかの国の対応にどう響くかを確かめる機会になる。", "a": "安全保障上の対応として必要とする視点。NHKは国防総省が脅威と認定したと伝え、産経ニュースは長官の「窃取、洗脳が目的」という発言を見出しにした。", "b": "認定の根拠を精査すべきとする視点。NHKの報道は認定の理由を「規制後も名称を変えて活動している」点として伝えるにとどまり、具体的な事例には触れていない。", "say": "確認できているのは、国防総省が、規制後も名称を変えて活動する孔子学院を脅威と認定したと発表したこと。確認できていないのは、認定された個別の機関名と、大学への具体的な影響。今夜から明日にかけて、中国側の反応や米国の大学の対応が出るかを見たい。", "src": "NHK(脅威と認定、10/24) · 産経ニュース(「偽装組織」を指定・長官の発言、10/24)"},
+    "i2":{"kick": "スポーツ · ✓ 3媒体", "title": "ワールドシリーズが開幕、ブルワーズがレイズに3対2で先勝 ミジオロウスキーが5回1失点", "what": "NHKは、大リーグのワールドシリーズが23日に開幕し、第1戦はブルワーズがレイズに3対2で勝ったと伝えた。共同通信は「ブルワーズ、レイズに先勝」と報じた。中日スポーツは、ブルワーズ先発で最速167キロのミジオロウスキーが5回を1失点に抑えたと伝え、殿堂入り右腕の米実況が「今季は満票でサイ・ヤング賞だ」と断言したと見出しにした。NHKは、ワールドシリーズが23日に開幕したと伝えている。", "why": "中日スポーツは先発のミジオロウスキーが5回1失点に抑えたと伝えており、3対2という1点差の勝利は、この投球が土台になったと報じられている。", "me": "結果を追う人は、第2戦以降の先発投手の予告や日程の発表を確認できる。", "a": "投手力を評価する視点。中日スポーツは167キロの速球と5回1失点の内容を伝え、勝利の要因として投球に注目した。", "b": "接戦だったことに注目する視点。NHKは3対2の1点差だったと伝えており、投手戦の末の接戦だった。", "say": "確認できているのは、第1戦でブルワーズが3対2で先勝したこと、ミジオロウスキーが5回を1失点に抑えたこと。確認できていないのは、第2戦以降の先発投手と日程の詳細。明日以降、第2戦の予告先発や結果、シリーズの流れを見たい。", "src": "NHK(第1戦の結果、10/24) · 共同通信(先勝、10/24) · 中日スポーツ(167キロ・5回1失点、10/24)"},
+    "i3":{"kick": "国際 · ✓ 2媒体", "title": "トランプ氏が「勝利なら全成人に80万円」「農業支援に1.3兆円」 劣勢の中間選挙で農業州に手当て", "what": "読売新聞は、劣勢のトランプ氏が「勝利なら全成人に80万円」「農業支援に1.3兆円」を掲げたとして、「露骨にバラマキ」と見出しにして報じた。西日本新聞は、米国の農業州が燃料高で逆風にあり、トランプ氏が中間選挙の票固めに腐心していると伝えた。同紙の掲載写真の説明によると、トランプ氏は22日、アイオワ州スーシティーの集会で演説した。", "why": "西日本新聞は農業州が燃料高で逆風にあると伝えており、読売新聞はその状況でトランプ氏が劣勢にあるとして公約を報じた。現金給付や農業支援の約束は、有権者の不満に応える狙いで掲げられたものとして伝えられている。", "me": "日本への直接の影響は、報じられた範囲では示されていない。米国の選挙公約が実現するかどうかは、今回の対カナダ関税の見直しなど、ほかの政策の動きと合わせて確かめる材料になる。", "a": "公約の効果に期待する視点。西日本新聞は農業州が燃料高に苦しんでいると伝えており、補助や給付が農家の不満に応える手段になりうるという内容である。", "b": "財源や実現性を疑う視点。読売新聞は「露骨にバラマキ」と見出しに掲げ、劣勢の中での公約だと伝えた。具体的な財源や法的な裏づけには触れていない。", "say": "確認できているのは、読売新聞が80万円と1.3兆円の公約を伝えたこと、農業州が燃料高で逆風にあること。確認できていないのは、公約の財源と実現の手続き。明日以降、民主党側の反応や選挙情勢の報道が出るかを見たい。", "src": "読売新聞(全成人に80万円・農業支援に1.3兆円、10/24) · 西日本新聞(農業州の逆風、10/24)"},
+    "i4":{"kick": "国際 · ✓ 3媒体", "title": "歴代の米政権がスペースXにスターリンクの停止・再開を要請と報道 ウクライナ軍向けは時速161キロ超で作動", "what": "ジャパンタイムズは、バイデン、トランプ両政権が、スペースXにスターリンクのサービスを複数の国で停止または再開するよう何度か求めていたと、関係者の話として伝えた。ストレーツ・タイムズが掲載したロイター電は、今月ウクライナ軍の利用が速度制限を受ける前から、そうした要請があったと報じた。キーウ・ポストは24日、ウクライナ国防省と軍の専門家が、スターリンクとスターシールドの端末が時速161キロを超える速度で作動していると確認したと伝え、試験は続いている。キーウ・ポストは、カナダのカーニー首相が速度制限の問題を非難したとも報じた。", "why": "ジャパンタイムズは、米政権が複数の国でサービスの停止や再開をスペースXに求めていたと伝えており、民間企業のサービスに政府が関与していた点が明らかになった。キーウ・ポストは速度の復旧を確認する試験が続いていると報じており、復旧の程度が焦点になる。", "me": "日本への直接の影響は、報じられた範囲では示されていない。民間企業の通信サービスが安全保障に関わる例として、続報を確かめる機会になる。", "a": "民間企業への依存を懸念する視点。ジャパンタイムズは歴代政権が停止や再開を求めていたと伝え、キーウ・ポストはカーニー首相が制限は人命に危険を及ぼすと警告したと報じた。", "b": "復旧の動きを評価する視点。キーウ・ポストは国防省が時速161キロ超での作動を確認したと伝え、試験が続いていると報じた。完全な復旧かどうかは検証が続く。", "say": "確認できているのは、歴代米政権がスペースXにサービスの調整を求めていたと報じられたこと、時速161キロ超での作動が確認されたこと。確認できていないのは、制限の経緯の詳細と、完全な復旧の有無。明日以降、国防省の追加発表や米議会の動きを見たい。", "src": "ジャパンタイムズ(歴代政権の要請、10/24) · ストレーツ・タイムズ(ロイター電、10/24) · キーウ・ポスト(時速161キロ超、10/24)"},
+    "i5":{"kick": "国際 · ✓ 3媒体", "title": "中国共産党の中央委員会総会が26日から29日まで北京で開催へ 2027年の党大会を前に規律強化が焦点", "what": "ストレーツ・タイムズが掲載したロイター電は、中国共産党の中央委員会が北京で月曜から木曜まで非公開の会議を開くと伝えた。会議は2027年の党大会を前に政治の方向性を示し、人事を議論する可能性があるという。同電は、約300人の最高幹部が集まり、規律の強化を話し合うと報じた。ジャパンタイムズは、習近平国家主席らが月曜に北京で会合を開き、次世代の指導者を示唆する可能性があると伝えた。SCMPは、習氏が金曜に早めの政治局会議を主宰し、反腐敗の取り組みを示したと報じた。", "why": "ストレーツ・タイムズのロイター電は、規律の引き締めと習氏の権威が焦点で、アナリストが2027年の党大会を前にした最後の大きな党の会合になりうると見ていると伝えた。人事の議論の可能性にも触れており、結果次第で次期指導部の見取り図に影響する。", "me": "日本への直接の影響は、報じられた範囲では示されていない。会議は29日までで、人事や政策に関する発表が出るかは、会議の終了後に確認できる。", "a": "規律強化を重視する視点。ストレーツ・タイムズのロイター電は、規律の引き締めが主題だと伝え、SCMPは反腐敗の取り組みを示す政治局会議を報じた。", "b": "次世代指導部への影響を注視する視点。ジャパンタイムズは、会合が次世代の指導者の手がかりになりうると伝えた。ロイター電は、2027年の党大会前の最後の大きな党の会合になりうるとの分析も報じている。", "say": "確認できているのは、26日から29日まで北京で開かれること、規律強化が主題とされること。確認できていないのは、人事の具体的な中身と決定事項。会議が終わる29日以降の発表を見たい。", "src": "ストレーツ・タイムズ(ロイター電・会議の日程、10/23) · ジャパンタイムズ(次世代指導部、10/24) · SCMP(早めの政治局会議、10/23)"}
+  };
+  const G = {
+    "先島諸島":{"f": "地理", "d": "沖縄県の宮古島や石垣島などを含む南西の島々。", "w": "台風30号の暴風域に入った"},
+    "暴風域":{"f": "気象", "d": "平均風速25メートル以上の風が吹いている、または吹く可能性のある範囲。", "w": "先島諸島が入った"},
+    "線状降水帯":{"f": "気象", "d": "発達した積乱雲が次々に連なり、同じ場所に大雨を降らせる雨域。", "w": "石垣島地方に直前予測が出た"},
+    "秋雨前線":{"f": "気象", "d": "秋に日本付近に停滞する前線。長雨をもたらす。", "w": "台風と重なって大雨のおそれ"},
+    "温帯低気圧":{"f": "気象", "d": "台風が北上して性質を変えた低気圧。", "w": "30号が27日に関東へ近づく見込み"},
+    "警報級":{"f": "気象", "d": "気象警報を出す基準に達するほどの現象。", "w": "広範囲で大雨のおそれ"},
+    "ダブル台風":{"f": "気象", "d": "二つの台風が同時に存在する状態。", "w": "30号と31号"},
+    "丹東":{"f": "地理", "d": "中国遼寧省の都市で、北朝鮮との国境に接する。", "w": "金総書記が到着したと報じられた"},
+    "遼寧省":{"f": "地理", "d": "中国東北部の省。", "w": "丹東が属する"},
+    "聯合ニュース":{"f": "報道", "d": "韓国の通信社。", "w": "金総書記の訪中を報じた"},
+    "新鴨緑江大橋":{"f": "インフラ", "d": "北朝鮮と中国を結ぶ橋。", "w": "通過したとみられると報じられた"},
+    "軍事パレード":{"f": "軍事", "d": "軍が隊列を組んで行う公開行進。", "w": "2025年9月に北京で開かれた"},
+    "軍事革命":{"f": "軍事", "d": "軍の装備や運用を大きく変える方針を指す表現。", "w": "金総書記の演説に出た"},
+    "自然保護区":{"f": "環境", "d": "貴重な自然環境を守るため立ち入りや開発が制限される区域。", "w": "火災が起きた"},
+    "草原火災":{"f": "災害", "d": "草原に燃え広がる火災。", "w": "モンゴル東部で起きた"},
+    "賠償請求":{"f": "法律", "d": "損害を与えた側に金銭の支払いを求めること。", "w": "モンゴル当局が検討"},
+    "法令違反":{"f": "法律", "d": "法律や規則に反する行為。", "w": "KDDIは「ない」と説明"},
+    "子会社":{"f": "経済", "d": "親会社が株式の過半を持つなどして支配する会社。", "w": "出火した車両の持ち主"},
+    "追加関税":{"f": "経済", "d": "既存の関税に上乗せして課す関税。", "w": "カナダ製品に50％"},
+    "中間選挙":{"f": "政治", "d": "米大統領選の中間の年に行われる議会選挙。", "w": "11月に実施"},
+    "接戦州":{"f": "政治", "d": "支持が拮抗し、勝敗が読みにくい州。", "w": "共和党の候補が要請した"},
+    "包装資材":{"f": "産業", "d": "商品を包む紙や容器などの材料。", "w": "関税の対象から外れた"},
+    "海藻類":{"f": "産業", "d": "昆布やわかめなど海藻の総称。", "w": "関税の対象から外れた"},
+    "情報機関":{"f": "安全保障", "d": "国家の安全にかかわる情報を集め分析する機関。", "w": "イランの計画を警告"},
+    "国務省":{"f": "政府", "d": "米国の外交を担う中央省庁。", "w": "警告を受けた"},
+    "殺害計画":{"f": "安全保障", "d": "人を殺害する目的の計画。", "w": "米政府職員を標的とするとされた"},
+    "孔子学院":{"f": "教育", "d": "中国政府の支援で海外の大学などに置かれた中国語・文化の教育施設。", "w": "国防総省が脅威と認定"},
+    "国防総省":{"f": "政府", "d": "米国の軍事を所管する省庁。", "w": "孔子学院を認定"},
+    "ワールドシリーズ":{"f": "スポーツ", "d": "大リーグの優勝決定シリーズ。", "w": "23日に開幕"},
+    "ブルワーズ":{"f": "スポーツ", "d": "大リーグのミルウォーキーの球団。", "w": "第1戦に勝った"},
+    "レイズ":{"f": "スポーツ", "d": "大リーグの球団。", "w": "第1戦で敗れた"},
+    "バラマキ":{"f": "政治", "d": "財政の裏づけが乏しいまま広く金銭を配る政策。", "w": "読売新聞が見出しに使った"},
+    "農業州":{"f": "政治", "d": "農業の比重が大きい州。", "w": "燃料高で逆風と報じられた"},
+    "スターリンク":{"f": "技術", "d": "スペースXが提供する衛星通信サービス。", "w": "ウクライナ軍が利用"},
+    "スペースX":{"f": "企業", "d": "ロケットや衛星通信を手がける米国企業。", "w": "スターリンクの運営会社"},
+    "党大会":{"f": "政治", "d": "共産党の最高機関の全国大会。", "w": "2027年に予定"},
+    "中央委員会":{"f": "政治", "d": "中国共産党の党大会の閉会中に党を指導する機関。", "w": "総会が北京で開かれる"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

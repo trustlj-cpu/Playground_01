@@ -1,0 +1,336 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>7,580.07</b>S&amp;P 500 · 10/30終値 · 前日比 -1.82%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>157.52</b>ドル円 · 10/30終値(NY) · 前日比 -0.13%</div>
+    </div>
+    <div class="dateline"><span>No. 28 · 朝刊</span><b>2026年11月1日(日)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="gmo">
+      <div class="kick">社会 · サイバー被害<span>✓ 3媒体 · 侵入経路と被害の範囲は未確認</span></div>
+      <h2 class="hl">GMOの不正アクセス、子会社が2年前に脆弱性を指摘 2日に社長らが会見</h2>
+      <p class="deck">グループ内のセキュリティー企業が、システムの欠陥を指摘していた。GMOは問題の発覚後、初めて記者会見を開く。</p>
+      <div class="body">
+        <p>GMOインターネットグループのFX自動売買向けサービス「お名前.com デスクトップクラウド」が不正アクセスを受けた問題で、グループ内のセキュリティー企業が2024年4月、システムの脆弱性を指摘していたことが分かった。この企業は抜本的な見直しを求めていた。当時はグループの指示で対策を施したが、結果として十分ではなかった。GMOの幹部は「サービスを一時的に停止して、もっと十分な対応を取るべきだった」と話している。</p>
+        <p>GMOは11月2日(月)の午後、熊谷正寿会長兼社長らが出席する記者会見を開く。問題の発覚後では初めての会見で、経緯や利用者への対応、今後の方針を説明するとみられる。セキュリティー会社の調べでは、被害者に情報共有を呼びかける不審なサイトが公開されていて、ハッカー側との関連が指摘されている。FXの利用者の間では不安が広がり、一晩で約430万円の損失を出したと話す人もいる。侵入の経路や被害の全体像は、現時点で確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="club">
+      <div class="kick">社会 · サイバー被害<span>✓ 3媒体 · 流出項目の全体は未確認</span></div>
+      <h3 class="hl">クラブツーリズム、会員情報432万件が流出のおそれ ホームページは一時停止</h3>
+      <div class="one">
+        <p>旅行会社のクラブツーリズムは31日、サーバーが不正アクセスを受け、インターネット会員の個人情報およそ432万件が漏えいした可能性があると発表した。30日午前5時45分に不正アクセスを検知し、該当するサーバーを隔離して通信を遮断した。ホームページの機能は、被害の拡大防止と調査のため一時停止していて、安全が確認でき次第、再開するとしている。 流出したおそれがある項目として、氏名、住所、電話番号、メールアドレス、会員ID、生年月日が挙げられている。国籍や緊急連絡先を含むとする情報もあり、項目の全体は確認できていない。同社は、ログインパスワードやクレジットカード情報は含まれないと説明している。30日には無印良品や外務省なども情報流出のおそれを公表しており、不正アクセスによる被害の公表が続いている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="okinawa"><b>沖縄で米海兵隊の伍長を酒気帯び運転の疑いで逮捕 外出禁止の時間帯に</b><em>31日午前0時すぎ、沖縄市の国道で車同士が接触したとの通報があり、キャンプ・ハンセン所属の21歳の伍長を現行犯逮捕した。基準の2倍超のアルコールが検出された。</em><span>社会 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kashihara"><b>奈良県橿原市で79歳の女を逮捕 男性をボンネットに乗せ2.2キロ走行</b><em>31日午前9時20分ごろ、集合住宅の駐車場で軽自動車を発進させ、前に立った56歳の男性を乗せたまま走った。男性は自分で降り、右手小指の打撲などのけがをした。</em><span>社会 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="hadano"><b>神奈川・秦野で山に放したクマを再捕獲し駆除 同じ公園の近くに戻る</b><em>市は31日、弘法山公園の山頂付近のわなにかかったツキノワグマ1頭を、人身被害の危険が高いと判断して駆除した。10月19日の夜に捕獲し、発信機を付けて放したクマだ。</em><span>社会 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="pope"><b>ローマ教皇レオ14世が米中間選挙で郵便投票 現職の教皇として史上初とされる</b><em>バチカンは30日、米シカゴ出身の教皇が11月3日の米中間選挙の投票を郵便で済ませたと明らかにした。教皇庁は投票を「市民の権利であり義務」と位置づけた。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="chosei"><b>長生炭鉱の犠牲者を悼む慰霊祭 市民団体が遺骨収容の日韓共同事業化を訴え</b><em>山口県宇部市の長生炭鉱で31日、水没事故の犠牲者の慰霊祭が開かれた。市民団体の井上洋子代表は、遺骨収容が日韓両政府の共同事業となることを実現したいと述べた。</em><span>社会 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="taxfree">
+      <div class="kick">経済 · 税制<span>✓ 2媒体 · 店ごとの返金手続きは未確認</span></div>
+      <h3 class="hl">免税は1日から「リファンド方式」に 出国時に消費税を返金、不正転売の対策</h3>
+      <div class="body">
+        <p>外国人旅行者らが使う免税制度が、11月1日の購入分から「リファンド方式」に変わる。これまでは店で消費税を引いた価格で買えたが、今後はいったん消費税込みの価格で支払い、出国時に空港や港の税関で品物の持ち出しが確認されてから、消費税相当額が返金される。免税で買った品が国内で横流しされる不正に対応するための見直しだ。新旧の併用期間はなく、11月以降の販売にはすべて新方式が適用される。購入日から90日以内に出国する必要があり、期限を過ぎると返金されない。飲食料品や化粧品などを国内で消費した場合も、返金の対象にならない。返金の方法や時期は店ごとに異なる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="iran">
+      <div class="kick">国際 · 中東<span>✓ 3媒体 · 指示の日時と場所は未公表</span></div>
+      <h3 class="hl">イラン最高指導者、米が攻撃を再開すれば「地理的制限なく反撃」と軍に指示</h3>
+      <div class="body">
+        <p>イランの最高指導者モジタバ・ハメネイ師は、米国が大規模攻撃を再び実施した場合、「即時に、強力で地理的な制約を受けない対応を取らなければならない」と軍の幹部らに指示した。最高指導者の事務所が31日に明らかにした。ハメネイ師は軍や革命防衛隊の司令官らと面会したとされる。指示が出された日時や場所は公表されておらず、映像や肉声も出ていない。前の最高指導者は、2月28日の米国とイスラエルの攻撃で殺害されている。11月3日の米中間選挙のあとに軍事作戦が再開されるのではないかとの見方がある中での発言で、米側をけん制した形だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="deflation">
+      <div class="kick">経済 · 物価<span>✓ 2媒体 · 宣言の時期は未定</span></div>
+      <h3 class="hl">木原官房長官、デフレ脱却宣言に慎重 日銀の「2%到達」判断を受けても</h3>
+      <div class="body">
+        <p>木原稔官房長官は30日の記者会見で、デフレ脱却を宣言するかどうかを問われ、デフレに戻らない経済状況が必要だとの従来の政府方針を改めて説明し、慎重に判断する構えを維持した。日銀がこの日、基調的な物価上昇率が目標の2%に届いたと判断したことを受けた質問だった。</p>
+        <p>デフレ脱却宣言は、物価が持続的に下落する状況ではなくなり、再びそうした状況に戻る見込みもないと、政府が確認したと示すものだ。判断には、消費者物価のほか、需給の状況や賃金の動きなど複数の指標を見る。野党側は、宣言よりも物価高を抑えるインフレ対策を優先するよう求めている。宣言の時期は示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>デフレ脱却宣言<i>経済</i></b><p>物価が下がり続ける状況ではなくなり、再び戻る見込みもないと政府が判断したと示すこと。賃上げや物価対策の議論の前提になる。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>クラブツーリズムでは、クレジットカード番号やログインパスワードも流出した</b> <span>同社は、ログインパスワードとクレジットカード情報は流出のおそれがある項目に含まれないと説明している。流出のおそれがあるのは氏名や住所などで、項目の全体は確認できていない。</span></div>
+        <div><b>免税が1日から廃止され、外国人は消費税を払ったままになる</b> <span>廃止ではない。購入時は消費税込みで支払うが、購入日から90日以内に出国して税関の確認を受ければ、消費税相当額が返金される。</span></div>
+        <div><b>日銀が2%到達を判断したので、政府はデフレ脱却を宣言した</b> <span>宣言は出ていない。木原官房長官は30日の会見で、デフレに戻らない経済状況が必要だとして、慎重に判断すると述べた。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 日 11月1日</b><span>免税が「リファンド方式」に切り替わり、店頭の案内に注目。クラブツーリズムのホームページの再開時期と流出項目の確定、全日本大学駅伝の結果も出る。</span><b>今週</b><span>11月2日(月)午後にGMOが記者会見を開く。3日は米中間選挙の投開票日で、イラン情勢と原油価格への影響を見たい。秦野市の弘法山公園のアクセス路は3日から閉鎖が解かれる見通し。</span><b>今後</b><span>政府がデフレ脱却宣言を出す時期と、日銀の次の決定会合で利上げの手がかりが出るか。</span><b>読者へ</b><span>クラブツーリズムやGMOの利用者は、公式サイトからお知らせを確認し、不審なメールやSMSのリンクは開かないようにしたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "gmo":{"kick": "社会 · サイバー被害 · ✓ 3媒体 · 侵入経路と被害の範囲は未確認", "title": "GMOの不正アクセス、子会社が2年前に脆弱性を指摘 2日に社長らが会見", "what": "GMOインターネットグループのFX自動売買向けサービス「お名前.com デスクトップクラウド」が不正アクセスを受けた問題で、グループ内のセキュリティー企業が2024年4月にシステムの脆弱性を指摘していたことが分かった。この企業は抜本的な見直しを求めていた。当時はグループの指示で対策を施したが、十分ではなかった。GMOの幹部は「サービスを一時的に停止して、もっと十分な対応を取るべきだった」と話している。GMOは11月2日午後、熊谷正寿会長兼社長らが出席する記者会見を開く。問題の発覚後では初めてだ。セキュリティー会社の調べでは、被害者に情報共有を呼びかける不審なサイトが公開されていて、ハッカー側との関連が指摘されている。", "why": "脆弱性は、見つかった時点で直さなければ、攻撃者の入り口として残り続ける。2年前の指摘が放置されたのか、不十分な対策にとどまったのかで、会社の責任の重さは変わる。FX自動売買は利用者の取引口座とつながるため、サービスを止めれば取引の機会を失う利用者が出る。止める判断の難しさが、対応を遅らせた可能性がある。", "me": "GMOのFX関連サービスを使っている人は、ログイン履歴と口座の残高を確認し、他のサービスと同じパスワードを使っていれば変えておく。被害者向けをうたう掲示板やサイトは、ハッカー側が関わっている可能性が指摘されているため、個人情報や口座の情報を入力しない。", "a": "企業の責任を厳しく問う立場は、社内の専門家が2年前に欠陥を指摘していた以上、攻撃を受ける前に手を打てたはずだと考える。会見では、誰がどの時点で何を判断したのかを示すべきだという。", "b": "全体像が見えるまで、責任の議論は急がないほうがよいという見方もある。侵入の経路や被害の範囲が確定しておらず、2年前の指摘と今回の侵入が直接つながるかどうかは、別に確かめる必要があるという。", "say": "確認できたのは、2年前の指摘と対策が不十分だったという幹部の認識、そして2日の会見の予定だ。侵入経路、被害の範囲、指摘と今回の侵入の因果関係はまだ分からない。会見では、サービスの停止を見送った判断の経緯と、損失を出した利用者への補償をどう説明するかを見たい。", "src": "NHK(子会社の指摘、10月31日) · 日本経済新聞(脆弱性を2年前に把握、10月31日) · 毎日新聞(2日に記者会見、10月31日)"},
+    "club":{"kick": "社会 · サイバー被害 · ✓ 3媒体 · 流出項目の全体は未確認", "title": "クラブツーリズム、会員情報432万件が流出のおそれ ホームページは一時停止", "what": "クラブツーリズムは10月31日、サーバーが不正アクセスを受け、インターネット会員の個人情報およそ432万件が漏えいした可能性があると発表した。30日午前5時45分に不正アクセスを検知し、該当するサーバーを隔離して通信を遮断した。ホームページの機能は被害拡大の防止と調査のため一時停止していて、安全が確認でき次第、再開するとしている。流出のおそれがある項目として、氏名、住所、電話番号、メールアドレス、会員ID、生年月日が挙げられている。国籍や緊急連絡先を含むとする情報もある。同社は、ログインパスワードやクレジットカード情報は含まれないと説明している。", "why": "旅行会社の会員情報は、氏名や住所に加え、家族構成や行き先がうかがえる緊急連絡先まで含みうる。こうした情報は、旅行の案内を装った詐欺メールや電話に使われやすい。パスワードが含まれなくても、本人確認のヒントとして悪用される恐れは残る。", "me": "クラブツーリズムの会員は、同社を名乗るメールやSMSのリンクは開かず、公式サイトや公式アプリから確認する。連絡先の登録がある家族にも、不審な電話や案内に注意するよう伝えておく。同じパスワードを他のサービスで使っていれば変える。", "a": "被害の大きさと再発防止を重く見る立場は、432万件という規模は検知から公表までが早くても重大だと指摘する。侵入経路の特定と、会員への個別の連絡が急がれるという。", "b": "迅速な公表を評価する見方もある。検知の翌日に件数と項目の候補を示し、ホームページを止めて被害を抑えようとした点は、対応として前進だという。ただし項目の確定には時間がかかるとも指摘される。", "say": "確認できたのは、約432万件のおそれと、30日朝に検知して隔離した経緯だ。国籍や緊急連絡先が含まれるか、侵入の経路、実際に流出した件数はまだ分からない。今日は、ホームページの再開時期と、流出項目の確定が出るかを見たい。", "src": "NHK(約432万件の漏えいか、10月31日) · 朝日新聞(クラブツーリズムで情報流出か、10月31日) · 時事通信(会員情報432万件、10月31日)"},
+    "taxfree":{"kick": "経済 · 税制 · ✓ 2媒体 · 店ごとの返金手続きは未確認", "title": "免税は1日から「リファンド方式」に 出国時に消費税を返金、不正転売の対策", "what": "免税制度が11月1日の購入分から「リファンド方式」に変わる。旅行者は店でいったん消費税込みの価格を支払い、出国時に空港や港の税関で、購入した品を国外へ持ち出すことが確認されると、消費税相当額が返金される。免税で買った品が国内で横流しされる不正に対応する見直しだ。新旧の併用期間はなく、11月以降に販売された免税品にはすべて新方式が適用される。購入日から90日以内に出国する必要がある。従来の購入額の上限はなくなるが、出国時に持ち出せる量に限られる。飲食料品や化粧品などを国内で消費した場合は返金されない。返金の方法や時期は店ごとに異なる。", "why": "これまでの方式では、免税で安く買った品を国内で転売しても、店側は後から確かめにくかった。出国時の確認を返金の条件にすれば、持ち出されない品には消費税が戻らなくなる。不正転売を減らすねらいがある一方、店と旅行者の手続きは増える。", "me": "海外からの友人や家族に買い物を勧めるなら、支払いは消費税込みになり、返金は出国時の手続き後になると伝えておく。店で働く人は、返金手数料や手続きの案内が店ごとに違う点を確認しておくと、窓口での説明がしやすい。", "a": "不正対策を重く見る立場は、免税品の横流しを防ぐには、持ち出しを確認してから返金する仕組みが確実だと考える。税の公平さを守るうえで必要な見直しだという。", "b": "旅行者や店の負担を心配する見方もある。いったん消費税込みで支払うことで割安感が薄れ、買い控えにつながるおそれがある。返金手続きが店ごとに違うため、旅行者が戸惑う場面も予想されるという。", "say": "確認できたのは、1日から新方式になること、90日以内の出国と税関の確認が条件であることだ。店ごとの返金の方法や手数料、買い物の動きへの影響はこれから分かる。今日から免税店の窓口でどんな案内が出るかを見たい。", "src": "毎日新聞(出国時に返金、1日開始、10月30日) · 朝日新聞(免税はリファンド方式に、10月31日)"},
+    "iran":{"kick": "国際 · 中東 · ✓ 3媒体 · 指示の日時と場所は未公表", "title": "イラン最高指導者、米が攻撃を再開すれば「地理的制限なく反撃」と軍に指示", "what": "イランの最高指導者モジタバ・ハメネイ師の事務所は10月31日、同師が軍の高官らに、米国が大規模攻撃を再び実施した場合は「即時に、強力で地理的な制約を受けない対応を取らなければならない」と指示したと明らかにした。ハメネイ師は軍や革命防衛隊の司令官らと面会したとされる。指示の日時や場所は公表されておらず、映像や肉声も出ていない。前の最高指導者は、2月28日の米国とイスラエルによる攻撃で殺害された。11月3日の米中間選挙のあとに軍事作戦が再開されるのではないかとの見方が出ている。", "why": "「地理的な制約を受けない」という表現は、反撃が中東の米軍基地にとどまらない可能性を示す。実際に使われれば、原油の輸送路や周辺国に影響が及ぶ。選挙の直前に公表したのは、米国内の議論や市場に向けた牽制の意味もあるとみられる。", "me": "原油価格が上がれば、ガソリンや電気代、輸入品の価格に響く。足元ではWTI原油が1バレル100ドルを超えている。海外出張や旅行の予定がある人は、中東周辺の経由便や渡航情報を確認しておくとよい。", "a": "牽制として受け止める見方は、攻撃の再開を思いとどまらせる抑止のねらいが大きいと考える。事務所が文書で公表した形で、実際の軍の動きとは切り離して見るべきだという。", "b": "緊張の高まりとして警戒する見方もある。選挙後の再攻撃をめぐる観測が出る中での指示で、双方が引くきっかけを失い、偶発的な衝突につながるおそれがあるという。", "say": "確認できたのは、事務所が指示を公表したことと、米中間選挙後の再攻撃をめぐる観測だ。指示がいつ、どこで出たのか、具体的な反撃の対象は分からない。選挙後の米国の動きと、原油価格の反応を見たい。", "src": "時事通信(米の攻撃再開けん制、10月31日) · 日本経済新聞(地理的制限を設けず対応、10月31日) · 読売新聞(米軍が再攻撃なら反撃指示、10月31日)"},
+    "deflation":{"kick": "経済 · 物価 · ✓ 2媒体 · 宣言の時期は未定", "title": "木原官房長官、デフレ脱却宣言に慎重 日銀の「2%到達」判断を受けても", "what": "木原稔官房長官は10月30日の記者会見で、デフレ脱却宣言の可能性を問われ、デフレに戻らない経済状況が必要だとの従来の政府方針を改めて説明し、慎重に判断する構えを維持した。日銀はこの日、基調的な物価上昇率が目標の2%に届いたと判断していた。デフレ脱却は、物価が持続的に下落する状況ではなくなり、再びそうした状況に戻る見込みもないことを、政府が確認したと示す位置づけだ。判断には消費者物価のほか、需給の状況や賃金の動きなど複数の指標を見る。野党側は、物価高を抑えるインフレ対策を求めている。宣言の時期は示されていない。", "why": "宣言を出せば、政府が物価の局面を「デフレ対策」から「物価高と賃上げの両立」に移したと示すことになる。物価高に苦しむ家計に向き合う政策が後回しに見えれば、世論の反発を招く。宣言の時期は、補正予算や賃上げ要請の議論にも関わる。", "me": "日銀が2%に届いたと判断しても、スーパーの値札や光熱費がすぐ下がるわけではない。宣言の有無は暮らしの負担を直接は変えない。給料の伸びが物価に追いついているかを、自分の賃上げ率と家計の支出で確かめておくとよい。", "a": "宣言に慎重な立場は、物価の上昇が賃金の伸びを上回る状況では、デフレ脱却を強調しても実感が伴わないと考える。賃上げが物価に追いつくまで待つほうがよいという。", "b": "早期の宣言を促す立場は、すでに物価が長く上がっているのに宣言しないことが、実態とのずれを生むと考える。宣言したうえで、物価高への対策に政策を切り替えるべきだという。", "say": "確認できたのは、官房長官が30日に慎重な姿勢を示したことと、日銀が2%到達と判断したことだ。宣言の時期や、どの指標を決め手にするのかは示されていない。補正予算の議論や月例の経済報告で、政府の表現が変わるかを見たい。", "src": "時事通信(政府、デフレ脱却宣言に慎重、10月30日) · 共同通信(木原官房長官、デフレ脱却宣言に慎重、10月30日)"},
+    "okinawa":{"kick": "社会 · ✓ 3媒体", "title": "沖縄で米海兵隊の伍長を酒気帯び運転の疑いで逮捕 外出禁止の時間帯に", "what": "沖縄県警沖縄署は10月31日、アメリカ海兵隊キャンプ・ハンセン所属の伍長(21)を、酒気帯び運転の疑いで現行犯逮捕した。同日午前0時15分ごろ、沖縄市で「車同士が接触した」などの110番通報があり、駆けつけた警察官が確認した。基準の2倍を超えるアルコールが検出され、伍長は「飲酒運転になることは分かっていた」と容疑を認めている。同乗者は2人いた。在沖縄米軍は、那覇市のホテルで女性が殺害された強盗殺人事件を受け、9日から30日間、午前0時から5時までの外出を禁止していた。逮捕はこの時間帯にあたる。", "why": "外出禁止は、米兵による事件が相次いだことへの再発防止策として出された。その時間帯に飲酒運転が起きたことは、措置が現場の隊員に行き渡っているかを疑わせる。基地を抱える沖縄では、米兵の事件が日米地位協定の運用や基地負担への不満に直結する。", "me": "沖縄に住む人や旅行者は、夜間の道路で酒気帯び運転の車に遭う危険が残る。深夜に車やバイクで移動するなら、通報の仕方や近くの交番の位置を確かめておくとよい。基地周辺の友人や家族がいれば、県や市の事件情報の発信に目を通しておく。", "a": "再発防止の実効性を問う立場は、外出禁止を出した直後の違反は、指示の徹底が足りない表れだと考える。米軍に原因の説明と処分の公表を求めるという。", "b": "個人の違反と制度の問題を分けて見る立場もある。大半の隊員は規則を守っており、一件を基地全体の問題にする前に、事実関係の捜査を待つべきだという。", "say": "確認できたのは、31日未明に酒気帯び運転の疑いで伍長が現行犯逮捕されたことと、外出禁止の時間帯だったことだ。当て逃げの有無や、同乗者の扱いは分からない。米軍の説明と処分、外出禁止の延長があるかを見たい。", "src": "時事通信(米兵を酒気帯び容疑で逮捕、10月31日) · 朝日新聞(沖縄の米兵逮捕、10月31日) · 共同通信(外出禁止中に運転、10月31日)"},
+    "kashihara":{"kick": "社会 · ✓ 2媒体", "title": "奈良県橿原市で79歳の女を逮捕 男性をボンネットに乗せ2.2キロ走行", "what": "奈良県警は10月31日、橿原市の79歳の無職の女を、殺人未遂の疑いで逮捕した。31日午前9時20分ごろ、自宅のある集合住宅の駐車場で軽自動車を発進させた際、前に立ちふさがった56歳の男性をボンネットに乗せたまま、市内を約2.2キロ走った疑いがある。直前に、女の車のドアが男性の車に当たり、トラブルになっていた。男性は110番通報し、ボンネットの上で警察と約7分間通話を続けた。信号待ちで車が止まった際に自分で降り、右手小指の打撲などのけがをした。女は「殺そうとは考えていなかった」と話している。", "why": "車に人が乗った状態で走る行為は、速度が低くても転落や衝突で命に関わる。殺人未遂の容疑が適用されるのは、結果の重さだけでなく、危険を認識していたかが問われるためだ。動機や病院の予約に急いでいたかなどの事情は、今後の捜査で調べられる。", "me": "駐車場でのドアの接触などのトラブルでは、車の前に立ちふさがらず、ナンバーを控えて警察に連絡する。走り出した車に乗ってしまった場合は、無理に降りず、通報を続けて安全な停止を待つ。", "a": "厳しい処罰を求める立場は、人を乗せたまま走る行為は、短い距離でも命の危険があると考える。高齢の運転者であっても、危険の認識は問われるべきだという。", "b": "事情の解明を待つべきだとする立場もある。女の供述と男性の説明に食い違いがありうるうえ、急いでいた事情や動機が、罪名や刑の重さに関わるという。", "say": "確認できたのは、31日朝に79歳の女が逮捕されたことと、男性の軽傷だ。ドアの接触から発進までの経緯、動機は捜査中で分からない。県警の発表と、殺人未遂の容疑が維持されるかを見たい。", "src": "朝日新聞(ボンネットに男性乗せて走行、10月31日) · 読売テレビ(79歳の女を逮捕、10月31日)"},
+    "hadano":{"kick": "社会 · ✓ 4媒体", "title": "神奈川・秦野で山に放したクマを再捕獲し駆除 同じ公園の近くに戻る", "what": "神奈川県秦野市は10月31日、市街地近くの観光名所「弘法山公園」の山林でツキノワグマ1頭を捕獲し、安楽死させたと発表した。10月11日以降、付近に相次いで出没していた個体で、市は10月19日の夜に捕獲した後、県の保護管理の指針にのっとって発信機を付け、丹沢山地の奥に放していた。31日午前6時ごろ、山頂付近の捕獲用のわなにクマがかかっているのを市の職員が確認した。短期間で同じ公園に戻ったことや、人通りが多いことから、人身被害の危険が高いと判断し、県と協議のうえで駆除した。公園へのアクセス路の閉鎖は11月3日から解除する方針だ。", "why": "捕獲したクマを山に放す「放獣」は、人里に近づかないよう学習させるねらいがある。だが、この個体は地域への執着が強く、短期間で同じ場所に戻った。放獣の効果が限られるケースが示され、自治体は人身被害の防止と保護の間で判断を迫られる。", "me": "山や公園に出かける人は、クマの目撃情報が出た場所の閉鎖や立ち入りの案内を事前に確認する。鈴やラジオで音を出し、早朝や夕方の入山は避ける。クマに出会ったら走って逃げず、背を向けずに距離をとる。", "a": "駆除の判断を支持する立場は、同じ個体が短期間で人通りの多い公園に戻った以上、人の安全を優先せざるをえないと考える。放獣は見直されるべきだという。", "b": "保護を重視する立場は、放獣の方法や場所の選び方に改善の余地があるとみる。発信機で行動は追えていたため、遠くに運ぶなど別の手段を検討できたのではないかという。", "say": "確認できたのは、31日朝に同じ個体とみられるクマがわなにかかり、駆除されたことだ。放獣から再捕獲までの行動の詳細や、同じ個体であることの確認方法は分からない。秋のクマ出没が続く中、放獣の指針が見直されるかを見たい。", "src": "NHK(放したクマを再び捕獲、10月31日) · 朝日新聞(市街地近くに再び出没のクマ、10月31日) · 毎日新聞(山奥に放ったクマ、再捕獲し駆除、10月31日) · 読売新聞(地域への執着が強い、10月31日)"},
+    "pope":{"kick": "国際 · ✓ 2媒体", "title": "ローマ教皇レオ14世が米中間選挙で郵便投票 現職の教皇として史上初とされる", "what": "ローマ教皇庁は10月30日、米シカゴ出身の教皇レオ14世が、11月3日投開票の米中間選挙の投票を郵便で済ませたと明らかにした。教皇は米イリノイ州で有権者登録を維持しており、10月3日に郵便投票用紙を請求したとされる。教皇庁は、教皇が投票を「市民の権利であり義務」と考えていると説明した。現職の教皇が米国の選挙で投票するのは、史上初とされる。バチカン市国に住む教皇は、アメリカ出身で初の教皇だ。", "why": "教皇は宗教指導者であり、国家元首でもあるため、投票そのものが政治的な意味を持ちうる。投票先は明らかにされていない。米国で移民政策や中絶をめぐる議論が続く中、教会の信徒の動きにも関心が集まる。", "me": "日本にいる米国籍の人は、在外投票の手続きが締め切りに間に合うかを、領事館や州の選挙管理当局の案内で確かめる。米中間選挙は為替や株価にも影響する。3日の結果は、円相場の見通しを考えるうえでも参考になる。", "a": "市民の義務を果たしたと受け止める立場は、教皇が選挙権を行使することに問題はなく、投票を勧める姿勢が民主主義への関心を高めるとみる。", "b": "政治への関与を心配する立場は、教皇の行動が特定の陣営に利用されたり、信徒の投票行動に影響したりするおそれがあるとみる。投票先を明かさない点が、中立を保つ工夫だという。", "say": "確認できたのは、教皇庁が郵便投票を済ませたと発表したことだ。投票先や、教皇の判断の背景は明らかにされていない。史上初という位置づけと、中間選挙の結果に教会がどう反応するかを見たい。", "src": "朝日新聞(米出身のローマ教皇、郵便投票、10月31日) · 時事通信(ローマ教皇が郵便投票、10月31日)"},
+    "chosei":{"kick": "社会 · ✓ 1媒体", "title": "長生炭鉱の犠牲者を悼む慰霊祭 市民団体が遺骨収容の日韓共同事業化を訴え", "what": "山口県宇部市の長生炭鉱で10月31日、水没事故の犠牲者の慰霊祭が開かれた。遺骨収容に取り組む市民団体の井上洋子代表は、遺骨を放置したままでは日韓の未来志向はないとして、遺骨収容が日韓両政府の共同事業となることを実現したいと述べた。長生炭鉱では、1942年に海底の坑道が水没し、日本人と朝鮮半島出身者らが犠牲になった。2025年8月の潜水調査で遺骨が見つかり、今年1月の日韓首脳会談では、犠牲者の身元確認のため、遺骨のDNA鑑定を両国が協力して行うことで合意している。収容された遺骨の鑑定はまだ手つかずとされる。", "why": "遺骨が見つかった今、課題は収容と身元確認を誰が担うかに移っている。民間の潜水調査には費用と安全の限界があり、政府の関与が不可欠になる。日韓の共同事業とすれば、両国の歴史問題への姿勢を示す機会にもなる。", "me": "歴史や追悼に関心がある人は、慰霊祭や資料館の公開日を市民団体の案内で確かめられる。DNA鑑定への協力は遺族の側にも関わるため、続報では身元確認の手続きに注目するとよい。", "a": "政府の関与を求める立場は、遺骨収容は民間団体に任せず、国の責任で進めるべき課題だと考える。日韓の共同事業とすれば、継続的な調査の体制もつくれるという。", "b": "慎重な立場は、共同事業にするには、費用の分担や調査の権限など調整すべき点が多いとみる。遺族や関係者の意向を確かめながら、段階的に進める必要があるという。", "say": "確認できたのは、31日に慰霊祭が開かれ、市民団体が共同事業化を訴えたことだ。鑑定の時期や、政府が共同事業を受け入れるかはまだ分からない。日韓政府の次の協議と、鑑定の進み方を見たい。", "src": "毎日新聞(長生炭鉱犠牲者の慰霊祭、10月31日)"}
+  };
+  const G = {
+    "脆弱性":{"f": "サイバー", "d": "ソフトやシステムにある、攻撃の入り口になりうる欠陥。", "w": "GMOの子会社が2年前に指摘していた。"},
+    "不正アクセス":{"f": "法律・サイバー", "d": "他人のID・パスワードの悪用や欠陥の突破で、権限なくシステムに入ること。不正アクセス禁止法で罰せられる。", "w": "GMOとクラブツーリズムが被害を公表した。"},
+    "自動売買":{"f": "金融", "d": "あらかじめ決めたルールに従い、プログラムが自動で売り買いする取引。", "w": "GMOのFX向けサービスが対象になった。"},
+    "隔離":{"f": "サイバー", "d": "被害の拡大を防ぐため、問題のあるサーバーをネットワークから切り離すこと。", "w": "クラブツーリズムが該当のサーバーを隔離した。"},
+    "漏えい":{"f": "サイバー", "d": "本来外に出てはならない情報が、外部に出てしまうこと。", "w": "個人情報の漏えいのおそれが公表された。"},
+    "リファンド方式":{"f": "税制", "d": "いったん税込みで支払い、条件を満たしたあとで消費税分を返してもらう仕組み。", "w": "免税制度が1日から切り替わる。"},
+    "免税":{"f": "税制", "d": "外国人旅行者が国外に持ち出す品について、消費税を免除すること。", "w": "購入日から90日以内の出国が条件になる。"},
+    "税関":{"f": "貿易・税制", "d": "空港や港で、品物の持ち出しや持ち込みを検査・確認する役所。", "w": "出国時に持ち出しを確認して返金につなげる。"},
+    "横流し":{"f": "税制", "d": "免税などで安く買った品を、本来の目的と違い国内で転売すること。", "w": "新方式が防ごうとしている不正。"},
+    "最高指導者":{"f": "安全保障", "d": "イランで国家の最終的な決定権を持つ地位。軍の最高指揮官でもある。", "w": "モジタバ・ハメネイ師が軍に指示した。"},
+    "革命防衛隊":{"f": "安全保障", "d": "イランの精鋭軍事組織。通常の軍とは別に、体制の防衛を担う。", "w": "司令官らがハメネイ師と面会したとされる。"},
+    "中間選挙":{"f": "政治", "d": "米国で大統領の任期の中間に行う選挙。連邦議会の議席の多くが改選される。", "w": "11月3日に投開票される。"},
+    "郵便投票":{"f": "政治", "d": "投票所に行かず、郵送で投票用紙を送る方法。", "w": "教皇が米中間選挙でこの方法をとった。"},
+    "酒気帯び運転":{"f": "法律", "d": "呼気中のアルコール濃度が基準以上の状態で車を運転すること。", "w": "沖縄で米兵が現行犯逮捕された。"},
+    "駆除":{"f": "野生動物", "d": "人への被害を防ぐため、野生動物を殺処分すること。", "w": "市がクマを駆除した。"},
+    "デフレ脱却宣言":{"f": "経済", "d": "物価が下がり続ける状況ではなくなったと、政府が示すこと。", "w": "政府は慎重に判断する構えだ。"},
+    "基調的な物価上昇率":{"f": "金融", "d": "一時的な要因をならして見た、物価の本来の上がり方。", "w": "日銀が2%に届いたと判断した。"},
+    "インフレ":{"f": "経済", "d": "物価が持続的に上がること。同じお金で買える物が減る。", "w": "野党が抑える対策を求めた。"},
+    "個人情報":{"f": "法律", "d": "氏名や住所など、特定の人を識別できる情報。", "w": "432万件のおそれが公表された。"},
+    "遺骨収容":{"f": "歴史", "d": "事故や戦争の犠牲者の遺骨を、現場から収めて遺族のもとへ戻すこと。", "w": "日韓の共同事業とするよう訴えた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

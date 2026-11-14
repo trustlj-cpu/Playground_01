@@ -1,0 +1,338 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,239.13</b>KOSPI · 11/10(火) 終値 · 前の取引日比4.39%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>667.61</b>KOSDAQ · 11/10(火) 終値</div>
+    </div>
+    <div class="dateline"><span>第38号 · 朝刊</span><b>2026年11月11日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="m1">
+      <div class="kick">経済 · 金融セキュリティー<span>報道照合 ✓ 4社 · 流出した金融会社の数と攻撃経路は未確認</span></div>
+      <h2 class="hl">金融保安院もハッキング被害、金融会社のセキュリティー評価情報の一部が流出…金融保安院『住民登録番号などの機微情報はなかった』</h2>
+      <p class="deck">金融会社のセキュリティーの状態を点数で示す『情報保護常時評価』サイトが破られた。金融委員会は原因の分析と再発防止を求めた。</p>
+      <div class="body">
+        <p>金融会社のサイバー脅威の探知と対応を担う金融委員会傘下の機関、金融保安院がハッキング攻撃を受け、一部の情報が流出した。金融保安院は9日にこの事実を確認し、該当システムへの接続を遮断したうえで、金融委員会や韓国インターネット振興院などに届け出た。事故は10日に知らされた。破られたのは『情報保護常時評価』サイトで、金融会社のセキュリティーの状態を評価して点数を示すサービスだ。金融会社が自社のセキュリティー水準を確認し、書類をやり取りする窓口であるため、利用者の情報や書式が蓄積されていた。流出したのは、個人信用情報の同意書見本などの行政書式約200件、その書式に入っていた氏名・生年月日などの個人情報300余件、一部を伏せた(マスキング)状態の氏名・携帯電話番号などシステム利用者の情報350余件と把握された。金融保安院は、住民登録番号や個人信用情報のような顧客の機微な情報はなかったと明らかにした。</p>
+        <p>今回の事故は、9月末に銀行界で始まった金融界のハッキング事態が1か月以上続くなかで起きた。これに先立ち、主要な市中銀行や大手証券会社、仮想資産取引所などが相次いでハッキング被害に遭い、今や金融界のセキュリティーを評価・監視する機関まで被害の対象になった。金融委員会は、金融保安院に徹底した事故原因の分析と再発防止措置を求めたと明らかにした。ただし、評価対象の金融会社のうち何社の資料が流出したのか、攻撃者がどんな経路で侵入したのかは、公式には確認されていない。調査が進行中のため、流出の範囲は変わりうる。金融保安院は、流出した情報に住民登録番号のような機微情報は含まれていないとしたが、書式に入っていた氏名と生年月日がどう使われうるかは、調査結果が出てからでないとわからない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="m2">
+      <div class="kick">経済 · 通貨・金融<span>報道照合 ✓ 4社 · 国際決済銀行の公式発表文は未確認</span></div>
+      <h3 class="hl">シン・ヒョンソン韓国銀行総裁、国際決済銀行の支払・市場インフラ委員会の議長に選任…米欧以外の人物では初、任期3年</h3>
+      <div class="one">
+        <p>シン・ヒョンソン韓国銀行総裁が10日(現地時間)、スイスのバーゼルで開かれた国際決済銀行(BIS)の世界経済会議で、支払・市場インフラ委員会(CPMI)の議長に選任された。任期は3年だ。米国や欧州以外の地域の人物がこの委員会の議長を務めるのは初めてだ。CPMIはBIS総裁会議傘下の協議体で、お金が行き来する支払決済の制度と金融市場インフラの国際基準を作り、管理する。米国の連邦準備制度、欧州中央銀行、イングランド銀行など28の中央銀行が加盟している。シン総裁は5月にBIS理事に選出され、BISで働いていた2023年には、トークン化した通貨や金融資産を一つのプラットフォームで発行・流通させる『統合元帳』構想を打ち出したことがある。韓国銀行は、今回の選任をデジタル化・トークン化分野の専門性を国際社会が認めた結果だと明らかにした。トークン化は、預金や債券のような資産をブロックチェーン技術に基づくデジタルの証票に替えることを指す。議長として今後扱う具体的な議題と日程は、まだ知らされていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="n1"><b>米国のガソリン全国平均価格、1ガロン4ドルを下回る…7月20日以来初めて</b><em>米国自動車協会の集計で、10日に全国平均のレギュラーガソリン価格が1ガロン4ドルを下回った。7月20日以来約4か月ぶりで、1ガロンは約3.8リットルだ。</em><span>経済 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="n2"><b>ソフトバンクグループ、米国データセンターの損失で2年ぶりの赤字転落</b><em>7〜9月期の純損失は約70億ドルで、会社は米国事業の『要件の変更』を理由に挙げた。四半期の損失は2年近くぶりだ。</em><span>企業 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="n3"><b>ルビオ米国務長官『イランへの大規模軍事作戦は今は不要』…イランの安全保障トップは協議再開説を否定</b><em>ルビオ長官は10日のG7外相会合で、経済的圧力がすでにイランに大きな打撃を与えていると述べた。イランの安全保障トップは、協議再開説を『原油価格を下げようとする欺瞞』だと否定した。</em><span>国際 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="n4"><b>マッシー米下院議員、ヘグセス国防長官の弾劾訴追案を提出…下院の採決は今週の見通し</b><em>共和党所属のマッシー議員が9日、イラン戦争の問題などを前面に出して弾劾訴追案を提出した。ヘグセス長官は、政治的動機から出た試みであり、将兵への攻撃だと反論した。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="n5"><b>イスラエルの新議会(クネセト)が開会…ヘルツォグ大統領は再選挙を警告し、妥協を促す</b><em>120人が宣誓した新議会では、どの陣営も過半数を確保できていない状態だ。ヘルツォグ大統領は再選挙を警戒し、10月7日の攻撃に対する調査を求めた。</em><span>国際 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="m3">
+      <div class="kick">国際 · ウクライナ戦争<span>報道照合 ✓ 3社 · 捕虜の大規模交換で合意したとの説は未確認</span></div>
+      <h3 class="hl">ロシア・ウクライナの終戦協議、9か月ぶりにアブダビで再開…ゼレンスキー大統領『建設的で実質的』</h3>
+      <div class="body">
+        <p>米国が仲介するロシア・ウクライナの終戦協議が10日(現地時間)、アラブ首長国連邦のアブダビで始まった。3者協議が開かれるのは9か月ぶりだ。米国の代表団は協議に先立ち、ウクライナと欧州側の代表たちと別々に会い、4時間近く続いた初日の会議のあと、ウォロディミル・ゼレンスキー・ウクライナ大統領は、協議が『建設的で実質的』だったと評価した。捕虜の釈放問題などが議題として取り沙汰された。協議が始まる数時間前にも、ロシアの致命的な空爆があった。</p>
+        <p>ロシアのクレムリンは、黒海の海運再開が議題かという質問に、協議が進行している間は答えないとした。ドナルド・トランプ米大統領は、今週のアブダビ協議が突破口になる可能性があると語った。戦後の安全保障秩序をめぐっては、米国が新たな安全保障の枠組みを、欧州が既存の体制の強化を前面に出していると伝えられる。協議を見守った一部からは、捕虜の大規模交換で合意したという話が出ているが、双方の公式な確認はない。領土と停戦の条件は、初日の結果として決まったものがない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="m4">
+      <div class="kick">国際 · 米国の金融政策<span>報道照合 ✓ 4社 · 12月の金利判断は未定</span></div>
+      <h3 class="hl">米FRBのウォラー理事『12月の利上げを支持』…物価の上昇が速まれば50bpの『ビッグステップ』も検討</h3>
+      <div class="body">
+        <p>クリストファー・ウォラー米連邦準備制度(FRB)理事が10日(現地時間)、12月の定例会合で利上げに賛成する計画だと明らかにした。基本の構想は0.25%ポイント(25bp)の引き上げで、物価の上昇が速まれば0.5%ポイント(50bp)の引き上げも検討すべきだと述べた。一度に0.5%ポイントを上げることを、一般に『ビッグステップ』と呼ぶ。ウォラー理事は、雇用市場は堅調で需要と供給はおおむね均衡しているが、物価上昇がどれほど幅広いかが特に懸念されると語った。</p>
+        <p>ウォラー理事は、FRB内部の分析が、生産者物価のさらなる上昇とエネルギー価格ショックがより長引く可能性を示していると説明した。いわゆる『保険的利下げ』3回分は、少なくとも元に戻すべきだとし、経済を押さえつけたいわけではないとして、過度にタカ派的ではないと一線を画した。同じ日、別のFRB関係者も追加利上げの必要性を重ねて述べた。ロリー・ローガン・ダラス連邦準備銀行総裁は、少なくとも2回、さらに引き上げるべきだと語った。12月の判断は連邦公開市場委員会の採決で決まり、まだ確定したものはない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="m5">
+      <div class="kick">産業 · 半導体<span>報道照合 ✓ 3社 · 11月の売上高はまだ公開前</span></div>
+      <h3 class="hl">TSMCの10月売上高5868億台湾ドル、月間で過去最高…前年同月比59.7%増</h3>
+      <div class="body">
+        <p>世界最大のファウンドリー(半導体受託生産)企業である台湾のTSMCが10日、10月の連結売上高が5868億9000万台湾ドルだと明らかにした。前月比14.7%、前年同月比59.7%増えた。従来の月間最高だった8月の5148億1000万台湾ドルも上回り、月間ベースで過去最高だ。TSMCは、人工知能(AI)半導体をはじめとする先端工程の製品を数多く手がける企業だ。</p>
+        <p>今年1〜10月の累計売上高は4兆4900億台湾ドル前後で、前年の同じ期間より43%以上増えた。今回の数値はTSMCが月別に先に公開する売上高の資料で、四半期の業績全体は別に発表する。11月の売上高は通常、翌月10日前後に公開される。今回の増加の原因をTSMCが直接説明した内容は、確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>59.7%</b><span>10月売上高の前年同月比の増加率</span></div>
+        <div><b>14.7%</b><span>10月売上高の前月比の増加率</span></div>
+        <div><b>4兆4900億</b><span>1〜10月の累計売上高(台湾ドル、前後)</span></div>
+      </div></div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>ファウンドリー<i>半導体</i></b><p>他社が設計した半導体を、注文を受けて代わりにつくる事業だ。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>金融保安院のハッキングで、金融会社の顧客の住民登録番号まで流出した。</b> <span>金融保安院は、住民登録番号や個人信用情報など顧客の機微情報は流出の対象になかったと明らかにした。流出は行政書式と担当者・利用者の情報が中心と把握され、調査は続いている。</span></div>
+        <div><b>アブダビ協議で、ロシアとウクライナが捕虜の大規模交換で合意した。</b> <span>確認されていない。双方も仲介国も合意の事実を公式に発表しておらず、捕虜釈放の問題が議題として取り沙汰されただけだ。</span></div>
+        <div><b>ウォラーFRB理事が、12月に0.5%ポイントの利上げをすると断言した。</b> <span>事実と異なる。ウォラー理事は12月の利上げに賛成で、基本は0.25%ポイントであり、物価の上昇が速まれば0.5%ポイントの引き上げも検討すべきだと述べた。決定は連邦公開市場委員会の採決で決まる。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 水 11月11日</b><span>米国・ロシア・ウクライナの協議が、アブダビで2日目の日程に入る。米下院でのヘグセス国防長官の弾劾訴追案の採決が、今週中に見込まれる。</span><b>今週</b><span>金融委員会と金融保安院が、流出した金融会社の規模と攻撃経路を公式に発表するかを確認できる。</span><b>その後</b><span>12月のFRB定例会合で金利の判断が出る。TSMCの11月の売上高は、来月初めに公開される。</span><b>読者へ</b><span>金融保安院は、今回の流出に住民登録番号のような機微情報はなかったと明らかにした。流出した金融会社の数は、まだ確認されていない。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "m1":{"kick": "経済 · 金融セキュリティー · ✓ 4社 · 流出した金融会社の数と攻撃経路は未確認", "title": "金融保安院もハッキング被害、金融会社のセキュリティー評価情報の一部が流出…金融保安院『住民登録番号などの機微情報はなかった』", "what": "金融保安院は9日、ハッキング攻撃で一部の情報が流出した事実を確認した。金融保安院は該当システムへの接続を遮断し、金融委員会や韓国インターネット振興院などに届け出た。被害に遭ったのは、金融会社のセキュリティーの状態を評価して点数を示す『情報保護常時評価』サイトだ。把握された流出情報は、個人信用情報の同意書見本などの行政書式約200件だ。その書式に含まれていた氏名・生年月日などの個人情報が300余件で、一部を伏せた氏名・携帯電話番号などシステム利用者の情報が350余件だ。金融保安院は、住民登録番号や個人信用情報など顧客の機微情報はなかったと明らかにした。金融委員会は、徹底した原因の分析と再発防止を求めた。", "why": "金融保安院は、金融会社のセキュリティー水準を点検し、脅威情報を集めて共有する機関だ。評価サイトには金融会社ごとのセキュリティーの状態に関する資料が集まっていて、漏れれば攻撃者が弱い部分を選ぶ手がかりに使いうる。9月末から続く金融界のハッキング事態のさなかに、評価機関が破られた点が、今回の件の重みだ。", "me": "自分の口座やカードの情報が直接漏れたという確認は、まだない。流出したのは金融会社の業務用の書式と担当者・利用者の情報が中心と把握された。それでも金融会社をかたる文字メッセージや電話が増えるかもしれないので、出所のはっきりしない連絡のリンクは開かない方がよい。", "a": "被害は限定的だとみる見方は、流出の規模が数百件の水準で、住民登録番号のような機微情報はないという金融保安院の説明を根拠に挙げる。認知してすぐ接続を遮断し、当局に届け出た点も、初動の対応が行われた証拠とみる。", "b": "懸念する見方は、セキュリティーを評価し監視する機関までが破られたという事実が、金融界全体の信頼への打撃だとみる。金融会社の資料がどれだけ出たのかまだわからない以上、後続の攻撃に使われうると心配し、書類中心の評価体系を、実際の攻撃への対応力の検証に変えなければならないという声もある。", "say": "確認されたのは、9日の流出の認知と届け出、流出情報のおおよその規模、機微情報はなかったという金融保安院の説明だ。確認されていないのは、流出した金融会社の数と攻撃経路だ。金融委員会と金融保安院が、調査結果と該当する金融会社への通知の範囲を明らかにするかを見ればよい。", "src": "聯合ニュース(金融保安院のハッキングと流出情報の範囲、11/10) · 東亜日報(常時評価サイトの被害と金融界のハッキング事態、11/10) · 京郷新聞(金融委への届け出と情報流出、11/10) · SBS(金融保安院のシステムのハッキング、11/10)"},
+    "m2":{"kick": "経済 · 通貨・金融 · ✓ 4社 · 国際決済銀行の公式発表文は未確認", "title": "シン・ヒョンソン韓国銀行総裁、国際決済銀行の支払・市場インフラ委員会の議長に選任…米欧以外の人物では初、任期3年", "what": "シン・ヒョンソン韓国銀行総裁は10日(現地時間)、スイスのバーゼルで開かれた国際決済銀行(BIS)の世界経済会議で、支払・市場インフラ委員会(CPMI)の議長に選任された。任期は3年だ。米国や欧州以外の地域の人物がCPMIの議長になったのは初めてだ。CPMIはBIS総裁会議傘下の協議体で、支払決済の制度と金融市場インフラの国際基準を作り、管理する。米国の連邦準備制度、欧州中央銀行、イングランド銀行など28の中央銀行が加盟している。シン総裁は5月にBIS理事に選出され、2023年にBISで働きながら、トークン化した資産を一つのプラットフォームで扱う統合元帳の構想を打ち出した。韓国銀行は、今回の選任をデジタル化とトークン化の分野の専門性を国際社会が認めた結果だと明らかにした。", "why": "支払決済の基準は、銀行間の送金、証券の決済、ステーブルコインと中央銀行デジタル通貨がどんな安全装置を備えるべきかを定める、規則の骨組みだ。この規則を作る席に韓国の中央銀行総裁が座れば、議論の議題を決める段階から声を出せる。", "me": "今すぐ自分の送金やカード決済が変わることはない。ただ、数年後の海外送金、デジタル資産の決済、預金トークンのようなサービスがどんな基準に従うかに、この委員会の議論が影響を与える。", "a": "肯定的な見方は、非西欧圏の人物が初めて議長を務めるという点で、韓国の支払決済の技術と制度の経験が国際的な議論に反映される機会だとみる。トークン化のような新しい分野を先に研究してきた経歴が、議長の選任に力になったと評価する。", "b": "慎重な見方は、国際基準が28の中央銀行の合意で作られる以上、議長一人が方向を左右するのは難しいとみる。韓国銀行総裁の業務と並行しなければならない負担もあり、実際の成果は議題の設定と合意の過程を見守らなければならないという立場だ。", "say": "確認されたのは、10日の選任、任期3年、非西欧圏で初の議長という点だ。確認されていないのは、議長としてまず扱う議題と日程だ。国際決済銀行や韓国銀行が具体的な業務計画を出すかを見ればよい。", "src": "聯合ニュース(CPMI議長の選任と支払決済の基準、11/10) · 東亜日報(非西欧圏初の議長と任期3年、11/10) · 京郷新聞(CPMIの加盟中央銀行と選出、11/10) · 韓国経済(デジタル支払決済の基準を作る役割、11/10)"},
+    "m3":{"kick": "国際 · ウクライナ戦争 · ✓ 3社 · 捕虜の大規模交換で合意したとの説は未確認", "title": "ロシア・ウクライナの終戦協議、9か月ぶりにアブダビで再開…ゼレンスキー大統領『建設的で実質的』", "what": "米国が仲介するロシア・ウクライナの終戦協議が10日(現地時間)、アラブ首長国連邦のアブダビで始まった。3者協議が開かれるのは9か月ぶりだ。米国の代表団は協議に先立ち、ウクライナと欧州側の代表たちと別々に会った。初日の会議は4時間近く続いた。ゼレンスキー・ウクライナ大統領は、協議が建設的で実質的だったと評価し、捕虜の釈放問題などが議題として取り沙汰された。クレムリンは、黒海の海運再開が議題かについて、協議中は答えないとした。トランプ米大統領は、今週の協議が突破口になる可能性があると語った。協議は11日にも続く予定だ。", "why": "今回の協議は、前線の状況と欧州の安全保障構想、米国の仲介のやり方が、一つの場でぶつかる場だ。戦後の安全保障秩序をめぐって米国と欧州の構想が異なる点が、協議の構図の変数として働く。", "me": "協議の進展は、国際的なエネルギーと穀物の価格、防衛産業と復興に関連する市場の方向に影響を与える。中東と東欧の緊張が絡み合った時期なので、原油価格の上下の幅が変わりうるし、物価にも間接的につながる。", "a": "期待をかける見方は、9か月ぶりに3つの当事者が一つのテーブルについたこと自体に意味があるとみる。捕虜の釈放のような小さな合意から積み上がれば、停戦の議論に移れるという判断だ。", "b": "懐疑的な見方は、協議の直前にも致命的な空爆があり、領土と安全の保証という核心の争点で立場の差が大きいとみる。初日にはっきりした進展が確認されなかった点を根拠に、短期の妥結は期待しにくいと語る。", "say": "確認されたのは、協議の開始、初日の会議の長さ、ゼレンスキー大統領の評価だ。確認されていないのは、捕虜の大規模交換で合意したとの説で、双方の公式な発表が出るまでは、事実とはみなせない。11日の協議の結果と、共同発表の有無を見守ればよい。", "src": "聯合ニュース(ゼレンスキー大統領の協議への評価と終戦協議の再開、11/10) · 東亜日報(英国・フランス・ドイツの代表団の派遣、11/10) · ガーディアン(米国側の終戦目標と協議の開始、11/10)"},
+    "m4":{"kick": "国際 · 米国の金融政策 · ✓ 4社 · 12月の金利判断は未定", "title": "米FRBのウォラー理事『12月の利上げを支持』…物価の上昇が速まれば50bpの『ビッグステップ』も検討", "what": "クリストファー・ウォラーFRB理事は10日(現地時間)、12月の定例会合で利上げに賛成する計画だと明らかにした。基本の構想は0.25%ポイント(25bp)の引き上げだ。物価の上昇が速まれば0.5%ポイント(50bp)の引き上げも検討すべきだと述べた。ウォラー理事は、雇用市場は堅調で需要と供給はおおむね均衡していると語った。物価上昇が幅広く広がっている点を特に懸念するとも述べた。FRB内部の分析が、生産者物価のさらなる上昇とエネルギー価格ショックがより長引く可能性を示していると説明した。ロリー・ローガン・ダラス連銀総裁は、少なくとも2回、さらに引き上げるべきだと語った。", "why": "金利の判断は、貸出金利、為替、株価に順に影響を与える。FRB理事が大幅な利上げの可能性を公に語れば、市場は12月の判断の前から金利の経路を計算し直す。引き上げ幅を決める鍵は、これから出る物価指標だ。", "me": "米国の金利が上がればウォンが弱くなり、韓国の利下げの余力が減りうるため、ローンの利子や為替に負担が生じかねない。ドル資産を持つ人には、為替の変動が評価額にすぐ反映される。", "a": "強硬な見方は、物価上昇が幅広く、エネルギーショックが長引きうる以上、遅らせずに先に上げてこそ信頼を守れるとみる。必要ならビッグステップも使おうという立場だ。", "b": "慎重な見方は、ウォラー理事自身が経済を押さえつけたいわけではないと語った点に注目する。基本は0.25%ポイントで、0.5%ポイントは物価指標しだいの条件付きの言及であり、過度に解釈してはならないとみる。", "say": "確認されたのは、ウォラー理事の12月の利上げ支持と、条件付きで50bpを検討するという発言だ。確認されていないのは、12月の実際の判断だ。委員会の採決で決まるので、物価指標と他の委員の発言をあわせて見ればよい。", "src": "聯合ニュース(ウォラー、12月の50bp利上げを考慮、11/11) · 朝鮮日報(ウォラー、ビッグステップの可能性を示唆、11/11) · ブルームバーグ(ウォラー、12月の利上げを支持、11/10) · ロイター(ウォラー、少なくとも0.25%ポイントの利上げを支持、11/10)"},
+    "m5":{"kick": "産業 · 半導体 · ✓ 3社 · 11月の売上高はまだ公開前", "title": "TSMCの10月売上高5868億台湾ドル、月間で過去最高…前年同月比59.7%増", "what": "台湾のTSMCは10日、10月の連結売上高が5868億9000万台湾ドルだと明らかにした。前月比14.7%、前年同月比59.7%増えた。従来の月間最高だった8月の5148億1000万台湾ドルを上回った。今年1〜10月の累計売上高は4兆4900億台湾ドル前後で、前年同期より43%以上増えた。TSMCは世界最大のファウンドリー企業であり、人工知能半導体をはじめとする先端工程の製品を数多くつくる。今回の数値は、月別に先に公開する売上高の資料だ。11月の売上高は通常、翌月10日前後に公開される。", "why": "月別の売上高は、四半期の業績が出る前に、半導体需要の温度を示す最も早い指標だ。TSMCはエヌビディアやアップルなど主要な設計企業のチップをつくるので、この数値は、半導体のサプライチェーン全体の注文の流れを推し量る手がかりになる。", "me": "KOSPIの時価総額でサムスン電子とSKハイニックスの比重が大きいので、TSMCの売上高は韓国株式市場の方向にも影響を与える。半導体関連のETFやファンドを持つ人は、この指標が該当銘柄の期待に反映されているかを見ることができる。", "a": "楽観的な見方は、月間で過去最高になったことと、前年に比べて大きく増えたことが、先端工程の需要が続いている証拠だとみる。半導体の市況がしばらく堅調だという根拠にする。", "b": "慎重な見方は、月別の売上高は為替や出荷の時期によってばらつくため、1か月の数値で趨勢を断定するのは難しいとみる。前年同月の基準が低かった点を考慮しなければならないという立場だ。", "say": "確認されたのは、売上高の金額と、前月比・前年比の増加率、8月を上回った月間の最高値だ。確認されていないのは、増加の原因についてのTSMCの直接の説明だ。11月の売上高がこの水準を保つかを見ればよい。", "src": "聯合ニュース(TSMCの10月売上高が60%増、11/10) · 電子新聞(月間で過去最高の売上高5868億台湾ドル、11/10) · 韓国経済(10月売上高が60%急増、11/10)"},
+    "n1":{"kick": "経済 · ✓ 報道3件", "title": "米国のガソリン全国平均価格、1ガロン4ドルを下回る…7月20日以来初めて", "what": "米国自動車協会(AAA)の集計で、10日に米国の全国平均のレギュラーガソリン価格が1ガロン4ドルを下回った。7月20日以来初めてで、約4か月ぶりだ。1ガロンは約3.8リットルだ。ガス価格の分析会社のあるアナリストは、価格がさらに下がると見通した。同じアナリストは、今年の感謝祭のガソリン価格は、2000年以降で最も高い水準になるだろうとも語った。ある価格集計会社は、この1週間のうちに、すべての州で価格が下がったと明らかにした。", "why": "ガソリン価格は、米国の消費者物価と消費心理に直結する。4ドルの線を下回れば家計の負担は減るが、それでも例年の感謝祭の水準よりは高い。", "me": "米国の物価と金利の見通しが変われば、為替と韓国の輸出にも影響が及ぶ。国際原油価格の流れは、国内のガソリンスタンドの価格に時差を置いて反映されるので、米国のガソリン価格の下落が続くかは、国内のガソリン価格の見通しにも参考になる。", "a": "価格の下落を歓迎する見方は、家計の燃料費の負担が減り、消費の余力が増えうるとみる。輸送費が下がれば、他の商品の価格にも緩和の圧力になるという説明だ。", "b": "慎重な見方は、中東情勢と冬場の需要しだいで、価格がまた上がりうるとみる。感謝祭の価格が2000年以降で最も高い水準になるという見通しも、依然として高い水準だという根拠に挙げる。", "say": "確認されたのは、全国平均で4ドルを下回ったことと、7月20日以来初めてという記録だ。確認されていないのは、今後の価格の経路だ。週ごとの平均価格と原油価格の流れをあわせて見ればよい。", "src": "聯合ニュース(ガソリンが4ドルを下回る、11/11) · CNBC(ガソリンが4ドルを下回る、7月以来初めて、11/10) · NBC(AAA集計で全国平均が下落、11/10)"},
+    "n2":{"kick": "企業 · ✓ 報道3件", "title": "ソフトバンクグループ、米国データセンターの損失で2年ぶりの赤字転落", "what": "日本のソフトバンクグループは10日、7〜9月期の決算を発表した。純損失は約70億ドルで、2年近くぶりの四半期の赤字だ。会社は米国のデータセンター事業で出た損失を理由に挙げ、米国のプロジェクトの要件の変更を原因として説明した。同じ日、ソフトバンクの株価は、アジアのテクノロジー株の反発に伴って11%上がったと集計された。会社は人工知能への投資に集中するグループだ。", "why": "ソフトバンクは人工知能インフラ投資の象徴的な会社なので、この四半期の損失は、データセンター投資がどれほど早く収益につながるかを推し量る手がかりになる。", "me": "ソフトバンクの投資先には、韓国の半導体・プラットフォーム企業とつながるところがあり、国内の投資心理にも影響を与えうる。個人投資家は、AIインフラの投資費用と収益の時点を区別して見る必要がある。", "a": "悲観的な見方は、大規模な投資が損失になって返ってきた点を根拠に、データセンター投資の過熱を警戒する。", "b": "楽観的な見方は、今回の損失は投資資産の価値を調整した性格が大きいとみる。同じ日に株価がテクノロジー株の反発に伴って上がった点を挙げて、投資心理はまだ折れていないと語る。", "say": "確認されたのは、約70億ドルの純損失と、会社が挙げた理由だ。確認されていないのは、損失が続くかどうかだ。次の四半期の決算で、データセンター事業がどう出るかを見ればよい。", "src": "聯合ニュース(ソフトバンク、2年ぶりに赤字転落、11/10) · CNBC(ソフトバンク、70億ドルの損失、11/10) · FT(米国データセンターの評価損、11/10)"},
+    "n3":{"kick": "国際 · ✓ 報道2件", "title": "ルビオ米国務長官『イランへの大規模軍事作戦は今は不要』…イランの安全保障トップは協議再開説を否定", "what": "マルコ・ルビオ米国務長官は10日、フランスのパリで開かれたG7外相会合で、イランに対する大規模軍事作戦は、今のところ必要ないと語った。イランに対する経済的作戦が、非常に破壊的な効果を出していると述べた。同じ日、イランの国家安全保障の最高責任者は、米国との協議再開説は偽りだと明らかにした。この人物は、この知らせは原油価格を下げようとする欺瞞だと主張した。", "why": "イランをめぐる軍事的緊張が下がったかどうかが、原油価格と海上輸送の危険度を左右する。米国が軍事の代わりに制裁を前面に出すというシグナルは、市場の不確実性を少し下げる。", "me": "原油価格と為替、国内の物価はイラン情勢に敏感だ。韓国は清海部隊の作戦区域の拡大を議論している最中で、イラン情勢の変化は安全保障上の負担ともつながる。ガソリン価格や暖房費のような生活費が影響を受けうる。", "a": "緊張の緩和を期待する見方は、軍事作戦は不要という発言が、目前の衝突拡大の可能性を下げるとみる。制裁と外交的圧力が中心の流れに変われば、原油価格の不安も減りうるという判断だ。", "b": "懐疑的な見方は、イラン側が協議再開説を公に否定した以上、実際の対話局面は開かれていないとみる。軍事カードを完全に引っ込めたのではなく、『今は』不要という条件付きの表現だという点も指摘する。", "say": "確認されたのは、ルビオ長官の発言と、イランの安全保障トップの否定だ。確認されていないのは、米国とイランが実際に接触しているかどうかだ。双方の公式な発表を待たなければならない。", "src": "聯合ニュース(ルビオの発言とイランの安全保障トップの否定、11/11) · 朝鮮日報(ルビオ、大規模軍事作戦は不要、11/11)"},
+    "n4":{"kick": "国際 · ✓ 報道3件", "title": "マッシー米下院議員、ヘグセス国防長官の弾劾訴追案を提出…下院の採決は今週の見通し", "what": "共和党所属のトーマス・マッシー下院議員は9日、ピート・ヘグセス国防長官に対する弾劾訴追案を提出した。訴追案はイラン戦争の遂行の問題などを前面に出し、議会の承認がない戦争の遂行は戦争権限法違反だという主張が盛り込まれた。下院はこの議案に2日以内に採決するか、却下の手続きを踏む仕組みのため、今週の採決が見通されている。ヘグセス長官は、これを政治的動機から出た試みだと反論した。将兵への攻撃だとも語った。ドナルド・トランプ大統領は、ヘグセス長官は批判ではなく称賛されるべきだと明らかにした。", "why": "国防長官の弾劾は、戦争の遂行に対する議会の統制がどこまで及ぶかを推し量る試金石だ。与党の議員が先頭に立った点が、政治的な重みを加える。", "me": "韓国の立場では、米軍首脳部の交代の有無が、韓米の安全保障協議や在韓米軍の議論に影響を与えうる。イラン戦争をめぐる論争は、ホルムズ海峡や清海部隊の活動拡大の議論にもつながる事案だ。", "a": "弾劾を進める側は、戦争の権限を議会が統制すべきだという憲法上の原則を前面に出す。与党の議員が直接乗り出した以上、党派的な攻勢ではないという点を強調する。", "b": "反対する側は、これを政治的な攻勢とみて、軍の士気を損なうと反論する。上院の通過は難しいという観測もあり、実際の罷免につながるのは難しいとみる。", "say": "確認されたのは、訴追案の発議と、ヘグセス長官の反論だ。確認されていないのは、採決の結果だ。下院の採決日程と、共和党からの離脱票を見ればよい。", "src": "聯合ニュース(弾劾の時計とヘグセス長官の反論、11/10) · 東亜日報(共和党3人が離脱すれば可決の可能性、11/10) · BBC(マッシー、弾劾の採決を推進、11/10)"},
+    "n5":{"kick": "国際 · ✓ 報道3件", "title": "イスラエルの新議会(クネセト)が開会…ヘルツォグ大統領は再選挙を警告し、妥協を促す", "what": "イスラエルの第26代議会(クネセト)が10日、正式に開会した。議員は120人で、政党名簿は11だ。先月27日の総選挙で構成された議会だ。どの陣営も過半数を確保できていない状態で、中道寄りのガディ・アイゼンコットの陣営が政府の構成を担った。イツハク・ヘルツォグ大統領は、再選挙を警戒して妥協を促した。ヘルツォグ大統領は、10月7日の攻撃に対する調査も求めた。連立協議が水面下で本格化した。", "why": "過半数の政党がなければ、連立協議の期間が長引き、再選挙の可能性も開く。イスラエル政治の安定がどうなるかは、ガザの事態やイラン情勢にもつながる。", "me": "中東情勢は原油価格と為替に影響を与え、韓国企業の中東事業にも関連がある。イスラエルの政府構成の行方は、イランへの対応や停戦協議の速度にもつながり、エネルギー価格の見通しの変数になる。", "a": "妥協を促す見方は、再選挙を避けて安定した政府を急いで立てるべきだとみる。10月7日の攻撃の調査要求も、国家的な合意が必要な課題だという認識から出たと説明する。", "b": "懐疑的な見方は、陣営間の対立が深く、連立の構成は簡単ではないとみる。どちらにも過半数がないため、少数政党の要求が協議の場を揺るがしうる点を指摘する。", "say": "確認されたのは、開会と大統領の促しだ。確認されていないのは、連立の構成の行方だ。連立協議の進み具合と、大統領の協議日程を見ればよい。", "src": "聯合ニュース(イスラエルの新議会の開会と連立協議、11/11) · アルジャジーラ(ヘルツォグ、再選挙を警告、11/10) · フランス・アンフォ(開会と妥協の促し、11/10)"}
+  };
+  const G = {
+    "情報保護常時評価":{"f": "セキュリティー", "d": "金融会社が情報保護の水準を常時点検され、点数を確認する評価制度", "w": "金融保安院が運営するサイトが今回破られた"},
+    "マスキング":{"f": "セキュリティー", "d": "氏名・番号の一部を星印などで伏せて個人情報を守る処理", "w": "流出した情報の一部が伏せられた状態だった"},
+    "個人信用情報":{"f": "法・制度", "d": "金融取引や信用度の判断に使われる個人の情報", "w": "同意書見本などの書式が流出した"},
+    "国際決済銀行":{"f": "金融", "d": "各国の中央銀行が集まり、金融協力を話し合う国際機関(BIS)", "w": "シン総裁がここの傘下の委員会の議長になった"},
+    "支払決済":{"f": "金融", "d": "お金をやり取りして取引を終えるすべての過程", "w": "CPMIが国際基準を定める分野"},
+    "金融市場インフラ":{"f": "金融", "d": "証券・決済を処理する清算機関・決済機関のようなシステム", "w": "CPMIが基準を作る対象"},
+    "トークン化":{"f": "金融・技術", "d": "預金・債券のような資産を、ブロックチェーン技術のデジタルの証票に替えること", "w": "シン総裁の専門分野として韓国銀行が言及"},
+    "統合元帳":{"f": "金融・技術", "d": "トークン化した通貨と資産を一つの帳簿で発行・流通させる構想", "w": "シン総裁が2023年に打ち出した構想"},
+    "ビッグステップ":{"f": "金融政策", "d": "政策金利を一度に0.5%ポイント引き上げること", "w": "ウォラー理事が12月の検討の可能性に言及"},
+    "bp":{"f": "金融", "d": "0.01%ポイントを意味する単位(ベーシスポイント)で、50bpは0.5%ポイント", "w": "ウォラー理事の12月の引き上げ幅への言及"},
+    "生産者物価":{"f": "経済", "d": "企業がつくって売る製品・サービスの価格の変動", "w": "FRB内部の分析が追加の上昇を示していると、ウォラー理事が説明"},
+    "保険的利下げ":{"f": "金融政策", "d": "景気後退のリスクに備えてあらかじめ行った利下げ", "w": "ウォラー理事が、少なくとも3回分は元に戻すべきだと言及"},
+    "ファウンドリー":{"f": "半導体", "d": "他社が設計した半導体を代わりにつくる事業", "w": "TSMCが世界最大手"},
+    "連結売上高":{"f": "会計", "d": "子会社まで合わせて計算した会社全体の売上高", "w": "TSMCが10月の連結売上高を公開"},
+    "弾劾訴追案":{"f": "法・制度", "d": "公職者の罷免を求めて議会に出す議案", "w": "マッシー議員が国防長官に対して発議"},
+    "クネセト":{"f": "政治制度", "d": "イスラエルの一院制の議会", "w": "第26代議会が10日に開会"},
+    "ガロン":{"f": "単位", "d": "米国の液体の体積の単位で、1ガロンは約3.8リットル", "w": "ガソリン価格の単位"},
+    "G7":{"f": "国際政治", "d": "米国・日本・ドイツ・英国・フランス・イタリア・カナダの先進7か国の協議体", "w": "パリの外相会合"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

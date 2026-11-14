@@ -1,0 +1,381 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>7,868.05</b>CAC40 · 10月19日（月）終値 · −1.11%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · フランス版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,690.73</b>S&amp;P 500 · 10月19日（月）終値 · +0.41%</div>
+    </div>
+    <div class="dateline"><span>第16号 · 朝刊</span><b>2026年10月20日 火曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · 10月17日以降の措置<span>報道照合 ✓ 7社 · 対象自治体の全リストと支援の日程は未公表</span></div>
+      <h2 class="hl">セバスチャン・ルコルニュ首相、県知事に月曜夜からの部分的・局地的な夜間外出禁止令を要請、商店向けに部分失業と支援基金も発表</h2>
+      <p class="deck">首相は非常事態を排除しないが、地域ごとの夜間外出禁止令のほうが適切だとみる。黄色いベストの連絡組織は、10月24日（土）の「第2幕」を予告している。</p>
+      <div class="body">
+        <p>首相のセバスチャン・ルコルニュ氏は10月19日（月）、その夜から「いくつかの部分的で局地的な夜間外出禁止令を発動する」よう県知事に求めたと発表したと、BFMTV、franceinfo、Le Mondeは伝える。複数の都市で暴力と略奪が相次いだ週末のあとだ。franceinfoによれば、対象地区の地図は市町村長との協議を経て午後に公表される予定だった。措置は主に商店を守るためのもので、パリ全域の夜間外出禁止令は見送られ、レ・アールのような限定した地区が対象になる。非常事態の可能性は残る。首相はそれを「重いもの」と形容し、「必要ならば」使うこともありうると述べたと、franceinfoは伝える。Le Figaro、Libération、Ouest-Franceは、そのほかの発表として、部分失業、商店主向けの支援基金、夜間外出禁止令を詳しく伝える。franceinfoはさらに、保険会社との協議と、火曜から100%で発動される部分失業を挙げる。</p>
+        <p>現場では、地域ごとの措置が相次いでいる。グアドループの県知事は、10月18日（日）午後8時から19日（月）午前6時まで、未成年者を対象とする夜間外出禁止令を出したと、BFMTVとOuest-Franceは伝える。北部のドゥナン市は日曜までの夜間外出禁止令を決めたと、Le Figaroは伝え、BFMTVは、市が10月17日の破壊行為と暴力を受けてこの決定を下したと補足する。Ouest-Franceは、ル・マン近郊のクーレーヌでも未成年者向けの措置があると伝える。都市担当大臣のヴァンサン・ジャンブリュン氏は、夜間外出禁止令を「必要なときには」認めるべきだと訴えたと、BFMTVは伝える。同局は、警察組合アリアンス・ポリスの総代表スタニスラス・ゴドン氏が「対応のなさ」に示した「落胆」も取り上げた。パリ・サントル区長のアリエル・ヴェイユ氏は、一部の地区では「不意を突かれたなら、夜間外出禁止令か軍のほうがよい」と述べたと、BFMTVは伝える。黄色いベストの連絡組織は、10月24日（土）にデモの「第2幕」を行うと予告したと、franceinfoとICIは伝える。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>100%</b><span>被害を受けた商店向けの部分失業が火曜から発動、franceinfoによる</span></div>
+        <div><b>10月24日</b><span>黄色いベストの連絡組織が予告した「第2幕」の日</span></div>
+        <div><b>20時–6時</b><span>グアドループの未成年者向け夜間外出禁止令の時間帯、10月18日から19日</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">司法 · 警察留置の集計<span>報道照合 ✓ 5社 · 有罪判決の確定数は未公表</span></div>
+      <h3 class="hl">ジェラルド・ダルマナン法務大臣、警察留置2513人、収監67人と発表、「組織犯罪」では警察留置を48時間から72時間に延ばす意向</h3>
+      <div class="one">
+        <p>法務大臣のジェラルド・ダルマナン氏は月曜夜、「現時点で」警察留置2513人、収監67人と発表したと、BFMTVと20 Minutesは伝える。BFMTVは、警察留置された人の4分の1を超える人が刑の言い渡しを待っていると補足する。franceinfoによれば、暴力に絡む警察留置は、「組織犯罪」の名目で48時間から72時間に延ばせるようになる。これに先立ち、大臣は「われわれはこの週末、紛れもなく失敗した」と認め（franceinfo）、数十人の未決勾留を発表していた（BFMTV）。パリでは、最初の即決裁判が開かれ、厳しい刑が言い渡され、被告の大半が刑務所に送られたとLibérationは書く。一方、BFMTVは無罪や公益労働の例にも触れる。Le Figaroは、首都で警察留置の延長が64%に上ったと指摘する。ルーアンでは、警察留置29人と即決裁判5件を数えると、BFMTVは伝える。内務大臣のローラン・ヌニェス氏は月曜、一部の大都市で「統制の喪失」があったと認め、エマニュエル・マクロン氏に辞表を出したが受理されなかったと、BFMTVは伝える。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2513</b><span>ジェラルド・ダルマナン氏が月曜夜に発表した警察留置</span></div>
+        <div><b>67</b><span>現時点の収監者数</span></div>
+        <div><b>72時間</b><span>組織犯罪での警察留置で可能な長さ。従来は48時間</span></div>
+      </div></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>ベルシー（経済省）、月曜夜にVinted、Leboncoin、Cdiscountを招集、略奪で盗まれた品の転売を防ぐ</b><em>Vintedは「ゼロ・トレランス」を徹底していると、franceinfoは伝える。ガブリエル・アタル氏とジョルダン・バルデラ氏は、プラットフォームに盗んだ者の特定への協力を求めたと、BFMTVは伝える。</em><span>経済 · ✓ 報道3社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>ドイツ政府、エヌビディアとの提携を発表、産業AIを加速、「ドイツの将来にとって決定的」と評価</b><em>BFMTVは、合意の金額は明らかにされていないと補足する。dpa-AFXによれば、提携が目指すのは、とくにミッテルシュタントでの産業利用だ。</em><span>テクノロジー · ✓ 報道2社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>イケア・フランス、最大303人の職を削減し100人を新規に創出する計画、労組は「矛盾した計画」と</b><em>同社は「ますます強まる競争」を理由に挙げたと、BFMTVとLibérationは伝え、Le Figaroは300人に丸めている。労使対話は月曜に始まったと、Le Mondeは補足する。</em><span>経済 · ✓ 報道4社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>エリナ・スビトリーナ、インスタグラムでガエル・モンフィスとの離婚を発表、モンフィスは10月5日に引退していた</b><em>L'Équipeによれば、40歳のフランス人選手は10月5日に現役を退いた。Libérationは結婚5年と伝え、「向き合うのが最も難しい真実」を引く。</em><span>スポーツ · ✓ 報道4社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>クリスティアーノ・ロナウド、代表合宿を離れたとして、ポルトガルサッカー連盟から30日間の停止処分と255ユーロの罰金</b><em>9月30日に合宿を離れたと、Le Mondeは伝える。L'ÉquipeとFrance 24は、30日間の停止処分と255ユーロの罰金を伝える。</em><span>スポーツ · ✓ 報道3社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">政治 · 2027年大統領選<span>報道照合 ✓ 2社 · 行政府の回答は伝えられていない</span></div>
+      <h3 class="hl">ブリュノ・ルタイヨー氏、大統領選の決選投票の日程変更を要求、2027年5月2日はメーデーの翌日</h3>
+      <div class="body">
+        <p>共和党の党首で大統領選候補のブリュノ・ルタイヨー氏は10月19日（月）、2027年の選挙の決選投票が5月2日に設定されていることについて、日程を変えるよう行政府に求めたと、BFMTVとLe Figaroは伝える。「これは悪い日だ」と、氏はBFMTVで語った。Le Figaroによれば、氏は10月17日と18日の破壊行為のあとBFMTVに招かれており、決選投票はメーデーの翌日にあたる。前日の10月18日（日）、BFMTVは、氏がすでにエマニュエル・マクロン氏に非常事態の宣言を求めていると伝えていた。Le Figaroは「行政府」に宛てた要求と見出しを付け、BFMTVは共和党の大統領選候補が投票日の変更を呼びかけたと見出しを付ける。いずれの媒体も現時点では、日程に関する要求への政府の回答を伝えていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">国際 · エネルギーと外交<span>報道照合 ✓ 6社 · 数字を伴う合意は未公表</span></div>
+      <h3 class="hl">エマニュエル・マクロン大統領、国内危機のさなかクウェートで湾岸歴訪を開始、燃料の調達確保をめざす</h3>
+      <div class="body">
+        <p>エマニュエル・マクロン氏は10月19日（月）、まずクウェート、次にアラブ首長国連邦という湾岸歴訪を始めたと、BFMTVとFrance 24は伝える。氏は前日にそれを予告していた。「われわれの燃料とガスを確保するため、あすの朝から湾岸諸国に行って、こうした取り組みを続ける」と述べたと、BFMTVは伝える。Le Mondeは、氏が燃料価格の高騰の出口を探していると書き、RFIは「石油に狙いを定めた」旅だと言う。Le Figaroは「調達を確保する」ための48時間の歴訪とするが、Le Mondeは3日間の訪問と述べる。Ouest-Franceは、日程の主題としてエネルギー、防衛、人工知能を挙げる。France 24は、週末の暴力のあとフランスで氏を苦しめる「批判から遠く」大統領が旅立つと指摘し、Le Figaroは「エマニュエル・マクロン、ペルシャ湾へ船出」という見出しを付ける。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">国際 · イスラエル<span>報道照合 ✓ 7社 · 支持が投票に与える効果は確認されていない</span></div>
+      <h3 class="hl">イスラエル総選挙の1週間前、ドナルド・トランプ氏がベンヤミン・ネタニヤフ氏への「全幅の支持」を表明</h3>
+      <div class="body">
+        <p>ドナルド・トランプ氏は10月18日（日）、イスラエルの総選挙の1週間前に、ベンヤミン・ネタニヤフ氏への「全幅の支持」を表明したと、France 24とfranceinfoは伝え、両社はこのメッセージがTruth Socialに投稿されたとする。BFMTVは「ビビへの全面的かつ無条件の支持」と見出しを付け、RFIは遅きに失した支持と評する。Le Mondeは、イスラエルの首相がアメリカ大統領との近さを演出していると書き、France 24は、首相が両者の同盟を前面に出していると指摘する。ネタニヤフ氏の最大の対抗馬ガディ・アイゼンコット氏は、「指導者を選べるのはイスラエル人だけだ」と答えたと、Libérationとfranceinfoは伝える。i24NEWSによれば、10の世論調査の平均では、リクードとアイゼンコット氏の政党ヤシャルが、それぞれ22議席で並び、単独で必要な61議席に届く陣営はない。投票は10月27日に行われる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>ウクライナ<span>ウクライナ軍は、空中ドローンによる負傷兵の初の搬送を実施したと主張しており、第92機械化旅団の映像が出ている（Le Figaro、Libération）。</span></li>
+        <li>ソーシャルメディア<span>ルネサンスの大統領選候補ガブリエル・アタル氏は、ソーシャルメディアを一時的に遮断することは「可能」だと述べる。BFMTVは、この提案は法的に複雑だと指摘する（BFMTV）。</span></li>
+        <li>フットボール：パリFC<span>ピエール・フェラッシ氏がパリFCの会長を退き、アントワーヌ・アルノー氏が後任に就く。11月9日の取締役会で正式に決まる見通し（L'Équipe）。</span></li>
+        <li>自転車競技<span>TotalEnergiesは、UCIが2027年に向けて登録したチームの一覧に載っていない。SA Vendée Cyclismeは、申請書類の作成を続けているという（L'Équipe）。</span></li>
+        <li>テニス<span>モイーズ・クアメが、リヨンのATP250の1回戦でロレンツォ・ソネゴを破る（L'Équipe）。</span></li>
+        <li>リーグ・ドゥ<span>モンペリエはロデーズに勝ち、リーグ・ドゥの2位に浮上した。決めたのは若手ラシネ・メニャンのゴール（L'Équipe）。</span></li>
+        <li>チャンピオンズリーグ<span>ランスのディフェンダー、イスマエロ・ガニウは左膝の単なる打撲だが、ランスのブルージュ戦は欠場する（L'Équipe）。</span></li>
+        <li>ミス・ユニバース<span>ガランス・オーティエが、プエルトリコで開かれるミス・ユニバース2026のフランス代表を務める。ミス・フランス社の撤退を受けて、ミス・ユニバース・フランスが選んだ（20 Minutes）。</span></li>
+        <li>NFL<span>ジェイレン・ハーツは、肺に血栓が見つかり、今季の残りを欠場する（L'Équipe）。</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「2027年大統領選の決選投票は、すでに動かされた。」</b> <span>BFMTVとLe Figaroが伝えているのは、ブリュノ・ルタイヨー氏が2027年5月2日に設定された日程の変更を求めていることだけで、行政府の回答も日程の変更も伝えられていない。</span></div>
+        <div><b>「警察留置は、逮捕されたすべてのデモ参加者について72時間になった。」</b> <span>franceinfoは、10月17日の暴力に絡む警察留置が、ジェラルド・ダルマナン氏によれば「組織犯罪」の名目で48時間から72時間に「延ばせる」ようになると伝えている。これは発表であり、一般的な規則ではない。</span></div>
+        <div><b>「Vintedは略奪品の転売を黙認している。」</b> <span>franceinfoは、Vintedが盗品について「ゼロ・トレランス」を徹底していると主張していると引き、BFMTVは、同プラットフォームがこの週末の盗品の販売を禁じていると伝える。Le Figaroは、同日中に戦利品の出品を見つけていた。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 10月20日（火）</b><span>franceinfoによれば、被害を受けた商店向けに100%の部分失業が発動される見通しで、エマニュエル・マクロン氏は湾岸歴訪を続け、アラブ首長国連邦に立ち寄る。</span><b>今週</b><span>黄色いベストの連絡組織が、10月24日（土）の「第2幕」を予告している。パリでは即決裁判が続く。</span><b>さらに先</b><span>10月27日にイスラエルの総選挙。大統領選の決選投票は2027年5月2日に設定されている。</span><b>読者へ</b><span>警察留置の数字が出回ったら、発表の日付と発表者を見たい。集計は刻一刻と変わる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "政治 · 10月17日以降の措置 · 報道照合 ✓ 7社 · 対象自治体の全リストと支援の日程は未公表", "title": "セバスチャン・ルコルニュ首相、県知事に月曜夜からの部分的・局地的な夜間外出禁止令を要請、商店向けに部分失業と支援基金も発表", "what": "セバスチャン・ルコルニュ氏は10月19日（月）、その夜から「いくつかの部分的で局地的な夜間外出禁止令を発動する」よう県知事に求めたと発表した。BFMTV、franceinfo、Le Mondeによる。franceinfoは、対象地区の地図は市町村長との協議を経て午後に公表される予定だったこと、パリ全域の夜間外出禁止令は見送られ、レ・アールのような限定した地区が対象になることを補足する。首相は非常事態を排除せず、それを「重いもの」と形容し、「必要ならば」のみ使うとした、とfranceinfoは伝える。Le Figaro、Libération、Ouest-Franceは部分失業、商店主向けの支援基金、夜間外出禁止令を詳しく伝え、franceinfoは保険会社との協議と、火曜から100%で発動される部分失業を挙げる。グアドループの県知事は未成年者向けの夜間外出禁止令を出し（BFMTV、Ouest-France）、ドゥナン市は日曜までの夜間外出禁止令を決めた（Le Figaro）。黄色いベストの連絡組織は、10月24日（土）の「第2幕」を予告した（franceinfo、ICI）。", "why": "地域ごとの夜間外出禁止令なら、非常事態という、発動の重い例外的な体制に頼らずに、特定の混乱へ素早く対応できる。部分失業と支援基金は、略奪に遭った商店主が店を閉めたり人を解雇したりするのを防ぐためのもので、こうした発表が治安対策と一緒に出る理由もそこにある。10月24日の「第2幕」は、対策全体に期限を与える。", "me": "対象の自治体に住んでいる、または働いているなら、時間帯と地区を定める県庁または市役所の告示を確認したい。被害を受けた店を営んでいるなら、支援基金と部分失業の具体的な手続きは、まだ大臣たちが詳しく示す必要がある。被害を示す書類を保管し、保険会社に連絡すること。", "a": "政府とその支持者にとって、夜間外出禁止令は均衡のとれた一時的な対応で、特定の中心市街地に限られ、非常事態は予備に置かれている。都市担当大臣のヴァンサン・ジャンブリュン氏は、そこでは「必要なときに」認められるべきだとみる（BFMTV）。", "b": "警察の幹部や地元の選出者にとって、対応は遅いか、足りない。アリアンス・ポリスの総代表スタニスラス・ゴドン氏は「対応のなさに落胆している」と述べ、パリ・サントル区長のアリエル・ヴェイユ氏は、一部の地区では夜間外出禁止令か軍が必要だと言う（BFMTV）。", "say": "確認済み：県知事への要請、非常事態の可能性、商店向けに発表された支援、グアドループとドゥナンの夜間外出禁止令。未確認：対象自治体の完全なリストと、支援の正確な日程。火曜の注目点：夜間外出禁止令の地図と支援基金の手続き、そして10月24日。", "src": "BFMTV（セバスチャン・ルコルニュ氏の発表、10月19日）、franceinfo（夜間外出禁止令、支援、第2幕、10月19日）、Le Monde（発表された夜間外出禁止令、10月19日）、Le Figaro（発表、ドゥナン、10月19日）、Libération（商店主への支援、10月19日）、Ouest-France（夜間外出禁止令、部分失業、10月19日）、ICI（第2幕、10月19日）"},
+    "s2":{"kick": "司法 · 警察留置の集計 · 報道照合 ✓ 5社 · 有罪判決の確定数は未公表", "title": "ジェラルド・ダルマナン法務大臣、警察留置2513人、収監67人と発表、「組織犯罪」では警察留置を48時間から72時間に延ばす意向", "what": "ジェラルド・ダルマナン氏は10月19日（月）、暴力のあとの警察留置2513人、収監67人を「現時点で」と断って発表したと、BFMTVと20 Minutesは伝える。BFMTVは、警察留置された人の4分の1を超える人が刑の言い渡しを待っていると補足する。franceinfoによれば、暴力に絡む警察留置は、「組織犯罪」の名目で48時間から72時間に延ばせるようになる。これに先立ち、法務大臣は「われわれはこの週末、紛れもなく失敗した」と認め（franceinfo）、数十人の未決勾留を発表していた（BFMTV）。パリでは、Libérationが最初の即決裁判を描き、厳しい刑が言い渡されて被告の大半が刑務所に送られたとする。BFMTVは無罪や公益労働にも触れる。Le Figaroは、パリで警察留置の延長が64%に上ったと指摘する。", "why": "警察留置の数は、有罪判決の数ではない。2513人の警察留置と67人の収監との差は、どれだけの案件にまだ決着がついていないかを示す。組織犯罪という罪名で72時間に延びれば、異例の数にのぼる案件を扱う捜査当局に、より多くの時間を与えることになる。", "me": "こうした集計を追うときは、数字ごとに発表の日付と発表者を確かめたい。先に出た数字とは違うことがあり、集計は刻一刻と変わる。警察留置は有罪判決を意味せず、それぞれの案件のその後の司法手続きだけが、結末を示す。", "a": "法務大臣にとって、司法の断固たる姿勢こそ期待される答えだ。当局が10月17日の週末に「失敗した」ことを認め、未決勾留と、組織犯罪の案件での警察留置の延長を発表する。", "b": "ほかの批判は、治安対応そのものに向けられる。ローラン・ヌニェス氏は一部の大都市で「統制の喪失」があったと認めて辞表を出したが、エマニュエル・マクロン氏に拒まれた（BFMTV）。パリ・サントル区長のアリエル・ヴェイユ氏は、治安部隊がなぜこれほど無力だったのかと問う（BFMTV）。", "say": "確認済み：ジェラルド・ダルマナン氏が月曜夜に発表した警察留置2513人と収監67人の数字、そして組織犯罪で最長72時間の警察留置を可能にするという発表。未確認：有罪判決の確定数と、パリで言い渡された刑の長さ。火曜の注目点：即決裁判の続きと、省からの新たな集計。", "src": "BFMTV（警察留置2513人、ローラン・ヌニェス氏の辞表、10月19日）、20 Minutes（収監67人、10月19日）、franceinfo（72時間の警察留置、10月19日）、Libération（即決裁判、10月19日）、Le Figaro（警察留置の延長、10月19日）"},
+    "s3":{"kick": "政治 · 2027年大統領選 · 報道照合 ✓ 2社 · 行政府の回答は伝えられていない", "title": "ブリュノ・ルタイヨー氏、大統領選の決選投票の日程変更を要求、2027年5月2日はメーデーの翌日", "what": "共和党の党首で大統領選候補のブリュノ・ルタイヨー氏は10月19日（月）、2027年の選挙の決選投票が5月2日に設定されていることについて、日程を変えるよう行政府に求めたと、BFMTVとLe Figaroは伝える。「これは悪い日だ」と、氏はBFMTVで語った。Le Figaroによれば、氏は10月17日と18日の破壊行為のあとBFMTVに招かれており、決選投票はメーデーの翌日にあたる。10月18日（日）、BFMTVは、氏がエマニュエル・マクロン氏に非常事態の宣言を求めていると伝えていた。いずれの媒体も、日程に関する要求への政府の回答を伝えていない。", "why": "選挙の日取りは行政府が定めるので、ブリュノ・ルタイヨー氏の要求は、10月17日の危機と大統領選の日程を結びつけるものになる。5月2日の決選投票は、労働組合の伝統的なデモの日であるメーデーのすぐあとにくる。", "me": "現時点で変更はない。現行の公式な日付である2027年5月2日を覚えておき、変わったものとは考えないこと。政府の回答や、ほかの候補が同じ要求を取り上げるかどうかに注意したい。", "a": "ブリュノ・ルタイヨー氏にとって、10月17日の暴力がつくった空気の中では、この日取りが問題になり、行政府に変更を求める。BFMTVとLe Figaroが伝えるとおりだ。", "b": "ほかの候補は、暴力に別の角度から反応した。ガブリエル・アタル氏はソーシャルメディアを一時的に遮断することは可能だとみて（BFMTV）、エドゥアール・フィリップ氏はLFIを名指しして「驚くべき暴力の水準」を非難する（Le Figaro）。確認した記事は、彼らが日程変更の要求を取り上げているとは述べていない。", "say": "確認済み：月曜にブリュノ・ルタイヨー氏が出した要求と、現行の2027年5月2日という日付。未確認：行政府の回答や、日程のいかなる変更。注目点：今後数日のうちの、政府やほかの候補の反応。", "src": "BFMTV（「これは悪い日だ」、10月19日）、Le Figaro（日程変更の要求、10月19日）"},
+    "s4":{"kick": "国際 · エネルギーと外交 · 報道照合 ✓ 6社 · 数字を伴う合意は未公表", "title": "エマニュエル・マクロン大統領、国内危機のさなかクウェートで湾岸歴訪を開始、燃料の調達確保をめざす", "what": "エマニュエル・マクロン氏は10月19日（月）、まずクウェート、次にアラブ首長国連邦という湾岸歴訪を始めたと、BFMTVとFrance 24は伝える。日曜、氏は「われわれの燃料とガスを確保するため、あすの朝から湾岸諸国に行って、こうした取り組みを続ける」と述べていた（BFMTV）。Le Mondeは、氏が燃料価格の高騰の出口を探していると書き、RFIは「石油に狙いを定めた」旅だと言う。Le Figaroは「調達を確保する」ための48時間の歴訪と述べる一方、Le Mondeは3日間の訪問と述べる。Ouest-Franceは、日程の主題としてエネルギー、防衛、人工知能を挙げる。", "why": "この訪問は、燃料価格が重くのしかかる「物価高」という社会的な危機と、エネルギー外交とを結びつける。国内が緊張しているときに、供給の確保は、行政府が海外で動かせる手段だ。Le MondeとLe Figaroが伝える日数の違いは、正確な日程がまだ詰める必要のあることを示す。", "me": "ディーゼル車に乗っている、または重油で暖房しているなら、給油所ですぐに効果が出るとは考えないこと。数字を伴う合意は現時点で何も伝えられていない。火曜と水曜の発表を追い、量や価格に触れられるかどうかを確かめたい。", "a": "行政府にとって、危機のさなかに出発するのは緊急性への答えだ。大統領は燃料とガスを確保したいと述べ、この旅は調達への働きかけとして示される（BFMTV、Le Figaro）。", "b": "批判する側にとって、この時機は批判を招く。France 24は、大統領がフランスで氏を苦しめる「批判から遠く」旅立つと指摘し、Le Figaroは「エマニュエル・マクロン、ペルシャ湾へ船出」と題した分析で歴訪を取り上げる。", "say": "確認済み：月曜の出発、クウェートとアラブ首長国連邦という行き先、掲げられたエネルギーの目的。未確認：歴訪の正確な長さ、その後に訪れる国、数字を伴うあらゆる合意。注目点：火曜のアラブ首長国連邦での発表と、日程のその後。", "src": "Le Monde（ペルシャ湾の歴訪、10月19日）、Le Figaro（歴訪の分析、10月19日）、BFMTV（クウェート到着、10月18〜19日）、RFI（石油に狙いを定めて、10月19日）、France 24（湾岸の歴訪、10月19日）、Ouest-France（エネルギー、防衛、AIの日程、10月19日）"},
+    "s5":{"kick": "国際 · イスラエル · 報道照合 ✓ 7社 · 支持が投票に与える効果は確認されていない", "title": "イスラエル総選挙の1週間前、ドナルド・トランプ氏がベンヤミン・ネタニヤフ氏への「全幅の支持」を表明", "what": "ドナルド・トランプ氏は10月18日（日）、10月27日のイスラエル総選挙の1週間前に、ベンヤミン・ネタニヤフ氏への「全幅の支持」を表明したと、France 24とfranceinfoは伝え、両社はこのメッセージがTruth Socialに投稿されたとする。BFMTVは「ビビへの全面的かつ無条件の支持」と見出しを付け、RFIは遅きに失した支持と評する。Le Mondeは、イスラエルの首相がアメリカ大統領との近さを演出していると書き、France 24は、首相が両者の同盟を前面に出していると指摘する。ガディ・アイゼンコット氏は、「指導者を選べるのはイスラエル人だけだ」と答えた（Libération、franceinfo）。i24NEWSによれば、10の世論調査の平均では、リクードとアイゼンコット氏の政党ヤシャルが、それぞれ22議席で並び、単独で61議席に届く陣営はない。", "why": "アメリカの支持を公然と示すことは、ワシントンとの関係に敏感な有権者に響きうるが、選挙への干渉だという主張を呼ぶこともありうる。世論調査が拮抗する中、最後の1週間のあらゆるシグナルが、両陣営によって注意深く吟味される。", "me": "世論調査を読むときは、二つの政党の議席が並んでいても、ありうる連立については何も語らないと覚えておきたい。単独で必要な61議席に届く陣営はない。結果が出るのは10月27日以降だ。", "a": "ベンヤミン・ネタニヤフ氏にとって、ドナルド・トランプ氏の後押しは、前面に出す強みだ。Le MondeとFrance 24は、氏がアメリカ大統領との近さを強調していると述べる。", "b": "最大の対抗馬であるガディ・アイゼンコット氏にとって、指導者を選ぶのはイスラエル人だけだ（Libération、franceinfo）。氏の政党ヤシャルは、i24NEWSが引く世論調査の平均で、リクードと並んでいる。", "say": "確認済み：10月18日にドナルド・トランプ氏が示した支持、ガディ・アイゼンコット氏の答え、10月27日という投票日。未確認：この支持が投票に与える効果。注目点：最新の世論調査と、投票後にありうる連立の顔ぶれ。", "src": "France 24（ドナルド・トランプ氏の支持、10月18〜19日）、franceinfo（全幅の支持、10月18日）、BFMTV（ビビへの全面的な支持、10月19日）、RFI（遅きに失した支持、10月19日）、Le Monde（演出された近さ、10月19日）、Libération（ガディ・アイゼンコット氏の答え、10月18日）、i24NEWS（世論調査、10月19日）"},
+    "i1":{"kick": "経済 · ✓ 報道3社", "title": "ベルシー（経済省）、月曜夜にVinted、Leboncoin、Cdiscountを招集、略奪で盗まれた品の転売を防ぐ", "what": "経済省は10月19日（月）夜、Vinted、Leboncoin、Cdiscountの各プラットフォームを集め、週末に略奪された商品の転売を防ぐと、BFMTVは伝える。franceinfoは、Vintedが「ゼロ・トレランス」を徹底していると述べていること、10月17日の略奪で盗まれた品がネットで転売されていることを伝える。Le Figaroは、略奪者の戦利品がすでにVintedにあふれ、「デモの最中に盗んだセーターを売ります」といった出品があると指摘する。BFMTVはまた、アタル氏とバルデラ氏が、VintedとLeboncoinに、盗んだ者の特定へ国に協力するよう求めたと伝える。", "why": "プラットフォームは売り手のデータを保有しており、盗みの犯人までたどる手段になる。盗品が出回るのを許しているという非難にさらされてもいる。招集はそのためだ。", "me": "中古品を買うなら、極端に安く、説明も評価もない出品には用心したい。とくにブランド品はそうだ。盗品と知って買えば、盗品関与の罪で訴追されうる。", "a": "政府や政治家にとって、プラットフォームは出品を削除して国に協力すべきだ。ガブリエル・アタル氏とジョルダン・バルデラ氏は、盗んだ者の特定を助けるよう求める（BFMTV）。", "b": "プラットフォームにとって、管理はすでに強化されている。Vintedは「ゼロ・トレランス」を徹底していると主張し（franceinfo）、BFMTVは、同社がこの週末の盗品の販売を禁じていると伝える。", "say": "確認済み：月曜夜の会合、Vintedの立場、Le Figaroが見つけた出品。未確認：会合のやり取りの中身と、削除された出品の数。注目点：プラットフォームが約束した取り組みと、ありうる訴追。", "src": "BFMTV（ベルシーでの会合、10月19日）、franceinfo（Vintedの「ゼロ・トレランス」、10月19日）、Le Figaro（Vintedの戦利品の出品、10月19日）"},
+    "i2":{"kick": "テクノロジー · ✓ 報道2社", "title": "ドイツ政府、エヌビディアとの提携を発表、産業AIを加速、「ドイツの将来にとって決定的」と評価", "what": "ドイツ政府は10月19日（月）、産業AIを加速するためのエヌビディアとの提携を発表したと、BFMTVは伝える。同局は「ドイツの将来にとって決定的だ」という言い回しを引き、合意の金額は明らかにされていないと補足する。dpa-AFXを中継したArivaによれば、提携が目指すのは、とくにミッテルシュタントでの産業AIの利用で、技術主権の強化をねらう。", "why": "ドイツは、産業の裾野をAIの道具に結びつけつつ、アメリカの供給元だけに頼らないようにしたい。AI向け半導体の最大手との合意は、機械と技術者へのアクセスをもたらす。金額が明かされていないので、現時点では実際の規模を測れない。", "me": "産業や下請けの分野で働いているなら、この発表に続きうる公募に目を配りたい。フランスの読者にとって役に立つのは、国内の計算向けAIの取り組みと比べることだ。", "a": "ドイツ政府にとって、合意は戦略的な賭けで、BFMTVが伝える言い回しでは「ドイツの将来にとって決定的」だ。", "b": "dpa-AFX通信の見方では、焦点は計算能力だけでなく、ミッテルシュタントの企業によるAIの導入だ。", "say": "確認済み：ドイツ政府とエヌビディアの提携の発表と、金額が公表されていないこと。未確認：資金の枠と、参加する企業のリスト。注目点：資金と日程についての詳しい説明。", "src": "BFMTV（エヌビディアとの提携、10月19日）、dpa-AFX（Ariva経由、産業AIの協力、10月19日）"},
+    "i3":{"kick": "経済 · ✓ 報道4社", "title": "イケア・フランス、最大303人の職を削減し100人を新規に創出する計画、労組は「矛盾した計画」と", "what": "イケア・フランスは最大303人の職を削減し、100人を新規に創出する計画だと、BFMTVとLe Mondeは伝える。BFMTVとLibérationは、同社が「ますます強まる競争」を理由に挙げたと伝える。Le Figaroは数字を300人の削減に丸めている。Le Mondeは、「矛盾した計画」と語る労組を引き、イケア・フランスが月曜に労使対話の手続きを始め、それが進められていくと補足する。", "why": "職を削減しながら創出もするのは、単なる人員の縮小というより、仕事の再編を示す。労使対話の手続きは、最終的な職の数と配置転換をめぐる交渉の段階を開く。", "me": "イケア・フランスで働いているなら、公式な情報は従業員代表との労使対話から出てくる。それ以外の人にとって、この計画は、オンラインの競争を前に小売りの大手が発表しうる例のひとつだ。", "a": "経営陣にとって、これはより強い競争への適応で、職の削減と創出を伴う（BFMTV、Libération）。", "b": "Le Mondeが引く労組にとって、計画は「矛盾」している。100人の創出に対して、303人の職が削減される。", "say": "確認済み：最大303人の削減と100人の創出の発表、労使対話の開始。未確認：対象の拠点と日程。注目点：交渉の行方。", "src": "BFMTV（303人、10月19日）、Libération（300人、競争、10月19日）、Le Figaro（300人に丸めて、10月19日）、Le Monde（矛盾した計画、10月19日）"},
+    "i4":{"kick": "スポーツ · ✓ 報道4社", "title": "エリナ・スビトリーナ、インスタグラムでガエル・モンフィスとの離婚を発表、モンフィスは10月5日に引退していた", "what": "エリナ・スビトリーナは10月19日（月）、インスタグラムでガエル・モンフィスとの離婚を発表したと、franceinfoとOuest-Franceは伝える。franceinfoは、長い投稿だったとする。L'Équipeは、40歳のフランス人選手が10月5日に現役を退いたと書き、Libérationは結婚5年と伝え、「向き合うのが最も難しい真実」という言い回しを引く。Ouest-Franceは、この発表を、テニス選手の1週間前の突然の引退と結びつける。", "why": "選手が自分のSNSで離婚を発表したことで、本人の言葉が語りの中心になる。複数の媒体が、それをガエル・モンフィスの引退と結びつけているが、報じられた抜粋の中では、夫妻はそれを詳しく説明していない。", "me": "テニスを追う読者にとって、これは私的な情報だ。当事者が自分で語ったことにとどめ、投稿を超えて理由を推測しないこと。", "a": "スポーツ紙にとって、10月5日のガエル・モンフィスの引退との結びつきは、説明のなかった決定に光を当てる（L'Équipe、Libération）。", "b": "選手本人にとって、これは自分のSNSで発表した個人的な決定だ。向き合うのが最も難しい真実を語っている（Libération）。", "say": "確認済み：スビトリーナのインスタグラムでの発表と、10月5日のモンフィスの引退。未確認：離婚の理由。報じられた抜粋の中で、夫妻は詳しく述べていない。注目点：ガエル・モンフィスのありうる声明。", "src": "franceinfo（SNSでの発表、10月19日）、L'Équipe（離婚と10月5日の引退、10月19日）、Libération（結婚5年、10月19日）、Ouest-France（突然の引退、10月19日）"},
+    "i5":{"kick": "スポーツ · ✓ 報道3社", "title": "クリスティアーノ・ロナウド、代表合宿を離れたとして、ポルトガルサッカー連盟から30日間の停止処分と255ユーロの罰金", "what": "ポルトガルサッカー連盟は、クリスティアーノ・ロナウドが許可なく代表の合宿を離れたとして、30日間の停止処分と255ユーロの罰金を科したと、Le Monde、L'Équipe、France 24は伝える。Le Mondeは、この攻撃手が9月30日に合宿を離れたと述べる。L'ÉquipeとFrance 24は、30日間の停止処分と255ユーロの罰金を伝える。", "why": "この処分は、選手が合宿を離れたことで始まった騒動に区切りをつける。期間と金額がはっきり定められ、対象は所属クラブではなく代表だ。255ユーロという罰金は、選手の報酬に比べてごくわずかで、スポーツ紙で論評を呼んでいる。", "me": "ポルトガルの試合を追うなら、停止処分が30日間続くと覚えておきたい。どの試合が対象になるかは、代表の日程で確かめること。", "a": "連盟にとって、この処分は許可のない離脱を対象とし、30日間の停止処分と罰金という明確な決まりを定める（L'Équipe、France 24）。", "b": "スポーツ紙にとって、重さは議論になっている。Ouest-Franceは、停止処分と並べて「ばかげた罰金」と題した。", "say": "確認済み：30日間の停止処分、255ユーロの罰金、9月30日の離脱。未確認：停止処分の対象になる試合。注目点：代表の次の合宿と、選手の反応。", "src": "Le Monde（30日間の停止処分、10月19日）、L'Équipe（30日間と255ユーロ、10月19日）、France 24（停止処分と罰金、10月19日）"}
+  };
+
+  // ───── 用語集: 本文・ポップアップ内の用語に点線
+  const G = {
+    "夜間外出禁止令":{"f": "法", "d": "県知事または市町村長が決める、特定の地区で一定の時間帯に出歩くことを禁じる措置。", "w": "月曜夜の分を、セバスチャン・ルコルニュ氏が県知事に求めた。"},
+    "県知事":{"f": "制度", "d": "各県で国を代表し、治安維持を担う役職。", "w": "局地的な夜間外出禁止令を実施する役目を負う。"},
+    "非常事態":{"f": "法", "d": "行政の権限を期間を限って広げる、例外的な体制（état d'urgence）。", "w": "首相は排除しないが「重い」とみる。"},
+    "部分失業":{"f": "経済", "d": "活動が縮小または停止したとき、従業員に補償を支払う制度（chômage partiel）。", "w": "略奪に遭った商店向けに発表された。"},
+    "支援基金":{"f": "経済", "d": "資金繰りに苦しむ企業を助けるための公的な資金枠。", "w": "略奪に遭った商店主向けに発表された。"},
+    "黄色いベスト":{"f": "社会", "d": "2018年に、増税と生活費に抗議して生まれた運動。", "w": "連絡組織が10月24日の「第2幕」を予告している。"},
+    "第2幕":{"f": "社会", "d": "最初のデモに続く2度目の動員日。2018年の運動の「アクト」にならった呼び方（acte II）。", "w": "10月24日（土）に予告された。"},
+    "アリアンス・ポリス":{"f": "制度", "d": "警察官の組合。", "w": "その総代表は、対応が不十分だとみる。"},
+    "警察留置":{"f": "法", "d": "容疑のある人を、限られた時間だけ拘束できる措置（garde à vue）。", "w": "月曜夜に2513人と発表された。"},
+    "未決勾留":{"f": "法", "d": "裁判の前に、裁判官の決定で身柄を収容すること（détention provisoire）。", "w": "大臣が数十件と発表した。"},
+    "即決裁判":{"f": "法", "d": "被告を軽罪裁判所で速やかに裁く手続き（comparution immédiate）。", "w": "月曜、パリで最初の審理が開かれた。"},
+    "組織犯罪":{"f": "法", "d": "強化された捜査手段を認める罪名で、警察留置の延長もその一つ。", "w": "警察留置を72時間にする名目として挙げられた。"},
+    "公益労働":{"f": "法", "d": "報酬のない労働を地域のために行う刑（travaux d'intérêt général）。", "w": "一部の即決裁判で言い渡された。"},
+    "決選投票":{"f": "政治", "d": "大統領選の2回目の投票で、首位に立った2人の候補で争う。", "w": "2027年5月2日に設定されている。"},
+    "共和党":{"f": "政治", "d": "右派の政党で、LRと略される（Les Républicains）。", "w": "ブリュノ・ルタイヨー氏が党首を務める。"},
+    "メーデー":{"f": "社会", "d": "5月1日の労働者の日。労働組合の伝統的なデモの日（1er-Mai）。", "w": "2027年の決選投票の前日にあたる。"},
+    "クウェート":{"f": "地理", "d": "湾岸の首長国で、歴訪の最初の訪問先。", "w": "エマニュエル・マクロン氏の月曜の訪問先。"},
+    "アラブ首長国連邦":{"f": "地理", "d": "湾岸の7つの首長国からなる連邦で、石油の大産出国。", "w": "歴訪の2番目の訪問先。"},
+    "湾岸":{"f": "地理", "d": "ペルシャ湾周辺の中東の地域で、炭化水素の大産出地。", "w": "燃料をめぐる歴訪の行き先。"},
+    "リクード":{"f": "政治", "d": "ベンヤミン・ネタニヤフ氏の右派政党。", "w": "世論調査の平均で、ヤシャルと並んでいる。"},
+    "ヤシャル":{"f": "政治", "d": "ガディ・アイゼンコット氏が率いる政党。", "w": "リクードと同じ22議席とされる。"},
+    "Truth Social":{"f": "メディア", "d": "ドナルド・トランプ氏が立ち上げたSNS。", "w": "ネタニヤフ氏への支持メッセージの発信先。"},
+    "ミッテルシュタント":{"f": "経済", "d": "ドイツの中堅・中小の産業企業の総体。", "w": "エヌビディアとの合意が狙う対象。"},
+    "ベルシー":{"f": "制度", "d": "経済省の所在地で、転じてその省を指す。", "w": "転売のプラットフォームを招集する。"},
+    "労使対話":{"f": "経済", "d": "決定の前に、従業員の代表と行う協議。", "w": "月曜、イケア・フランスで始まった。"},
+    "ポルトガルサッカー連盟":{"f": "スポーツ", "d": "ポルトガルのサッカーを統括する組織。", "w": "ロナウドに停止処分を科した。"},
+    "インスタグラム":{"f": "メディア", "d": "写真やメッセージを共有するSNS。", "w": "スビトリーナの発表の発信先。"},
+    "セバスチャン・ルコルニュ":{"f": "人物", "d": "首相。", "w": "夜間外出禁止令を県知事に求めた。"},
+    "ジェラルド・ダルマナン":{"f": "人物", "d": "法務大臣。", "w": "警察留置2513人を発表した。"},
+    "ローラン・ヌニェス":{"f": "人物", "d": "内務大臣。", "w": "統制の喪失を認めた。"},
+    "ブリュノ・ルタイヨー":{"f": "人物", "d": "共和党の党首で、大統領選候補。", "w": "決選投票の日程変更を求めている。"},
+    "ヴァンサン・ジャンブリュン":{"f": "人物", "d": "都市担当大臣。", "w": "夜間外出禁止令を「必要なときに」認めるよう訴える。"},
+    "ベンヤミン・ネタニヤフ":{"f": "人物", "d": "イスラエルの首相。", "w": "ドナルド・トランプ氏の支持を受けた。"},
+    "ガディ・アイゼンコット":{"f": "人物", "d": "ベンヤミン・ネタニヤフ氏の最大の対抗馬で、ヤシャルを率いる。", "w": "トランプ氏の支持に答えた。"},
+    "アリエル・ヴェイユ":{"f": "人物", "d": "パリ・サントル区の社会党の区長。", "w": "一部の地区では夜間外出禁止令か軍が必要だと言う。"},
+    "ガブリエル・アタル":{"f": "人物", "d": "ルネサンスの大統領選候補。", "w": "プラットフォームに国への協力を求める。"},
+    "ジョルダン・バルデラ":{"f": "人物", "d": "国民連合の党首。", "w": "アタル氏とともにプラットフォームに求めた。"},
+    "スタニスラス・ゴドン":{"f": "人物", "d": "警察組合アリアンス・ポリスの総代表。", "w": "対応のなさに落胆している。"},
+    "エリナ・スビトリーナ":{"f": "スポーツ", "d": "ウクライナのテニス選手。", "w": "離婚を発表した。"},
+    "ガエル・モンフィス":{"f": "スポーツ", "d": "フランスのテニス選手で、10月5日に引退した。", "w": "離婚の発表の当事者。"},
+    "クリスティアーノ・ロナウド":{"f": "スポーツ", "d": "ポルトガルの攻撃手。", "w": "30日間の停止処分を受けた。"},
+    "グアドループ":{"f": "地理", "d": "カリブ海にあるフランスの海外領土。", "w": "未成年者向けの夜間外出禁止令。"},
+    "ドゥナン":{"f": "地理", "d": "北部の市。", "w": "日曜までの夜間外出禁止令。"},
+    "エヌビディア":{"f": "経済", "d": "AI向け半導体を手がけるアメリカのメーカー。", "w": "ドイツ政府の提携相手。"},
+    "Vinted":{"f": "経済", "d": "古着などの中古品を売るプラットフォーム。", "w": "ベルシーに招集された。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
