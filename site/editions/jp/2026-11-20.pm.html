@@ -1,0 +1,338 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>56,436.65</b>日経平均 · 11/20終値 · 前日比5.06%安</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>円相場 · 11/20 · 終値は確認できず</div>
+    </div>
+    <div class="dateline"><span>No. 47 · 夕刊</span><b>2026年11月20日(金)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="e1">
+      <div class="kick">マーケット · 株式<span>✓ 4媒体 · 下落の原因は未確認</span></div>
+      <h2 class="hl">日経平均は5.06%安の5万6436円65銭で終える 一時2800円超下落、AI・半導体関連に売りが広がったと伝えられる</h2>
+      <p class="deck">東京株式市場は取引開始直後から売りが先行し、大幅安で取引を終えた。背景の説明は報道ごとに幅があり、確認できていない。</p>
+      <div class="body">
+        <p>20日の東京株式市場で、日経平均株価が取引開始直後から売りに押され、一時2800円以上値下がりして5万7000円を割り込んだ。下げ幅は朝方の1300円超から1700円超、2000円超へと広がり、午前10時ごろには2800円超になったと伝えられる。売りはAI・半導体関連の銘柄が中心だったという。日経平均は東証の主力225銘柄の株価から計算する指数で、終値は5万6436円65銭で、前日から5.06%下がった。</p>
+        <p>背景については、AI・半導体業界の先行きへの懸念を挙げる報道があるが、誰の見立てかは示されておらず、確認できていない。前日19日の米市場では、米AI企業のアンソロピックが上場した。上場がAI市場の不安を和らげなかったとする見方も伝えられている。19日の東京市場は前場で続伸し、上場への期待が支えになったとされていた。この下落が続くのかどうかは、この時点では確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="e2">
+      <div class="kick">マーケット · IPO<span>✓ 4媒体 · 時価総額の基準と需要の倍率は未確認</span></div>
+      <h3 class="hl">アンソロピックの時価総額は282兆円でメタを上回ったと伝えられる 日本での調達は4700億円との報道も</h3>
+      <div class="one">
+        <p>19日にナスダックへ上場した米AI企業アンソロピックについて、時価総額が約282兆円となり、メタを上回ったと伝えられる。時価総額は、株価に発行済み株式数をかけた金額で、市場が会社の大きさをどう値付けしたかを示す。朝刊で伝えた公開価格ベースの評価額約239兆円とは数字が異なるが、どの時点の株価で計算したかは示されておらず、確認できていない。 日本国内では、同社株の調達額が4700億円に上り、4倍の投資家需要があったと伝えられる。一方、日本向けの募集額の3倍超にあたる1兆5000億円超の注文が集まったとする報道もあり、倍率は報道ごとに異なる。約5000人の従業員がミリオネア、つまり100万ドル以上の資産を持つ立場になったとの報道もある。いずれも単独の報道で、調達の内訳や日本での販売の仕組みは確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="j1"><b>ネパールで邦人35人が拘束、詐欺に関与した疑いと伝えられる リゾート施設内に「警察署」も</b><em>詐欺への関与が疑われ、邦人35人が拘束されたと伝えられる。リゾート施設の中には「警察署」とされる設備もあったという。</em><span>事件 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="j2"><b>陸自が4月に大分で起きた戦車爆発の原因を特定したと報じられる</b><em>大分県の日出生台演習場で4月に起きた爆発で、車長や砲手らが死亡した。原因を特定したと伝えられるが、内容は確認できていない。</em><span>安保 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="j3"><b>トランプ氏、年内のイラン攻撃再開の見送りを示唆したと伝えられる</b><em>年内はイランへの攻撃を再開しない可能性を示したと伝えられる。戦略を練り直しているのかは、確認されていない。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="j4"><b>ホルムズ海峡でイランがタンカーへの攻撃を強めていると伝えられる</b><em>タンカーへの攻撃が強まっていると伝えられる。関係企業が詳細を明かさないため、被害の程度は見極めにくいという。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="j5"><b>プーチン氏が海上とエネルギー分野の停戦を拒否と伝えられる クリミア橋への再攻撃を受け</b><em>クリミア橋が再び攻撃を受けたと伝えられ、プーチン氏は海上とエネルギー分野の停戦に応じない考えを示したという。</em><span>国際 · ✓ 2媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="e3">
+      <div class="kick">社会 · 裁判<span>✓ 3媒体 · 審理の日程は未確認</span></div>
+      <h3 class="hl">岐阜の陸自射撃場事件の初公判、被告は起訴内容を認めたと伝えられ、弁護側は責任能力を争い無罪を主張</h3>
+      <div class="body">
+        <p>3年前、岐阜市の陸上自衛隊の射撃場で隊員3人が小銃で撃たれ、2人が死亡、1人が大けがをした事件の初公判が20日、岐阜地裁で開かれた。強盗殺人などの罪に問われている元自衛官候補生の被告は、起訴された内容を認めたと伝えられる。一方、弁護側は責任能力を争い、無罪を主張した。事件当時、被告は18歳だったとされる。</p>
+        <p>責任能力とは、自分の行為の善悪を判断し、それに従って行動する能力のことで、これが著しく欠けていたと認められれば、罰せられないか刑が軽くなる。今回の裁判では、事件当時の被告の精神状態をどう評価するかが争点とされる。判決の時期や、次回以降の審理の日程は、この時点では確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="e4">
+      <div class="kick">経済 · 金融<span>✓ 3媒体 · 漏えいの規模は1媒体、手口は未確認</span></div>
+      <h3 class="hl">楽天証券の情報漏えいに片山担当相が「非常に遺憾」、顧客の保護を求めたと伝えられる</h3>
+      <div class="body">
+        <p>楽天証券の顧客情報の漏えいをめぐり、片山担当相が20日、「非常に遺憾」と述べ、顧客の保護を求めたと伝えられる。金融庁は19日、同社に対し、不正アクセスによる漏えいの経緯などを報告させる報告徴求命令を出している。</p>
+        <p>報告徴求命令は、行政が事業者に業務や経緯について報告を求める手続きで、まず事実関係をつかむために使われる。漏えいの規模については、最大約1125万口座分のIDなどが漏れた可能性があると会社が発表したとする報道が1媒体にとどまり、不正アクセスの手口は確認できていない。担当相が求めた具体的な対応の中身も、示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="e5">
+      <div class="kick">国際 · 外交<span>✓ 2媒体 · 電話協議の内容は未確認</span></div>
+      <h3 class="hl">高市首相がトランプ氏と電話協議し米中ロ首脳会談の説明を受けたと伝えられる 独首相は「写真撮影のため」と皮肉ったとも</h3>
+      <div class="body">
+        <p>高市早苗首相がトランプ米大統領と電話で協議し、19日の米中ロ首脳会談について説明を受けたと伝えられる。協議の時間や説明の具体的な中身、日本側が伝えた要望は、確認できていない。朝刊で伝えたとおり、日本は3カ国会談の当事者ではなく、結果を受け取る立場にある。</p>
+        <p>一方、ドイツの首相は、米中ロ会談を「写真撮影のため」と皮肉ったと伝えられる。ウクライナを支援する有志連合は、支援の強化を再確認したうえで、ウクライナや欧州の頭越しに物事が決まることへの警戒を示したという。有志連合は、ウクライナを支える欧州などの国々の集まりで、19日の会合には40を超える参加者があったとゼレンスキー大統領が投稿している。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>有志連合<i>安保</i></b><p>特定の目的のために、賛同する国々が自発的に集まる枠組み。ここではウクライナ支援のための国々の集まりを指す。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>アンソロピックの上場が日経平均の大幅下落の原因だ。</b> <span>AI・半導体業界の先行きへの懸念を背景に挙げる報道はあるが、誰の見立てかは示されておらず、上場との因果関係は確認できていない。</span></div>
+        <div><b>楽天証券から漏れた情報がすでに闇市場で売られている。</b> <span>個人情報が闇で売買されているとの報道はあるが、楽天証券の漏えい分が含まれるかどうかは確認されていない。漏えいの規模と手口も公表されていない。</span></div>
+        <div><b>岐阜の陸自射撃場事件の被告は無罪になる。</b> <span>初公判で弁護側が責任能力を争い無罪を主張した段階で、判決は出ていない。被告は起訴内容を認めたと伝えられ、責任能力の評価が争点とされる。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>明日 · 11月21日(土)</b><span>米国時間20日のアンソロピック株の値動きと、次に東京市場が開く日の日経平均の反応が焦点になる。楽天証券は、金融庁への報告と会社の説明が引き続き焦点になる。</span><b>来週</b><span>岐阜の陸自射撃場事件は、精神鑑定の扱いと次回の期日が焦点になる。COP31の交渉は、改定案文をめぐる協議が続く。</span><b>後で</b><span>戦車爆発の原因の中身は、防衛省・陸自の発表で明らかになるかが焦点。ネパールで拘束された邦人35人については、外務省の説明が待たれる。</span><b>読者へ</b><span>楽天証券に口座がある人は、会社からの通知とログイン履歴を確認しておくと安心。株価が大きく動く日は、売買を急がず、注文内容を落ち着いて確かめたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "e1":{"kick": "マーケット · 株式 · ✓ 4媒体 · 下落の原因は未確認", "title": "日経平均は5.06%安の5万6436円65銭で終える 一時2800円超下落、AI・半導体関連に売りが広がったと伝えられる", "what": "20日の東京株式市場で、日経平均株価は取引開始直後から売りが広がり、一時2800円以上値下がりして5万7000円を割り込んだ。下げ幅は朝方の1300円超から1700円超、2000円超、2800円超へと広がったと伝えられる。売りはAI・半導体関連の銘柄が中心だったという。前日19日の米市場では、AI企業のアンソロピックが上場した。19日の日経平均は前場で続伸したと伝えられていた。終値は5万6436円65銭で、前日比5.06%安だった。", "why": "日経平均は、AI・半導体関連の値がさ株の動きに左右されやすく、これらが売られると指数全体が大きく動く。上場直後のアンソロピックの値動きは、AI関連企業全体への期待の強さを測る材料として注目されていた。ただ、下落の理由を説明する発言の主は報道に示されておらず、因果関係は確認できていない。", "me": "投資信託やNISAでAI・半導体関連や日本株を持つ人は、評価額が大きく下がった可能性がある。値動きが大きい日に売買を急ぐと、安値で手放すことにもなりかねない。", "a": "下落を一時的な調整と受け止める側は、上場で期待が高まった直後に、利益を確定する売りが出やすい局面だったと見る。", "b": "懸念を強める側は、AIの採算性への不安が払拭されていないことが表れたと見る。日経平均の上昇を支えてきた銘柄に売りが集中したことを重く受け止め、下げが続く可能性に注意を促す。", "say": "確認できたのは、20日に日経平均が一時2800円以上下がり、売りがAI・半導体関連に集まったと複数の報道が伝えていること。原因については、発言者や根拠が示されておらず、アンソロピック上場との関係も確定していない。次は、米市場の反応と、翌営業日の東京市場の値動きを見たい。", "src": "NHK(日経平均の下落, 11月20日) · 毎日新聞(5万7000円割れ, 11月20日) · 朝日新聞(AI市場への懸念, 11月20日) · 日本経済新聞(午前10時の下げ幅, 11月20日)"},
+    "e2":{"kick": "マーケット · IPO · ✓ 4媒体 · 時価総額の基準と需要の倍率は未確認", "title": "アンソロピックの時価総額は282兆円でメタを上回ったと伝えられる 日本での調達は4700億円との報道も", "what": "19日にナスダックへ上場したアンソロピックの時価総額が、約282兆円となり、メタを上回ったと伝えられる。時価総額は、株価に発行済み株式数をかけた金額である。朝刊で伝えた公開価格ベースの評価額は約1兆5千億ドル(約239兆円)で、数字が異なる。どの時点の株価で282兆円を計算したかは、示されていない。日本国内では、同社株の調達額が4700億円に達し、4倍の投資家需要があったと伝えられる。日本向けの募集額の3倍超にあたる1兆5000億円超の注文があったとする報道もあり、倍率は一致しない。約5000人の従業員がミリオネアになったとの報道もある。", "why": "時価総額は株価の変動で日々変わるため、同じ会社でも測る時点で数字が違ってくる。上場直後は値動きが大きく、数字が短い間に入れ替わりやすい。日本の投資家向けにまとまった調達が行われた規模は、国内の資金がAI関連企業にどれだけ向かっているかを映す。", "me": "米国株や海外株を組み入れた投資信託を持つ人は、保有銘柄の中にAI関連企業が占める割合を確かめておくとよい。個別株を買う場合は、上場直後の値動きの大きさを前提にする必要がある。", "a": "強気の見方は、時価総額がメタを上回ったことを、AI専業企業への需要の強さの表れと受け止める。日本でも4倍の需要があったことを、投資家の関心の高さの裏づけとする。", "b": "慎重な見方は、20日の日経平均の大幅な下落が示すように、AI関連の評価額が先行しているとの不安は残ると指摘する。時価総額の数字も、基準が示されないまま受け止めるべきでないとする。", "say": "確認できたのは、上場後の時価総額が約282兆円と1媒体が伝えたこと、日本での調達が4700億円で4倍の需要だったと別の1媒体が伝えたこと。日本向けの注文を募集額の3倍超とする報道もあり、倍率は一致しない。基準となる株価や日時は公表されていない。朝刊の約239兆円との差は、計算の基準が違う可能性があるが、確認はできていない。", "src": "毎日新聞(時価総額282兆円, 11月20日) · 朝日新聞(日本での調達4700億円, 11月20日) · 東洋経済オンライン(日本向けの注文1兆5000億円超, 11月20日) · 時事通信(従業員約5000人がミリオネア, 11月20日)"},
+    "e3":{"kick": "社会 · 裁判 · ✓ 3媒体 · 審理の日程は未確認", "title": "岐阜の陸自射撃場事件の初公判、被告は起訴内容を認めたと伝えられ、弁護側は責任能力を争い無罪を主張", "what": "岐阜市の陸上自衛隊の射撃場で3年前、隊員3人が小銃で撃たれ、2人が死亡し1人が大けがをした事件の初公判が、20日に岐阜地裁で開かれた。強盗殺人などの罪に問われているのは元自衛官候補生の被告で、事件当時18歳だったとされる。自衛官候補生は、正式な自衛官になる前の教育を受ける立場である。被告は起訴された内容を認めたと伝えられる。弁護側は責任能力を争い、無罪を主張した。審理の日程や判決の時期は、確認できていない。", "why": "被告が事実を認めたうえで弁護側が責任能力を争う場合、裁判の焦点は、何が起きたかではなく、当時の精神状態をどう評価するかに移る。責任能力の判断は、精神鑑定などをもとに裁判所が行う。事件は自衛隊の射撃場で起き、隊員が亡くなったため、組織の管理体制への関心も続いている。", "me": "直接の影響は小さいが、事件の経緯や管理のあり方は公開の法廷で語られるため、今後の審理の報道に触れる機会が増える。", "a": "厳正な処罰を求める立場は、複数の命が失われた事件であり、被告が事実を認めている以上、重い刑が妥当だと考える。", "b": "慎重な立場は、責任能力の有無は精神鑑定を丁寧に検討して判断する必要があり、結論を急ぐべきでないと考える。", "say": "確認できたのは、初公判が20日に開かれ、被告が起訴内容を認めたと伝えられていることと、弁護側が責任能力を争って無罪を主張したこと。被告の発言の細部は、報道ごとに表現が異なる。今後は、精神鑑定の扱いと次回の期日を見たい。", "src": "NHK(弁護側の無罪主張, 11月20日) · 朝日新聞(責任能力の争い, 11月20日) · 毎日新聞(起訴内容を認める, 11月20日)"},
+    "e4":{"kick": "経済 · 金融 · ✓ 3媒体 · 漏えいの規模は1媒体、手口は未確認", "title": "楽天証券の情報漏えいに片山担当相が「非常に遺憾」、顧客の保護を求めたと伝えられる", "what": "楽天証券の顧客情報の漏えいをめぐり、片山担当相が20日、「非常に遺憾」と述べ、顧客の保護を求めたと伝えられる。金融庁は19日、同社に報告徴求命令を出している。報告徴求命令は、法令に基づき、行政が事業者に業務や経緯について報告を求める措置である。1媒体は、最大約1125万口座分のIDや約447万口座分の口座情報が漏れた可能性があると会社が発表したと伝えている。不正アクセスの手口は確認できていない。顧客情報がテスト用の環境に置かれていたと一部で報じられている。", "why": "閣僚が公の場で遺憾を表すのは、行政がこの問題を重く見ていることを示す。証券口座には氏名や住所、取引の情報が集まっており、外部に出ると、なりすましや詐欺に使われる恐れがある。会社が何を、いつ、どう伝えるかが次の焦点になる。", "me": "楽天証券に口座を持つ人は、会社からの通知を確認し、不審なログインや取引がないか見ておくとよい。他のサービスと同じパスワードを使っている場合は、変更を検討したい。", "a": "厳しい対応を支持する側は、顧客の資産を預かる事業者に、情報管理の実態を速やかに開示させる必要があると考える。", "b": "会社の対応を見守る側は、被害の範囲が確定する前に責任を断じるのは早く、まず事実の把握が先だと考える。", "say": "確認できたのは、担当相が遺憾の意を示したことと、金融庁が報告徴求命令を出していること。漏えいの規模は1媒体の報道にとどまり、手口は公表されていない。テスト環境の件は一部の報道にとどまる。次は、会社の公式発表と、報告の期限の有無を見たい。", "src": "毎日新聞(担当相の発言, 11月20日) · Yahoo!ニュース(遺憾と金融相, 11月20日) · ITmedia NEWS(漏えいの規模とテスト環境, 11月19日)"},
+    "e5":{"kick": "国際 · 外交 · ✓ 2媒体 · 電話協議の内容は未確認", "title": "高市首相がトランプ氏と電話協議し米中ロ首脳会談の説明を受けたと伝えられる 独首相は「写真撮影のため」と皮肉ったとも", "what": "高市早苗首相はトランプ米大統領と電話で協議し、19日の米中ロ首脳会談について説明を受けたと伝えられる。協議の時間や内容の詳細は、確認できていない。ドイツの首相は、米中ロ会談を「写真撮影のため」と皮肉ったと伝えられる。ウクライナを支援する有志連合は、支援の強化を再確認した。会談がウクライナや欧州の頭越しに進むことへの警戒が示されたという。ゼレンスキー大統領は、19日の有志連合の会合に40を超える参加者があったと投稿している。", "why": "日本は米中ロ会談の当事者ではないため、米国からの説明が、結果を知る主な経路になる。電話協議は、日本の安全保障や対中ロ政策に関わる情報を共有する場として使われる。欧州の首脳が会談に冷ややかな反応を示したことは、同盟国の間でも受け止めが分かれていることを映す。", "me": "直接の影響はないが、米中ロの関係や対ウクライナ支援の行方は、エネルギー価格や安全保障の議論を通じて、家計や税負担に間接的に関わる。", "a": "会談を評価する側は、対立する大国の首脳が直接話す場が持たれたこと自体に意味があり、同盟国への説明が行われたことも対話の一部と見る。", "b": "懸念する側は、ウクライナや欧州を含めない形で大国が話し合うことは、当事者の意向を軽んじる構図だと見て、独首相の皮肉もその表れと受け止める。", "say": "確認できたのは、日米首脳の電話協議があったと伝えられていることと、有志連合が支援強化を再確認したこと。電話協議の具体的な中身は出ていない。独首相の発言も単独の報道に依拠している。次は、日本政府が協議内容をどこまで公表するかを見たい。", "src": "毎日新聞(電話協議と独首相の発言, 11月20日) · 朝日新聞(有志連合の会合, 11月20日)"},
+    "j1":{"kick": "事件 · ✓ 1媒体", "title": "ネパールで邦人35人が拘束、詐欺に関与した疑いと伝えられる リゾート施設内に「警察署」も", "what": "邦人35人がネパールで拘束されたと伝えられる。詐欺に関与した疑いがあるという。リゾート施設の中には、「警察署」とされる設備もあったと伝えられる。拘束された人の氏名や、詐欺の手口、被害額は、確認できていない。日本政府の対応や、現地当局の発表も確認できていない。報道は1媒体にとどまる。", "why": "海外の拠点から日本人を狙う詐欺では、拠点が観光施設や住宅に紛れていることがある。警察署を装った設備があったとすれば、被害者を信用させる手口に使われた可能性がある。ただし手口は確認されておらず、推測の域を出ない。", "me": "警察や公的機関を名乗る電話やビデオ通話で金銭を求められたら、自分で調べた番号から本物かどうかを確かめる。海外の仕事の勧誘も、渡航前に出所をよく確かめたい。", "a": "厳しく見る側は、日本人が加害側に関わっていた場合は、国内外で厳正に責任を問うべきだと考える。", "b": "慎重な見方は、拘束された人が詐欺に関わっていたのか、だまされて連れて行かれたのか、現時点では分からないとして、事実の確認を待つべきだとする。", "say": "確認できたのは、邦人35人が拘束され、詐欺への関与が疑われていると1媒体が伝えたこと。人数以外の詳細や日本政府の発表は出ていない。次は、外務省の説明と、現地当局の発表を見たい。", "src": "時事通信(邦人35人の拘束, 11月20日)"},
+    "j2":{"kick": "安保 · ✓ 1媒体", "title": "陸自が4月に大分で起きた戦車爆発の原因を特定したと報じられる", "what": "陸上自衛隊が、4月に大分県の日出生台演習場で起きた戦車の爆発事故の原因を特定したと伝えられる。爆発では、車長や砲手らが死亡した。原因の具体的な内容は、報道の要約では示されていない。再発防止策や、関係者の処分も確認できていない。報道は1媒体にとどまる。", "why": "戦車の爆発は、装備の欠陥、整備や取り扱いの誤り、訓練の手順の問題など、原因によって再発防止策の方向が変わる。原因の公表は、同じ装備を使う他の部隊の安全にも関わる。内容の確認が欠かせない。", "me": "日常生活への直接の影響はないが、自衛隊の装備や訓練の安全管理は、防衛費の使い方を考える材料になる。", "a": "原因の特定を評価する側は、事故の検証を公表することで、遺族や国民への説明責任が果たされ、再発防止につながると考える。", "b": "慎重な見方は、原因だけでなく、管理体制や教育のどこに問題があったかまで示されなければ、再発防止の実効性は測れないと指摘する。", "say": "確認できたのは、陸自が原因を特定したと伝えられていること。何が原因だったかは、この時点で確認できていない。防衛省・陸自の公式発表で裏づけたい。1媒体の報道のため、原因の中身が示された時点で、あらためて確認する必要がある。", "src": "The Japan Times(戦車爆発の原因, 11月20日)"},
+    "j3":{"kick": "国際 · ✓ 1媒体", "title": "トランプ氏、年内のイラン攻撃再開の見送りを示唆したと伝えられる", "what": "トランプ米大統領が、年内にはイランへの攻撃を再開しない可能性を示したと伝えられる。戦略を練り直しているのかは確認されていない。報道は1媒体にとどまる。発言の場所や日時、イラン側の反応は、確認できていない。中東の緊張は続いており、ホルムズ海峡でのタンカーへの攻撃が伝えられている。", "why": "攻撃の再開時期は、原油価格や中東の海運、日本の燃料調達に影響する。大統領の示唆が実際の方針なのか、交渉上の発言なのかは分からない。", "me": "ガソリンや電気代は、中東情勢と原油価格に左右される。ただ、今回の発言が価格にどう効くかは分からない。燃料の価格が気になる人は、続報を確認しておきたい。", "a": "歓迎する側は、年内の再開が見送られれば、緊張が和らぎ、海上輸送への不安が小さくなると受け止める。", "b": "懐疑的な側は、示唆にすぎず、状況が変われば方針は変わり得るとして、発言を額面どおりに受け取るのは早いと考える。", "say": "確認できたのは、年内の再開見送りを示唆したと1媒体が伝えたこと。発言の原文や状況は出ていない。次は、ホワイトハウスの発言録と、イラン側の反応を見たい。単独の報道のため、発言の趣旨が変わっていないかも確かめる必要がある。", "src": "毎日新聞(年内の攻撃再開見送りの示唆, 11月20日)"},
+    "j4":{"kick": "国際 · ✓ 1媒体", "title": "ホルムズ海峡でイランがタンカーへの攻撃を強めていると伝えられる", "what": "ホルムズ海峡で、イランがタンカーへの攻撃を強めていると伝えられる。船の被害がどの程度かは、関係企業が詳細を明かさないため、見極めにくいという。報道は1媒体にとどまる。攻撃の件数や被害を受けた船の名前、積み荷は、確認できていない。攻撃の日時の詳細も、確認できていない。", "why": "ホルムズ海峡は、世界の原油輸送の大きな部分が通る狭い海路で、日本も原油の多くを中東から輸入している。タンカーの被害が増えると、保険料や運賃が上がり、輸入コストに響く。被害の実態が見えにくいことは、市場の不安を長引かせる。", "me": "ガソリンや電気代、輸入品の価格に、時間をおいて影響する可能性がある。ただ、現時点で価格への影響は確認できていない。", "a": "警戒を強める側は、攻撃の拡大が海運と原油供給を揺さぶると見て、備蓄や調達先の分散の議論を進めるべきだと考える。", "b": "冷静に見る側は、被害の程度が確認できていない段階では、市場が過剰に反応すべきではないと考える。", "say": "確認できたのは、攻撃が強まっていると1媒体が伝えたこと。件数と被害の程度は確認できていない。次は、船会社や各国当局の発表を見たい。被害の実態が分かるまでは、1媒体の報道として受け止めるのが妥当だ。", "src": "The Japan Times(ホルムズ海峡のタンカー攻撃, 11月20日)"},
+    "j5":{"kick": "国際 · ✓ 2媒体", "title": "プーチン氏が海上とエネルギー分野の停戦を拒否と伝えられる クリミア橋への再攻撃を受け", "what": "クリミア橋が再び攻撃を受けたと、ロシアが任命した知事が述べたと伝えられる。ウクライナのゼレンスキー大統領は、橋への攻撃はロシアの攻撃への報復だと説明したと伝えられる。プーチン大統領は、海上とエネルギー分野の停戦には応じないと述べたという。橋の被害の程度は、確認できていない。ウクライナ側の公式な説明の全文も、確認できていない。", "why": "クリミア橋はロシア本土とクリミアを結ぶ補給路で、攻撃のたびに戦況の象徴として扱われる。海上やエネルギー分野の停戦は、黒海の輸送やエネルギー施設への攻撃を止める枠組みで、拒否によって交渉の見通しは厳しくなる。", "me": "黒海経由の穀物輸送やエネルギー価格は、停戦の行方に左右される。食料やエネルギーの価格には、時間をおいて影響が出る可能性がある。", "a": "ウクライナを支持する側は、橋への攻撃を、ロシアの攻撃への報復としての軍事目標への攻撃と受け止める。", "b": "慎重な見方は、橋への攻撃が停戦の機運を遠ざけ、民間の被害を拡大させかねないとして懸念する。", "say": "確認できたのは、橋が再び攻撃されたとロシア側の知事が述べたこと、ゼレンスキー氏が報復と説明したこと、プーチン氏が停戦を拒んだと伝えられていること。被害の程度は出ていない。次は、橋の状況と、停戦をめぐる各国の反応を見たい。", "src": "The Japan Times(プーチン氏の発言, 11月20日) · The Guardian(橋への再攻撃, 11月19日)"}
+  };
+  const G = {
+    "日経平均":{"f": "金融", "d": "東証の主力225銘柄の株価から計算する株価指数。", "w": "20日に一時2800円以上下落した。"},
+    "半導体":{"f": "技術", "d": "電気をよく通す性質と通さない性質の中間にある素材や、それで作る電子部品。AIの計算に欠かせない。", "w": "AI・半導体関連に売りが広がったと伝えられる。"},
+    "時価総額":{"f": "金融", "d": "株価に発行済み株式数をかけた金額。市場が付けた会社の大きさの目安。", "w": "アンソロピックが約282兆円と伝えられる。"},
+    "公開価格":{"f": "金融", "d": "新規上場で、投資家に株式を売り出すときの価格。", "w": "評価額の基準として朝刊で伝えた。"},
+    "評価額":{"f": "金融", "d": "株価などをもとに算出した、企業の価値の金額。", "w": "朝刊では約239兆円と伝えた。"},
+    "ミリオネア":{"f": "金融", "d": "100万ドル以上の資産を持つ人。", "w": "約5000人の従業員がなったとの報道がある。"},
+    "初公判":{"f": "法", "d": "起訴された事件で、最初に開かれる公開の裁判。", "w": "岐阜地裁で20日に開かれた。"},
+    "責任能力":{"f": "法", "d": "自分の行為の善悪を判断し、それに従って行動する能力。著しく欠けていれば罰せられないか刑が軽くなる。", "w": "弁護側が争った。"},
+    "無罪":{"f": "法", "d": "裁判で、罪に当たらない、または罪を証明できないと判断されること。", "w": "弁護側が主張した。"},
+    "強盗殺人":{"f": "法", "d": "強盗が人を死なせる罪。法定刑は死刑か無期懲役で、非常に重い。", "w": "被告が問われている罪の一つ。"},
+    "自衛官候補生":{"f": "安保", "d": "正式な自衛官になる前に、基礎的な教育を受ける立場。", "w": "被告は元自衛官候補生。"},
+    "報告徴求命令":{"f": "金融", "d": "行政が事業者に、業務や経緯について報告を求める措置。", "w": "金融庁が楽天証券に出している。"},
+    "不正アクセス":{"f": "技術", "d": "他人のIDやパスワードなどを使い、許可なくシステムに入ること。", "w": "顧客情報の漏えいをめぐる問題。"},
+    "有志連合":{"f": "安保", "d": "特定の目的のために、賛同する国々が自発的に集まる枠組み。", "w": "ウクライナ支援のための会合を開いた。"},
+    "頭越し":{"f": "外交", "d": "当事者を飛ばして、物事を決めてしまうこと。", "w": "ウクライナや欧州の頭越しへの警戒が示された。"},
+    "邦人":{"f": "外交", "d": "海外にいる日本人。", "w": "ネパールで35人が拘束されたと伝えられる。"},
+    "演習場":{"f": "安保", "d": "部隊が射撃や機動などの訓練を行うための土地。", "w": "大分県の日出生台演習場で爆発があった。"},
+    "ホルムズ海峡":{"f": "エネルギー", "d": "ペルシャ湾の出口にある狭い海峡。世界の原油輸送の大きな部分が通る。", "w": "タンカーへの攻撃が強まっていると伝えられる。"},
+    "停戦":{"f": "国際", "d": "戦っている双方が、戦闘を一時的にやめること。", "w": "プーチン氏が海上とエネルギー分野の停戦を拒んだと伝えられる。"},
+    "クリミア橋":{"f": "安保", "d": "ロシア本土とクリミア半島を結ぶ橋。補給路として重要とされる。", "w": "再び攻撃を受けたと伝えられる。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
