@@ -1,0 +1,333 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>6,910.39</b>S&amp;P 500終値 · 11月20日(米国現地) · 取引終了後の値</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>22,617.73</b>ナスダック総合指数終値 · 11月20日(米国現地) · 取引終了後の値</div>
+    </div>
+    <div class="dateline"><span>第49号 · 朝刊</span><b>2026年11月22日 日曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s0">
+      <div class="kick">国際 · 中東<span>報道照合 ✓ 3社 · 米軍の損傷・撃墜の有無と事件の時期は独立して確認されていない</span></div>
+      <h2 class="hl">イラン、ペルシャ湾上空で米F-16損傷・MQ-1撃墜を主張…米中央軍は「攻撃はなかった」との速報</h2>
+      <p class="deck">イラン軍は防空ミサイルで米軍のF-16を損傷させ、緊急着陸させたと主張した。米中央軍が否定したとの速報が出たが、どちらの主張も独立して確認されていない。</p>
+      <div class="body">
+        <p>イラン軍が21日、ペルシャ湾上空で自国の防空ミサイルが米軍のF-16戦闘機に命中して緊急着陸させ、米軍のMQ-1無人機は撃墜したと主張した。国営メディアを通じて伝えられた主張だ。これに対し米中央軍が、イランがF-16を攻撃した事実はないと明らかにしたとの速報が続き、米側の即時の確認がないとの報道も同じ日に出た。F-16が実際に損傷したのか、MQ-1が本当に撃墜されたのか、事件が正確にいつどこで起きたのかは、独立して確認されていない。これに先立つ20日には、イランの半国営通信が、ホルムズ海峡のゲシュム島上空で爆発音と閃光があり、敵の航空機が撃墜された可能性があると伝えた。二つの主張が同じ事件を指すのかも分かっていない。</p>
+        <p>この主張が出た時点で、米国とイスラエルの内部ではイランをさらに攻撃せよという声が高まっているとの報道がある。複数の情報筋を引用した報道によると、ネタニヤフ・イスラエル首相は、イランが弾道ミサイルの製造能力を回復し、核・軍事施設を地下深くに移す速さを懸念しており、軍事行動に出るなら米国との合同作戦を望んでいるという。一方、トランプ大統領は急がない立場で、追加攻撃を決意したのかは不明確だと伝えられた。アラグチ・イラン外相は同じ日、米国と終戦に向けた外交的解決を今も望むという従来の立場を示した。米国がイランの主張に公式の立場を出すのか、追加攻撃の可否をいつ決めるのかは、まだ分かっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · 与野党の攻防<span>報道照合 ✓ 4社 · 発言の全体の文脈と裁判日程は未確認</span></div>
+      <h3 class="hl">イ大統領「5500億の回収が背任か」、大庄洞の容疑に反論…チャン・ドンヒョク「悔しければ裁判を受けろ」</h3>
+      <div class="one">
+        <p>イ・ジェミョン大統領が、大庄洞事件に関連する起訴に真っ向から反論した。イ大統領は5500億ウォンの回収を掲げ、背任ではないという趣旨で語り、SNSに「大庄洞は檀君以来最大の成功」という動画を共有したと伝えられた。チャン・ドンヒョクは21日、これに「悔しければ裁判を受けろ」と応じた。チャン・ドンヒョクは「1000万ウォンを盗んでおいて500万ウォンを返せば無罪なのか」と問い、「舌が長いほど刑も長くなる」と語った。また「なぜ裁判は受けずに脱獄法を押し通すのか」と問い詰めた。与党側からは、チャン・ドンヒョクが大きな勘違いをしているという反応が出た。5500億ウォンはイ大統領側が掲げる公益回収の規模で、この数値をどう数えるかを巡って解釈が分かれてきた。背任が成立するかの判断と、「脱獄法」と呼ばれた立法の処理日程は、今回の攻防では確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>GTA 6、発売初日の売上約5兆ウォン・3250万本の販売と伝えられる…集計基準は確認されず</b><em>ゲームGTA 6が発売初日に約5兆ウォン分、3250万本売れたと伝えられた。発売当日時点の別の外部推計はこれより低いと伝えられ、基準が食い違う。</em><span>ゲーム · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>KBO、MLB事務局のク・ジャウク身分照会の要請を受ける…「FA資格のため海外球団とも契約可能」と通知</b><em>KBOは20日、MLB事務局からサムスンのク・ジャウクに対する身分照会の要請を受け、FA資格であることを通知したと発表した。実際に米国へ行くかどうかと条件は分かっていない。</em><span>野球 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>水原三星、慶南を下してKリーグ2優勝確定…2部から3年ぶりに1部復帰</b><em>1部昇格をすでに確定していた水原三星が21日、慶南を下してKリーグ2の優勝まで確定した。スコアと得点者は確認されていない。</em><span>サッカー · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>チェ・ミンジョン、ソウル木洞のショートトラック・ワールドツアー女子1000mで3連続優勝…決勝記録1分31秒050</b><em>チェ・ミンジョンが21日、木洞アイスリンクのワールドツアー第3戦女子1000m決勝で1分31秒050で1位となり、3大会連続優勝した。準決勝でも終盤の逆転で1位になったと伝えられた。</em><span>スポーツ · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>国連、「キラーロボット」規制の国際規範づくりに着手…米国・ロシアは消極的との報道</b><em>AIベースの自律型致死兵器を扱う国際規範づくりが始まり、米国とロシアは消極的だと伝えられた。合意内容と拘束力は確認されていない。</em><span>国際 · ✓ 報道1件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s2">
+      <div class="kick">社会 · 試験<span>報道照合 ✓ 3社 · 摘発された試験の種類と個別の処分は未確認</span></div>
+      <h3 class="hl">税理士試験のAI不正の自白後、初の国家資格試験で6件を摘発…試験中の無作為電話で着信音</h3>
+      <div class="body">
+        <p>税理士試験の首席合格者による人工知能不正の自白後、初めて行われた国家資格試験で、不正行為6件が摘発された。試験の最中に受験者へ無作為に電話をかけ、着信音が鳴るか確認する方式が使われ、実際に着信音が鳴って摘発された受験者がいた。摘発された事例には電子機器の所持などが含まれた。6件という集計は、報道によって6件無効または6人摘発と表現が分かれる。韓国産業人材公団は先に、ほかの国家資格試験全般に対する全数調査に入った。今回摘発された試験がどの試験だったのか、受験者数と個別の処分内容は確認されていない。点検方式が次の試験にも同じ強度で続くのかも、まだ分かっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s3">
+      <div class="kick">経済 · 貿易<span>報道照合 ✓ 2社 · 発効時期と撤廃率の基準の差は未確認</span></div>
+      <h3 class="hl">EUとインドネシア、包括的経済連携協定に署名…関税の90%以上を撤廃</h3>
+      <div class="body">
+        <p>欧州連合とインドネシアが21日(現地時間)、ベルギーのブリュッセルのEU本部で、包括的経済連携協定と投資保護協定に署名した。署名したのは、フォンデアライエンEU委員長と、アイルランガ・ハルタルト・インドネシア経済調整相だ。輸出入品の関税を90%以上なくす内容だ。ただし撤廃率は基準によって異なり、欧州委員会の資料には品目数基準で98%以上と説明されている。協定に先立つ19日にEU加盟国政府が署名を承認し、今後、欧州議会の承認手続きを経ると伝えられている。インドネシアは2027年1月1日にEUの一般特恵関税制度から卒業すると伝えられている。協定が実際に発効する時期は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s4">
+      <div class="kick">産業 · 人工知能<span>報道照合 ✓ 3社 · プラットフォームの具体的な運営方式は未確認</span></div>
+      <h3 class="hl">SKのチェ・テウォン会長、東京で「AI時代、大学を新たに設計し直すべき」…日韓の企業・大学の共同プラットフォームを提案</h3>
+      <div class="body">
+        <p>SKグループのチェ・テウォン会長が21日、東京で、人工知能の時代には大学がまったく新しい教育体系を備えるべきだと強調した。大学の試験と学位、運営方式から設計し直すべきだと語った。続いて、韓国と日本の企業と大学が一緒に取り組む共同プラットフォームをつくろうと提案し、各報道では、AI人材を共に育てようという趣旨だと伝えられた。</p>
+        <p>チェ会長は先立つ6月に東京で開かれた日韓経済イベントでも、日韓経済連帯を常設の協力の枠組みに育てようと提案したことがある。今回のプラットフォームに参加する企業と大学、発足時期、財源は分かっていない。日本側の大学と企業がこの提案にどう反応したのかも確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>21日</b><span>東京で発言した日</span></div>
+        <div><b>2か国</b><span>韓国と日本の企業・大学が対象</span></div>
+        <div><b>6月</b><span>先に常設の協力の枠組みを提案した時期</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>イランが米軍のF-16を撃墜したという主張</b> <span>イラン軍が主張したのはF-16の損傷と緊急着陸で、撃墜したとしたのはMQ-1だ。米中央軍が攻撃はなかったと明らかにしたとの速報が出ており、どちらも独立して確認されていない。</span></div>
+        <div><b>国家資格試験の不正が6件だけなので問題は終わったという話</b> <span>6件は、AI不正騒動の後の最初の試験で摘発された件数だ。韓国産業人材公団はほかの国家資格試験全般に対する全数調査に入っており、結果は出ていない。</span></div>
+        <div><b>EUとインドネシアの協定で関税の90%以上がすぐなくなるという話</b> <span>撤廃率は品目数と貿易額などの基準によって異なって示される。協定は欧州議会の承認手続きが残っており、発効時期は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 日 11月22日</b><span>イランが主張したF-16の損傷とMQ-1の撃墜について、米側の公式の立場が出るか、米国とイスラエルの追加攻撃の決定を示す兆しがあるかを見る。イ大統領とチャン・ドンヒョクの大庄洞を巡る攻防が続くかも見守りたい。</span><b>今週</b><span>EUとインドネシアの協定は、欧州議会の承認手続きを控えている。日程はまだ分かっていない。</span><b>その後</b><span>ク・ジャウクのメジャーリーグ挑戦の可否は、12月のロックアウト前に分かるだろうとの見通しが出ている。</span><b>読者へ</b><span>戦闘機の撃墜のように、当事者が出す戦果は、相手の確認が出るまで主張として読もう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "s0":{"kick": "国際 · 中東 · 報道照合 ✓ 3社 · 米軍の損傷・撃墜の有無と事件の時期は独立して確認されていない", "title": "イラン、ペルシャ湾上空で米F-16損傷・MQ-1撃墜を主張…米中央軍は「攻撃はなかった」との速報", "what": "イラン軍は21日、自国の防空ミサイルがペルシャ湾上空で米軍のF-16戦闘機を損傷させ、緊急着陸させたと明らかにした。イラン側は米軍のMQ-1無人機を撃墜したとも主張した。米中央軍が、イランがF-16を攻撃した事実はないと明らかにしたとの速報が出た。米国の即時の確認がないとの報道も同じ日に出た。20日にはイランの半国営通信が、ホルムズ海峡のゲシュム島上空で爆発音と閃光があり、敵の航空機が撃墜された可能性があると伝えた。同じ時期、複数の情報筋を引用した報道では、イスラエルと米国がイランを追加攻撃する案を検討中だとした。トランプ大統領の決意は不明確だと伝えられた。", "why": "戦闘機の損傷や無人機の撃墜が事実と確認されれば、イランと米国の間の軍事的緊張が一段高まり、すでに交わされている追加攻撃の議論にも影響しうる。逆に主張が事実と違えば、イランが戦果を掲げて国内外の世論と交渉力を管理しようとしているのかもしれない。どちらなのかは、双方の公式な確認が食い違っているため、今は判別できない。", "me": "韓国の読者の暮らしに最初に届く経路は原油価格と為替だ。ホルムズ海峡は原油の輸送路なので、衝突の報が広がれば燃料価格とウォン相場が揺れうる。相場が大きく動いたとき、この報がその背景なのかをまず考えてみればよい。", "a": "イラン側の見方は、防空網が作動して侵入した航空機を防いだという説明だ。自国の領空と海域を守る能力があると示そうとするメッセージで、米軍の作戦に対する抑止の信号とも読める。", "b": "米国側の見方は、イランがこれまで似た撃墜・攻撃の主張を繰り返してきて、今回の主張も確認されていない戦果だというものだ。中央軍がF-16への攻撃はなかったと明らかにしたとの速報が、この立場に近い。", "say": "確認されたのは、イランの主張と米国の否定の速報が対立しているという事実までだ。F-16の損傷とMQ-1の撃墜は、どちらも独立して検証されていない。きょうは米中央軍の公式発表の有無と、イスラエル・米国の追加攻撃の決定を示す兆しを見る。残骸や映像などの物証が出るかが判断の基準だ。", "src": "聯合ニュース(イランのF-16攻撃とMQ-1撃墜の主張、11/21) · 東亜日報(米国とイスラエルの追加攻撃検討の報道、11/21) · FinancialJuice(米中央軍の否定の速報、11/21)"},
+    "s1":{"kick": "政治 · 与野党の攻防 · 報道照合 ✓ 4社 · 発言の全体の文脈と裁判日程は未確認", "title": "イ大統領「5500億の回収が背任か」、大庄洞の容疑に反論…チャン・ドンヒョク「悔しければ裁判を受けろ」", "what": "イ・ジェミョン大統領は、大庄洞事件に関連する起訴に真っ向から反論した。イ大統領は5500億ウォンの回収を掲げ、背任ではないという趣旨で語った。イ大統領がSNSに「大庄洞は檀君以来最大の成功」という動画を共有したとも伝えられた。チャン・ドンヒョクは21日、「悔しければ裁判を受けろ」と応じた。チャン・ドンヒョクは「1000万ウォンを盗んでおいて500万ウォンを返せば無罪なのか」と語った。また「舌が長いほど刑も長くなる」と述べ、「なぜ裁判は受けずに脱獄法を押し通すのか」と問うた。与党側からは、チャン・ドンヒョクが大きな勘違いをしているという反応が出た。", "why": "公益回収額をどう計算するかと、背任が成立するかは、別の問いだ。5500億ウォンはイ大統領側が掲げる回収の規模で、与野党と市民団体が解釈を異にしてきた数字だ。この攻防は、裁判と立法を巡る与野党の対峙につながる。", "me": "政治の攻防では、一つの数字が別々の意味で使われる。「回収した」と「損害を与えた」は同じ事実を見る別の基準なので、どちらの言葉でも、その数字が何を数えたものかをまず尋ねれば混乱が減る。", "a": "イ大統領側の見方は、事業の結果として5500億ウォンを公共が回収したので、市民に損害を与えた背任とは程遠いというものだ。成果を掲げて、容疑の前提を否認する論理だ。", "b": "チャン・ドンヒョク側の見方は、一部を返したからといって残りへの責任が消えるわけではなく、悔しければ裁判で争えばよいというものだ。チャン・ドンヒョクは自ら「脱獄法」と呼んだ立法にも問題を提起した。", "say": "確認されたのは、二人が21日前後に公開の発言を交わしたという事実だ。5500億ウォンの算定基準と背任が成立するかは、この攻防だけでは分からない。きょうは裁判所の日程と、チャン・ドンヒョクが脱獄法と呼んだ立法の処理日程、与党の追加対応を見る。", "src": "OBCニュース(イ大統領の大庄洞背任への反論、11/21) · 毎日新聞(イ大統領がSNSで共有した動画、11/21) · ニューシス(チャン・ドンヒョクの裁判要求の発言、11/21) · 文化日報(チャン・ドンヒョクの脱獄法批判、11/21)"},
+    "s2":{"kick": "社会 · 試験 · 報道照合 ✓ 3社 · 摘発された試験の種類と個別の処分は未確認", "title": "税理士試験のAI不正の自白後、初の国家資格試験で6件を摘発…試験中の無作為電話で着信音", "what": "税理士試験の首席合格者による人工知能不正の自白後、初めて行われた国家資格試験で、不正行為6件が摘発された。試験の途中で受験者に無作為に電話をかけ、着信音が鳴るか確認する方式が使われた。実際に着信音が鳴って摘発された受験者がいた。摘発された事例には電子機器の所持などが含まれた。ある報道は6件が無効にされたと伝え、別の報道は6人が摘発されたと伝えていて、表現が分かれる。韓国産業人材公団は先に、ほかの国家資格試験全般に対する全数調査に入った。どの試験だったのか、受験者数と個別の処分内容は確認されていない。", "why": "資格試験は合格がそのまま職業資格になるので、不正が明らかになれば試験全体の公正さが揺らぐ。無作為の電話は、試験官の目に付かない機器を見つけ出す新しい統制手段だ。最初の試験の摘発件数は、今後の点検の強度を決める基準になる。", "me": "資格試験を準備する人にとって、試験場に電子機器を持ち込まないことが基本になった。電源を切っていても、所持そのものが問題になりうるかは、試験ごとの案内文の持ち込み禁止の規定を事前に確認する必要がある。", "a": "取り締まり強化の側は、最初の試験で6件が摘発されたことを、点検が効果を上げているという意味だと見る。今後は試験場の点検をもっと細かくすべきだという立場だ。", "b": "慎重論の側は、摘発された6件は表に出たものにすぎず、全体の規模を語らないと見る。着信音で確認する方式は、機器を所持している場合しか捕まえられないという限界も指摘されている。", "say": "確認されたのは、AI不正騒動の後の最初の国家資格試験で6件が摘発されたという点だ。試験の種類と処分は確認されていない。きょうは韓国産業人材公団の全数調査の結果と追加摘発の有無、次の試験の点検方式を見る。", "src": "聯合ニュース(無作為電話の点検と不正行為6件の摘発、11/21) · SBS(試験中の着信音による摘発、11/21) · 聯合ニュースTV(試験の最中の着信音による不正の摘発、11/21)"},
+    "s3":{"kick": "経済 · 貿易 · 報道照合 ✓ 2社 · 発効時期と撤廃率の基準の差は未確認", "title": "EUとインドネシア、包括的経済連携協定に署名…関税の90%以上を撤廃", "what": "欧州連合とインドネシアが21日(現地時間)、ベルギーのブリュッセルのEU本部で、包括的経済連携協定と投資保護協定に署名した。署名は、フォンデアライエンEU委員長と、アイルランガ・ハルタルト・インドネシア経済調整相が行った。協定は輸出入品の関税を90%以上なくす内容だ。欧州委員会の資料は品目数基準で98%以上の関税をなくすと説明しており、基準によって数値が異なる。これに先立つ19日、EU加盟国政府が署名を承認した。協定は今後、欧州議会の承認手続きを経ると伝えられている。発効時期は確認されていない。", "why": "EUがアジアの新興国と結ぶ協定が増えれば、韓国企業が同じ市場で迎える競争条件も変わる。韓国もEU、インドネシアとそれぞれ貿易協定を結んでおり、二つの協定の関税条件は比較の基準になる。撤廃率は、品目数で数えるか貿易額で数えるかによって変わる。", "me": "インドネシアへ部品・素材を輸出したり、EUに完成品を売ったりする企業にとっては、競合国の製品の関税が下がる時点が価格競争力の変数になる。消費者が買う物の値段がすぐに変わるわけではない。", "a": "協定支持の側は、90%以上の関税撤廃で貿易の障壁が下がり、双方の輸出が増えてサプライチェーンが多角化すると見る。", "b": "慎重論の側は、撤廃率が基準によって異なり、引き下げの大半が発効以後に適用され、議会の承認も残っているため、効果が出るまで時間がかかると見る。", "say": "確認されたのは、21日の署名と90%以上撤廃という方向だ。撤廃率の基準の差と発効時期は確認されていない。きょう以降は、欧州議会の採決日程と発効時点、インドネシアの一般特恵関税制度からの卒業時点との関係を見る。", "src": "聯合ニュース(EUとインドネシアの貿易協定の締結、11/21) · 朝鮮日報(署名の詳細と撤廃率の報道、11/22)"},
+    "s4":{"kick": "産業 · 人工知能 · 報道照合 ✓ 3社 · プラットフォームの具体的な運営方式は未確認", "title": "SKのチェ・テウォン会長、東京で「AI時代、大学を新たに設計し直すべき」…日韓の企業・大学の共同プラットフォームを提案", "what": "SKグループのチェ・テウォン会長が21日、東京で、人工知能の時代には大学がまったく新しい教育体系を備えるべきだと強調した。大学の試験と学位、運営方式から設計し直すべきだと語った。韓国と日本の企業と大学が一緒に取り組む共同プラットフォームをつくろうと提案した。各報道では、AI人材を共に育てようという趣旨だと伝えられた。チェ会長は先立つ6月に東京で開かれた日韓経済イベントでも、日韓経済連帯を常設の協力の枠組みに育てようと提案した。プラットフォームに参加する企業と大学、発足時期、財源は確認されていない。", "why": "大学が卒業証書と試験で能力を証明する方式は、AIが問題解きと文章作成を代わりに行う時代に揺らぐ。企業が直接、人材育成に乗り出そうという提案は、大学と産業界の役割分担を改めて問う。日韓の二国が共にやろうという点で、協力の範囲も変わる。", "me": "大学生と就職準備生にとっては、単位と試験の点数のほかに、AIを使う能力をどう証明するかが課題だ。日韓の共同プログラムができれば、交換とインターンの機会が増えうるが、今は提案の段階だ。", "a": "提案支持の側は、両国とも人材難とAI投資の圧力を抱えており、人材と資源を共に使う共同プラットフォームが規模の利点を生むと見る。", "b": "慎重論の側は、参加機関と財源が決まっていない提案は宣言にとどまりかねず、企業が教育改革を主導することへの懸念もあると見る。", "say": "確認されたのは、チェ会長の21日の東京での発言と、共同プラットフォームの提案だ。具体的な計画は分かっていない。きょうは日本側の大学と企業の反応、後続日程の発表の有無を見る。", "src": "聯合ニュース(東京での発言、11/21) · 毎日経済(大学の試験と学位の再設計の発言、11/21) · ファイナンシャルニュース(日韓共同プラットフォームの提案、11/21)"},
+    "i1":{"kick": "ゲーム · ✓ 報道2件", "title": "GTA 6、発売初日の売上約5兆ウォン・3250万本の販売と伝えられる…集計基準は確認されず", "what": "ゲーム「GTA 6」が発売初日に約5兆ウォン分、3250万本売れたと伝えられた。制作会社はロックスター・ゲームスだ。13年ぶりに出た新作だ。発売当日時点の別の外部推計は、これより低いと伝えられた。5兆ウォンと3250万本の集計主体と基準は確認されていない。販売数値に先行注文と予約決済が含まれたかも分かっていない。", "why": "初日の売上が大型映画の公開成績と比べられる規模で、ゲームが最も大きな娯楽産業の一つだということを示している。ただし売上は、先行注文と予約決済をいつ反映するかによって数字が変わる。だから同じ初日でも、集計ごとに値が違う。", "me": "ゲームを買おうとする人は、価格とプラットフォーム別の仕様を確認すればよい。ゲーム関連株を見る人は、初日の数字よりその後の販売の推移と公式発表のほうが重要だ。", "a": "ヒットを強調する側は、13年待った新作なので期待が大きく、初日の記録が産業の規模を示すと見る。", "b": "慎重論の側は、集計主体が不明確な数値は、低く出た推計と大きく違いうるので、公式発表を待つべきだと見る。", "say": "5兆ウォンと3250万本は、伝えられた数字にすぎず、集計主体が確認されていない。外部推計はこれより低いと伝えられた。きょうは制作会社の公式の販売発表が出るかを見る。", "src": "聯合ニュース(GTA 6の発売初日の売上と販売量、11/21) · 京郷新聞(発売初日に5兆ウォン分販売、11/21)"},
+    "i2":{"kick": "野球 · ✓ 報道2件", "title": "KBO、MLB事務局のク・ジャウク身分照会の要請を受ける…「FA資格のため海外球団とも契約可能」と通知", "what": "KBOは20日、MLB事務局からサムスンのク・ジャウクに対する身分照会の要請を受けたと発表した。KBOは、ク・ジャウクがFA資格のため、海外球団を含むすべての球団と契約を結べると通知したと明らかにした。ク・ジャウクは33歳だ。12月に予想されるメジャーリーグのロックアウトの前に決着がつくだろうとの見通しが併せて伝えられた。ク・ジャウクが実際に米国行きを選ぶのか、交渉する球団と条件は分かっていない。", "why": "身分照会は、MLB球団が獲得を検討する前に踏む最初の段階だ。FA選手はポスティング手続きなしに球団と交渉できるので、日程が速く動きうる。ロックアウトが始まると契約の日程が止まるため、その前が変数になる。", "me": "サムスンのファンとプロ野球ファンにとっては、次のシーズンの戦力とFA市場の流れがかかった知らせだ。身分照会がそのまま契約ではないことを覚えておけばよい。", "a": "米国挑戦を見込む側は、身分照会は関心のサインで、ロックアウト前に契約が出うると見る。", "b": "慎重論の側は、身分照会だけで契約を断定できず、年齢と契約条件が変数だと見る。", "say": "確認されたのは、KBOが20日に身分照会の要請とFA資格の通知を発表したという事実だ。契約の可否は確認されていない。きょうは球団名が具体的に出るかと、本人の立場の発表を見る。", "src": "朝鮮日報(KBOの発表とFA資格の通知、11/21) · マネートゥデイ(ロックアウト前の決着の見通し、11/21)"},
+    "i3":{"kick": "サッカー · ✓ 報道2件", "title": "水原三星、慶南を下してKリーグ2優勝確定…2部から3年ぶりに1部復帰", "what": "水原三星が21日、慶南を下してKリーグ2の優勝を確定した。水原三星は3年間の2部リーグ生活を終え、Kリーグ1への復帰がすでに確定した状態だった。今回の優勝で、2部優勝のトロフィーまで手にすることになった。試合のスコアと得点者は確認されていない。", "why": "昇格と優勝が重なると、クラブは1部復帰シーズンの選手団と予算の計画をより早く立てられる。優勝確定の時点が正規日程のどの段階かによって、残りの試合の意味も変わる。", "me": "水原三星のファンにとっては、3年ぶりの1部復帰と優勝が重なった日だ。次のシーズンの日程と選手獲得の知らせが続くかもしれず、他のクラブのファンにとっては、来年の1部の順位争いの変数が一つ増えたことになる。", "a": "祝福の側の見方は、2部で過ごした3年を優勝で締めくくり、クラブの再建が成功したというものだ。ファン基盤の大きいクラブが本来の位置を取り戻したという意味も与える。", "b": "慎重論の側の見方は、1部の競争は一段難しいので、2部の成績がそのまま1部の成績を意味するわけではないというものだ。選手団の補強と予算の裏付けが必要だという指摘が付く。", "say": "確認されたのは、21日の優勝確定と1部復帰だ。スコアと得点者は確認されていない。優勝を決めた試合が何ラウンドだったのかも確認されていない。きょうはクラブの優勝行事と次のシーズンの準備計画が出るかを見る。", "src": "聯合ニュース(水原三星のKリーグ2優勝確定、11/21) · 朝鮮日報(1部復帰と優勝トロフィーの報道、11/21)"},
+    "i4":{"kick": "スポーツ · ✓ 報道3件", "title": "チェ・ミンジョン、ソウル木洞のショートトラック・ワールドツアー女子1000mで3連続優勝…決勝記録1分31秒050", "what": "チェ・ミンジョンが21日、ソウルの木洞アイスリンクで開かれたショートトラック・ワールドツアー第3戦の女子1000m決勝で1分31秒050で1位となった。チェ・ミンジョンはこの種目で3大会連続優勝した。準決勝でも終盤の逆転で1位になったと伝えられた。同じ決勝でキム・ギルリは衝突で入賞できなかったと伝えられた。この大会は国際スケート連盟が主管するワールドツアーだ。", "why": "ワールドツアーの連続優勝は、シーズンのランキングと次の大会の出場順に影響する成績だ。ホームでの優勝なので、選手の競技力とコンディションが安定しているサインと読まれることもある。", "me": "ショートトラックのファンなら、次の大会と残りの個人種目の日程を確認してみるとよい。優勝の知らせが続くほど代表チームの選考争いも注目され、現地観戦を計画した人は、残りの試合の時間割を事前に見ておくとよい。", "a": "優勝を評価する側は、終盤の逆転が繰り返される点を挙げ、レース運びの能力が優れていると見る。", "b": "慎重論の側は、決勝で衝突が起きたようにショートトラックは変数が大きく、一度の優勝が次の大会を保証しないと見る。", "say": "確認されたのは、21日の女子1000m決勝の優勝と記録だ。ほかの種目の最終結果は確認されていない。キム・ギルリの衝突の経緯と判定も確認されていない。きょうは大会最終日の種目別の結果を見る。", "src": "聯合ニュース(1000mで3連続優勝、11/21) · 京郷新聞(ワールドツアーで3連続優勝、11/21) · 朝鮮日報(決勝記録と逆転優勝、11/21)"},
+    "i5":{"kick": "国際 · ✓ 報道1件", "title": "国連、「キラーロボット」規制の国際規範づくりに着手…米国・ロシアは消極的との報道", "what": "人工知能ベースの「キラーロボット」のような自律型致死兵器がすでに戦場で使われているなか、国際社会がこれを規制する国際規範づくりに着手したと伝えられた。米国とロシアは消極的だと伝えられた。合意された規範の内容と拘束力は確認されていない。議論が開かれた場所と参加国の数も、今回の報道だけでは確認されていない。", "why": "自律型致死兵器は、人が引き金を引かなくても対象を選んで攻撃する兵器だ。これを規制する規範が拘束力を持つには軍事大国の同意が必要で、米国とロシアが消極的なら規範は宣言にとどまりかねない。", "me": "日常にすぐ関わる問題ではないが、AIが軍事領域に広がる速さを測る知らせだ。韓国も武器輸出と軍の現代化でこの規範の影響を受けうるし、国防分野で働いたり投資したりする人は、規範の方向に注目する価値がある。", "a": "規制推進の側は、人の統制がない兵器の使用を防ぐ最低限の国際基準が必要だと見る。", "b": "消極的な側は、既存の国際法で十分だと見るか、新しい規範が軍事技術の開発を制約しうると見る。", "say": "確認されたのは、規範づくりの議論が始まり、米国とロシアが消極的だという報道だ。合意内容と拘束力は確認されていない。きょうは規範の草案の拘束力の有無と、参加国の立場を見る。", "src": "聯合ニュース(国連のキラーロボット規制の国際規範づくり着手と米国・ロシアの消極的な立場の報道、11/21)"}
+  };
+  const G = {
+    "防空ミサイル":{"f": "安全保障", "d": "敵の航空機やミサイルを迎撃するため、地上や艦船から撃つミサイル。", "w": "イラン軍がF-16に命中させたと主張した手段だ。"},
+    "中央軍":{"f": "安全保障", "d": "中東と中央アジア地域の作戦を担う米軍の地域統合軍。", "w": "イランのF-16攻撃の主張を否定したとの速報の主体だ。"},
+    "MQ-1":{"f": "安全保障", "d": "米軍が使う、武装可能な中高度無人機の系列の機種名。", "w": "イランが撃墜したと主張した無人機だ。"},
+    "合同作戦":{"f": "安全保障", "d": "二つ以上の国の軍が一緒に計画し、遂行する軍事作戦。", "w": "イスラエルが米国と一緒に行う方式を望んでいると伝えられた。"},
+    "弾道ミサイル":{"f": "安全保障", "d": "発射後に放物線を描いて飛び、目標を打つミサイル。", "w": "イランの製造能力の回復の速さが、イスラエルの懸念として伝えられた。"},
+    "起訴":{"f": "法・制度", "d": "検事が裁判を開くよう裁判所に求めること。", "w": "イ大統領が大庄洞関連の起訴に反論した。"},
+    "背任":{"f": "法・制度", "d": "任された仕事をする人が任務に背き、相手に財産上の損害を与える犯罪。", "w": "イ大統領が5500億ウォンの回収を挙げて、背任ではないと語った。"},
+    "公益回収":{"f": "法・制度", "d": "開発利益の一部を公共が取り戻すこと。", "w": "5500億ウォンがこの回収の規模として挙げられた。"},
+    "全数調査":{"f": "法・制度", "d": "一部ではなく、対象の全体を漏れなく調べる方式。", "w": "産業人材公団が、ほかの国家資格試験全般を対象に着手した。"},
+    "包括的経済連携協定":{"f": "経済", "d": "関税の撤廃に加え、サービス・投資・ルールまで幅広く扱う経済協定。", "w": "EUとインドネシアが21日に署名した。"},
+    "投資保護協定":{"f": "経済", "d": "相手国に行った投資を、差別や収用から守る協定。", "w": "貿易協定とともに署名された。"},
+    "一般特恵関税制度":{"f": "経済", "d": "先進国が開発途上国の輸出品に低い関税を与える制度。", "w": "インドネシアが2027年1月1日に卒業すると伝えられている。"},
+    "身分照会":{"f": "制度・契約", "d": "MLB球団が獲得を検討する前に、選手の契約可能な身分を事務局を通じて尋ねる手続き。", "w": "MLB事務局がク・ジャウクについて要請した。"},
+    "FA":{"f": "制度・契約", "d": "一定の期間を満たし、どの球団とも契約できるようになったフリーエージェント選手。", "w": "ク・ジャウクはFA資格と通知された。"},
+    "自律型致死兵器":{"f": "安全保障", "d": "人の関与なしに対象を決めて攻撃する、人工知能ベースの兵器。", "w": "国連が規制の規範づくりに着手したと伝えられた。"},
+    "拘束力":{"f": "法・制度", "d": "合意や規範が守られなかったとき、責任を問える法的な力。", "w": "規範の拘束力の有無は確認されていない。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
