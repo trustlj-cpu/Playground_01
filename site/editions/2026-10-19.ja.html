@@ -1,0 +1,359 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>KOSPI · 10/16 終値 · 取引終了時点</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ウォン/ドル相場 · 週末 · 1ドル当たりのウォン</div>
+    </div>
+    <div class="dateline"><span>第15号 · 朝刊</span><b>2026年10月19日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会・殉職<span>報道照合 ✓ 9社 · 内部進入を決めた経緯は警察が捜査中</span></div>
+      <h2 class="hl">富川で殉職したキム・ジンソク消防司令補の告別式がきょう、チャン・ドンヒョク代表は秋美愛知事の謝罪に「辞職せよ」</h2>
+      <p class="deck">16日に富川の工場火災の消火中に亡くなったキム・ジンソク消防司令補の告別式が19日、京畿道庁葬で営まれる。国民の力は18日、秋美愛京畿道知事の前日の謝罪を受けて辞職を求めた。</p>
+      <div class="body">
+        <p>16日午前8時38分ごろ、京畿道富川市梧亭区内洞の工場火災現場に出動して亡くなったキム・ジンソク消防司令補は、当時24時間勤務をほぼ終え、午前9時の退勤まで20分ほどに迫っていたと、ファイナンシャルニュースと財経日報が伝えた。故人は17日未明に亡くなった。18日、順天郷大学富川病院の葬儀場に設けられた弔問所の遺影の前には、7歳の娘が書いた手紙が置かれたと、京郷新聞と韓国日報が報じた。手紙には、大人になったらまたパパに会おうという気持ちが込められていた。弔問所を訪れた共に民主党のソン・ヨンギル議員が手紙の写真をSNSで公開したと、韓国日報と中央エコノミーニュースが伝えた。故人には玉条勤政勲章の追贈と1階級特進が決まった。告別式は19日、京畿道庁葬として執り行われ、消防庁と京畿道によると秋美愛京畿道知事も出席すると、ファイナンシャルニュースが報じた。遺族と労組は、作業員がすでに避難した状況で内部への進入が決まった経緯を明らかにするよう求めており、警察は専従チームをつくって火災の原因と進入の経緯を捜査している。</p>
+        <p>国民の力のチャン・ドンヒョク代表は18日、フェイスブックに、秋知事の謝罪を「5日ぶりに追い立てられて出した謝罪」と書き、「辞職を望むのだから辞職せよ」と求めたと、京郷新聞とニュースピム、国民日報が報じた。秋知事が17日に弔問所の前で語った「謝罪を望んでおられるのだから、本当に心を込めて謝罪する」という言葉をそのまま切り返したものだ。チャン代表は、秋知事が12億ウォンの公邸に入り新しい公用車を買ったことを挙げ、秋知事本人を「財政のストロー」と狙い撃ちしたと、ニュースピムが伝えた。国民の力のチョン・ジョムシク院内代表も「他人に言われて謝罪するのは、本当の謝罪とは言えない」と語ったと、慶北道民日報とロイシュが報じた。秋知事は13日の国会行政安全委員会による京畿道への国政監査で、消防予算を「最も大きい、頭の痛い財政のストロー」のようだと語り、物議を醸した。18日の報道時点で、秋知事側の追加の反応は出ていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>約20分</b><span>出動時、キム消防司令補の退勤までの残り時間</span></div>
+        <div><b>7歳</b><span>遺影の前に手紙を置いた故人の娘の年齢</span></div>
+        <div><b>19日</b><span>京畿道庁葬で行う告別式の日付</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">政治・国務会議<span>報道照合 ✓ 5社 · 公開縮小を建議した国務委員が誰かは確認されていない</span></div>
+      <h3 class="hl">李在明大統領「公開の国務会議だから話せないというのは嘘」、非公開の要求に重ねて反論</h3>
+      <div class="one">
+        <p>李在明大統領は18日、SNSに、国務会議の公開範囲を狭めようという主張に改めて反論する文を投稿したと、京郷新聞とファイナンシャルニュース、ソウル新聞が報じた。大統領は、公開の国務会議では国務委員はもちろん自治体の首長まで言うべきことを言っているとし、会議が公開されているから話せないという主張は嘘だと書いた。また、公開会議のあとには、保安が必要な案件を扱う非公開会議が別に続くと説明した。ファイナンシャルニュースは、大統領が、耳に痛くても苦言を呈する参謀が本当の参謀だと強調したと伝えた。この投稿は、一部の国務委員が国務会議の公開範囲を狭めるよう建議したという報道が出てから3日で出たもので、大統領は16日にも、国務会議の全面非公開の主張には同意できないとの立場を示したと、天地日報が報じた。政府も、生中継のために国務委員が大統領の意見に反対できないという内容は事実と異なると反論した。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>イム・ソンジェ、アジアンツアーのマカオオープンでワン・ウェイシュアンに延長の末敗れ準優勝</b><em>イム・ソンジェは最終合計17アンダーパー263打で並んだ。ワン・ウェイシュアンが18番ホールのイーグルで追いつき、延長1ホール目のバーディーで勝った。</em><span>スポーツ · ✓ 報道6件</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>ソン・フンミン、ニューヨーク・シティ戦の終盤のシュートがポストに当たり、LAFCは1-1の引き分け</b><em>ソン・フンミンはMLS第31節に攻撃的ミッドフィールダーで先発し、フルタイム出場した。LAFCの先制点は、ソン・フンミンが得たフリーキックから生まれた。</em><span>スポーツ · ✓ 報道5件</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>キム・ミンソク共に民主党代表、淳昌醤類祭りの公演中のステージあいさつ論争に謝罪</b><em>15日、歌手ヒン(HYNN)の公演中にステージに上がった。キム代表は18日、司会者の呼び込みのためだったとして、歌手と観客に謝罪した。</em><span>政治 · ✓ 報道5件</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>チェ・ジヨンIMF理事「先進国のうち財政余力が増えた国は韓国だけ」</b><em>15日のバンコクでの記者懇談会で、半導体好況による税収増を理由に挙げた。IMFは今年の韓国の成長率見通しを3.3%に引き上げた。</em><span>経済 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>キム・ジヨン初代重大犯罪捜査庁長、指名37日で任命され業務開始</b><em>李在明大統領が15日に任命案を裁可し、キム庁長は16日に初出勤した。最初の指示として、早期定着の専従チームの構成を命じた。</em><span>社会 · ✓ 報道5件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">スポーツ・秋の野球<span>報道照合 ✓ 7社 · 第3戦の先発は未定</span></div>
+      <h3 class="hl">KIA、1回に5得点でLGに6-3、準プレーオフ2連勝…オラー6回2失点</h3>
+      <div class="body">
+        <p>KIAは18日、光州の起亜チャンピオンズフィールドで行われた2026 KBO準プレーオフ(5戦3勝制)の第2戦でLGを6-3で破り、第1戦の5-1の勝利に続いて2連勝を収めたと、ソウル新聞と天地日報、メディアペンが報じた。KIAは1回裏、LG先発のイム・チャンギュから安打6本を集中させて5点を奪った。ニューデイリーとソウル新聞は、このイニングの6安打は準プレーオフの1イニング最多安打タイ記録で、5得点は歴代ポストシーズンの1回裏最多得点タイ記録だと伝えた。KIA先発のアダム・オラーは6回を6被安打8奪三振2失点で勝利投手になった。スポーツ京郷は、誕生日に先発勝利を挙げたオラーが「普段はもらえない援護点を秋にもらった」と述べ、最高の誕生日プレゼントだと語ったと伝えた。KIAは残り3試合であと1勝すれば、サムスンが待つプレーオフに進む。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">スポーツ・バドミントン<span>報道照合 ✓ 6社 · 足首のけがの程度は未確認</span></div>
+      <h3 class="hl">アン・セヨン、山口に2-1の逆転勝ちでデンマークオープン2連覇…今年61勝1敗、シーズン10回目の優勝</h3>
+      <div class="body">
+        <p>アン・セヨンは18日、デンマークのオーデンセで行われたデンマークオープン女子シングルス決勝で、日本の山口茜を2-1(21-23、21-14、21-18)で下し、大会2連覇を果たしたと、マネートゥデイとニュースピム、韓国日報が報じた。韓国選手がデンマークオープンを2年連続で制したのは初めてだ。第1ゲームは21-21から連続失点で落とし、第2ゲームで7連続得点を挙げて流れを変えた。ニュースピムは、アン・セヨンが足首のけがを抱えながらも、最終ゲームで6点差の劣勢をはね返して逆転勝ちしたと伝えた。韓国日報は今回の優勝を、今年10個目の優勝トロフィーと紹介した。この優勝で今年の戦績は62試合61勝1敗、勝率98.4%となった。マネートゥデイとファイナンシャルニュースは、アジア大会の金メダルを含めて今回が今年10回目の優勝と集計し、山口に対しては10連勝を続けたと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">社会・税金<span>報道照合 ✓ 6社 · 判決確定日は媒体ごとに表記が異なる</span></div>
+      <h3 class="hl">サッカー選手のキム・ヨングォン、約8億3000万ウォンの総合所得税取り消し訴訟で大法院で最終敗訴</h3>
+      <div class="body">
+        <p>代表経験のあるサッカー選手のキム・ヨングォン(蔚山HD)が、約8億3000万ウォンの総合所得税の賦課の取り消しを求めて起こした訴訟で最終的に敗訴したと、マネートゥデイと亜洲経済、デイリアンが18日に報じた。大法院第3部は、キム・ヨングォンの請求を退けた原審を確定させた。キム・ヨングォンは、中国でプレーしていた際に控除限度を超えて翌年に繰り越された外国納付税額約6億500万ウォンを、日本でプレーしていた時期の所得と合算して控除を受けようとしたが、裁判所は、国ごとに分けて控除すべきだという課税当局の判断が正しいとみた。蔚山税務署は、2019~2021年の帰属分として、加算税を含め約8億3000万ウォンを追加で賦課した。キム・ヨングォンは国内の非居住者だと主張したが、裁判所は、国内の住民登録を維持し収入の大部分を国内に送金していた点を挙げ、国内居住者だと判断したと、財経日報が伝えた。1審と2審もいずれもキム・ヨングォンの請求を棄却した。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>イ・ガンイン62分、アトレティコ1-0<span>17日のエスパニョール戦のアウェーで、イ・ガンインに代わって投入されたバエナの決勝ゴールで勝ち、シメオネ監督は運動量と体力消耗を考慮した交代だったと語ったと、聯合ニュースと朝鮮日報が伝えた。</span></li>
+        <li>チェ・テウォン「20代なら絶対に起業」<span>EBSの講演で、大学の卒業証書より問題解決の経験が重要だと語ったと、京郷新聞と東亜日報が報じた。</span></li>
+        <li>新韓銀行の中金利ローン0.3%ポイント引き下げ<span>16日から中・低信用の顧客向けの民間中金利ローンの金利を下げ、最高金利は年6.9%だと、ZDNetコリアと朝鮮日報が伝えた。</span></li>
+        <li>受託・委託取引の実態調査19日開始<span>中小ベンチャー企業部が1万5000社を対象に、調査対象の取引期間を6か月から1年に延ばすと、朝鮮日報と聯合ニュースが報じた。</span></li>
+        <li>民間建設現場75か所を集中取り締まり<span>国土交通部が11月13日まで違法下請けと代金未払いを点検すると、聯合ニュースとハンギョレが伝えた。</span></li>
+        <li>トランプ氏、側近に責任転嫁<span>米中間選挙を控えて共和党の劣勢が濃くなると、選挙戦略の不振の責任を側近に転嫁し、ホワイトハウスで内紛の気配があると、聯合ニュースとKBSが報じた。</span></li>
+        <li>ベイリー英イングランド銀行総裁、IMF会合で退席<span>17日のバンコクのIMF運営委員会でロシア代表が発言すると、アンドルー・ベイリー総裁ら複数の国の代表が抗議して退席したと、ガーディアンが報じた。</span></li>
+        <li>オ・サンウク、全国体育大会フェンシング2連覇<span>アジア大会金メダリストのオ・サンウクが全国体育大会で2年連続で頂点に立ち、通算7回目の優勝を達成したと、朝鮮日報が伝えた。</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>キム・ジンソク消防司令補の遺族の年齢が媒体ごとに異なって伝わっている</b> <span>韓国日報と中央エコノミーニュースなど大半の報道は、娘が7歳だと伝えた。</span></div>
+        <div><b>アン・セヨンが今年、個人戦の大会だけで10回優勝したという話が出回っている</b> <span>マネートゥデイとファイナンシャルニュースの10回目の優勝の集計は、アジア大会の金メダルを含めた数字だ。</span></div>
+        <div><b>キム・ヨングォンが海外で納めた税金を認められなかったという投稿が広まっている</b> <span>裁判所は外国納付税額の控除そのものを否定したのではなく、国ごとに分けて控除すべきだと判断した(マネートゥデイ、亜洲経済)。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 月 10月19日</b><span>キム・ジンソク消防司令補の告別式が京畿道庁葬で行われ、秋美愛京畿道知事が出席する。株式市場が開き、KOSPIが16日の反発を続けられるかが試される。</span><b>今週</b><span>KBO準プレーオフ第3戦が行われ、KIAはあと1勝でプレーオフに進む。</span><b>その後</b><span>富川の火災の原因と内部進入の決定の経緯をめぐる警察の捜査結果が出る。重大犯罪捜査庁の最初の捜査対象と正式な就任式の日程は決まっていない。</span><b>読者へ</b><span>海外で所得を得た居住者なら、外国納付税額の控除は国ごとの限度で別々に計算される。国税庁ホームタックスの案内で、控除の方式を確認できる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会・殉職 · 報道照合 ✓ 9社 · 内部進入を決めた経緯は警察が捜査中", "title": "富川で殉職したキム・ジンソク消防司令補の告別式がきょう、チャン・ドンヒョク代表は秋美愛知事の謝罪に「辞職せよ」", "what": "キム・ジンソク消防司令補は16日午前8時38分ごろ、富川市梧亭区内洞の工場火災現場に出動して孤立し、17日未明に亡くなった。出動時、退勤まで約20分が残っていたと、ファイナンシャルニュースと財経日報が伝えた。18日、弔問所の遺影の前には7歳の娘の手紙が置かれたと、京郷新聞と韓国日報が報じた。告別式は19日に京畿道庁葬で営まれ、秋美愛京畿道知事が出席する(ファイナンシャルニュース)。国民の力のチャン・ドンヒョク代表は18日、フェイスブックで秋知事の謝罪を「追い立てられて出した謝罪」とし、辞職を求めた(京郷新聞、ニュースピム、国民日報)。チョン・ジョムシク院内代表も、本当の謝罪ではないと語った。遺族と労組は、内部進入を決めた経緯の解明を求めている。", "why": "一人の消防官の死が国政監査での発言をめぐる論争と重なり、追悼と政争が同じ時間に進んでいる。争点は二つある。一つは、消防の人件費・装備の財政を国と自治体がどう分担するかという構造の問題で、もう一つは、現場進入の判断と安全基準という運用の問題だ。", "me": "消防の財政配分は、結局は地域の消防署の人員と装備の水準につながる。告別式のあと京畿道と国会で出てくる消防予算の議論が、実際の現場の人員補強につながるかを見られる。", "a": "チャン・ドンヒョク代表とチョン・ジョムシク院内代表のように、秋知事の謝罪は遅く、真心がないとみる見方だ。彼らは13日の発言から17日の謝罪までの経緯を問題にして辞職を求めた。", "b": "遺族と労組が求めているのは、謝罪よりも進入決定の経緯の解明だ。作業員がすでに避難した状況でなぜ内部進入が決まったのかを明らかにしてこそ、同じ死を防げるという見方だ。", "say": "確認されたのは、殉職の経緯の大筋と19日の告別式、国民の力の辞職要求だ。確認されていないのは、内部進入を誰がどんな基準で決めたのかと、出火の正確な原因だ。きょうは、告別式で秋知事が何を語るか、警察の専従チームが進入の経緯について何を明らかにするかを見ていく。", "src": "京郷新聞(殉職の経緯・勲章追贈、10/17) · 韓国日報(弔問所の娘の手紙、10/18) · ファイナンシャルニュース(退勤20分前の出動・告別式、10/18) · ニュースピム・国民日報(チャン・ドンヒョク氏の辞職要求、10/18) · 慶北道民日報・ロイシュ(チョン・ジョムシク氏の発言、10/18)"},
+    "s2":{"kick": "政治・国務会議 · 報道照合 ✓ 5社 · 公開縮小を建議した国務委員が誰かは確認されていない", "title": "李在明大統領「公開の国務会議だから話せないというのは嘘」、非公開の要求に重ねて反論", "what": "李在明大統領は18日、SNSに、公開の国務会議のせいで話せないという主張は嘘だとする文を投稿した(京郷新聞、ファイナンシャルニュース、ソウル新聞)。大統領は、国務委員や自治体の首長まで公開会議で言うべきことを言っていると書いた。公開会議のあとには、保安案件を扱う非公開会議が別に開かれると説明した。一部の国務委員が公開範囲の縮小を建議したという報道は3日前に出ていた。大統領は16日にも、全面非公開の主張には同意しないと述べた(天地日報)。政府は、生中継のために反対意見を出せないという内容は事実と異なるとした。", "why": "国務会議の生中継には、政策決定の過程を国民に見せられるという利点がある一方、閣僚がカメラの前で異論を出しにくいという指摘がついて回った。大統領が2日のうちに2度反論に乗り出したのは、この方式を維持し続ける意思と読める。", "me": "公開の国務会議は誰でも映像で見られるため、政策がどんな議論を経て決まるのかを直接確認できる。閣僚の発言が実際に大統領と異なる意見を含むかを見守れば、この論争を自分で判断できる。", "a": "大統領と政府は、公開会議でも異論は十分に出ており、機微な案件は非公開会議で扱うので、公開を縮小する理由はないとみる。苦言を呈する参謀が本当の参謀だという言葉も、同じ文脈だ。", "b": "公開範囲の縮小を建議したという国務委員の側は、生中継が自由な討論を妨げるという問題意識を持っていると報じられた。カメラの前では大統領と異なる意見を出しにくいという指摘だ。", "say": "確認されたのは、大統領の18日の投稿と16日の立場、政府の反論だ。誰が公開縮小を建議したのかと、建議の具体的な内容は確認されていない。次の国務会議が、今回の論争のあとも同じ範囲で公開されるかを見ていく。", "src": "京郷新聞(大統領SNSの反論文、10/18) · ファイナンシャルニュース(苦言を呈する参謀への言及、10/18) · 東亜日報(16日「非公開の主張に同意できない」、10/16) · 天地日報(16日の立場、10/18) · ソウル新聞(公開会議の説明、10/18)"},
+    "s3":{"kick": "スポーツ・秋の野球 · 報道照合 ✓ 7社 · 第3戦の先発は未定", "title": "KIA、1回に5得点でLGに6-3、準プレーオフ2連勝…オラー6回2失点", "what": "KIAは18日、光州の起亜チャンピオンズフィールドで行われた準プレーオフ第2戦でLGを6-3で破った(ソウル新聞、天地日報、メディアペン)。第1戦の5-1の勝利に続く2連勝だ。KIAは1回裏、LG先発のイム・チャンギュから6安打を集中させて5点を挙げた。この6安打は準プレーオフの1イニング最多安打タイ、5得点はポストシーズンの1回裏最多得点タイ記録だと、ニューデイリーが伝えた。先発のアダム・オラーは6回を6被安打8奪三振2失点で勝利投手になった。オラーは、誕生日に挙げた勝利を最高のプレゼントだと語った(スポーツ京郷)。", "why": "5戦3勝制で最初の2試合に勝ったチームは、残り3試合であと1度勝てばよい。1回の大量得点は、LG先発を早々に崩して救援陣の運用まで揺さぶったという点で、シリーズ全体に影響する。", "me": "KIAとLGのファンにとっては、第3戦からLGのホームに会場が移る点が変数だ。プレーオフの日程やチケット販売の日程も、このシリーズがいつ終わるかによって変わる。", "a": "KIA側では、第1・2戦とも先発が長く投げ、打線が必要なときに爆発した点から、流れが明確に移ったとみる。オラーの好投で先発陣の優位が確認されたという評価だ。", "b": "LG側では、ホームで第3戦を迎える以上、まだ逆転の余地があるとみる。第2戦でも1回以降は3点を追い上げ、打線が完全に抑えられたわけではなかった。", "say": "確認されたのは、2連勝と1回の5得点、オラーの投球記録だ。第3戦の先発と正確な試合時刻はまだ確認されていない。KIAが第3戦でシリーズを決めるのか、LGがホームで反撃するのかを見ていく。", "src": "朝鮮日報(第2戦先発オラー・イム・チャンギュ予告、10/18) · ソウル新聞・天地日報(KIA 6-3勝利、10/18) · ニューデイリー(1回6安打タイ記録、10/18) · スポーツ京郷(オラーの誕生日の感想、10/18)"},
+    "s4":{"kick": "スポーツ・バドミントン · 報道照合 ✓ 6社 · 足首のけがの程度は未確認", "title": "アン・セヨン、山口に2-1の逆転勝ちでデンマークオープン2連覇…今年61勝1敗、シーズン10回目の優勝", "what": "アン・セヨンは18日、デンマークのオーデンセで行われたデンマークオープン女子シングルス決勝で、山口茜を2-1(21-23、21-14、21-18)で下した(マネートゥデイ、ニュースピム、韓国日報)。韓国選手のデンマークオープン2連覇は初めてだ。第1ゲームは21-21から続けて失点して落とし、第2ゲームで7連続得点により逆転した。ニュースピムは、アン・セヨンが足首のけがを抱えてプレーしたと伝えた。今年の戦績は62試合61勝1敗、勝率98.4%だ。マネートゥデイとファイナンシャルニュースは、アジア大会の金メダルを含めて今年10回目の優勝と集計した。山口に対しては10連勝だ。", "why": "デンマークオープンは上位グレードの大会であり、ランキングポイントと賞金の比重が大きい。最大のライバルである山口を相手に第1ゲームを落としながらも逆転した点で、年末の王者決定戦を控え、対戦成績の優位が続いた。", "me": "バドミントンファンにとっては、足首のけがの程度が次の大会への出場にどう影響するかが関心事だ。シーズン終盤の大会日程は、世界バドミントン連盟の日程表で確認できる。", "a": "記録に注目する見方は、勝率98.4%と山口に対する10連勝を挙げ、アン・セヨンが女子シングルスを圧倒するシーズンを送っているとみる。けがを抱えながら勝った点を強調する。", "b": "けがに注目する見方は、決勝で足首の問題が表れた以上、残りのシーズンの出場を調整すべきだとみる。第1ゲームを落とし、最終ゲームで6点差まで追い込まれた試合内容も併せて挙げられる。", "say": "確認されたのは、決勝のスコアと2連覇、今年61勝1敗の戦績だ。足首のけがの程度と次の大会への出場の有無は確認されていない。代表チームや所属チームのけが関連の発表が出るかを見ていく。", "src": "ニュースピム(決勝進出・山口とのリマッチ、10/18) · マネートゥデイ(2連覇・シーズン10回目の優勝、10/18) · 韓国日報(優勝トロフィーの集計、10/18) · ファイナンシャルニュース(61勝1敗、10/18)"},
+    "s5":{"kick": "社会・税金 · 報道照合 ✓ 6社 · 判決確定日は媒体ごとに表記が異なる", "title": "サッカー選手のキム・ヨングォン、約8億3000万ウォンの総合所得税取り消し訴訟で大法院で最終敗訴", "what": "キム・ヨングォンは、約8億3000万ウォンの総合所得税の賦課を取り消してほしいという訴訟で最終的に敗訴した(マネートゥデイ、亜洲経済、デイリアン)。大法院第3部は、原告敗訴の原審を確定させた。争点は、中国で控除限度を超えて繰り越された外国納付税額約6億500万ウォンを、日本時代の所得と合算して控除できるかだった。裁判所は、国ごとに分けて控除すべきだと判断した。蔚山税務署は、2019~2021年の帰属分として、加算税を含め約8億3000万ウォンを賦課した。裁判所は、国内の住民登録の維持と国内への送金を根拠に、キム・ヨングォンを国内居住者とみた(財経日報)。1審と2審も請求を棄却した。", "why": "外国納付税額控除は、同じ所得に二つの国が課税する二重課税を防ぐ仕組みだが、国ごとに限度を別々に計算する。税率の高い国で残った控除分を、税率の低い国の所得に持ち込んで使うことはできないという点を、大法院が改めて確認した。", "me": "海外で働いたり、複数の国で所得を得たりした人にも、同じ原則が適用される。海外に長くいても、国内の住民登録と送金の記録があれば国内居住者と判断され得る点も、注目に値する。", "a": "課税当局と裁判所は、国別の控除が税法の原則であり、国内に生活の根拠を維持している以上、国内居住者として納税すべきだとみた。3度の裁判で同じ結論が出た。", "b": "キム・ヨングォン側は国内の非居住者だと主張し、実際に納めた海外の税金を合算して控除を受けるべきだという立場だった。海外でプレーする選手に税負担が重なるという問題意識だ。", "say": "確認されたのは、最終敗訴と国別控除の原則、居住者判断の根拠だ。判決の確定日は媒体ごとに表記が食い違い、確認されていない。海外リーグを経た他の選手に似た訴訟があるかを見ていく。", "src": "聯合ニュース(外国納付税額控除訴訟で最終敗訴、10/17) · 韓国経済(中国の税金を日本の所得から控除認めず、10/18) · マネートゥデイ・亜洲経済(大法院の判断、10/18) · 財経日報(居住者判断の根拠、10/18)"},
+    "i1":{"kick": "スポーツ · ✓ 報道6件", "title": "イム・ソンジェ、アジアンツアーのマカオオープンでワン・ウェイシュアンに延長の末敗れ準優勝", "what": "イム・ソンジェは18日、マカオ・ゴルフ・アンド・カントリークラブで終わったアジアンツアーのSJMマカオオープンで準優勝した(ニュースピム、ニュース1、スポーツ京郷)。最終合計17アンダーパー263打で、台湾のワン・ウェイシュアンと並んだ。イム・ソンジェは17番と18番ホールのバーディーで2打差までリードしたが、ワン・ウェイシュアンが18番ホールでイーグルを奪った(ヘラルド経済)。延長1ホール目でワン・ウェイシュアンがバーディーを奪って勝った。イム・ソンジェは大会の第1~3ラウンドを通じて上位を保った。準優勝賞金は11万ドルだった。", "why": "大会を通じて首位を保ちながら、最終ホールで逆転を許した結果だ。来週韓国で開かれるジェネシス・チャンピオンシップを前に、試合勘を確かめる大会だったという報道もある。", "me": "国内のゴルフファンにとっては、イム・ソンジェの来週の国内大会への出場の有無と成績が関心事だ。アジアンツアー初優勝は次の機会に持ち越された。", "a": "惜しさに注目する見方は、17番ホールまで1位で、2打差でリードしていた試合を逃した点を挙げる。ヘラルド経済は、最終ホールのイーグルにやられたと表現した。", "b": "競技力に注目する見方は、4日間ずっと上位を保った点を挙げ、コンディションが良いとみる。来週の国内大会を控えた調整の舞台としては成果があったという評価だ。", "say": "確認されたのは、17アンダーでの並びと延長での敗北、準優勝賞金だ。来週の国内大会への出場は一部の媒体しか伝えておらず、確認されていない。大会の組み合わせ発表を見ていく。", "src": "ニュースピム(延長の末に準優勝、10/18) · 聯合ニュース(マカオオープン延長戦で敗北、10/18) · スポーツ京郷(ワン・ウェイシュアン18番ホールのイーグル、10/18)"},
+    "i2":{"kick": "スポーツ · ✓ 報道5件", "title": "ソン・フンミン、ニューヨーク・シティ戦の終盤のシュートがポストに当たり、LAFCは1-1の引き分け", "what": "LAFCは18日(韓国時間)、米ニューヨークで行われたMLS第31節のニューヨーク・シティFCとのアウェー戦で1-1で引き分けた(ニューシス、日刊スポーツ、ニュースピム)。ソン・フンミンは4-2-3-1の攻撃的ミッドフィールダーで先発し、フルタイム出場した。LAFCの先制点は、ソン・フンミンが得たフリーキックから生まれた。ニューヨーク・シティはコーナーキックの場面でヘディングで同点にした。ソン・フンミンの試合終盤のシュートは、左のポストに当たって跳ね返った(江原道民日報)。ソン・フンミンは攻撃ポイントを挙げられなかった。", "why": "レギュラーシーズン終盤に勝ち点1にとどまり、プレーオフのシード争いで損をした。ソン・フンミンがフリーキックを得て終盤に決定的なシュートを放つなど、攻撃の中心の役割は続いた。", "me": "ソン・フンミンの試合を追うファンにとっては、レギュラーシーズンの残り試合とプレーオフの日程が関心事だ。試合は韓国時間では主に午前に行われる。", "a": "不運に注目する見方は、ポストに当たったシュートが入っていれば勝利だったと指摘する。日刊スポーツは、劇的なゴールをポストが阻んだと伝えた。", "b": "結果に注目する見方は、アウェーで先に得点しながらセットプレーで同点を許した守備を問題とみる。攻撃ポイントがなかった点も併せて指摘される。", "say": "確認されたのは、1-1の引き分けとソン・フンミンのフルタイム出場、ポストを叩いたシュートだ。シュートの時点が規定時間終了間際か追加時間かは、媒体ごとに表現が異なった。次の試合でソン・フンミンの攻撃ポイントが出るかを見ていく。", "src": "朝鮮日報(終盤のシュートがポスト、10/18) · ニューシス(LAFC 1-1引き分け、10/18) · 日刊スポーツ(フリーキック獲得、10/18)"},
+    "i3":{"kick": "政治 · ✓ 報道5件", "title": "キム・ミンソク共に民主党代表、淳昌醤類祭りの公演中のステージあいさつ論争に謝罪", "what": "キム・ミンソク共に民主党代表は15日、全北の淳昌醤類祭り開幕式の祝賀公演中、歌手ヒン(HYNN)のステージに上がってあいさつした(ソウル新聞、ノーカットニュース)。キム代表が降りたあと、公演が再び続いた。キム代表は18日、Xに謝罪文を投稿した。公演中なのであいさつしないつもりだったが、司会者に突然呼ばれてあいさつすることになったと説明した。淳昌醤類祭り組織委員会は、主催側の手違いだったと謝罪した(慶北道民日報)。国民の力のチェ・スジン院内首席報道官は「横暴な乱入」と批判した(KBC)。", "why": "地域の祭りに政治家が来賓として出席してあいさつする慣行は古いが、公演の途中でステージに上がった場面が映像で広まり、儀典をめぐる論争に発展した。司会者の呼び込みという釈明と、主催側の謝罪が同時に出た。", "me": "地域の祭りに行く観客なら、公演中の来賓のあいさつで流れが途切れる経験をするかもしれない。祭りの主催側が来賓紹介の順序をどう変えるかが、実際の変化の基準だ。", "a": "国民の力は、与党代表が公演を中断させた過剰な儀典だとみる。歌手と観客の権利を無視したという批判だ。", "b": "キム代表と主催側は、司会者の突然の呼び込みによる手違いだと説明する。キム代表が自らステージに上がろうとしたわけではないという立場だ。", "say": "確認されたのは、15日のステージでのあいさつと18日の謝罪、主催側の謝罪だ。公演がどれだけ中断したかは確認されていない。歌手側が立場を出すかを見ていく。", "src": "ニュースピム(公演中のステージ登場・国民の力の批判、10/17) · 天地日報(淳昌醤類祭りの混乱論争、10/17) · ノーカットニュース・ソウル新聞(キム代表の謝罪、10/18)"},
+    "i4":{"kick": "経済 · ✓ 報道4件", "title": "チェ・ジヨンIMF理事「先進国のうち財政余力が増えた国は韓国だけ」", "what": "チェ・ジヨン国際通貨基金(IMF)理事は15日(現地時間)、バンコクの年次総会の記者懇談会で、他の国は財政余力が減っているのに韓国だけが増えたと語った(亜洲経済、SBS、デイリアン)。理由には、半導体好況による税収増を挙げた。IMFは世界経済見通しで、今年の韓国の成長率見通しを3.3%と示した。7月の見通しの2.6%より0.7ポイント高い。IMFは今年の韓国の一般政府債務比率を47.3%と見通した。チェ理事は、AIブームがすぐには止まらないと語った。", "why": "財政余力とは、景気が悪化したときに、政府が借金を大きく増やさずに使える資金の余裕だ。半導体の税収が増えたおかげで債務比率の見通しは下がったが、その分、半導体景気に頼る度合いも大きくなった。", "me": "税収が増えれば、来年度予算の余裕につながり得る。ただしIMFは、増えた税収の一部が債務返済と基金の積み立てに使われるとみた。", "a": "チェ理事は、韓国の財政余力の増加をIMF内部でもうらやむ肯定的な差別化と評価した。成長潜在力を高める投資をすべきだという点にIMFのスタッフも共感していると伝えた。", "b": "チェ理事自身が、IMFの韓国成長率見通しは政府投資の効果を十分に反映しておらず保守的だと語った。半導体好況が終われば、税収の増加も共に弱まり得る。", "say": "確認されたのは、3.3%の成長率見通しと47.3%の債務比率見通し、チェ理事の発言だ。潜在成長率の数値は確認されていない。22日の韓国銀行金融通貨委員会の決定を見ていく。", "src": "聯合ニュース(チェ・ジヨン理事「韓国だけ財政余力が増えた」、10/16) · SBS(同じ発言、10/16) · 亜洲経済(成長率見通し3.3%、10/16)"},
+    "i5":{"kick": "社会 · ✓ 報道5件", "title": "キム・ジヨン初代重大犯罪捜査庁長、指名37日で任命され業務開始", "what": "李在明大統領は15日、キム・ジヨン初代重大犯罪捜査庁長の任命案を裁可した(ニュースピム、京郷新聞)。国会行政安全委員会が同日、人事聴聞報告書を採択した直後だった。指名から任命まで37日かかった。キム庁長は16日に初出勤し、就任式なしで業務報告を受け、組織の早期定着のための専従チームの構成を指示した(韓国日報)。重大犯罪捜査庁は今月2日に発足した。正式な就任式は来週中に開かれる予定と伝えられた。", "why": "重大犯罪捜査庁は、検察から切り離された重大犯罪の捜査機能を担う新機関だ。開庁から2週間で長が決まったが、事務スペースと電算システム、人員はまだそろっていない。", "me": "重大犯罪の捜査をどの機関が担うかによって、告訴・告発事件の処理ルートが変わり得る。重大犯罪捜査庁がいつから本格的な捜査に入るかが、実際の変化の時点だ。", "a": "大統領は、敵味方の区別なく迅速かつ公平無私に捜査してほしいと求めた。聴聞報告書が与野党の合意で採択されたことを根拠に、任命に問題はないという見方だ。", "b": "一部の与党関係者は、いわゆる親尹検事疑惑を挙げて反対してきた。聴聞報告書には、検事在職時代の論争についての釈明が不十分だという不適格意見も併せて載った。", "say": "確認されたのは、15日の任命と16日の初出勤、最初の指示だ。最初の捜査対象と就任式の日付は確認されていない。内部監察結果の発表を見ていく。", "src": "ニュース1(1号指示「早期定着」、10/18) · 聯合ニュース(今週の注目人物 初代重大犯罪捜査庁長、10/16) · 韓国日報・京郷新聞(初出勤、10/16)"}
+  };
+  const G = {
+    "消防司令補":{"f": "消防", "d": "消防公務員の階級の一つ", "w": "殉職したキム・ジンソク消防司令補"},
+    "京畿道庁葬":{"f": "行政", "d": "京畿道が主管する葬儀の形式", "w": "19日の告別式"},
+    "玉条勤政勲章":{"f": "行政", "d": "公務員の功績に贈る勤政勲章の一つ", "w": "故人に追贈"},
+    "1階級特進":{"f": "行政", "d": "功績や殉職によって階級を一つ上げること", "w": "故人に決定"},
+    "国政監査":{"f": "国会", "d": "国会が毎年、政府と自治体の業務を点検する手続き", "w": "13日の京畿道への国政監査での発言"},
+    "行政安全委員会":{"f": "国会", "d": "行政・自治体・警察・消防を担当する国会の常任委員会", "w": "秋知事の発言の舞台"},
+    "院内代表":{"f": "政党", "d": "政党の国会議員団を代表する役職", "w": "チョン・ジョムシク院内代表"},
+    "国務会議":{"f": "政府", "d": "大統領と国務委員が政策を審議する最高会議", "w": "公開範囲をめぐる論争"},
+    "国務委員":{"f": "政府", "d": "国務会議の構成員である長官など", "w": "公開縮小の建議"},
+    "準プレーオフ":{"f": "野球", "d": "KBOポストシーズンの2番目の段階", "w": "KIAの2連勝"},
+    "5戦3勝制":{"f": "野球", "d": "5試合のうち先に3勝したチームが勝ち上がる方式", "w": "準プレーオフ"},
+    "奪三振":{"f": "野球", "d": "投手が奪った三振の数", "w": "オラーの8奪三振"},
+    "デンマークオープン":{"f": "バドミントン", "d": "世界バドミントン連盟ワールドツアーの上位グレードの大会", "w": "アン・セヨンの2連覇"},
+    "総合所得税":{"f": "税金", "d": "個人の1年間の所得を合算して課す税金", "w": "キム・ヨングォンの訴訟"},
+    "外国納付税額":{"f": "税金", "d": "海外で納めた税金で、国内の税金から一定の限度で差し引かれる", "w": "国ごとの控除"},
+    "加算税":{"f": "税金", "d": "申告・納付の義務を怠ったときに上乗せして課す税金", "w": "約8億3000万ウォンに含まれる"},
+    "非居住者":{"f": "税金", "d": "国内に生活の根拠がなく、国内の所得にだけ課税される人", "w": "キム・ヨングォンの主張"},
+    "アジアンツアー":{"f": "ゴルフ", "d": "アジア地域の男子プロゴルフツアー", "w": "イム・ソンジェの準優勝"},
+    "MLS":{"f": "サッカー", "d": "米国・カナダのプロサッカーリーグ", "w": "LAFCの引き分け"},
+    "重大犯罪捜査庁":{"f": "司法", "d": "検察から分離された、重大犯罪の捜査を担う機関", "w": "初代庁長の任命"},
+    "財政余力":{"f": "経済", "d": "政府が債務の負担なしにさらに使える財政の余裕", "w": "IMF理事の発言"},
+    "IMF":{"f": "国際機関", "d": "国際通貨基金", "w": "チェ・ジヨン理事"},
+    "起亜チャンピオンズフィールド":{"f": "野球", "d": "光州にあるKIAタイガースの本拠地球場", "w": "準PO第2戦の会場"},
+    "勝利投手":{"f": "野球", "d": "チームの勝利に決定的な役割を果たした投手に与えられる記録", "w": "オラー"},
+    "オーデンセ":{"f": "地名", "d": "デンマーク中部の都市、デンマークオープンの開催地", "w": "アン・セヨンの決勝"},
+    "大法院第3部":{"f": "司法", "d": "大法官4人で構成される大法院の小部の一つ", "w": "キム・ヨングォン事件の確定"},
+    "原審":{"f": "司法", "d": "上級審から見て、すぐ下の裁判所の判決", "w": "大法院が確定"},
+    "蔚山税務署":{"f": "税金", "d": "蔚山地域を管轄する国税庁の第一線の税務署", "w": "追加賦課"},
+    "住民登録":{"f": "行政", "d": "国内に居住している事実を行政機関に登録する制度", "w": "居住者判断の根拠"},
+    "帰属分":{"f": "税金", "d": "どの年の所得として計算されるかによる区分", "w": "2019~2021年"},
+    "アンダーパー":{"f": "ゴルフ", "d": "基準打数より少ない打数で回ること", "w": "17アンダーパー"},
+    "イーグル":{"f": "ゴルフ", "d": "1ホールで基準打数より2打少なく回ること", "w": "ワン・ウェイシュアンの18番ホール"},
+    "淳昌醤類祭り":{"f": "地域", "d": "全北の淳昌郡がコチュジャンなどの醤類をテーマに開く祭り", "w": "キム・ミンソク代表の論争"},
+    "攻撃的ミッドフィールダー":{"f": "サッカー", "d": "攻撃のつなぎと得点機会をつくる中央のミッドフィールダー", "w": "ソン・フンミンのポジション"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

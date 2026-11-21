@@ -1,0 +1,334 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>61,142.35</b>日経平均 · 11/13終値 · 前日比+0.53%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>TOPIX · 11/13終値のデータなし</div>
+    </div>
+    <div class="dateline"><span>No. 41 · 朝刊</span><b>2026年11月14日(土)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="shien">
+      <div class="kick">政治 · 消費減税<span>✓ 3媒体 · 支援金の対象の所得上限と支給期間は未確認</span></div>
+      <h2 class="hl">消費減税法案が参院で実質審議入り 首相、支援金の対象を勤労者の5割以上で検討</h2>
+      <p class="deck">参議院の特別委員会で13日、食料品の消費税減税法案の審議が始まった。首相は、減税に合わせて設ける支援金の対象を、これまでの3割から広げる考えを示した。</p>
+      <div class="body">
+        <p>参議院の特別委員会で13日、今国会で最大の焦点になっている食料品の消費税減税関連法案の審議が始まった。高市首相は、減税にあわせて導入する、所得に応じた支援金について、これまで勤労者の3割としていた対象を、5割以上に広げる方向で検討していると述べた。子ども2人の世帯では最大6万円になるとの説明も出た。支援金とは、税率を下げても恩恵が小さい人を現金で支える仕組みで、対象を決める所得の上限が上がれば、受け取れる人が増える。10人の勤労者のうち、受け取れる人が3人から5人以上に増える計算だ。ただ、支給の期間や所得の上限額は、この日の答弁では確認できていない。</p>
+        <p>審議では、首相が公明党の主張について「重く受け止める」との答弁を重ねた。一方、公明党の中野政調会長は同じ日の記者会見で、首相は疑問に答えるべきだ、2年後に増税になるような仕組みでは国民は納得しないと述べた。法案の中身をめぐる疑問は残っている。減税の期間が終わったあと税率がどうなるのか、減税と支援金に必要な財源をどう確保するのかは、与野党の論点であり続けている。国会の会期は12月12日までで、法案が会期内に成立するかは、参議院での審議の進み方と各党の対応で決まる。前日までの与党内の議論から、舞台は参議院の委員会に移った。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="tama">
+      <div class="kick">経済 · 保険<span>✓ 3媒体 · 不正請求の実態とタマホームの説明は未確認</span></div>
+      <h3 class="hl">大手損保2社、タマホーム経由の火災保険の新規販売を停止へ 保険金の不正請求の疑い</h3>
+      <div class="one">
+        <p>住宅メーカーのタマホームで、火災保険の保険金を不正に請求していた疑いが出ている問題で、大手損害保険2社が、タマホームを通じた火災保険の新規の販売をやめる方針を決めた。もう1社も取りやめる方向で、3社になる可能性がある。ただし、3社目の最終的な判断は確認できていない。新規の販売が止まるだけで、すでに結ばれた契約への影響は伝えられていない。 タマホームは、住宅の建築のほかに保険代理店の事業も手がけ、損保各社から委託を受けて火災保険を売ってきた。疑いとして指摘されているのは、顧客と組んで不正に得た保険金を、保険の更新時の保険料にあてる、顧客に実質的な負担が出ないよう修理費を水増しして請求する、といった手口だ。いずれも疑いの段階で、不正請求があったと認定されたわけではない。損保会社が販売を止める判断をしたことで、調べが続くあいだの被害の拡大を防ぐ狙いがある。タマホームの説明と、不正請求の範囲は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="bouei"><b>防衛費5年間の総額、60兆円前後で調整とも50兆円台の提示とも 数字が食い違う</b><em>調整は60兆円前後、財務省の提示は50兆円台と、関係者の話が分かれる。防衛省は70兆円台を求めているとされ、決まった額はない。</em><span>防衛 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kouhaku"><b>紅白歌合戦の出場歌手が発表され41組が決定 初出場は＝LOVEやモナキなど7組</b><em>13日に紅組と白組あわせて41組の出場が発表された。初出場は＝LOVEやモナキなど7組で、特別企画も予定されている。</em><span>文化 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="rakuten"><b>楽天グループの1～9月期、売上高は過去最高でも最終赤字 この時期として8年連続</b><em>金融と旅行の事業が好調で、売上高は過去最高になった。携帯電話事業の赤字が続き、最終赤字はこの時期として8年連続だ。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kikin"><b>政府の秋のレビューで、使われない基金の資金を国庫へ返すよう求める意見が相次ぐ</b><em>各省庁が事業ごとに設けた基金の余剰資金をめぐり、返納を求める意見が出た。中司行革相は年末に向けて見直しを進める考えだ。</em><span>財政 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="teisuu"><b>衆院の定数削減、比例31議席を減らす法案を与党が来週の審議入りに提案</b><em>自民党・日本維新の会・国民民主党の3党が出した法案で、比例代表を31議席減らす。与党側が衆院の特別委の理事会で提案した。</em><span>政治 · ✓ 2媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="nitori">
+      <div class="kick">社会 · サイバー<span>✓ 2媒体 · 実際に持ち出された件数と原因は未確認</span></div>
+      <h3 class="hl">ニトリHD、最大3700万件余りの個人情報が流出したおそれ 会長が決算会見で陳謝</h3>
+      <div class="body">
+        <p>家具・日用品大手のニトリホールディングスは、第三者による不正アクセスで、会員などの個人情報が最大3700万件余り(3762万件)流出したおそれがあると発表している。13日の決算会見で、似鳥昭雄会長は、多大な心配と迷惑をかけたとして陳謝した。ニトリによると、不正アクセスは6日に確認され、すぐに接続を遮断して、外部の専門機関と調べている。3762万件は上限の数字で、実際に持ち出された件数は確認されていない。</p>
+        <p>対象になりうるのは、会員の情報、商品を買った人の情報、法人会員の情報、通販モール経由の注文の情報だ。ニトリは、ログインのパスワードとクレジットカードの情報は、流出したおそれのある情報に含まれないと説明している。調べが進むなかで、10月中旬から下旬にもアクセスがあった可能性が出ている。対象になる人には順次連絡が届く予定で、ニトリや配送業者を名乗る不審な連絡には注意するよう呼びかけられている。原因と、不正アクセスの範囲は、調査の結果を待つ段階だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="ebina">
+      <div class="kick">社会 · 事件<span>✓ 3媒体 · 運転していた人の特定と事故の詳しい状況は未確認</span></div>
+      <h3 class="hl">神奈川・海老名で歩行中の女性2人がトラックにはねられ死亡 逃走した車は相模原で見つかる</h3>
+      <div class="body">
+        <p>13日午後、神奈川県海老名市の交差点で、歩行中の高齢の女性2人がトラックにはねられ、死亡した。トラックは現場から逃げた。警察はひき逃げ事件として調べており、逃走したとみられるトラックを相模原市内で見つけ、関係者から話を聴いている。ひき逃げとは、人身事故を起こしたのに、けが人を助けたり警察へ知らせたりする義務を果たさず、その場を離れる行為をいう。現場には事故の通報があり、通報の時点では、トラックと歩行者の交通事故として伝えられていた。亡くなった2人の年齢や名前、事故の詳しい状況、運転していた人の特定は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="hirakata">
+      <div class="kick">社会 · 子ども<span>✓ 3媒体 · 死亡に至った経緯と、市の対応の検証は未確認</span></div>
+      <h3 class="hl">大阪・枚方市で3歳の長女を暴行して殺害した疑い 父親を殺人容疑で、母親も逮捕</h3>
+      <div class="body">
+        <p>大阪府枚方市で、3歳の長女に暴行を加えて殺害した疑いで、父親が殺人容疑で逮捕された。母親も、暴行を知りながら放置して死亡させた疑いで逮捕された。病院から、全身にあざがあるという通報があり、体にはあざが数十カ所あったという。警察が経緯を調べている。</p>
+        <p>枚方市は、この家庭について虐待の通告を受けており、あざを確認していたことを会見で明らかにした。市の担当者は、重傷ではなく、保護はしなかった、安全と判断したと説明し、通告は3団体から5回程度あったとした。市の対応が適切だったのかは、まだ検証されていない。子どもを守る仕組みがどこで働かなかったのかは、今後の検証を待つ必要がある。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>虐待の通告<i>福祉</i></b><p>子どもが虐待を受けているおそれがある場合に、近所の人や学校、病院などが児童相談所や市町村へ知らせること。通告を受けた側は、子どもの安全を確かめ、必要なら保護する。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>消費減税の支援金は、勤労者の5割以上に配ることが決まった</b> <span>高市首相は、対象を5割以上とする方向で検討していると述べた段階で、決定ではない。所得の上限額と支給の期間も、確認できていない。</span></div>
+        <div><b>ニトリの3700万件の個人情報は、すべて流出した</b> <span>ニトリは、最大3762万件が流出したおそれがあると発表したが、これは上限の数字で、実際に持ち出された件数は確認されていない。ログインのパスワードとカード情報は含まれないとニトリは説明している。</span></div>
+        <div><b>損保3社がタマホーム経由の火災保険の販売停止を決めた</b> <span>新規の販売をやめる方針を決めたのは2社で、もう1社は取りやめる方向だが、最終判断は確認できていない。すでに結ばれた契約への影響も確認できていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 土 11月14日</b><span>海老名市のひき逃げで、運転していた人が特定されるかを見る。ニトリの調査で、実際に持ち出された件数が出るか、タマホームが不正請求の疑いにどう説明するかも確かめる。</span><b>来週</b><span>与党が提案した定数削減法案の審議入りが、理事会で決まるかを見る。中国で開かれるAPEC首脳会議にあわせた、日ロの首脳対話について、木原官房長官は国益を総合的に勘案して適切に対応するとしている。</span><b>あとで</b><span>国会の会期は12月12日まで。消費減税法案が会期内に成立するかと、基金の見直しがまとまる年末までの動きを見る。</span><b>読者へ</b><span>ニトリや配送業者を名乗る連絡のリンクは開かず、公式のアプリやサイトから確認する。子どもの様子が気になるときは、児童相談所の全国共通ダイヤル189へ。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "shien":{"kick": "政治 · 消費減税 · ✓ 3媒体 · 支援金の対象の所得上限と支給期間は未確認", "title": "消費減税法案が参院で実質審議入り 首相、支援金の対象を勤労者の5割以上で検討", "what": "参議院の特別委員会で13日、食料品の消費税減税関連法案の審議が始まった。高市首相は、減税にあわせて導入する所得に応じた支援金について、対象を勤労者の5割以上とする方向で検討していると述べた。これまでは勤労者の3割としていた。子ども2人の世帯では最大6万円になるとの説明も出た。首相は公明党の主張について「重く受け止める」との答弁を重ねた。公明党の中野政調会長は同じ日、首相は疑問に答えるべきで、2年後に増税になるような仕組みでは国民は納得しないと述べた。国会の会期は12月12日までである。", "why": "減税は税率を下げる政策だが、支援金は現金を配る政策で、誰が受け取れるかで家計への効き方が変わる。対象が3割から5割以上に広がれば、減税の恩恵が小さい人への支えが厚くなる一方、必要な財源も増える。参議院で与党が過半数を持たない場合は、野党や公明党の賛否が成立の鍵になるため、首相の答弁は協力を得るための材料でもある。", "me": "勤労者であれば、自分の所得が支援金の対象に入るかが、今後の決定しだいで変わる。所得の上限額と支給の期間は確認できていないので、決まるまでは家計の見通しに入れすぎないほうがよい。", "a": "首相側は、支援金の対象を広げることで、減税の恩恵が届きにくい中低所得の人を支えられると説明している。公明党の主張も受け止めるとし、成立に向けて協力を求める姿勢だ。", "b": "公明党の中野政調会長は、2年後に増税になるような仕組みは国民が納得しないとし、首相に疑問への説明を求めた。減税の期間が終わったあとの税率と財源に、疑問の目が向いている。", "say": "確認できたのは、参院で審議が始まったことと、首相が対象を5割以上で検討すると述べたことだ。確認できていないのは、所得の上限額、支給の期間、財源の総額である。検討が決定に変わる時点と、会期末の12月12日までに成立するかを見たい。", "src": "NHK(消費税減税法案、参院特別委で審議開始、11/13) · 時事通信(支援金、勤労者5割対象、11/13) · 朝日新聞(公明の主張を重く受け止め、11/13)"},
+    "tama":{"kick": "経済 · 保険 · ✓ 3媒体 · 不正請求の実態とタマホームの説明は未確認", "title": "大手損保2社、タマホーム経由の火災保険の新規販売を停止へ 保険金の不正請求の疑い", "what": "住宅メーカーのタマホームで、火災保険の保険金を不正に請求していた疑いが出ている。大手損害保険2社は、タマホームを通じた火災保険の新規の販売をやめる方針を決めた。もう1社も取りやめる方向である。タマホームは保険代理店の事業も手がけ、損保各社から委託を受けて火災保険を売ってきた。疑いとして指摘されているのは、顧客と組んで不正に得た保険金を更新時の保険料にあてることや、修理費を水増しして請求することである。いずれも疑いの段階で、不正請求の範囲は確認できていない。", "why": "火災保険は、住宅を建てた人が住宅ローンと一緒に入ることが多く、販売の窓口が止まると新築の契約の流れに影響する。不正請求は、保険金を払う側の損保が被害を受けるだけでなく、保険料が上がる形で他の加入者にも影響しうる。損保が代理店との関係を見直すのは、疑いの段階でも取引を続けることがリスクになるためだ。", "me": "タマホームで住宅を建てる予定の人は、火災保険を別の窓口で選ぶ必要が出る可能性がある。すでに契約している人は、契約している損保と代理店に、手続きに影響があるかを確かめておくとよい。", "a": "損保側は、疑いが出た以上、新規の販売を止めて被害の拡大を防ぐ判断をした。調べの結果が出るまで、取引を続けないことが優先されている。", "b": "タマホームの側から見れば、販売の窓口を失うことは事業への影響が大きく、不正が認められる前の対応にあたる。同社の説明と、不正請求の範囲は確認できていない。", "say": "確認できたのは、2社が新規の販売をやめる方針を決め、もう1社も同じ方向であることだ。確認できていないのは、不正請求の実態、3社目の最終判断、既存の契約への影響である。タマホームが出す説明と、損保各社の追加発表を見たい。", "src": "NHK(大手損保2社、タマホーム経由の販売停止へ、11/13) · 朝日新聞(タマホームの火災保険販売を停止へ、11/13) · Yahoo!ニュース(損保3社、タマホーム保険販売停止へ、11/13)"},
+    "nitori":{"kick": "社会 · サイバー · ✓ 2媒体 · 実際に持ち出された件数と原因は未確認", "title": "ニトリHD、最大3700万件余りの個人情報が流出したおそれ 会長が決算会見で陳謝", "what": "ニトリホールディングスは、第三者による不正アクセスで、会員などの個人情報が最大3700万件余り(3762万件)流出したおそれがあると発表した。不正アクセスは6日に確認され、接続はすぐに遮断された。対象になりうるのは、会員の情報、商品を買った人の情報、法人会員の情報、通販モール経由の注文の情報である。ログインのパスワードとクレジットカードの情報は、流出したおそれのある情報に含まれないとニトリは説明している。調査では、10月中旬から下旬にもアクセスがあった可能性が出ている。13日の決算会見で、似鳥昭雄会長は多大な心配と迷惑をかけたとして陳謝した。", "why": "3762万件は上限の数字で、実際に持ち出された件数ではない。氏名や住所などは、パスワードが無事でも、不審な連絡や詐欺に使われうる。短い期間に大手企業の流出が続いており、利用者が自分で身を守る場面が増えている。", "me": "ニトリの会員や購入者は、ニトリや配送業者を名乗る不審な連絡のリンクを開かず、公式のアプリやサイトから確認する。ニトリから連絡が届く場合は、順次になるとされている。", "a": "ニトリは、パスワードとカード情報は含まれないとし、接続を遮断して専門機関と調べていると説明している。対象者への連絡も順次行う方針だ。", "b": "利用者の側から見れば、10月中旬から下旬にもアクセスがあった可能性が出てきた点が気がかりで、確認から発表までの経緯や、再発防止の説明を求める見方がある。原因は確認できていない。", "say": "確認できたのは、最大3762万件の流出のおそれと、パスワードとカード情報が含まれないとニトリが説明していることだ。確認できていないのは、実際に持ち出された件数、原因、不正アクセスの範囲である。ニトリの調査結果と、対象者への連絡の方法を見たい。", "src": "NHK(ニトリ会長、個人情報流出のおそれで陳謝、11/13) · ニトリ公式サイト(個人情報流出のおそれのお知らせ、11/9)"},
+    "ebina":{"kick": "社会 · 事件 · ✓ 3媒体 · 運転していた人の特定と事故の詳しい状況は未確認", "title": "神奈川・海老名で歩行中の女性2人がトラックにはねられ死亡 逃走した車は相模原で見つかる", "what": "13日午後、神奈川県海老名市の交差点で、歩行中の高齢の女性2人がトラックにはねられ、死亡した。トラックは現場から逃げた。警察はひき逃げ事件として調べている。逃走したとみられるトラックは、相模原市内で見つかった。警察は、関係者から話を聴いている。事故の通報の時点では、トラックと歩行者の交通事故として伝えられていた。亡くなった2人の年齢や名前、運転していた人の特定は、確認できていない。", "why": "ひき逃げは、人を助ける義務を果たさずに現場を離れる行為で、被害者の救護が遅れ、命に関わる。車が逃走後に見つかるまでの時間が短いほど、運転者の特定は進みやすい。事件では、車の発見と運転者の確認が、捜査の最初の分かれ目になる。", "me": "事故やひき逃げを見かけたら、110番と119番に通報し、車のナンバーや色、逃げた方向を覚えておくと捜査の助けになる。ドライブレコーダーを持つ人は、記録が残っていないか確かめておくとよい。", "a": "警察は、逃走したトラックを見つけ、関係者から話を聴くところまで進んだ。運転者の特定に向けた調べが本格化する段階だ。", "b": "遺族や地域の側からは、なぜ現場で救護されなかったのかを知りたいという思いが残る。交差点の安全対策も、今後の論点になりうる。いずれも確認できていない。", "say": "確認できたのは、女性2人が死亡し、トラックが相模原市内で見つかったことだ。確認できていないのは、運転していた人の特定、2人の身元、事故の詳しい状況である。警察の発表を見たい。", "src": "NHK(2人死亡ひき逃げ、トラックを相模原で発見、11/13) · 朝日新聞(歩行者2人ひかれて死亡、トラック逃走、11/13) · 毎日新聞(歩行中の高齢女性2人が死亡、11/13)"},
+    "hirakata":{"kick": "社会 · 子ども · ✓ 3媒体 · 死亡に至った経緯と、市の対応の検証は未確認", "title": "大阪・枚方市で3歳の長女を暴行して殺害した疑い 父親を殺人容疑で、母親も逮捕", "what": "大阪府枚方市で、3歳の長女に暴行を加えて殺害した疑いで、父親が殺人容疑で逮捕された。母親も、暴行を知りながら放置して死亡させた疑いで逮捕された。病院から、全身にあざがあるという通報があった。体にはあざが数十カ所あったとされる。枚方市は会見で、この家庭について虐待の通告を受け、あざを確認していたと明らかにした。市の担当者は、重傷ではなく、保護はしなかった、安全と判断したと説明し、通告は3団体から5回程度あったとした。警察は経緯を調べている。", "why": "虐待の通告は、子どもを守る仕組みの入口だが、通告を受けた側がどの程度の危険と見るかで、保護に進むかどうかが分かれる。通告が複数の団体から複数回あったことは、周囲が異変に気づいていたことを示す。気づいた情報がつながって保護に至ったかが、検証の焦点になる。", "me": "子どもの様子が気になるときは、全国共通のダイヤル189(児童相談所)に連絡できる。通告は間違いでも責任を問われないので、迷ったときも知らせてよい。", "a": "市の側は、あざを確認したが重傷ではなく、安全と判断して保護しなかったと説明した。当時の判断の理由と基準が、今後の説明の中心になる。", "b": "子どもを守る立場からは、複数回の通告とあざの確認があったのに保護に至らなかった点を、検証すべきだという見方がある。市の判断が適切だったかは、まだ検証されていない。", "say": "確認できたのは、父親と母親が逮捕されたことと、市が通告を受けてあざを確認していたことだ。確認できていないのは、死亡に至った経緯と、市の対応が適切だったかである。警察の調べと、市の検証の結果を見たい。", "src": "朝日新聞(3歳娘虐待か、殺人容疑で父親逮捕、11/13) · 毎日新聞(3歳長女殺害、容疑の父親、11/13) · 産経ニュース(3歳娘に暴行死、殺人容疑で父親を逮捕、11/13)"},
+    "bouei":{"kick": "防衛 · ✓ 2媒体", "title": "防衛費5年間の総額、60兆円前後で調整とも50兆円台の提示とも 数字が食い違う", "what": "防衛費の5年間の総額をめぐり、数字が食い違っている。調整されている額は60兆円前後とされ、防衛省は70兆円台を要求している。一方、財務省が50兆円台を提示したと、関係者の話として伝えられている。防衛省は、調達を減らす方針を企業に伝えたとされる。首相は、防衛費をめぐる大幅な増税には慎重な考えを示した。決まった額は発表されていない。", "why": "防衛費の総額は、装備の調達の計画や企業の受注、将来の財源のあり方を決める土台になる。60兆円と50兆円では10兆円の差があり、増税や国債でどう賄うかの議論も変わる。数字が出どころによって違うため、最終決定までは幅を持って見る必要がある。", "me": "防衛費の増額は、増税や他の予算の削減という形で、将来の税負担に関わりうる。決まった額と財源の説明が出るまで、特定の数字を前提にしないほうがよい。", "a": "防衛省は、必要な装備を確保するため、70兆円台の予算を求めている。", "b": "財務省は、50兆円台を示し、予算の規模を抑える立場だ。首相も、大幅な増税には慎重な考えを示している。", "say": "確認できたのは、数字が60兆円前後、50兆円台、70兆円台と、出どころによって食い違っていることだ。確認できていないのは、最終的な総額と財源である。決定の時期と、財源の説明を見たい。", "src": "朝日新聞(5年間の防衛費、60兆円前後で調整、11/13) · ロイター(防衛費5年で50兆円台、財務省が提示、11/13)"},
+    "kouhaku":{"kick": "文化 · ✓ 3媒体", "title": "紅白歌合戦の出場歌手が発表され41組が決定 初出場は＝LOVEやモナキなど7組", "what": "紅白歌合戦の、ことしの出場歌手が13日に発表された。紅組と白組あわせて41組の出場が決まった。ことしの初出場は、＝LOVEやモナキなど合わせて7組である。特別企画では、稲葉浩志さんの出演が発表された。渡辺美里さんは21年ぶり2回目の出場となる。M!LKの曽野舜太さんは、出場会見でヒット曲にちなんで喜びを語った。放送は大みそかである。", "why": "紅白の出場者は、その年の音楽の流れを映す一覧として毎年注目される。初出場の歌手には、デビュー後の短い期間で選ばれた例もあり、勢いが数字に表れる場になっている。発表の日は、出場できなかった歌手のコメントも話題になる。", "me": "大みそかの番組を見る人は、初出場の7組や特別企画の出演者を事前に調べておくと、当日の楽しみが増える。出場の順番や曲目は、確認できていない。", "a": "出場する歌手の側は、全国の視聴者に届く機会として喜びを語っている。", "b": "出場できなかった歌手からは、ブログで残念だという趣旨のコメントも出た。選考の基準が毎年の関心事になる。", "say": "確認できたのは、41組の出場と初出場7組である。確認できていないのは、出場の順番と曲目、司会者などの詳細だ。大みそかまでの追加発表を見たい。", "src": "NHK(紅白歌合戦、ことしの出場歌手発表、11/13) · 毎日新聞(M!LK曽野舜太さん、紅白出場会見で喜び、11/13) · 読売新聞(モナキなど7組が初出場、11/13)"},
+    "rakuten":{"kick": "経済 · ✓ 1媒体", "title": "楽天グループの1～9月期、売上高は過去最高でも最終赤字 この時期として8年連続", "what": "楽天グループは、ことし1月から9月までの9か月間の決算を発表した。金融や旅行の事業が好調で、売上高は過去最高になった。一方、携帯電話事業の赤字が続いていることなどから、最終損益は赤字になった。この時期の最終赤字は8年連続である。売上高と赤字の金額は、確認できていない。", "why": "売上高が過去最高でも赤字が続く背景には、携帯電話事業の通信網への投資と、利用者の獲得にかかる費用がある。金融や旅行が稼いだ利益が、携帯の赤字に吸収される構図だ。赤字が続く間は、借り入れの返済や資金の調達が経営の課題になりやすい。", "me": "楽天のサービスを使う人にとって、決算はポイントや料金の条件が変わる要因になりうる。変更の発表が出た場合は、条件を確認するとよい。", "a": "好調な金融や旅行の事業を見れば、売上の拡大は続いていて、本業の広がりは評価できるという見方がある。", "b": "携帯電話事業の赤字が8年続くことに注目すれば、黒字化の見通しが示されない限り、経営への不安は残るという見方がある。", "say": "確認できたのは、売上高が過去最高で、最終赤字がこの時期として8年連続であることだ。確認できていないのは、金額と、携帯事業の黒字化の時期である。次の決算での携帯事業の赤字の幅を見たい。", "src": "NHK(楽天の第3四半期決算、11/13)"},
+    "kikin":{"kick": "財政 · ✓ 1媒体", "title": "政府の秋のレビューで、使われない基金の資金を国庫へ返すよう求める意見が相次ぐ", "what": "政府が国の事業を検証する秋のレビューで、各省庁が事業ごとに設けている基金について議論があった。使われないままになっている資金を国庫に返納するよう求める意見が相次いだ。中司行政改革担当大臣は、年末に向けて見直しを進める考えを示した。基金とは、複数の年度にわたる事業のために、国があらかじめ積み立てておく資金である。見直しの対象や、返納を求める額は、確認できていない。", "why": "基金は、年度ごとの予算の枠を超えて使える利点があるが、使われないまま残ると、国の財政に使える資金が眠ることになる。返納が決まれば、他の予算にまわせる額が増える。省庁にとっては、事業の裁量が小さくなる。", "me": "基金の見直しは、補助金や給付を受ける事業の継続に影響しうる。補助金を受ける事業者は、所管の省庁の発表を確認しておくとよい。", "a": "見直しを求める側は、使われない資金は国庫に戻して、必要な予算にまわすべきだと考えている。", "b": "省庁の側は、事業の継続や急な需要への備えに基金が必要だと考えるのが一般的だ。今回の議論での各省庁の反応は、確認できていない。", "say": "確認できたのは、返納を求める意見が相次ぎ、中司大臣が年末に向けて見直す考えを示したことだ。確認できていないのは、対象となる基金と返納の額である。年末までの見直しの結果を見たい。", "src": "NHK(基金の余剰資金の返納を求める意見相次ぐ、11/13)"},
+    "teisuu":{"kick": "政治 · ✓ 2媒体", "title": "衆院の定数削減、比例31議席を減らす法案を与党が来週の審議入りに提案", "what": "衆議院議員の定数削減をめぐり、与党側は、衆議院の政治改革に関する特別委員会の理事会で、法案を来週審議入りしたいと提案した。法案は、自民党、日本維新の会、国民民主党の3党が提出したもので、比例代表を31議席減らす内容である。与党は、政治資金に関する3法案の採決が見送られた同じ日に、審議入りを求めた。提案が受け入れられたかは、確認できていない。", "why": "定数の削減は、議席の配分を変え、どの党が議席を失うかに直結するため、党の利害が強く出る。比例代表は、小さな政党が議席を得やすい仕組みであり、削減の影響を受けやすい。審議入りの日程は、会期末の12月12日までの法案成立を左右する。", "me": "定数が変わると、比例代表での投票が議席に結びつく度合いが変わる。選挙の仕組みに関わる法案なので、審議の内容を確認しておくとよい。", "a": "提出した3党は、議員の定数を減らすことで、政治の改革を進める姿勢を示している。", "b": "政治資金に関する3法案は同じ日に採決が見送られた。野党側の反応は確認できていない。審議の順序や条件が、今後の論点になりうる。", "say": "確認できたのは、与党が来週の審議入りを提案したことと、比例31議席を減らす内容であることだ。確認できていないのは、審議入りの日程が決まったかと、各党の対応である。来週の理事会の結論を見たい。", "src": "NHK(比例代表31議席削減法案、与党が来週の審議入りを提案、11/13) · 毎日新聞(政治資金3法案、採決見送り、11/13)"}
+  };
+  const G = {
+    "特別委員会":{"f": "国会", "d": "法案を専門に審議する、委員会の一つ。本会議の前に詳しく調べる。", "w": "参議院の特別委員会で13日、消費減税法案の審議が始まった。"},
+    "審議入り":{"f": "国会", "d": "法案の審議を始めること。委員会などで、提出された法案が最初に議論される段階。", "w": "定数削減法案について、与党は来週の審議入りを提案した。"},
+    "支援金":{"f": "社会保障", "d": "減税とあわせて、所得に応じて国が現金で支える仕組み。税率を下げても恩恵が小さい人を支える。", "w": "首相は、支援金の対象を勤労者の5割以上で検討すると述べた。"},
+    "会期":{"f": "国会", "d": "国会が開かれている期間。会期が終わるまでに成立しなかった法案は、原則として成立しない。", "w": "国会の会期は12月12日までである。"},
+    "不正請求":{"f": "法律", "d": "事実と違う内容で、保険金や給付金などを請求すること。", "w": "タマホームで、保険金の不正請求の疑いが出ている。疑いの段階で、認定はされていない。"},
+    "保険金":{"f": "金融", "d": "事故や災害などで損害が出たときに、保険会社が契約者に払うお金。", "w": "火災保険の保険金を不正に請求した疑いが出ている。"},
+    "不正アクセス":{"f": "情報", "d": "許可を得ずに、他人のコンピューターや会員システムに侵入すること。", "w": "ニトリは、不正アクセスで個人情報が流出したおそれがあると発表した。"},
+    "ひき逃げ":{"f": "法律", "d": "人身事故を起こしたのに、けが人を助けたり警察に知らせたりする義務を果たさず、その場を離れること。", "w": "海老名市の事故は、ひき逃げ事件として調べられている。"},
+    "虐待の通告":{"f": "福祉", "d": "子どもが虐待を受けているおそれがあるとき、児童相談所や市町村に知らせること。", "w": "枚方市は、虐待の通告を受け、あざを確認していたと説明した。"},
+    "防衛費":{"f": "防衛", "d": "国が防衛のために使うお金。装備の調達や隊員の給与などを含む。", "w": "防衛費の5年間の総額の数字が食い違っている。"},
+    "最終赤字":{"f": "経済", "d": "本業の損益に、税金や特別な損益を加えた最後の損益が、赤字になっていること。", "w": "楽天グループの最終赤字は、この時期として8年連続となった。"},
+    "基金":{"f": "財政", "d": "複数の年度にわたる事業のために、国があらかじめ積み立てておく資金。", "w": "政府の秋のレビューで、使われない基金の返納を求める意見が相次いだ。"},
+    "秋のレビュー":{"f": "財政", "d": "政府が、国の事業の無駄がないかを公開の場で点検する取り組み。", "w": "秋のレビューで、基金の見直しが議論された。"},
+    "国庫":{"f": "財政", "d": "国のお金を管理する会計の仕組み。ここでは、国の財布を指す。", "w": "余った資金を国庫に返すことが議論されている。"},
+    "定数削減":{"f": "国会", "d": "衆議院や参議院の議席の数を減らすこと。", "w": "与党は、定数削減の法案の審議入りを提案した。"},
+    "比例代表":{"f": "選挙", "d": "政党が得た票の割合に応じて、議席を配分する選挙の仕組み。", "w": "比例代表を31議席減らす法案が出されている。"},
+    "殺人容疑":{"f": "法律", "d": "人を殺した疑いのこと。逮捕の時点では、有罪が決まったわけではない。", "w": "父親が殺人容疑で逮捕されたが、事件の経緯は調べられている段階だ。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

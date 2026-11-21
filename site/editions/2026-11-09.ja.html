@@ -1,0 +1,339 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+    <div class="ears">
+      <div class="ear"><b>5,059.69</b>KOSPI · 11/06(金) 終値 · 前日比-6.02%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>24,579.4</b>ナスダック · 11/06(金、米国) 終値 · 前日比+1.09%</div>
+    </div>
+    <div class="dateline"><span>第36号 · 朝刊</span><b>2026年11月9日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="p1">
+      <div class="kick">スポーツ · プロ野球<span>報道照合 ✓ 4社 · シリーズMVPの得票の詳細は未確認</span></div>
+      <h2 class="hl">サムスン、ktを12-1で破り12年ぶり韓国シリーズ優勝…ク・ジャウクがMVP、通算9回目の頂点</h2>
+      <p class="deck">サムスン・ライオンズが8日、大邱でkt wizを12-1で下し、4勝1敗で12年ぶり、通算9回目の優勝を決めた。</p>
+      <div class="body">
+        <p>サムスン・ライオンズが8日、大邱サムスン・ライオンズ・パークで行われた韓国シリーズ第5戦でkt wizを12-1で破り、シリーズ成績4勝1敗で頂点に立った。2014年以来12年ぶり、通算9回目の優勝だ。サムスンは第1戦を7-8で落としたが、第2戦から第5戦まで4試合を連勝した。相手のktはレギュラーシーズンを90勝で終えたチームで、サムスンの優勝は戦力で上回るチームを破った番狂わせ、いわゆる『アップセット』と呼ばれる。シリーズの最優秀選手(MVP)は主将のク・ジャウクが受けた。脚に不安を抱えながらも5試合すべてで安打を放ち、打率0.500(20打数10安打)、本塁打1本、6打点を記録した。入団後初めて手にする優勝リングだ。大邱サムスン・ライオンズ・パークでの初優勝でもある。</p>
+        <p>最後のボールはクリス・ペデクが投げ、捕手カン・ミンホのミットに収まった。カン・ミンホはプロ22年を待った末に、初めて優勝リングをはめる。パク・ジンマン監督は、選手として6度優勝したあと、監督としては初めて頂点に立った。敗れたktのイ・ガンチョル監督は『第2戦で勝てなかったのが敗因』と語った。サムスンは前日の第4戦で1回だけで6点を奪って10-5で勝ち、3勝1敗とリードし、この日の第5戦でシリーズを終わらせた。韓国シリーズは先に4勝したチームが優勝する7戦4勝制のため、第6・7戦は行われない。優勝が決まると、大邱市内はファンの熱狂に沸いた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="p2">
+      <div class="kick">政治 · 特検<span>報道照合 ✓ 3社 · 特検の候補と実際の執行額は未確認</span></div>
+      <h3 class="hl">捏造起訴特検に380億ウォン超の費用推計…公訴取り消し条項は消えたが迂回の論争、チャン・ドンヒョク『脱獄法』</h3>
+      <div class="one">
+        <p>国会予算政策処が推計した捏造起訴特検の任命・職務の費用は、380億5600万ウォンだ。この特検法は6日の本会議で、出席議員168人のうち賛成167人、反対1人で可決された。国民の力は採決に加わらず、フィリバスター(無制限討論)で対抗したが、約24時間で強制的に終了した。捜査対象は、イ・ジェミョン大統領の事件を含め、ユン・ソンニョル政権の検察による捏造捜査・起訴の疑惑6件だ。候補は共に民主党、国民の力、祖国革新党がそれぞれ推薦して大統領が任命し、任命は早ければ22日ごろになる見通しだ。この費用推計は5月に作成されたもので、最終的な法案とは人員の想定が違う。当時は特検補6人、特別捜査官150人、派遣検事30人を前提としたが、最終的な法案は特検補8人、特別捜査官70人、派遣検事20人だ。大統領が求めた公訴取り消し権限の条項は、法制司法委員会の修正の過程で削除された。ただ、国会の専門委員の検討報告書は、刑事訴訟法を準用すれば特検が公訴を取り消せるという解釈が可能だと指摘した。国民の力のチャン・ドンヒョク代表は7日『特検法は大統領の脱獄法』として弾劾にまで言及し、ナ・ギョンウォン議員は8日、フェイスブックに『イ・ジェミョンの裁判を再開し、大統領選挙をやり直すべきだ』と書いた。共に民主党は、真相究明が先だという立場だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="q1"><b>イ大統領『支持しても崇拝はするな』…SNSで政治家への宗教的な賛美を戒める</b><em>イ・ジェミョン大統領が7日夜から8日未明にかけてSNSに投稿し、政治家への称賛と支持は必要でも、宗教的な賛美と崇拝はいけないと述べた。生きた理性と市民の参加で民主主義を守るべきだとも書いた。</em><span>政治 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="q2"><b>チョ・ヒョン外交長官、パリのG7外相会合に出席…ルビオ米国務長官との会談の有無に注目</b><em>チョ・ヒョン長官は8日に出国し、11日までパリで開かれるG7外相会合に招待国の資格で出席する。ルビオ長官も出席するが、個別の二国間会談が開かれるかは確定していない。</em><span>外交 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q3"><b>トランプ、中間選挙の結果を『歴史の大きな後退』と呼び『より強く戻る』</b><em>トランプ大統領は8日、Truth Socialに、米国が先の選挙の結果で歴史上の巨大な後退をしたと書いた。株式市場が1日で3兆ドルを失ったという主張もしたが、この数字と選挙の関係は確認されていない。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q4"><b>ポーランド検察、クラクフ銃撃をテロ容疑で捜査…死者6人・負傷者16人に増え、家族の遺体も発見</b><em>極右思想の影響を受けた事件とみて、検察はテロ容疑で捜査し、6件の殺人容疑での起訴を準備している。重体の銃撃犯の自宅からは家族3人の遺体が見つかり、ポーランドは2日間の国家服喪期間を宣言した。</em><span>国際 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="q5"><b>月曜9日、南部・済州で雨…日中の気温11~15度で初冬の寒さ、麟蹄山地の大雪注意報は解除</b><em>気象庁は、月曜日の9日に南部地方と済州で雨が降り、日中の気温は11~15度にとどまると予報した。江原の麟蹄山地の大雪注意報は、8日午後11時に解除された。</em><span>暮らし · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="p3">
+      <div class="kick">国際 · 中東<span>報道照合 ✓ 2社 · 直接の命中の有無と死者63人の集計は未確認</span></div>
+      <h3 class="hl">イエメンのフーシ派、サウジの首都リヤドの金融地区を攻撃…アラムコのタワーが破損、サウジ『軽微な被害・死傷者なし』</h3>
+      <div class="body">
+        <p>イエメンの反政府勢力フーシ派の飛翔体が、サウジアラビアの首都リヤドのキング・アブドゥラ金融地区(KAFD)を攻撃し、地区内にある国営石油会社アラムコの建物が破損した。金融機関や企業の本社が集まるビジネス地区だ。攻撃の時点は7日と8日で、報道によって異なる。サウジのエネルギー省は、破片で建物が軽微な被害を受け、負傷者も死者もいないと明らかにした。サウジが率いるアラブ連合軍は、フーシ派がリヤドを狙って撃ったミサイルを上空で迎撃したと発表した。建物の被害が直接の命中によるものか、迎撃された飛翔体の破片によるものかは、まだ確認されていない。</p>
+        <p>フーシ派は最近、サウジの空港・港・石油施設を狙ったミサイル・ドローンの攻撃を増やしてきた。7日には、フーシ派がサウジの空爆でイエメンの首都サヌア近郊で27人が死亡したと主張したが、サウジは見解を示さなかった。イエメン内戦で2日間に63人が死亡したという集計も出たが、独立して確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="p4">
+      <div class="kick">社会 · 情報セキュリティー<span>報道照合 ✓ 3社 · 流出した人数と範囲は未確認</span></div>
+      <h3 class="hl">SMエンタ・系列会社の役職員の個人情報が流出…住民登録番号・口座番号を含む、4日ごろ外部ハッキング</h3>
+      <div class="body">
+        <p>SMエンターテインメントと系列会社の役職員の個人情報が、外部のハッキングで流出した。SMはおわびの文書で、4日ごろ外部の攻撃者が許可されていない方法で業務システムに入り、保管されていた文書ファイルを持ち出した事実を、内部のセキュリティー点検で確認したと明らかにした。流出した情報には、名前、携帯電話番号、住所、口座番号、住民登録番号、所属、契約書に書かれた情報が含まれ、対象者ごとに項目が異なる。ファンプラットフォーム『バブル』を運営するディアユとドリームメーカー・エンターテインメントも、同じ時期に攻撃を受けた。</p>
+        <p>SMは、攻撃に使われた接続IPと経路を遮断し、許可されていないアクセスキーを変更したうえで、関係当局や外部の専門機関とともに調査している。流出した情報が悪用された二次被害は確認されていないとした。対象の役職員には個別の通知を続けており、ボイスフィッシングとスミッシング(文字メッセージで偽のインターネットアドレスを送って情報を盗む詐欺)に備え、会社や関係者をかたる連絡に注意するよう呼びかけた。被害者は個人情報保護法に基づいて損害賠償を請求したり、個人情報紛争調停委員会に調停を申請したりできる。正確な被害人数と流出範囲は公開されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="p5">
+      <div class="kick">国際 · ウクライナ<span>報道照合 ✓ 3社 · 会談の議題の詳細と結果は未確認</span></div>
+      <h3 class="hl">米国・ロシア・ウクライナの終戦協議、10~11日にアブダビで再開…フランス外相『欧州も参加』</h3>
+      <div class="body">
+        <p>米国が仲介するロシア・ウクライナの終戦協議が、10日と11日にアラブ首長国連邦のアブダビで再び開かれる。スティーブ・ウィトコフ米特使が2日に発表した会談で、ウィトコフ特使とジャレッド・クシュナーが米国の代表として出る予定だ。議題は、終戦後の安全保障、緊張緩和、人道的措置だ。今年1月以降、米国が仲介した3者の公式協議としては4回目で、直前の協議は2月、米国・イスラエルがイランと戦争をする前だった。</p>
+        <p>ジャン=ノエル・バロ仏外相は8日、欧州もアブダビの協議に参加すると明らかにした。一方、ウォロディミル・ゼレンスキー・ウクライナ大統領は8日、テレグラムで、ドニプロペトロウシク州のドニプロ、パブログラード、カミャンスケなどがこの日に空爆を受け、停電のピーク時には60万件を超える契約者が電気を使えず、復旧が進んでいると明らかにした。今回の協議で停戦や合意が出るかは、まだ何も決まっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>10~11日</b><span>アブダビでの米国・ロシア・ウクライナ協議</span></div>
+        <div><b>4回目</b><span>1月以降の米国仲介の3者公式協議</span></div>
+        <div><b>60万+</b><span>8日、停電のピーク時に電気が止まった契約者(ゼレンスキー)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>公訴取り消し条項が消えたのだから、特検はイ・ジェミョン大統領の裁判の公訴を取り消せない。</b> <span>最終的な法案で、公訴取り消し権限の条項は削除された。ただ、国会法制司法委員会の専門委員の検討報告書は、刑事訴訟法の準用で公訴取り消しが可能だという解釈を指摘しており、最終的な解釈は確定していない。</span></div>
+        <div><b>フーシ派の攻撃でリヤドのアラムコのタワーが大きく崩れ、死傷者が出た。</b> <span>サウジのエネルギー省は、建物が軽微な被害を受け、負傷者も死者もいないと明らかにした。直接の命中か迎撃の破片かは確認されていない。</span></div>
+        <div><b>中間選挙のせいで、米国の株式市場から1日で3兆ドルが消えた。</b> <span>3兆ドルという数字はトランプ大統領の主張で、選挙との因果関係は独立して確認されていない。5日に米国の3大指数は昨年4月以降で最大の1日の下げ幅を示したあと、6日に反発した。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 月 11月9日</b><span>KOSPIが6日に6.02%下落してから初めて開く月曜日の取引だ。チョ・ヒョン長官は11日までパリのG7外相会合に出席し、ルビオ長官と会うかが注目される。南部と済州は雨が降り、日中の気温は11~15度だ。</span><b>今週</b><span>10~11日にアブダビで米国・ロシア・ウクライナの協議が開かれ、フランスなど欧州も参加する。クラクフ銃撃事件は、検察の起訴準備が続く。</span><b>その後</b><span>捏造起訴特検の任命は、早ければ22日ごろの見通しだ。SMエンタは、被害を受けた役職員への個別通知を順次進めている。</span><b>読者へ</b><span>SMエンタや系列会社と契約したことがあるなら、会社の個別通知を確認し、会社をかたる文字メッセージや電話のリンクは押さないようにしよう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "p1":{"kick": "スポーツ · プロ野球 · ✓ 4社 · シリーズMVPの得票の詳細は未確認", "title": "サムスン、ktを12-1で破り12年ぶり韓国シリーズ優勝…ク・ジャウクがMVP、通算9回目の頂点", "what": "サムスン・ライオンズは8日、大邱サムスン・ライオンズ・パークで行われた韓国シリーズ第5戦で、kt wizを12-1で破った。シリーズ成績はサムスンの4勝1敗だ。サムスンは第1戦を7-8で落とし、第2戦から第5戦まで4連勝した。優勝は2014年以来12年ぶりで、通算9回目だ。シリーズMVPは主将のク・ジャウクで、5試合すべてで安打を放ち、打率0.500(20打数10安打)、本塁打1本、6打点を記録した。最後のボールはクリス・ペデクが投げ、カン・ミンホが受けた。パク・ジンマン監督は、選手として6度優勝したあと、監督としては初めて頂点に立った。ktのイ・ガンチョル監督は、第2戦で勝てなかったのが敗因だと語った。", "why": "韓国シリーズは、先に4勝したチームが優勝する7戦4勝制の短期決戦だ。レギュラーシーズンで90勝をあげたktが第1戦に勝ちながらシリーズを落としたことは、短期決戦ではシーズンの成績よりも一、二試合の流れと先発の運用が結果を大きく分けることを示す。サムスンは大邱で行われた第3~5戦をすべて勝ち、本拠地で優勝を決めた。", "me": "野球ファンなら、優勝記念グッズや球団イベントの案内を、球団の公式チャンネルで確認しよう。優勝の直後は、限定商品を売るとうたう偽の投稿が増えうるので、公式の販売先を使うのがよい。", "a": "サムスンが第4戦の1回の6得点のように序盤で勢いをつかみ、脚に不安を抱えながら毎試合で安打を放ったク・ジャウクのような主力が踏ん張ったから、番狂わせが可能だったとみる見方がある。", "b": "イ・ガンチョル監督が第2戦で勝てなかったことを敗因に挙げたように、シリーズが一試合の行方で分かれ、ktがレギュラーシーズンの戦力を短期決戦で生かせなかったとみる見方がある。", "say": "確認されたのは、第5戦の12-1という結果、シリーズ4勝1敗、12年ぶり9回目の優勝、MVPがク・ジャウクという点だ。確認されていないのは、優勝後の球団の公式行事の日程と、ktのオフシーズンの計画だ。きょうは、サムスンが優勝行事の日程をどう発表するかを見るべきだ。", "src": "聯合ニュース(サムスン、12年ぶりに頂点奪還・総合、11/8) · 東亜日報(サムスン、KTを破り通算9回目の優勝・速報、11/8) · 韓国経済(王朝の復活、9回目の優勝、11/8) · 朝鮮日報(90勝のKTを破りアップセット優勝、11/8)"},
+    "p2":{"kick": "政治 · 特検 · ✓ 3社 · 特検の候補と実際の執行額は未確認", "title": "捏造起訴特検に380億ウォン超の費用推計…公訴取り消し条項は消えたが迂回の論争、チャン・ドンヒョク『脱獄法』", "what": "国会予算政策処は、捏造起訴特検の任命と職務の遂行に必要な財政を、総額380億5600万ウォンと推計した。この推計は5月に作成され、当時想定した人員は特検補6人、特別捜査官150人、派遣検事30人だった。6日に通過した最終的な法案は、特検補8人、特別捜査官70人、派遣検事20人と定めた。本会議の採決は出席議員168人のうち賛成167人、反対1人で、国民の力は採決を欠席した。大統領が求めた公訴取り消しの権限は、法制司法委員会で削除された。国民の力のチャン・ドンヒョク代表は7日、この法を『大統領の脱獄法』と呼び、投入人員が300人、費用が380億ウォンを超えると主張した。特検の任命は、早ければ22日ごろになる見通しだ。", "why": "特検は捜査の範囲と権限が法の条文で決まるため、公訴取り消しの条項の有無が、大統領に関わる裁判の行方に直結する。推計費用は人員の規模によって変わるので、最終的な法案で人員が減った分、実際の執行額は380億ウォンと異なりうる。", "me": "税金が使われる事業なので、最終的な予算がいくらで確定するかは、国民みんなに関わる。特検の任命と捜査開始の日程が確定すれば、国会の議案情報システムと政府の告知で直接確認できる。", "a": "野党側は、条項が消えても刑事訴訟法の準用で公訴取り消しの道が開かれており、大統領が任命する特検が大統領の事件を扱う点で、公正性が落ちるとみる。", "b": "与党側は、公訴取り消しの条項を削除して懸念を反映したと考え、ユン・ソンニョル政権の検察による捏造捜査・起訴の疑惑を明らかにすることが先だとみる。", "say": "確認されたのは、6日の本会議での通過、公訴取り消し条項の削除、380億5600万ウォンという5月の推計だ。確認されていないのは、実際の特検の候補と最終的な執行予算、刑事訴訟法の準用による公訴取り消しの可否だ。きょうは、特検の候補推薦と任命の日程が公開されるかを見るべきだ。", "src": "聯合ニュース(捏造起訴特検に380億超の投入と論争の条項、11/8) · 京郷新聞(チャン・ドンヒョク、特検法は大統領の脱獄法、11/8) · ヘラルド経済(ナ・ギョンウォン、裁判再開と大統領選挙のやり直しを主張、11/8)"},
+    "p3":{"kick": "国際 · 中東 · ✓ 2社 · 直接の命中の有無と死者63人の集計は未確認", "title": "イエメンのフーシ派、サウジの首都リヤドの金融地区を攻撃…アラムコのタワーが破損、サウジ『軽微な被害・死傷者なし』", "what": "イエメンの反政府勢力フーシ派の飛翔体が、サウジアラビアの首都リヤドのキング・アブドゥラ金融地区(KAFD)を攻撃した。地区内のアラムコの建物が破損した。攻撃の時点は7日と8日で、報道によって異なる。サウジのエネルギー省は、破片で建物が軽微な被害を受け、負傷者も死者もいないと明らかにした。サウジが率いるアラブ連合軍は、リヤドを狙ったミサイルを上空で迎撃したと発表した。破損が直接の命中によるものか迎撃の破片によるものかは、確認されていない。フーシ派は7日、サウジの空爆でサヌア近郊で27人が死亡したと主張し、サウジは見解を示さなかった。", "why": "フーシ派は紅海沿岸のイエメンの武装勢力で、サウジが支援する政府軍と内戦中だ。港と空港に続いて、首都のビジネス地区や国営石油会社の建物まで攻撃の対象が広がれば、サウジのエネルギー施設の安全と国際原油価格への不安が高まる。", "me": "中東の知らせは、ガソリン価格と為替につながりうる。サウジへの出張や旅行の計画があるなら、外交部の海外安全旅行の告知を確認しよう。", "a": "サウジ側の説明どおり、迎撃がほぼ成功して被害は軽微で、サウジの防空能力が機能したとみる見方がある。", "b": "首都中心のビジネス地区とアラムコの建物まで攻撃の範囲に入ったことから、フーシ派の攻撃能力が大きくなり、戦線拡大の懸念が高まったとみる見方がある。", "say": "確認されたのは、リヤドの金融地区への攻撃、アラムコの建物の破損、サウジのエネルギー省の『軽微な被害・死傷者なし』という説明だ。確認されていないのは、直接の命中の有無と、2日間で63人が死亡したという集計だ。きょうは、サウジの公式な対応と原油価格の反応を見るべきだ。", "src": "聯合ニュース(サウジの金融地区に攻撃、アラムコタワー破損・総合、11/8) · 京郷新聞(イエメン内戦、サウジの首都のアラムコの建物が攻撃を受け、2日間で63人死亡、11/8)"},
+    "p4":{"kick": "社会 · 情報セキュリティー · ✓ 3社 · 流出した人数と範囲は未確認", "title": "SMエンタ・系列会社の役職員の個人情報が流出…住民登録番号・口座番号を含む、4日ごろ外部ハッキング", "what": "SMエンターテインメントは、外部の攻撃者が許可されていない方法で業務システムにアクセスし、保管されていた一部の文書ファイルを流出させた事実を、内部のセキュリティー点検で確認したと明らかにした。発生の時点は4日ごろと把握された。流出した項目には、名前、携帯電話番号、住所、口座番号、住民登録番号、所属、契約書の記載情報が含まれ、対象者ごとに異なる。ファンプラットフォーム『バブル』を運営するディアユとドリームメーカー・エンターテインメントも、同じ時期に攻撃を受けた。SMは、攻撃に使われたIPと経路を遮断し、アクセスキーを変更して、二次被害は確認されていないとした。", "why": "住民登録番号と口座番号がともに流出すると、なりすましや金融詐欺に使われうる。系列会社が同じ業務システムを使っていれば、一か所が破られたときに被害がともに広がりうる。", "me": "SMや系列会社と契約したことがあるなら、会社の個別通知を確認しよう。会社をかたる文字メッセージや電話のリンクは押さず、必要なら金融機関の本人確認の通知を申し込もう。", "a": "会社側は、流出の事実を自ら把握して知らせ、接続経路の遮断やアクセスキーの変更などの措置を終えたと説明する。", "b": "流出した人数と範囲が公開されておらず、契約書の情報まで出た点から、被害の規模がまだ明らかになっていないとみる見方がある。", "say": "確認されたのは、4日ごろのハッキング、役職員の個人情報と契約書の情報の流出、系列会社2社の同じ時期の被害、二次被害は未確認という会社の説明だ。確認されていないのは、正確な被害人数と範囲だ。きょうは、会社の追加の告知と、当局の調査の着手の有無を見るべきだ。", "src": "京郷新聞(SMエンタの個人情報流出、11/8) · KBSニュース(SMエンタ系列会社の役職員の個人情報流出、11/8) · エコノミスト(SMエンタの個人情報流出でおわび、11/8)"},
+    "p5":{"kick": "国際 · ウクライナ · ✓ 3社 · 会談の議題の詳細と結果は未確認", "title": "米国・ロシア・ウクライナの終戦協議、10~11日にアブダビで再開…フランス外相『欧州も参加』", "what": "米国が仲介するロシア・ウクライナの協議が、10日と11日にアブダビで開かれる。スティーブ・ウィトコフ米特使が2日に発表した。米国側からは、ウィトコフ特使とジャレッド・クシュナーが出る予定だ。議題としては、終戦後の安全保障、緊張緩和、人道的措置が挙げられた。今年1月以降、米国が仲介した3者の公式協議としては4回目だ。ジャン=ノエル・バロ仏外相は8日、欧州もアブダビの協議に参加すると明らかにした。ゼレンスキー・ウクライナ大統領は8日、テレグラムで、ドニプロペトロウシク州の停電がピーク時に60万契約者を超え、復旧が進んでいると明らかにした。", "why": "終戦後の安全保障は、戦争の再発を防ぐための仕組みで、欧州が協議に参加すれば、米国とロシアの二国中心だった議論が、安全保障の当事者である欧州まで広がる。協議の最中も空爆が続き、双方が交渉の場の外でどんな圧力を使うかが、結果に影響を与える。", "me": "ロシア・ウクライナ戦争の協議の進展は、エネルギーや穀物の価格と為替に影響を与えうる。結果は、合意の有無よりも、停戦の範囲と実施の時期が具体的に発表されるかを見ればよい。", "a": "米国と欧州がともに席に着けば、安全保障の議論が現実的な枠組みを備えうるとみる見方がある。", "b": "協議の直前まで空爆が続いており、今回の協議は実務レベルなので、すぐに停戦の合意が出るのは難しいとみる見方がある。", "say": "確認されたのは、10~11日のアブダビでの開催、米国の代表団の構成、フランス外相の欧州参加の発言、ゼレンスキーの停電の説明だ。確認されていないのは、ロシアの代表団の構成と合意の可能性だ。きょうは、代表団の到着と会談の形式の発表を見るべきだ。", "src": "聯合ニュース(フランス外相、アブダビの終戦協議に欧州も参加、11/8) · ブルームバーグ(ウクライナの和平推進、アブダビで再開、11/8) · ゼレンスキー大統領のテレグラム(ドニプロの停電の復旧、11/8)"},
+    "q1":{"kick": "政治 · ✓ 報道4件", "title": "イ大統領『支持しても崇拝はするな』…SNSで政治家への宗教的な賛美を戒める", "what": "イ・ジェミョン大統領は、7日夜から8日未明にかけてSNSに投稿した。政治家について、称賛と批判は必要だが、宗教的な賛美と崇拝はいけないという内容だ。大統領は『支持しても崇拝はするな』という趣旨で書いた。また、生きた理性で民主主義を守るべきで、市民の参加が民主主義を守ると書いた。大統領は6日にも、自分の側の主張だけが正しいとみる態度を盲信だと批判した。投稿の時点は、報道によって7日夜と8日未明に分かれている。", "why": "政治家の支持者集団の過熱が、政党内部の対立と重なると、政治的なメッセージとして読まれる。大統領が自ら、ファンダム政治から距離を置けば、支持層の行動の仕方が変わりうる。", "me": "政治のニュースを見るときは、支持する政治家の発言も事実確認を経て読む習慣をつけられる。ファンダムに関するオンラインの論争では、出所が不明な投稿を共有する前に確認しよう。", "a": "ファンダムと距離を置き、批判的な支持を強調したもので、盲目的な追従が民主主義を損なうという一般的な原則を示したとみる見方がある。", "b": "与党内の対立が激しくなった時期に出たメッセージなので、特定の派閥や党内の状況を狙ったものと読めるとみる見方がある。", "say": "確認されたのは、大統領がSNSに崇拝を戒める投稿をした事実と、その内容だ。確認されていないのは、特定の対象を念頭に置いたものかどうかだ。きょうは、与野党がこのメッセージをどう解釈するかを見るべきだ。", "src": "聯合ニュース(イ大統領、政治家の称賛・批判は必要だが崇拝はいけない・総合、11/7) · 京郷新聞(支持しても崇拝するな、11/8) · 東亜日報(称賛しても賛美するな、支持しても崇拝するな、11/8) · 朝鮮日報(政治家への宗教的な賛美・崇拝はいけない、11/8)"},
+    "q2":{"kick": "外交 · ✓ 報道3件", "title": "チョ・ヒョン外交長官、パリのG7外相会合に出席…ルビオ米国務長官との会談の有無に注目", "what": "チョ・ヒョン外交部長官は8日、フランスのパリへ出国し、11日までG7外相会合に出席する。韓国は招待国の資格だ。外交部によると、チョ長官は主要国の長官らと個別の二国間会談も持つ計画だ。マルコ・ルビオ米国務長官も出席する予定で、米国の中間選挙後で初の韓米外相の対面が実現するか注目される。開催地は、主催国フランスがデモの余波でマルセイユからパリに変え、二国間会談が開かれるかは確定していない。会談が開かれれば、清海部隊の作戦区域の拡大と原子力潜水艦の燃料供給が議題になる見通しだ。", "why": "G7に招待国として出席すれば、韓国が主要な先進国と安全保障・経済の懸案を直接調整する機会が生まれる。中間選挙で米議会の構図が変わり、韓米の安全保障協議の日程と議題が影響を受けうる。", "me": "清海部隊の活動領域の拡大には国会の同意が必要で、原子力潜水艦の燃料の協議は、韓米の安全保障協力の方向を示す。結果は外交部の発表で確認できる。", "a": "個別の二国間会談が開かれなくても、略式の会合だけで、中間選挙後の韓米の高官級の対話の糸口を開けるとみる見方がある。", "b": "開催地の変更で日程が流動的で、正式な会談が確定していないため、実質的な成果を期待するのは早いとみる見方がある。", "say": "確認されたのは、チョ長官の8日の出国と11日までの日程、ルビオ長官の出席予定だ。確認されていないのは、二国間会談の実現の可否と議題だ。きょうは、パリ到着後に外交部が会う日程を発表するかを見るべきだ。", "src": "聯合ニュース(チョ・ヒョン、米選挙後のG7でルビオと初の対面、11/8) · ファイナンシャルニュース(米中間選挙後で初のG7外相会合、チョ・ヒョンがパリへ出国、11/8) · ニュース1(チョ・ヒョン、G7出席でフランスへ、11/8)"},
+    "q3":{"kick": "国際 · ✓ 報道3件", "title": "トランプ、中間選挙の結果を『歴史の大きな後退』と呼び『より強く戻る』", "what": "ドナルド・トランプ米大統領は8日、ソーシャルメディアのTruth Socialに投稿した。『米国は先の選挙の結果で、歴史上の巨大な後退をした』という内容だ。株式市場も1日で3兆ドルの損失を被ったと主張し、『われわれはより大きく、より強く戻ってくる』と書いた。この選挙は3日に行われた中間選挙で、民主党が圧勝した。ニューヨーク株式市場は、5日に3大指数が昨年4月以降で最大の1日の下げ幅を記録し、6日に反発した。3兆ドルという数字と選挙の関連性は、独立して確認されていない。", "why": "中間選挙の結果は、大統領の法案処理や人事、対外政策の推進の速度を左右する。大統領が株価の下落を選挙結果と結びつけると、市場の変動が政治の争点として読まれるきっかけになる。", "me": "米国の株式市場と為替は、韓国の株式市場とウォンにも影響を与える。6日にKOSPIが6.02%下がったあと、米国株の反発が続くかが、きょうの取引の変数だ。", "a": "選挙に負けても政策の基調を変えず、支持層を結集しようとするメッセージだとみる見方がある。", "b": "株価の下落を選挙のせいにするには、ハイテク株の売りなど別の要因があり、根拠が足りないとみる見方がある。", "say": "確認されたのは、トランプ大統領がこうした投稿をした事実と、5日の下落・6日の反発だ。確認されていないのは、3兆ドルの損失の原因だ。きょうは、月曜日のアジア株式市場が米国株の反発に続くかを見るべきだ。", "src": "聯合ニュース(トランプ、中間選挙の後退を恐れるな、11/8) · トランプのTruth Social投稿の原文(giant step back in History、11/8) · ABCニュース(Trump says US took giant step back through midterms、11/8)"},
+    "q4":{"kick": "国際 · ✓ 報道4件", "title": "ポーランド検察、クラクフ銃撃をテロ容疑で捜査…死者6人・負傷者16人に増え、家族の遺体も発見", "what": "ポーランド検察は7日、クラクフの市場広場で起きた銃撃事件を、テロ容疑で捜査すると8日に明らかにした。死者は6人、負傷者は16人と集計された。検察は6件の殺人容疑での起訴を準備している。銃撃犯は警察に撃たれて重体だ。犯人の自宅からは、家族3人の遺体が見つかった。当局は、事件は極右思想の影響を受けたものだと説明した。ポーランドは2日間の国家服喪期間を宣言した。負傷者のなかには、英国・ポルトガル・ロシア・ドイツ・オーストリアの国籍の人が含まれる。", "why": "テロ容疑に捜査が切り替わると、動機、背後関係、共犯の有無を広く調べ、極右思想との関係を明らかにする法的な根拠が生まれる。銃規制が厳しい国で起きた事件なので、銃器管理の制度の議論に広がる可能性がある。", "me": "ポーランドへの旅行を計画していたなら、外交部の海外安全旅行の告知を確認しよう。海外の事件は、死者・負傷者の集計が変わるため、当局の発表を待つのがよい。", "a": "テロ捜査に切り替えて、動機と思想的な背景、家族の事件との関連まで明らかにすることが、再発の防止に重要だとみる見方がある。", "b": "国籍別の被害者や銃撃犯の犯行動機、射撃クラブでの活動歴などがまだ不明確で、性急に思想的な事件と断定するより、捜査の結果を待つべきだとみる見方がある。", "say": "確認されたのは、テロ容疑の捜査、6人死亡・16人負傷、銃撃犯の重体、家族の遺体の発見だ。確認されていないのは、正確な動機と家族の死亡の前後関係だ。きょうは、検察の起訴内容と、銃撃犯の容体の発表を見るべきだ。", "src": "聯合ニュース(22人死傷のポーランド銃乱射、テロ容疑で捜査・総合、11/8) · 東亜日報(ポーランドの銃撃犯の自宅からも家族の遺体3体を発見、11/8) · ガーディアン(Kraków shooting latest updates、11/7) · BBC(What we know about Krakow mass shooting so far、11/8)"},
+    "q5":{"kick": "暮らし · ✓ 報道2件", "title": "月曜9日、南部・済州で雨…日中の気温11~15度で初冬の寒さ、麟蹄山地の大雪注意報は解除", "what": "気象庁は、月曜日の9日に南部地方と済州で雨が降り、日中の気温が11~15度にとどまると予報した。中部地方は8日夜まで雨または雪が降った。江原の麟蹄山地には大雪注意報が出されたが、8日午後11時に解除された。8日夜、仁川の首都圏第1環状高速道路の松内IC付近では、乗用車8台が追突して5人がけがをした。月曜日に日中の気温が11~15度にとどまるのは、初冬並みの肌寒い天気だ。", "why": "雨が降ったあとに気温が下がる区間では、道路が濡れたり凍ったりして、事故の危険が大きくなる。日中の気温が11~15度と低い初冬の天気が続けば、暖房の需要が増える。", "me": "月曜日の出勤では傘と厚手の上着を持ち、雨の道路では車間距離を広げよう。南部と済州への旅行の計画があるなら、最新の予報と航空・旅客船の運航情報を確認しよう。", "a": "日中の気温が11~15度と初冬の寒さが続き、厚手の服と暖房の準備が必要だとみる見方がある。", "b": "中部の雨・雪は8日夜までで、麟蹄山地の大雪注意報も解除され、雪の被害の懸念は減ったとみる見方がある。", "say": "確認されたのは、9日の南部・済州の雨の予報、日中の気温11~15度、麟蹄山地の大雪注意報の解除だ。確認されていないのは、降水量と地域ごとの積雪だ。きょうは、気象庁の更新予報と出勤時間帯の道路状況を見るべきだ。", "src": "聯合ニュース(中部は夜まで雨・雪、月曜日は南部・済州で雨、11/8) · 聯合ニュース(江原の麟蹄山地の大雪注意報を解除、11/8)"}
+  };
+  const G = {
+    "特検法":{"f": "法・制度", "d": "特別検察官が特定の事件を捜査するよう定める法。", "w": "捏造起訴特検法が6日の本会議を通過した。"},
+    "公訴取り消し":{"f": "法・制度", "d": "検事がすでに裁判にかけた事件で、起訴を取り下げること。", "w": "最終的な法案では、特検の公訴取り消し権限の条項が消えた。"},
+    "費用推計":{"f": "財政", "d": "法案が施行されると政府のお金がいくらかかるかを、あらかじめ計算すること。", "w": "予算政策処が特検の費用を380億5600万ウォンと推計した。"},
+    "フィリバスター":{"f": "政治・制度", "d": "少数政党が長い発言で法案の処理を遅らせる無制限討論。", "w": "国民の力が対抗したが、約24時間で強制的に終了した。"},
+    "出席議員":{"f": "政治・制度", "d": "本会議の採決で、実際にその場にいる国会議員の数。", "w": "出席議員168人のうち、賛成が167人だった。"},
+    "準用":{"f": "法・制度", "d": "ある法の規定を、性質が似た別の場合に合わせて持ってきて適用すること。", "w": "刑事訴訟法を準用すれば公訴取り消しが可能だという解釈が出た。"},
+    "検討報告書":{"f": "政治・制度", "d": "国会の専門委員が法案の争点と問題を整理して、議員に出す報告書。", "w": "専門委員の検討報告書が、公訴取り消しの迂回の可能性を指摘した。"},
+    "弾劾":{"f": "法・制度", "d": "高位の公職者を国会が罷免するよう求める手続き。", "w": "チャン・ドンヒョク代表が弾劾にまで言及した。"},
+    "迎撃":{"f": "軍事・安保", "d": "飛んでくるミサイルやドローンを空中で撃ち落とすこと。", "w": "連合軍が、リヤドへ向かったミサイルを迎撃したと発表した。"},
+    "反政府勢力":{"f": "軍事・安保", "d": "政府に対抗して武装して戦う勢力。", "w": "フーシ派はイエメンの反政府勢力だ。"},
+    "二次被害":{"f": "セキュリティー", "d": "流出した情報があとで詐欺やなりすましに使われて生じる追加の被害。", "w": "SMは二次被害は確認されていないとした。"},
+    "スミッシング":{"f": "セキュリティー", "d": "文字メッセージで偽のインターネットアドレスを送り、個人情報を盗む詐欺。", "w": "SMはスミッシングに注意するよう呼びかけた。"},
+    "個人情報保護法":{"f": "法・制度", "d": "個人情報を集めて使う方法と、侵害したときの責任を定めた法。", "w": "被害者はこの法に基づいて損害賠償を請求できる。"},
+    "紛争調停":{"f": "法・制度", "d": "裁判の前に、委員会が当事者間の争いを合意で解決できるよう助ける手続き。", "w": "個人情報紛争調停委員会に調停を申請できる。"},
+    "安全保障":{"f": "国際・外交", "d": "戦争が終わったあと、再び攻撃されないよう国々が約束する仕組み。", "w": "アブダビ協議の議題として挙げられた。"},
+    "G7":{"f": "国際・外交", "d": "米国・日本・ドイツなど主要先進7か国の集まり。", "w": "チョ・ヒョン長官がパリのG7外相会合に出席する。"},
+    "招待国":{"f": "国際・外交", "d": "加盟国ではないが、会合に招かれて出席する国。", "w": "韓国はG7外相会合に招待国の資格で出席する。"},
+    "極右":{"f": "政治", "d": "民族・国家を前面に出して、他の集団を排斥する極端な政治的傾向。", "w": "クラクフ銃撃事件に極右思想が影響したと当局が明らかにした。"},
+    "中間選挙":{"f": "政治・制度", "d": "米国の大統領の任期の途中に、議会の議員の一部を新たに選ぶ選挙。", "w": "3日の中間選挙で民主党が圧勝した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

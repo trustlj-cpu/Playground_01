@@ -1,0 +1,449 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>69,030.92円</b>日経平均 · 10/9 大引け · 前日比 −0.02%（12日はスポーツの日で休場、再開は13日）</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>158.25円</b>ドル円 · 10/9 夜 · 前日比 +0.45円、円安方向</div>
+    </div>
+    <div class="dateline"><span>第 8 号 · 朝刊</span><b>2026年10月12日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="riyadh">
+      <div class="kick">国際·中東<span>報道照合 ✓ 6社 · 死傷者数はサウジ民間航空当局の発表、実行者は未確定</span></div>
+      <h2 class="hl">リヤド国際空港への攻撃で12人死亡、300人超が負傷。フーシ派の関与が疑われ、トランプ氏は反撃への参加を「検討」</h2>
+      <p class="deck">死者に米国人が含まれると伝えられ、米国は強く反応した。週明けの原油市場と、日本の燃料価格への波及が焦点になる。</p>
+      <div class="body">
+        <p>サウジアラビアの民間航空当局は10日、首都リヤドのキング・ハリド国際空港が攻撃を受け、12人が死亡、309人が負傷したと発表した（AP通信、ロイター）。毎日新聞は、死者に米国人が含まれると伝えた。AP通信と朝日新聞は、イランが支援するイエメンの武装組織フーシ派による攻撃の疑いがあるとし、フーシ派はサウジの空港への警告を改めて出した（ロイター）。同じ空港は先週も弾道ミサイルで狙われ、サウジ国籍の3人が死亡していた（アルジャジーラ）。フーシ派は8日にも新たな攻撃を主張し、サウジ主導の有志連合は弾道ミサイル2発を迎撃したと発表していた（AP通信）。今回は被害が桁違いに大きく、空港の閉鎖は延長された（AP通信）。キング・ハリド国際空港は、サウジの国内外の旅客と貨物を担う主要な空港の一つだ。フーシ派の支配地域にあるサヌア空港も攻撃を受けたと、フーシ派系のテレビが伝えた（ロイター）。ただ、実行者の特定と、攻撃の手段の詳細は、まだ確認できていない。</p>
+        <p>米国の反応は早かった。ルビオ国務長官は攻撃を非難し、米国はサウジとともにあると述べた（ロイターなど4社）。トランプ大統領は、反撃への参加を「検討する」と語ったと朝日新聞と毎日新聞が伝え（NPRも同様）、参加するかどうかは決まっておらず、サウジ主導の有志連合は報復を誓った（ガーディアン）。背景には米国とイランの対立がある。米軍は、イランの海上封鎖を破ろうとした貨物船を航行不能にしたとロイターが報じた。中東の戦争は、国際通貨基金（IMF）と世界銀行の年次総会でも最大の議題になる見通しだ（ロイター）。市場への影響は、まず原油に出る。WTI原油は9日に91.85ドル（+0.39%）、S&amp;P500は7,811.54（+0.59%）、金は4,216.3ドル（+1.43%）で引けたが、いずれも攻撃の前の水準だ。東京市場は12日、スポーツの日で休場となり、再開は13日になる。日本は原油の大半を中東から輸入しており、供給と海上輸送にどう響くかが焦点だ。死者の国籍別の内訳や、日本人の被害の有無、日本政府の対応は、まだ確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>12人</b><span>死亡者数。負傷は309人（サウジ民間航空当局、AP通信）</span></div>
+        <div><b>91.85ドル</b><span>WTI原油の金曜（9日）終値。攻撃の前の水準で、前日比0.39%高</span></div>
+        <div><b>13日</b><span>東京市場の再開日。12日はスポーツの日で休場</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="icc">
+      <div class="kick">国際·国際法<span>報道照合 ✓ 6社 · 制裁の具体的な範囲と猶予期間は米政府の文書を未確認</span></div>
+      <h3 class="hl">ICC制裁、日本含む21カ国の議長団が「即時撤回」を要求。茂木外相はルビオ長官と赤根所長に電話</h3>
+      <div class="one">
+        <p>国際刑事裁判所（ICC）の締約国議会の議長団は10日、日本を含む21カ国の名で、米国の制裁の即時撤回を求める声明を出した（時事通信、毎日新聞、NHK）。声明は、制裁が司法の機能を妨げると訴えた。米国はICC本体を制裁対象に指定しており、ICCの赤根智子所長は「断固拒否する」との声明を出した（毎日新聞）。茂木敏充外相はルビオ米国務長官と電話で協議し、赤根所長とも話した。ルビオ氏は制裁の「必要性」を伝えた（NHK、ジャパンタイムズ）。木原稔官房長官は「深く懸念する」と述べ、法の支配を強調した（時事通信）。ノーベル平和賞のピレイ氏は「前代未聞で容認できない」と批判した（毎日新聞）。ICCは、戦争犯罪などの個人の責任を裁く常設の国際裁判所で、オランダのハーグにある。毎日新聞は、ICC解体の賛否が、米軍と結びつく安全保障の「踏み絵」になっていると指摘する。ジャパンタイムズは、高市早苗首相が再び板挟みになったと報じた。日本は国内に在日米軍を置いており、制裁の具体的な範囲や猶予期間は、米政府の文書で確認できていない。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>議長団<i>ぎちょうだん</i></b><p>条約の加盟国が集まる会議を取りまとめる代表たち。ICCの場合は、締約国議会の議長と副議長で、加盟国全体の声として声明を出せる。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="yana"><b>簗農水相の「道路予算」発言</b><em>石破前首相が批判し、首相は更迭を否定した。週明けの予算委員会で進退が焦点になる。</em><span>国内政治 · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="nepal"><b>ネパールで土石流、5人不明</b><em>土砂が川をせき止めた湖が決壊したとみられる。軍が救助にあたる。</em><span>国際·災害 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="india"><b>インドで数千人拘束</b><em>選管を批判するデモで、首都を封鎖。「ゴキブリ人民党」の創設者は釈放された。</em><span>国際 · ✓ 5社</span></div>
+      <div class="it story" tabindex="0" data-id="pope"><b>教皇、肺の手術を今週受ける</b><em>小さな腫瘍の手術を受けると本人が述べた。詳しい病状は確認できていない。</em><span>国際 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="dc"><b>北九州、データセンター着工を見合わせ</b><em>小学校の隣という立地に反発があった。AI投資の電力負担も各地で争点になっている。</em><span>社会·産業 · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="baseball">
+      <div class="kick">スポーツ<span>報道照合 ✓ 7社 · ファイナルステージの日程と相手はNPBの日程表に基づく</span></div>
+      <h3 class="hl">DeNAが巨人に2連勝でCSファイナルへ。大谷翔平は12日からリーグ優勝決定シリーズ、村上宗隆のホワイトソックスは敗退</h3>
+      <div class="body">
+        <p>プロ野球のクライマックスシリーズ（CS）セ・リーグは、横浜DeNAが読売ジャイアンツに2連勝し、ファイナルステージに進んだ（NHK、毎日新聞、朝日新聞）。ベテランの戸柱恭孝の働きが目立った（毎日新聞、朝日新聞）。NPBの日程表では、ファイナルは14日に甲子園で阪神と戦う予定だ。巨人の橋上秀樹監督代行は、試合後に「ラストミーティング」を開き、激動のシーズンが終わった（スポーツ報知）。パ・リーグは、日本ハムが西武に勝って1勝1敗とし、決着は12日の第3戦に持ち越された（NHK、毎日新聞）。</p>
+        <p>米大リーグでは、ドジャースの大谷翔平がナショナル・リーグ優勝決定シリーズの第1戦を前に、フリー打撃で調整した（時事通信、NHK）。相手はブルワーズで、シリーズは12日から始まる（スポーツ報知）。一方、ホワイトソックスは地区シリーズでガーディアンズに敗れて敗退し、村上宗隆は最終戦で4打数4三振に終わった（NHK、時事通信）。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="okinawa">
+      <div class="kick">社会·安全保障<span>報道照合 ✓ 6社 · 起訴の判断と、被害者の遺族の意向は未確認</span></div>
+      <h3 class="hl">沖縄の米兵殺人事件、茂木外相が米側に「遺憾」を伝達。米軍は合同パトロールを開始、地元には「効果に疑問」の声</h3>
+      <div class="body">
+        <p>沖縄県那覇市のホテルで女性が死亡し、米海兵隊の20歳の兵士が強盗殺人の疑いで逮捕された事件で、茂木敏充外相は11日までに、米側に「遺憾の意」を伝えた（毎日新聞）。外務省は米国のグラス駐日大使を呼んで懸念を示し、高市早苗首相は「極めて凶悪」と述べて、米軍に綱紀粛正と捜査への全面協力を求めた（アルジャジーラ）。兵士は容疑を否認しており、検察の起訴の判断はまだ出ていない。</p>
+        <p>米軍は、基地周辺で日米合同のパトロールを始めた。ただ、沖縄市のコザ地区では、効果に疑問の声が出ている（毎日新聞）。毎日新聞は、再発防止が繰り返されてきた中で、政府の本気度が問われると書いた。ジャパンタイムズは、「誰もが怒っている」と、住民の不安と怒りを伝えた。沖縄では、1972年の本土復帰後に約6,000人の米軍関係者が逮捕されたとされる（アルジャジーラ）。2024年は80人で、20年で最多だった。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="ukraine">
+      <div class="kick">国際·ウクライナ<span>報道照合 ✓ 6社 · 「エネルギー停戦」はロシア側の確認が未了</span></div>
+      <h3 class="hl">トランプ氏「ウクライナに新しい大統領を」。ゼレンスキー氏は製油所攻撃の停止を提案、トランプ氏は「エネルギー停戦」で合意と発表</h3>
+      <div class="body">
+        <p>トランプ米大統領は10日、ウクライナのゼレンスキー大統領を批判し、「新しい指導者が必要だ」と述べた（時事通信、NHK、毎日新聞）。毎日新聞は、ロシアの製油所へのウクライナの攻撃に米国が不満を持ち、停止を求めていると伝えた。ゼレンスキー氏は、ロシアがエネルギー施設への攻撃をやめるなら、製油所への攻撃を止めると提案した（ロイター）。米ABCの取材には、ロシアが60日間の停戦に応じるなら、選挙を実施すると語った（ロイター）。ドイツ政府はゼレンスキー氏を支持した（ロイター）。</p>
+        <p>その後、トランプ氏は自身のSNSに、ロシアとウクライナの間で「エネルギー停戦」が直ちに発効し、双方が合意したと書き込んだ（ロイター）。ゼレンスキー氏はカナダのカーニー首相ら欧州などの首脳と話し、停戦を支持すると述べた（NHK、ゼレンスキー氏のSNS）。ただ、ロシア側の確認と、対象や期間の詳細は、まだ確認できていない。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>米国の金曜（9日）の終値は、S&amp;P500が7,811.54（+0.59%）、WTI原油が91.85ドル（+0.39%）、金が4,216.3ドル（+1.43%）<span>取引所の終値データ</span></li>
+        <li>日経平均は9日に6万9030円92銭（−0.02%）。12日はスポーツの日で東京市場は休場で、再開は13日<span>東京証券取引所の休場日程</span></li>
+        <li>ジブチ沖で移民船が転覆し、109人が死亡、116人以上が不明。子ども15人を含む<span>時事・ロイター</span></li>
+        <li>ポーランド警察、トゥスク首相らへの攻撃計画の可能性を警告<span>AP・ロイター</span></li>
+        <li>米司法省、大統領取材の一時停止を巡り、テレビ局を独占禁止法違反の疑いで調査<span>毎日・ロイター</span></li>
+        <li>愛知県豊田市で、50代の男性が玄関先でクマに襲われ重傷<span>NHK・朝日</span></li>
+        <li>陸上のキプチョゲ、2023年以来のマラソンで優勝<span>ジャパンタイムズ</span></li>
+        <li>パレスチナの議会選、2027年9月に再延期。自治政府議長選と同日に<span>朝日・時事・毎日</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「トランプ氏は、サウジを守るため米軍の反撃参加を決めた。」</b> <span>朝日新聞と毎日新聞は、トランプ氏が「検討する」と述べたと伝えた。決定は確認できていない。</span></div>
+        <div><b>「ロシアも、エネルギー停戦に同意した。」</b> <span>トランプ氏は双方が合意したと書き、ウクライナは支持を表明した。ロシア側の確認は、まだ取れていない。</span></div>
+        <div><b>「簗農水相は、近く辞任する。」</b> <span>首相は更迭を否定し、簗氏も辞任を否定している。自民党内に辞任を求める声はある（時事通信）。週明けの予算委員会での説明が焦点だ。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>10/12 月</b><span>サウジ空港攻撃の実行者の特定と、トランプ氏が反撃への参加を決めるか · 週明けの原油（WTI）と金の動き · ロシアとウクライナのエネルギー停戦の中身の確認 · 簗農水相の進退と予算委員会の始まり · ICC制裁を巡る日米の協議 · 大リーグNLCSの開幕と、プロ野球パ・リーグCSの第3戦 · 東京市場は休場（スポーツの日）。</span><b>今週</b><span>13日 東京市場の再開 · 14日 CSセ・リーグのファイナルステージ開幕（甲子園、NPB日程表） · 今週 教皇レオ14世の肺の手術（ロイター） · 18日 滋賀・草津市長選の投開票 · 11月9日 COP31の開幕（時事通信）。</span><b>読者へ</b><span>中東に出かける予定の人は、外務省の海外安全情報と航空会社の運航情報を確かめる。ガソリンや灯油の価格は、近くの店の表示で確かめる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    riyadh:{kick:"国際·中東 · 報道照合 ✓ 6社 · 死傷者数はサウジ民間航空当局の発表、実行者は未確定",title:"リヤド国際空港への攻撃で12人死亡、300人超が負傷。フーシ派の関与が疑われ、トランプ氏は反撃への参加を「検討」",
+      what:"サウジアラビアの民間航空当局は10月10日（土）、リヤドのキング・ハリド国際空港が攻撃を受け、12人が死亡、309人が負傷したと発表した（AP通信、ロイター）。毎日新聞は、死者に米国人が含まれると伝えた。AP通信と朝日新聞は、イランが支援するイエメンの武装組織フーシ派による攻撃の疑いがあると報じた。ロイターによると、フーシ派はサウジの空港を巡る警告を改めて出した。サウジは空港の閉鎖を延長した（AP通信）。同じ空港は先週も攻撃を受け、サウジ国籍の3人が死亡した（アルジャジーラ）。ルビオ米国務長官は攻撃を非難し、米国はサウジの側に立つと述べた。朝日新聞と毎日新聞は、トランプ大統領が反撃への参加を「検討する」と述べたと伝えた。",
+      why:"空港という民間の施設で、死傷者が300人を超えた。攻撃が続けば、サウジの空の玄関が止まり、湾岸の航空と物流に響く。米国が反撃に加われば、イランとの対立が地域の戦争に広がる恐れがある。原油の供給と航路の安全は、世界の物価に直結する。",
+      me:"日本は原油の大半を中東に頼る。ガソリンや灯油の店頭価格は、原油相場に遅れて反映されるため、すぐには動かないが、月曜以降の相場次第で数週間後の価格に及ぶ。中東への出張や旅行を予定している人は、外務省の海外安全情報と航空会社の運航情報を確かめたい。",
+      a:"民間人が多数死傷した以上、同盟国のサウジを守る行動は必要だ。反撃の構えを示すことが、次の攻撃を抑える。",b:"反撃への参加は、米国をさらに戦争に引き込む。実行者が確定していない段階での軍事行動は、誤算や拡大の危険が大きい。",
+      say:"きょうの数字は「309人」。攻撃の大きさを示す一方、実行者と手段はまだ確定していない。見るべきは三つある。トランプ氏が「検討」から決定に進むか、フーシ派が次の空港攻撃を予告するか、そして週明けの原油がどう反応するか。東京市場は休場なので、日本の投資家は13日の再開まで、海外の値動きを見ることになる。",
+      src:"AP通信 · ロイター · NPR · ガーディアン · 朝日新聞 · 毎日新聞 · 時事通信 · アルジャジーラ（10/9〜11。死傷者数はAP通信とロイター、米国人の死者は毎日新聞、反撃の検討は朝日新聞と毎日新聞）"},
+    icc:{kick:"国際·国際法 · 報道照合 ✓ 6社 · 制裁の具体的な範囲と猶予期間は米政府の文書を未確認",title:"ICC制裁、日本含む21カ国の議長団が「即時撤回」を要求。茂木外相はルビオ長官と赤根所長に電話",
+      what:"ICCの締約国議会の議長団は10月10日、日本を含む21カ国の名で、米国の制裁の即時撤回を求める声明を出した（時事通信、毎日新聞、NHK）。米国はICC本体を制裁対象に指定しており、赤根智子所長は声明で「断固拒否する」と述べた（毎日新聞）。茂木敏充外相はルビオ国務長官と電話で協議し、ルビオ氏は制裁の「必要性」を伝えた。茂木氏は赤根所長とも電話で話した（NHK、朝日新聞、毎日新聞）。木原稔官房長官は「深く懸念する」と述べた（時事通信）。ノーベル平和賞のピレイ氏は「前代未聞で容認できない」と批判した（毎日新聞）。ジャパンタイムズは、高市首相が再び板挟みになったと報じた。",
+      why:"ICCの所長は日本人で、日本は裁判所の最大級の財政支援国でもある。一方で日本は安全保障を米国に頼り、国内には多くの米軍が駐留する。裁判所を守る立場と、同盟国との関係の両立が、日本外交の力を試している。",
+      me:"暮らしに直接の影響はない。ただ、ICCの運営が止まれば、戦争犯罪の捜査が難しくなる。日本が国際法の支持と米国との関係をどう両立させるかは、今後の外交や防衛の議論にもつながる。",
+      a:"法の支配を守るため、同盟国であっても反対を続けるべきだ。21カ国の声明は、主要な民主主義国が連帯を示した意義がある。",b:"米国は、ICCが政治的に動いていると主張する。安全保障を米国に頼る日本が、強く反対し続ければ、別の分野の関係に響くという懸念もある。",
+      say:"きょうの数字は「21カ国」。日本が名を連ねたことは小さくない。見るべきは、制裁の具体的な範囲と猶予期間、ICCが銀行取引や給与をどう続けるか、そして日本が声明のあとに資金や法的な支えという形の行動を示すか。言葉で終わるのか、支えにつながるのかで、今回の反対の重みが決まる。",
+      src:"時事通信 · 毎日新聞 · NHK · 朝日新聞 · ジャパンタイムズ（10/10〜11。声明は時事通信と毎日新聞とNHK、外相の電話はNHKと朝日新聞と毎日新聞）"},
+    baseball:{kick:"スポーツ · 報道照合 ✓ 7社 · ファイナルステージの日程と相手はNPBの日程表に基づく",title:"DeNAが巨人に2連勝でCSファイナルへ。大谷翔平は12日からリーグ優勝決定シリーズ、村上宗隆のホワイトソックスは敗退",
+      what:"プロ野球CSのセ・リーグ・ファーストステージで、DeNAは巨人に2連勝し、ファイナルステージ進出を決めた（NHK、毎日新聞、朝日新聞）。第1戦は度会隆輝の一発で先勝し、第2戦は戸柱恭孝らベテランが光った。巨人の橋上秀樹監督代行は試合後にラストミーティングを開いた（スポーツ報知）。パ・リーグは日本ハムが西武に勝って1勝1敗とした。大リーグでは、ドジャースの大谷翔平がブルワーズとのNLCS第1戦の前日にフリー打撃で快音を響かせた（時事通信）。ホワイトソックスは地区シリーズで敗退し、村上宗隆は4打数4三振だった（NHK、時事通信）。",
+      why:"日本のプロ野球は短期決戦の最中で、日本選手は米国のプレーオフでも結果を左右する。国内外の試合が同時に進むため、見る側の注目が分かれる。",
+      me:"NLCSの試合時間と放送や配信の予定、CSの日程を確かめたい。",
+      a:"",b:"",
+      say:"きょうの数字は「2連勝」。短期決戦では、ベテランの一打が流れを変えることが多い。見るべきは、日本ハム対西武の第3戦の結果、ファイナルの先発の顔ぶれ、そして大谷の復調が数字に出るか。",
+      src:"NHK · 毎日新聞 · 朝日新聞 · 時事通信 · スポーツ報知 · ジャパンタイムズ（10/10〜11。DeNAの勝ち上がりはNHKと毎日新聞と朝日新聞、日程はNPB）"},
+    okinawa:{kick:"社会·安全保障 · 報道照合 ✓ 6社 · 起訴の判断と、被害者の遺族の意向は未確認",title:"沖縄の米兵殺人事件、茂木外相が米側に「遺憾」を伝達。米軍は合同パトロールを開始、地元には「効果に疑問」の声",
+      what:"沖縄県那覇市のホテルで、39歳の女性が死亡しているのが見つかり、米海兵隊の20歳の兵士が強盗殺人の疑い（朝日新聞）で逮捕された（アルジャジーラ）。沖縄県議会は9日、米側への抗議決議を可決した（NHK、時事通信）。兵士は容疑を否認している。外務省は米国のグラス駐日大使を呼んで懸念を伝え、高市早苗首相は「極めて凶悪」と述べて、米軍に綱紀粛正と捜査への全面協力を求めた。茂木敏充外相は11日までに、米側に「遺憾の意」を伝えた（毎日新聞）。米軍は日米合同のパトロールを始めたが、沖縄市のコザ地区では効果を疑う声が出ている（毎日新聞）。ジャパンタイムズは、住民の不安と怒りを伝えている。",
+      why:"沖縄には在日米軍の専用施設の多くが集まり、米兵による事件が繰り返されてきた。日米地位協定が、捜査や身柄の扱いで日本側の手を縛るとして、見直しを求める声が根強い。再発防止の約束が守られてきたかが、改めて問われている。",
+      me:"沖縄に住む人や、観光で訪れる人にとって、夜間の外出や基地周辺の安全は気になる点だ。県や警察の発表を確かめたい。",
+      a:"日米同盟の安定には、米軍の存在が欠かせない。合同パトロールなどで、再発防止を図るのが現実的だ。",b:"事件は繰り返されており、小さな対策では足りない。日米地位協定の見直しと、基地の負担の軽減が必要だ。",
+      say:"きょうの数字は「80人」。2024年の米軍関係者の逮捕は20年で最多だった。見るべきは、検察の起訴の判断、日米の再発防止策に実効性があるか、そして沖縄県が地位協定の見直しを正式に求めるか。",
+      src:"毎日新聞 · 朝日新聞 · NHK · 時事通信 · ジャパンタイムズ · アルジャジーラ（10/5〜11。外相の伝達と合同パトロールは毎日新聞、県議会の決議はNHKと時事通信、事件の概要はアルジャジーラと朝日新聞）"},
+    ukraine:{kick:"国際·ウクライナ · 報道照合 ✓ 6社 · 「エネルギー停戦」はロシア側の確認が未了",title:"トランプ氏「ウクライナに新しい大統領を」。ゼレンスキー氏は製油所攻撃の停止を提案、トランプ氏は「エネルギー停戦」で合意と発表",
+      what:"トランプ米大統領は10月10日、ゼレンスキー大統領を批判し、ウクライナに「新しい指導者が必要だ」と述べた（時事通信、NHK、毎日新聞）。毎日新聞は、ロシアの製油所への攻撃を巡る米国の不満が背景にあると伝えた。ゼレンスキー氏は、ロシアがエネルギー施設への攻撃をやめれば製油所への攻撃を止めると提案し（ロイター）、ロシアが60日間の停戦に応じるなら選挙を実施すると米ABCに述べた。ドイツ政府はゼレンスキー氏を支持した。その後、トランプ氏は自身のSNSに、ロシアとウクライナの間で「エネルギー停戦」が直ちに発効し、双方が合意したと書き込んだ（ロイター）。ゼレンスキー氏は欧州などの首脳と話し、停戦を支持すると述べた（NHK）。ロシア側の確認は取れていない。",
+      why:"米国の大統領が他国の指導者の交代に触れるのは異例で、ウクライナへの支援の先行きに影響する。エネルギー施設への攻撃が止まれば、原油や軽油の供給と価格にも響く。",
+      me:"日本は欧州と並んでウクライナを支援してきた。エネルギー施設の停戦が進めば、国際的な原油や軽油の相場が下がる可能性がある。ただ、合意の中身は確認が必要だ。",
+      a:"戦争を終わらせるには、米国が当事者に圧力をかけ、停戦の形を作る必要がある。エネルギー施設への攻撃をやめる合意は、まず現実的な一歩だ。",b:"他国の指導者の交代を公然と求めるのは、内政への干渉だ。ウクライナが不利な形で停戦を迫られる恐れがある。",
+      say:"きょうの数字は「60日」。ゼレンスキー氏が選挙の条件に挙げた停戦の期間だ。見るべきは、エネルギー停戦にロシアが同じ内容で応じるか、期限がいつか、そして米国がウクライナへの圧力を強めるか。",
+      src:"ロイター · 時事通信 · NHK · 毎日新聞 · ジャパンタイムズ（10/10〜11。発言は時事通信とNHKと毎日新聞、停戦の発表と提案はロイター）"},
+    yana:{kick:"国内政治 · 報道照合 ✓ 5社 · 予算委員会の日程と、首相の最終判断は未確認",title:"簗農水相の「道路予算」発言、石破前首相が批判。首相は更迭を否定、週明けの予算委が焦点",
+      what:"簗和生農林水産相は5月、栃木県の党支部の懇親会で、衆院選で対立候補を支援した首長のいる市と町について、「道路予算を大幅にカットした」と述べたとされる（北海道新聞、熊本日日新聞）。簗氏は5日に発言を撤回して陳謝したが、辞任は否定している。高市早苗首相は「襟を正して職責を全うしてほしい」と述べ、更迭を否定した。石破茂前首相は「全国民の代表者との認識がない」「政治に携わる者として疑わしい」と批判し（NHK、朝日新聞）、京都府知事も予算配分の公平性に疑念を示した（毎日新聞）。時事通信は、自民党内に辞任は不可避との声があると伝え、進退が週明けの予算委員会の焦点になるとした。",
+      why:"予算の配分が政治的な報復に使われたと受け取られれば、行政の公平性への信頼に関わる。首相の任命責任も問われる。",
+      me:"道路や防災の予算は、地域の暮らしに直結する。国会の予算委員会での説明と、予算の決定過程が明らかになるかを見たい。",
+      a:"発言は撤回と陳謝で終わった。仕事で返すという首相の判断も一つの考え方だ。",b:"予算の配分が選挙の対立と結びついたとの疑いは重い。説明が尽くされるまで、進退の議論は終わらない。",
+      say:"きょうの数字は「1か月半」。発言の前に予算配分は決まっていたとの指摘があり、事実関係が焦点になる。見るべきは、予算委での簗氏の説明、野党の問責決議案の扱い、首相の対応が変わるか。",
+      src:"北海道新聞 · 熊本日日新聞 · NHK · 朝日新聞 · 毎日新聞 · 時事通信（10/5〜11。発言と撤回は北海道新聞と熊本日日新聞、石破氏の批判はNHKと朝日新聞）"},
+    nepal:{kick:"国際·災害 · 報道照合 ✓ 4社 · 不明者数は5人と報じられるが、確定は未確認",title:"ネパールで再び土石流、少なくとも5人不明。軍が救助、せき止め湖の決壊が原因か",
+      what:"ネパールで土石流が再び起き、少なくとも5人が行方不明になっている。毎日新聞は、家屋30軒ほどが流された可能性があると伝えた。NHKは、土砂が川をせき止め、軍が救助活動をしていると報じた。時事通信は、せき止められた湖が決壊したことが原因とみられると伝えた。ロイターは、洪水の恐れから、村人に避難を呼びかけたと報じた。",
+      why:"山間部の斜面崩れと雨で、川がせき止められ、決壊すると下流に被害が及ぶ。復旧のあとにも同じ災害が繰り返される地域が多い。",
+      me:"ネパールへの渡航や登山を予定している人は、外務省の海外安全情報を確かめたい。",
+      a:"",b:"",
+      say:"きょうの数字は「5人」。行方不明者の数はこれから変わりうる。確認したい点は、決壊した湖の規模と、下流の避難の状況。",
+      src:"NHK · 毎日新聞 · 時事通信 · ロイター（10/11）"},
+    india:{kick:"国際·インド · 報道照合 ✓ 5社 · 拘束者数は6千〜7千人と報道で幅",title:"インドで数千人拘束。「ゴキブリ人民党」創設者は釈放、選管批判のデモが続く",
+      what:"インドで、有権者を名簿から外した疑いがあるとして、選挙管理委員会を批判するデモが相次いだ。当局は首都デリーを封鎖し、数千人を拘束した。拘束者数は、毎日新聞が約6,000人、朝日新聞が7,000人と、報道で幅がある。デモを呼びかけた「ゴキブリ人民党」の創設者も拘束されたが、のちに釈放された（ロイター、ジャパンタイムズ、時事通信）。運動側は、さらなる抗議を呼びかけている。",
+      why:"世界最大の民主主義国で、選挙の公正さを巡る不信が広がっている。大規模な拘束は、集会の自由への懸念も呼ぶ。",
+      me:"インドは日本の企業の進出先として重要だ。政治の混乱が続くかを見たい。",
+      a:"",b:"",
+      say:"きょうの数字は「数千人」。人数は報道で食い違っている。確認したい点は、拘束者の最終的な数と、選管が疑惑にどう答えるか。",
+      src:"毎日新聞 · 朝日新聞 · 時事通信 · ロイター · ジャパンタイムズ（10/10〜11）"},
+    pope:{kick:"国際·宗教 · 報道照合 ✓ 2社 · 手術の日時と病状の詳細は未確認",title:"教皇レオ14世、肺の小さな腫瘍の手術を今週受けると発表",
+      what:"ローマ教皇レオ14世は、肺にできた小さな腫瘍の手術を、今週受けると述べた（ロイター、ジャパンタイムズ）。手術の日時や、腫瘍が良性か悪性かは、記事の見出しの段階では確認できていない。",
+      why:"教皇の健康は、世界約14億人のカトリック信者に関わる。日程や行事が変わる可能性がある。",
+      me:"直接の影響はない。バチカンの発表を待ちたい。",
+      a:"",b:"",
+      say:"きょうの数字は「今週」。確認したい点は、手術の日時、回復の見込み、行事への影響。",
+      src:"ロイター · ジャパンタイムズ（10/11。詳細は未確認）"},
+    dc:{kick:"社会·産業 · 報道照合 ✓ 2社",title:"小学校隣の大規模データセンター、北九州は年内着工を見合わせ。AI投資の電力負担が争点に",
+      what:"北九州市で、小学校に隣接して計画されている大規模データセンターについて、年内の着工が見合わせられた（毎日新聞）。地元には反発がある。朝日新聞は、米国でデータセンターが争点になっており、発電所への巨額投資とも日本は地続きだと伝えた。",
+      why:"AIの普及でデータセンターが急増し、電力と土地、騒音への影響が各地で問題になっている。",
+      me:"自分の街に計画が出た場合、住民説明会や自治体の手続きで、騒音や電力の影響を確かめられる。",
+      a:"",b:"",
+      say:"きょうの数字は「年内」。着工の見合わせが、計画の中止につながるかが焦点。",
+      src:"毎日新聞 · 朝日新聞（10/11）"}
+  };
+  const G = {
+    "締約国議会":{f:"国際法",d:"ICCを作った条約（ローマ規程）の加盟国が集まる最高の意思決定機関。予算や裁判官の選出などを決める。その議長と副議長でつくる「議長団」が、加盟国全体の声として声明を出すことがある。",w:"日本を含む21カ国の議長団が、米国の制裁の即時撤回を求める声明を出した。"},
+    "COP31":{f:"気候変動",d:"国連の気候変動枠組条約の第31回締約国会議。世界の国々が温室効果ガスの削減や途上国への支援を話し合う年に一度の会議で、今年は11月に開かれる。",w:"時事通信が、11月9日に開幕すると伝えた。"},
+    "ホワイトソックス":{f:"野球",d:"米大リーグ、アメリカン・リーグのシカゴの球団。日本の村上宗隆が所属する。",w:"地区シリーズでガーディアンズに敗れ、今季を終えた。"},
+    "ゴキブリ人民党":{f:"国際",d:"インドで広がる抗議運動の名称で、運動側は「ゴキブリ」を自称している。創設者はアビジート・ディプケ氏とロイターが報じた。選挙管理委員会を批判するデモを呼びかけた。",w:"創設者は拘束されたのち、釈放された。"},
+    "ナショナル・リーグ優勝決定シリーズ":{f:"野球",d:"米大リーグのナ・リーグで、優勝チームを決める7戦制のシリーズ。略してNLCS。勝つとワールドシリーズに進む。",w:"ドジャースは12日から、ブルワーズと戦う。"},
+    "NLCS":{f:"野球",d:"ナショナル・リーグ優勝決定シリーズの略。米大リーグで、ナ・リーグの優勝チームを決める7戦制のシリーズ。",w:"大谷翔平はブルワーズとのNLCS第1戦の前日に、フリー打撃で調整した。"},
+    "地区シリーズ":{f:"野球",d:"米大リーグのプレーオフの一段階。ワイルドカードシリーズのあと、リーグ優勝決定シリーズの前に行われる。",w:"ホワイトソックスは地区シリーズで敗退した。"},
+    "エネルギー停戦":{f:"国際",d:"戦争中の双方が、発電所や製油所など、電力や燃料にかかわる施設への攻撃をやめる取り決め。全面的な停戦とは別で、対象と期間が焦点になる。",w:"トランプ氏が、ロシアとウクライナの間で直ちに発効すると書き込んだ。"},
+    "ブルワーズ":{f:"野球",d:"ミルウォーキー・ブルワーズ。米大リーグ、ナ・リーグの球団で、NLCSでドジャースと戦う。",w:"12日から始まるシリーズで、大谷翔平のドジャースの相手になる。"},
+    "国際刑事裁判所":{f:"国際法",d:"ICC。戦争犯罪や人道に対する罪などを、国ではなく個人の責任として裁く常設の国際裁判所。オランダのハーグにある。",w:"米国がICC本体を制裁の対象に指定した。"},
+    "ルビオ国務長官":{f:"外交",d:"マルコ・ルビオ氏。米国の外交を担う閣僚。国務長官は日本の外務大臣にあたる。",w:"サウジ空港への攻撃を非難し、茂木外相にはICC制裁の必要性を伝えた。"},
+    "議長団":{f:"国際法",d:"条約の加盟国が集まる会議を取りまとめる代表たち。ICCの場合は、締約国議会の議長と副議長で、加盟国全体の声として声明を出せる。",w:"日本を含む21カ国の議長団が、制裁の撤回を求めた。"},
+    "踏み絵":{f:"言葉",d:"江戸時代に、キリスト教の信者かどうかを調べるため、絵を踏ませたことから、人の立場や忠誠を試す行為を指すようになった言葉。",w:"ICCを巡る賛否が、米軍と結びつく安全保障の「踏み絵」になっていると毎日新聞が指摘した。"},
+    "フーシ派":{f:"中東",d:"イエメン北部を拠点とする、イスラム教シーア派系の武装組織。イランの支援を受けるとされ、サウジアラビアなどへのミサイルやドローンの攻撃を主張してきた。",w:"AP通信と朝日新聞は、空港攻撃にこの組織の関与の疑いがあると伝えた。"},
+    "赤根智子":{f:"国際法",d:"日本人の法律家。ICCの判事を経て、所長を務める。",w:"米国の制裁に「断固拒否する」との声明を出した。"},
+    "ABC":{f:"メディア",d:"米国の三大テレビネットワークの一つ。",w:"ゼレンスキー氏は、ABCの取材に、60日間の停戦に応じるなら選挙を実施すると語った。"},
+    "ジブチ":{f:"地理",d:"アフリカ北東部の小さな国。紅海の出入り口にあり、海を挟んでイエメンの対岸にある。",w:"ジブチ沖で移民船が転覆し、109人が死亡した。"},
+    "ピレイ":{f:"国際法",d:"ナビ・ピレイ氏。南アフリカ出身の法律家で、元国連人権高等弁務官、元ICC判事。2026年のノーベル平和賞を受けた。",w:"米国の制裁を「前代未聞で容認できない」と批判した。"},
+    "トゥスク":{f:"国際",d:"ドナルド・トゥスク氏。ポーランドの首相で、元欧州理事会議長。",w:"ポーランド警察が、トゥスク首相らへの攻撃計画の可能性を警告した。"},
+    "ガーディアンズ":{f:"野球",d:"クリーブランド・ガーディアンズ。米大リーグ、アメリカン・リーグの球団。",w:"地区シリーズでホワイトソックスを破り、勝ち進んだ。"},
+    "WTI原油":{f:"エネルギー",d:"米国産の軽質原油の先物価格。ニューヨークで取引され、世界の原油の代表的な指標。",w:"9日は91.85ドルで引けた。"},
+    "グラス":{f:"外交",d:"ジョージ・グラス氏。米国の駐日大使。",w:"外務省は、グラス大使を呼んで懸念を伝えた。"},
+    "綱紀粛正":{f:"言葉",d:"役人や組織の規律の乱れを正し、きびしく引き締めること。",w:"高市首相は米軍に、綱紀粛正と捜査への全面協力を求めた。"},
+    "キプチョゲ":{f:"スポーツ",d:"エリウド・キプチョゲ氏。ケニアのマラソン選手で、五輪を2連覇した。2019年には記録として認められない形で、2時間を切った。",w:"2023年以来となるマラソンで優勝した。"},
+    "度会隆輝":{f:"野球",d:"横浜DeNAの外野手。",w:"第1戦の決勝打が、チームの先勝につながった。"},
+    "日米地位協定":{f:"外交・安全保障",d:"在日米軍の地位や基地の使い方、米軍関係者の裁判の扱いなどを定めた協定。1960年に結ばれた。事件のたびに、身柄の扱いなどの見直しを求める声が出る。",w:"捜査や身柄の扱いで日本側の手を縛るとして、見直しを求める声が根強い。"},
+    "ラストミーティング":{f:"野球",d:"シーズンの最後に、監督やコーチが選手に感謝や思いを伝える集まり。",w:"巨人の橋上秀樹監督代行が、試合後に開いた。"},
+    "問責決議案":{f:"国会",d:"参議院で、大臣などの責任を問い、辞任を求める決議の案。法的な拘束力はないが、野党が政権に圧力をかける手段になる。",w:"野党が、簗農水相に対する問責決議案を含めて協議している。"},
+    "フリー打撃":{f:"野球",d:"試合の前などに、投手が投げる球を自由に打つ練習。",w:"大谷翔平が、NLCSの前日にフリー打撃で調整した。"},
+    "有志連合":{f:"安全保障",d:"共通の目的のために、複数の国が自発的に集まって組む軍事的な枠組み。ここでは、イエメンのフーシ派に対抗してサウジアラビアが主導してきた連合を指す。",w:"サウジ主導の有志連合は、報復を誓った。"},
+    "国際通貨基金":{f:"金融",d:"IMF。加盟国の経済や為替を見守り、経済危機に陥った国に資金を貸す国際機関。",w:"中東の戦争が、世界銀行との年次総会で最大の議題になる見通しだ。"},
+    "独占禁止法":{f:"法律",d:"企業が談合や不当な取引で競争をゆがめることを禁じる法律。",w:"米司法省が、テレビ局の対応が違反にあたるかを調べている。"},
+    "S&P500":{f:"市場",d:"米国の大手500社の株価をもとにした指数。米国株の全体の動きを示す代表的な指標。",w:"9日は7,811.54（+0.59%）で引けた。"},
+    "ファーストステージ":{f:"野球",d:"クライマックスシリーズの最初の段階。リーグ2位と3位が3戦で戦い、先に2勝したほうがファイナルステージに進む。",w:"DeNAは巨人に2連勝して勝ち上がった。"},
+    "本土復帰":{f:"沖縄",d:"1972年5月15日に、米国の統治下にあった沖縄が日本に返還されたこと。",w:"復帰後に約6,000人の米軍関係者が逮捕されたと、アルジャジーラは伝えた。"},
+    "自治政府":{f:"中東",d:"パレスチナ自治政府。ヨルダン川西岸の一部を治める。議長は自治政府の代表。",w:"議会選は、2027年9月の議長選と同日に延期された。"},
+    "橋上秀樹":{f:"野球",d:"元プロ野球選手。各球団のコーチを経て、巨人の監督代行を務めた。",w:"試合後に「ラストミーティング」を開き、今季を終えた。"},
+    "任命責任":{f:"政治",d:"大臣などを選んだ首相や上司が、その人物の不祥事に負う責任。",w:"簗農水相の問題で、高市首相の任命責任も問われる。"},
+    "民間航空当局":{f:"中東",d:"民間の飛行機の運航や空港を監督する政府の機関。サウジアラビアでは民間航空総局がこれにあたる。",w:"12人の死亡と309人の負傷を発表した。"},
+    "海上封鎖":{f:"安全保障",d:"敵対する国の港や海路を、軍艦などで塞いで、船の出入りを止めること。",w:"米軍は、イランの海上封鎖を破ろうとした貨物船を航行不能にした。"},
+    "クライマックスシリーズ":{f:"野球",d:"日本のプロ野球で、セ・パ各リーグの優勝チームを決める短期決戦。レギュラーシーズン上位3チームが出て、勝者が日本シリーズに進む。略してCS。",w:"DeNAはCSセ・リーグを勝ち上がった。"},
+    "ファイナルステージ":{f:"野球",d:"CSの第2段階。ファーストステージの勝者と、リーグ1位のチームが戦い、勝者が日本シリーズに進む。1位のチームには1勝のアドバンテージがある。",w:"DeNAは14日から、甲子園で阪神と戦う予定だ。"},
+    "イエメン":{f:"中東",d:"アラビア半島の南にある国。2014年ごろから内戦が続き、北部はフーシ派が支配している。",w:"フーシ派は、イエメンの武装組織だ。"},
+    "キング・ハリド国際空港":{f:"中東",d:"サウジアラビアの首都リヤドにある、国内外の旅客と貨物を担う主要な空港。",w:"12人が死亡し、309人が負傷する攻撃を受けた。"},
+    "日本ハム":{f:"野球",d:"北海道日本ハムファイターズ。パ・リーグの球団。",w:"西武に勝って、CSファーストステージを1勝1敗にした。"},
+    "コザ":{f:"沖縄",d:"沖縄市の中心部の地名。米軍嘉手納基地の近くにあり、基地の街として栄えてきた。",w:"コザ地区では、合同パトロールの効果を疑う声が出ている。"},
+    "戸柱恭孝":{f:"野球",d:"横浜DeNAの捕手でベテラン。",w:"短期決戦で、勝負どころの働きが目立った。"},
+    "データセンター":{f:"IT",d:"インターネットやAIの計算を行うサーバーを大量に置く施設。大量の電力を使い、冷却設備も必要になる。",w:"北九州では、小学校の隣に計画された施設の着工が見合わせられた。"},
+    "年次総会":{f:"金融",d:"国際通貨基金（IMF）と世界銀行が、毎年10月ごろに開く総会。各国の財務相や中央銀行の総裁が集まる。",w:"中東の戦争が、最大の議題になる見通しだ。"},
+    "法の支配":{f:"政治",d:"権力を持つ人も、法に従わなければならないという原則。",w:"木原官房長官は、ICC制裁への懸念と合わせて強調した。"},
+    "更迭":{f:"政治",d:"大臣などを、本人の意思によらず、任命した側が辞めさせること。自分から辞める「辞任」とは違う。",w:"首相は、簗農水相の更迭を否定した。"},
+    "世界銀行":{f:"金融",d:"途上国の開発や貧困対策のため、資金を貸したり技術を支援したりする国際機関。",w:"IMFとともに、年次総会を開く。"},
+    "海外安全情報":{f:"外交",d:"外務省が、国や地域ごとの危険度を示して渡航者に注意を促す情報。危険度は4段階に分かれる。",w:"中東への渡航前に確かめたい。"},
+    "NPB":{f:"野球",d:"日本野球機構。日本のプロ野球を運営する組織。",w:"NPBの日程表では、ファイナルは14日に始まる。"},
+    "簗和生":{f:"政治",d:"自民党の衆院議員（栃木）で、農林水産相。道路予算を巡る発言が問題になっている。",w:"発言を撤回して陳謝したが、辞任は否定している。"},
+    "木原稔":{f:"政治",d:"政府の窓口役として会見を行う官房長官。",w:"ICC制裁に「深く懸念する」と述べた。"},
+    "司法省":{f:"米国",d:"米国の省庁。検察や捜査（FBI）を担当し、トップは司法長官。",w:"大統領取材の一時停止を巡り、テレビ局を調べている。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

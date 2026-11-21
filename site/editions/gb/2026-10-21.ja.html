@@ -1,0 +1,372 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事をクリックすると展開する。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>FTSE100 · 対象期間内に確定した終値なし · 10月20日（火）</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 英国版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,712.57</b>S&amp;P 500 · 10月20日（火）の終値、+0.28%</div>
+    </div>
+    <div class="dateline"><span>第17号 · 朝刊</span><b>2026年10月21日（水）</b><span>記事をタップすると開く。<u style="text-decoration:dotted underline var(--red)">点線の語</u>をタップすると意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · コロナ公的調査<span>報道照合 ✓ 4社 · 政府が勧告をどう扱うかはまだ分かっていない</span></div>
+      <h2 class="hl">コロナ公的調査、ハンコック氏の介護施設「防護の輪」発言は根拠なしと認定　報告書は死者4万3000人超に言及</h2>
+      <p class="deck">10月20日に公表された英国コロナ公的調査のモジュール6の報告書は、介護部門を「いわば後回しの存在」と評していると、同調査、ガーディアン、BBCニュース、イブニング・スタンダードが伝えている。</p>
+      <div class="body">
+        <p>英国コロナ公的調査は、10月20日（火）、介護部門に関するモジュール6の報告書を公表した。同調査は報道発表で、パンデミックの当初から介護施設に「防護の輪」が張られていたとする主張は根拠がなかったと述べ、イブニング・スタンダードは、マット・ハンコック氏の介護施設の「防護の輪」発言は「根拠なし」だと見出しで伝えた。LBCは、ハンコック氏がこの主張をしたのは2020年5月だと報じている。調査は介護部門を「いわば後回しの存在」と評し、政府はパンデミック前から介護施設の入居者がいかに脆弱かを知っていたのに、最も保護が必要な時期に施設への保護が足りなかったと認定した。ガーディアンによると、調査の委員長は、病院から退院した人を隔離するよう介護施設に助言しなかった失敗を重大だと述べており、同紙の見出しは、政府の失敗によってコロナが介護施設で「野火のように」広がったとしている。デイリー・メール、ミラー、インディペンデントはいずれも見出しで介護施設の死者を4万3000人としており、調査の報告書は、2020年3月から2022年7月までにコロナ19が関わる記録された死者が4万3000人超いたと述べている。</p>
+        <p>報告書は、パンデミック初期の数か月に、多くの入院患者がコロナ19の検査を受けないまま介護施設に退院させられ、介護部門が個人用防護具（PPE）の入手に苦労したと認定している。こうした失敗は、パンデミック前に成人向け社会的ケアの適切な計画がなかったことに行き着くとする。勧告には、保健・社会的ケア従事者に終末期ケアの研修を義務づけることが含まれ、報告書は、心肺蘇生を試みない決定の通知（DNACPR）を一律に使うことを促す国の方針があった証拠は見つからなかったとも述べている。公表前、ミラーは、遺族が、これほど多くの命を奪った決定の責任がだれにあるかを報告書が示すことを望んでいたと報じた。オープンデモクラシーとケアリング・タイムズによると、ハンコック氏は先の調査の審問で、輪が切れ目のないものではなかったと認め、主張が誤解を招くものだったことに同意した一方、政府が施設を守ろうとしたという意味だったと主張した。デイリー・メールは、調査結果を、介護施設の入居者がNHSを守るために「犠牲にされた」とする形で伝えた。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">国防 · 中東<span>報道照合 ✓ 5社 · 何機が関わるかは報道で示されていない</span></div>
+      <h3 class="hl">英国、サウジアラビアをフーシ派の攻撃から守るため英国空軍の戦闘機を派遣へ　任務は防衛</h3>
+      <div class="one">
+        <p>国防省は10月20日、サウジアラビアへの英軍の支援に関する作戦の最新情報を公表し、BBCニュース、ガーディアン、イブニング・スタンダードは、英国が王国をフーシ派の攻撃から守るため戦闘機を派遣すると報じている。ガーディアンの報道は英国空軍（RAF）のタイフーン戦闘機を挙げ、アルジャジーラの見出しもタイフーンに触れている。ブルームバーグは、英国空軍がサウジアラビアを守る任務に就くと報じ、ロイターがこれを伝えた。AP通信は、英国が支援を拡大し、「防衛的な」空中哨戒を含めると伝えた。報道によると、機体の役割は防衛で、イエメンのイランが支援する武装勢力フーシ派への攻撃は行わない。今回の派遣は、それまでの小規模な措置に続くものだ。9月には、ITVニュースとアルジャジーラが、キプロスのRAFアクロティリに配備された英国空軍のボイジャー1機から空中給油を行うと報じており、サウジアラビアにはすでにスカイ・セイバー防空システムがある。10月20日の報道は、アトラスA400M輸送機と軍事顧問を加え、給油の取り決めを90日間延長したと伝えている。ロイターとブルームバーグによると、サウジアラビアは、「砂漠のダボス」と呼ばれる未来投資イニシアチブ会議を、攻撃を受けて2027年に延期した。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>90日間</b><span>既存の空中給油の取り決めの延長、10月20日の報道による</span></div>
+        <div><b>2027年</b><span>サウジアラビアが延期した投資会議の新しい日付、ロイターとブルームバーグによる</span></div>
+        <div><b>1機</b><span>9月に最初に示されたRAFボイジャー給油機、ITVニュースとアルジャジーラによる</span></div>
+      </div></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>競争・市場庁、アップルにiPhoneの非接触決済技術へのアクセス拡大を求める案を示す</b><em>BBCニュースは、変更によって新しいデジタルウォレット、鍵、チケットアプリが生まれうると伝え、規制当局は10月20日にGOV.UKで案を公表した。</em><span>テクノロジー · ✓ 3社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>レボリュートの利用者、他のサイトにも影響した障害の最中に支払いができなかったと訴え</b><em>BBCニュースは数千人の利用者がアプリの不具合を訴えたと伝え、イブニング・スタンダードは、グーグル・クラウドがレボリュートとライトムーブに影響した障害を謝罪したと伝えている。</em><span>ビジネス · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>監査規制当局、マンチェスター・シティの会計を調査中　ただし正式な調査は開始せず</b><em>BBCニュースは、規制当局が問題を調べていると報じ、Accountant.nlは、BDOが対象期間の大半でクラブの監査を担当したと伝えている。</em><span>サッカー · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>NHSの創設理念への国民の支持が英国全体で低下していると、ガーディアンが報道</b><em>ガーディアンによると、専門家は低下の背景に経済的困窮の深まりと移民への見方の変化を挙げており、調査は10月20日に公表された。</em><span>医療 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>テムズ・ウォーターの債権者、救済案を主導する元労働党閣僚を確保と、ガーディアンが報道</b><em>ガーディアンは10月20日にこの動きを報じ、ITVニュースは8月、貸し手が救済案が認められれば取締役会を刷新する計画だと伝えていた。</em><span>ビジネス · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">メディア · 公共放送<span>報道照合 ✓ 4社 · 人員削減の数は報道で食い違っている</span></div>
+      <h3 class="hl">BBC、BBCスリー、BBCスコットランド、ラジオ4エクストラのリニア放送の終了を確認　5億ポンドの削減を目指す</h3>
+      <div class="body">
+        <p>BBCは10月20日、5億ポンドの削減を進める一環として、BBCスリー、BBCスコットランド、ラジオ4エクストラをリニア放送のサービスとして終了すると発表したと、BBCニュース、ガーディアン、イブニング・スタンダードが報じている。ガーディアンの見出しは、BBCスリーとBBCスコットランドのテレビチャンネルが来年閉鎖されるとしており、ブリットブリーフは閉鎖時期を2027年春としている。報道によると、BBCスリーとBBCスコットランドはオンラインで続き、BBCスコットランドはiPlayer上のチャンネルとして残り、一部の番組はスコットランドのBBCワンとBBCツーでも放送され、ラジオ4エクストラの番組はBBCサウンズに移る。「レポーティング・スコットランド：ニュース・アット・セブン」はiPlayerに移らず、リニア放送のチャンネルの終了とともに終わると、ブリットブリーフは伝えている。</p>
+        <p>マット・ブリッティン会長は、今回の確認は視聴者にも同僚にもつらいものになると述べた。夏には、5億ポンドを削減する取り組みは一部サービスの終了を「十分に意味しうる」と述べており、BBCは6月、約550人の人員削減が見込まれると述べていた。ブリットブリーフによると、BBCニュースでさらに100人、スコットランドで10の職が減るが、影響を受ける雇用の総数は報道で食い違っている。音声の実演家らは、現在の形でのラジオ4エクストラの喪失を批判し、音声分野の芸術家の収入に大きな打撃になると述べた。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">経済 · 予算案<span>報道照合 ✓ 6社 · 税の小幅な変更は、すべての報道で排除されているわけではない</span></div>
+      <h3 class="hl">ヒーリー財務相、10月28日の予算案を前にキャピタルゲイン税の引き上げを否定</h3>
+      <div class="body">
+        <p>ジョン・ヒーリー財務相は、10月28日の初の予算案でキャピタルゲイン税を引き上げるべきだとの声を退けたと、BBCニュース、ガーディアン、シティAM、イブニング・スタンダードが報じている。BBCニュースによると、労働党の有力者らは、キャピタルゲイン税を所得税と同じ水準にそろえるよう求めており、批判する側は、それが裏目に出かねないと論じていた。ザワヤ経由のタイムズ紙は、税率を上げれば富裕層が英国を離れたり資産の売却を遅らせたりして税収が減りかねないと警告され、財務相が決断したと報じた。キャピタルゲイン税は現在、大半の利益に18%と24%の税率がかかる。シティAMによると、投資家は、同紙が「有害」と呼んだ憶測が終わったことを歓迎した。</p>
+        <p>デイリー・メールは、ヒーリー氏は代わりに銀行を狙っていると報じ、ザワヤが伝えたタイムズ紙の報道は、主な増収策は銀行への課徴金で、その収入は時限的な生活費支援策の財源に充てられるとしている。ロイターはフィナンシャル・タイムズを引いて、小幅な引き上げが検討されていたと報じており、変更が一切排除されたのかどうかは報道で食い違っている。財務省の立場は、税の決定は財務相が財政イベントで示すものだというものだ。保守党のケミ・ベイドノック党首は、ガーディアンが伝えた発言で、歳出を削らなければ彼の予算案はレイチェル・リーブス氏のものより悪くなると述べた。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">天気 · 嵐<span>報道照合 ✓ 5社 · 進路と最も強い風の時間帯はなお詰められている</span></div>
+      <h3 class="hl">今季初の名前つきの嵐「ストーム・オースティン」、風の黄色警報と最大時速70マイルの突風をもたらす</h3>
+      <div class="body">
+        <p>英国気象庁は、2026/27年シーズン最初の名前つきの嵐を「ストーム・オースティン」と命名した。BBCウェザーは、英国に激しい強風をもたらすと報じている。ガーディアンは、嵐は英国南部を直撃する見通しだとしている。AOLとGBニュースは、イングランド南部とウェールズの一部に風の黄色警報が出ていると伝え、時間帯は木曜の深夜ごろから金曜の正午までで、報道によって少しずれがある。時速50〜60マイルの突風が広く予想され、ユア・ウェザーによると、吹きさらしの沿岸部では時速70マイルを超えることもある。ミラーは、38の地域で備えるよう呼びかけられたと伝え、デイリー・メールは、干ばつに見舞われたイングランドの10月のハーフターム休暇が雨で台無しになると予報している。</p>
+        <p>予報官は、進路はなお詰められているところで、影響を受ける地域は変わりうるとしている。名前は英国気象庁、アイルランド気象局（Met Éireann）、オランダ気象局（KNMI）が共同で発表しており、オースティンは、アイルランド気象局の90周年を記念し、アイルランド気象サービスの初代局長オースティン・ネーグルをたたえて選ばれた。嵐は、中程度または大きな影響をもたらしうるとき、通常はアンバーまたは赤の警報が出るときに命名される。ブルームバーグの見出しは、ガス価格が急騰するなか、嵐が欧州の風力発電を押し上げるとしている。</p>
+      </div>
+      <div class="more">記事を開いてDailyDropの考えを読む</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>時速70マイル</b><span>吹きさらしの沿岸部で起こりうる突風、ユア・ウェザーによる</span></div>
+        <div><b>38</b><span>備えるよう呼びかけられた地域、ミラーによる</span></div>
+        <div><b>90周年</b><span>名前のオースティンが記念するアイルランド気象局の節目、英国気象庁の名前リストによる</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>英国は、イエメンでフーシ派と戦うため部隊を送る。</b> <span>違う。BBCニュース、ガーディアン、国防省の最新情報は、サウジアラビアの防衛を助けるための航空機と軍事顧問の防衛的な派遣だと伝えており、報道によればフーシ派への攻撃は含まれない。</span></div>
+        <div><b>マット・ハンコックの「防護の輪」は、パンデミックの当初から介護施設の安全を守っていた。</b> <span>英国コロナ公的調査が10月20日に公表した報告書はこの主張を根拠なしと認定し、イブニング・スタンダードとLBCがその認定を報じている。先の審問でハンコック氏は、輪が切れ目のないものではなかったと認めた。</span></div>
+        <div><b>ストーム・オースティンは英国全土に時速70マイルの風をもたらす。</b> <span>違う。黄色警報の対象はイングランド南部とウェールズの一部で、ユア・ウェザーによると時速50〜60マイルの突風が広く予想され、70マイル超は吹きさらしの沿岸部でのみ起こりうる。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/21 水</b><span>英国気象庁によるストーム・オースティンの最新情報、サウジアラビア派遣に関する国防省の追加発表、英国コロナ公的調査の介護施設報告書へのマット・ハンコック氏の反応に注目。</span><b>今週</b><span>イングランド南部とウェールズの一部への風の黄色警報は、木曜の深夜ごろから金曜の正午までとされるが、開始時刻は報道で食い違っている。</span><b>その先</b><span>ジョン・ヒーリー財務相の初の予算案は10月28日で、BBCスリー、BBCスコットランド、ラジオ4エクストラの終了は2027年春になる見込み。</span><b>読者へ</b><span>木曜の夜に移動する前に、郵便番号ごとの英国気象庁の警報を確認し、銀行アプリが使えなくなる場合に備えて予備の支払い手段を持っておくこと。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "政治 · コロナ公的調査 · 報道照合 ✓ 4社 · 政府が勧告をどう扱うかはまだ分かっていない", "title": "コロナ公的調査、ハンコック氏の介護施設「防護の輪」発言は根拠なしと認定　報告書は死者4万3000人超に言及", "what": "英国コロナ公的調査は、2026年10月20日、介護部門に関するモジュール6の報告書を公表した。調査の報道発表によると、パンデミックの当初から介護施設に「防護の輪」が張られていたとする主張は根拠がなく、イブニング・スタンダードは、マット・ハンコック氏の主張を「根拠なし」と見出しに掲げた。LBCは、ハンコック氏がこの主張をしたのは2020年5月だと報じている。報告書は介護部門を「いわば後回しの存在」と呼び、多くの入院患者がコロナ19の検査を受けないまま介護施設に退院させられ、施設が個人用防護具（PPE）の入手に苦労したと指摘し、こうした失敗はパンデミック前に成人向け社会的ケアの計画がなかったことによるとしている。保健・社会的ケア従事者への終末期ケア研修の義務化を勧告し、DNACPRの通知を一律に使うことを促す国の方針があった証拠は見つからなかったと述べている。デイリー・メール、ミラー、インディペンデントは見出しで死者4万3000人を挙げ、ガーディアンは、調査の委員長が、病院から退院した人を隔離するよう介護施設に助言しなかった失敗を重大だと述べたと伝えている。", "why": "「防護の輪」は存在しなかったという正式な認定は、政治的な言い回しを確定した記録に変える。また、失敗がどうつながっていたかも示している。社会的ケアの計画はパンデミック前から欠けていたため、検査、装備、退院の判断は計画のないまま下された。規模、すなわち2020年3月から2022年7月までに記録された4万3000人超の死者は、遺族が報告書に責任の所在を示すよう求めた理由を説明している。", "me": "家族が入居型や看護付きのケアを受けているなら、終末期ケアの研修と感染対策の計画に関する勧告が、施設に求められることを最も変えやすい部分だ。報告書自体は規則を変えないので、現実的な一歩は、地元の施設や自治体に、感染拡大に備えてどんな計画を持っているか尋ねることだ。", "a": "調査と遺族の運動団体は、ミラーとガーディアンの伝えるところでは、調査結果を、入居者が無防備なまま置かれ、閣僚の公の主張が実際に起きたことと合っていなかった証拠と受け止めており、決定の責任をめぐる問題はなお決着していない。", "b": "オープンデモクラシーとケアリング・タイムズが伝える先の審問でのハンコック氏の立場は、この言葉は政府が施設を守ろうとしたという意味で、患者を病院から出したのはましなほうの選択だった、というもので、輪が切れ目のないものではなかったことは認めた。", "say": "調査自身の発表と複数の報道機関が確認している点は、「防護の輪」についての認定、検査なしの退院、PPEの問題、4万3000人という数字。まだ分かっていない点は、政府がどの勧告を、いつ受け入れるか。ハンコック氏の反応と、勧告に関する閣僚の発言に注目したい。", "src": "英国コロナ公的調査（モジュール6の報道発表、10月20日）· ガーディアン（介護施設に関する認定、10月20日）· BBCニュース（調査の指摘、10月20日）· イブニング・スタンダード（ハンコック氏の主張は「根拠なし」、10月20日）"},
+    "s2":{"kick": "国防 · 中東 · 報道照合 ✓ 5社 · 何機が関わるかは報道で示されていない", "title": "英国、サウジアラビアをフーシ派の攻撃から守るため英国空軍の戦闘機を派遣へ　任務は防衛", "what": "国防省は10月20日、サウジアラビアへの英軍の支援に関する作戦の最新情報を公表した。BBCニュース、ガーディアン、イブニング・スタンダードは、英国が王国をフーシ派の攻撃から守るため戦闘機を派遣すると報じ、ガーディアンは英国空軍のタイフーン戦闘機を挙げている。ブルームバーグは、英国空軍がサウジアラビアを守る任務に就くと報じ、ロイターがこれを伝えた。AP通信は、英国が支援を拡大し、「防衛的な」空中哨戒を含めると伝えた。報道によると、役割は防衛で、フーシ派への攻撃は含まれない。10月20日の報道は、アトラスA400M輸送機と軍事顧問を加え、空中給油の取り決めを90日間延長したと伝えている。9月には、ITVニュースとアルジャジーラが、RAFボイジャー給油機1機という先の措置を報じ、ロイターとブルームバーグは、サウジアラビアが攻撃を受けて投資会議を2027年に延期したと伝えている。", "why": "給油機から戦闘機への移行は、英国の航空機を飛来するミサイルやドローンに近づけ、役割が防衛であっても、英国が紛争に引き込まれる危険を高める。また、政府が装備にとどまらない形で湾岸の協力国を支える意思があることも示している。", "me": "ほとんどの読者にとって直接の影響は間接的だ。フーシ派の攻撃は域内の旅行と輸送のコストを押し上げており、フィナンシャル・タイムズは、サウジアラビア発のプライベートジェットのチャーター費が急騰していると報じている。湾岸への渡航を考えているなら、予約する前に外務省の渡航情報を確認したい。", "a": "この動きを支持する側は、政府の主張を報道が伝えるところでは、防衛の役割ならサウジアラビアの都市の民間人を守れ、安全保障上の協力関係にも応え、イエメンへの攻撃も伴わないと述べている。", "b": "懸念を報道が反映している批判派は、防衛任務でも直接の衝突につながりうると述べ、議会に発言の機会があったのかを問うている。一方、フーシ派は、攻撃はイエメンで自分たちが支配する地域への爆撃への応答だと主張している。", "say": "確認されている点は、国防省が10月20日に発表し、複数の報道機関が伝えた防衛的な派遣。確認されていない点は、航空機の数、滞在期間、交戦規則。議会での質問と国防省のさらなる発表に注目したい。", "src": "GOV.UK（国防省の作戦最新情報、10月20日）· BBCニュース（サウジアラビア防衛に戦闘機、10月20日）· ガーディアン（サウジアラビアにタイフーン、10月20日）· イブニング・スタンダード（サウジアラビアに戦闘機、10月20日）· AP通信（防衛的な空中哨戒の拡大、10月20日）"},
+    "s3":{"kick": "メディア · 公共放送 · 報道照合 ✓ 4社 · 人員削減の数は報道で食い違っている", "title": "BBC、BBCスリー、BBCスコットランド、ラジオ4エクストラのリニア放送の終了を確認　5億ポンドの削減を目指す", "what": "BBCは10月20日、BBCスリー、BBCスコットランド、ラジオ4エクストラをリニア放送のサービスとして終了すると発表したと、BBCニュース、ガーディアン、イブニング・スタンダードが報じている。狙いは5億ポンドの削減だ。ガーディアンの見出しは、二つのテレビチャンネルが来年閉鎖されるとしており、ブリットブリーフは閉鎖時期を2027年春としている。報道によると、BBCスリーとBBCスコットランドはオンラインで続き、BBCスコットランドはiPlayerに残り、一部の番組はスコットランドのBBCワンとBBCツーで放送され、ラジオ4エクストラの番組はBBCサウンズに移る。「レポーティング・スコットランド：ニュース・アット・セブン」はリニア放送のチャンネルとともに終わると、ブリットブリーフは伝えている。マット・ブリッティン会長は、このニュースは視聴者にも同僚にもつらいものになると述べた。ブリットブリーフは、BBCニュースでさらに100人、スコットランドで10の職が減ると報じ、BBCは6月に約550人の人員削減が見込まれると述べていた。", "why": "放送チャンネルを閉じて番組はオンラインに残すことは、BBCの支出を編成からストリーミングへと移すことになる。送信や編成のコストは減るが、とくに高齢の視聴者・聴取者やネットをあまり使わない人々を、インターネット接続が必要なサービスへ移すことにもなる。", "me": "BBCスリーやBBCスコットランドを見たり、ラジオ4エクストラを聴いたりしているなら、2027年春からはiPlayerかBBCサウンズが必要になる。すぐに変わることはなく、受信料もこの発表の影響を受けない。", "a": "計画を支持する側は、報道に出るBBC幹部も含め、視聴者が大切にする番組を守り、オンラインでより若い視聴者に届くには、サービスを変えなければならないと述べている。", "b": "報道に登場する音声の実演家のような批判派は、現在の形でのラジオ4エクストラの喪失は実演家の収入を傷つけ、スコットランドのチャンネルを閉じればスコットランドでのBBCの提供が弱まると述べている。", "say": "3社の報じたBBCの発表で確認されている点は、三つの終了と5億ポンドの狙い。確認されていない点は、正確な終了日と、報道で食い違っている雇用の総数。BBCの詳しい日程と、スコットランド政府や実演家の組合の反応に注目したい。", "src": "BBCニュース（BBCスリー、BBCスコットランド、ラジオ4エクストラを終了、10月20日）· ガーディアン（チャンネルは来年閉鎖、10月20日）· イブニング・スタンダード（リニアのチャンネルを終了、10月20日）· ブリットブリーフ（人員削減、10月20日）"},
+    "s4":{"kick": "経済 · 予算案 · 報道照合 ✓ 6社 · 税の小幅な変更は、すべての報道で排除されているわけではない", "title": "ヒーリー財務相、10月28日の予算案を前にキャピタルゲイン税の引き上げを否定", "what": "ジョン・ヒーリー財務相は、10月28日の初の予算案でキャピタルゲイン税を引き上げるべきだとの声を退けたと、BBCニュース、ガーディアン、シティAM、イブニング・スタンダードが報じている。BBCニュースによると、労働党の有力者らはこの税を所得税と同じ水準にそろえるよう求めており、批判する側は、それが裏目に出かねないと論じていた。ザワヤ経由のタイムズ紙は、ヒーリー氏が、税率を上げれば富裕層が英国を離れたり資産の売却を遅らせたりして税収が減りかねないと警告されたと報じた。キャピタルゲイン税は現在、大半の利益に18%と24%の税率がかかる。シティAMは、投資家が憶測の終わりを歓迎したと報じている。デイリー・メールは、同氏が銀行を狙っていると伝え、ザワヤが伝えたタイムズ紙の報道は、銀行への課徴金が主な増収策になり、時限的な生活費支援策の財源になるとしている。ロイターはフィナンシャル・タイムズを引いて、小幅な引き上げが検討されていたと報じた。", "why": "キャピタルゲイン税は、資産を売ったときにだけ払う税なので、税率だけで行動が変わりうる数少ない大型税の一つだ。税率をそろえることを排除すれば、見込まれた税収源が一つ消え、予算案を前に、銀行への課徴金のような他の策に負担が移る。", "me": "株式、ファンド、二軒目の不動産を持っているなら、18%と24%の税率はいまのところ維持される見通しだが、確定するのは10月28日の予算案だ。小幅な変更がなお可能かどうかは報道で食い違っているので、このニュースだけを理由に売るのは避けたい。", "a": "この決定を支持する側は、シティAMとタイムズ紙の伝えるところでは、税率を上げれば投資家が海外へ流れて税収が減りかねないので、税率を据え置くことが投資を守ると述べている。", "b": "税率をそろえることを求めた労働党の有力者は、BBCニュースの説明では、利益は稼ぎより軽く課税されていると論じ、保守党のケミ・ベイドノック党首は、ガーディアンで、歳出を削らなければ予算案は前回より悪くなると主張している。", "say": "複数の報道機関が確認している点は、財務相がキャピタルゲイン税を所得税と同じ水準にそろえることを退けたこと。確認されていない点は、小幅な変更が計画されているかどうかと、銀行への課徴金の規模。10月28日の予算案の演説に注目したい。", "src": "BBCニュース（財務相がキャピタルゲイン税の要求を退ける、10月20日）· ガーディアン（ヒーリー氏、キャピタルゲイン税の引き上げを拒否へ、10月20日）· シティAM（ヒーリー氏、キャピタルゲイン税の引き上げを否定、10月20日）· イブニング・スタンダード（ヒーリー氏、キャピタルゲイン税の引き上げを否定、10月20日）· デイリー・メール（予算案と銀行、10月20日）· ザワヤ（タイムズ紙の報道の転載、10月20日）"},
+    "s5":{"kick": "天気 · 嵐 · 報道照合 ✓ 5社 · 進路と最も強い風の時間帯はなお詰められている", "title": "今季初の名前つきの嵐「ストーム・オースティン」、風の黄色警報と最大時速70マイルの突風をもたらす", "what": "英国気象庁は、2026/27年シーズン最初の名前つきの嵐を「ストーム・オースティン」と命名した。BBCウェザーは激しい強風をもたらすと報じ、ガーディアンは英国南部を直撃する見通しだとしている。AOLとGBニュースは、イングランド南部とウェールズの一部に風の黄色警報が出ていると伝え、木曜の深夜ごろから金曜の正午までで、開始の表現は少し異なる。ユア・ウェザーは、時速50〜60マイルの突風と、吹きさらしの沿岸部では時速70マイル超を伝えている。ミラーは、38の地域で備えるよう呼びかけられたと伝え、デイリー・メールは、干ばつに見舞われたイングランドの10月のハーフターム休暇が雨で台無しになると予報している。予報官は、進路はなお詰められているとしている。オースティンという名前は、アイルランド気象局の90周年を記念し、アイルランド気象サービスの初代局長オースティン・ネーグルをたたえて選ばれた。ブルームバーグの見出しは、ガス価格が急騰するなか、嵐が欧州の風力発電を押し上げるとしている。", "why": "黄色警報は、混乱が確実というより起こりうることを意味するが、強い突風は枝を落とし、交通に影響する。嵐は乾いた時期のあとに来るため、木の葉や乾いた地面が風の影響を増すことがあり、風力発電への影響は、天気がエネルギー価格にどうつながるかを示している。", "me": "イングランド南部やウェールズに住んでいるなら、庭の家具を固定し、木曜の夜と金曜の移動計画を確かめ、出かける前に地域の英国気象庁の警報を見ておきたい。", "a": "予報官と英国気象庁は、報じられているところでは、警報は黄色であり、時速70マイルの最も強い突風は吹きさらしの沿岸部に限られる可能性が高いと強調している。", "b": "ミラーとデイリー・メールのタブロイド報道は、ハーフターム休暇の予定への危険に傾き、世帯に基本的な物の買い置きを促しており、影響を受ける地域の数についてより警戒的な調子を映している。", "say": "確認されている点は、嵐に名前がついたこと、風の黄色警報が出ていること、沿岸部で時速60マイル超の突風がありうること。確認されていない点は、正確な進路と時間帯で、予報官は変わりうるとしている。水曜と木曜の英国気象庁の最新情報に注目したい。", "src": "BBCウェザー（強風警報、10月20日）· ガーディアン（嵐は英国南部を直撃の予報、10月20日）· ミラー（38の地域に備えを呼びかけ、10月20日）· デイリー・メール（ハーフターム休暇が雨で台無しの予報、10月20日）· 英国気象庁（2026/27年の嵐の名前、9月）"},
+    "i1":{"kick": "テクノロジー · 報道照合 ✓ 3社", "title": "競争・市場庁、アップルにiPhoneの非接触決済技術へのアクセス拡大を求める案を示す", "what": "競争・市場庁は、GOV.UKによると、10月20日、アップルのiPhoneの非接触技術を開放するための案を示した。BBCニュースは、提案された変更によって新しいデジタルウォレットや鍵、チケットアプリが生まれうると伝えている。シティAMは、アップルがiPhoneの非接触決済をめぐって英国の取り締まりに直面していると見出しに掲げ、ロイターは、英国がアップルの非接触決済の支配を崩そうとしていると見出しに掲げた。イブニング・スタンダードは、規制当局がアップルは非接触決済のシステムへのアクセスを開放すべきだと述べたと伝えている。この案は最終決定ではなく、アップルが受け入れたとは報じられていない。", "why": "スマートフォンは、決済カードや交通パス、鍵を一つの門番の後ろに置いている。他の開発者が同じ非接触チップを使えるなら、銀行や交通事業者が独自のウォレットを提供でき、手数料が下がり、選択肢が広がる可能性がある。", "me": "いま何かを変える必要はない。案が実施されれば、iPhoneでアップルウォレットの代わりに、銀行や交通事業者のウォレットを使えるようになるかもしれない。", "a": "規制当局の主張は、BBCニュースとGOV.UKの伝えるところでは、アクセスが広がれば、競合のウォレット、鍵、チケットアプリがアップルのものと競争できるというものだ。", "b": "アップルは他の市場で、決済チップへのアクセスを制限することが安全を守り、不正対策にも役立つと主張してきた。フィナンシャル・タイムズは同社がこの立場を守ると報じており、案は争われる可能性がある。", "say": "確認されている点は、規制当局が10月20日に案を公表したこと。確認されていない点は、最終的な規則、日程、アップルの正式な回答。意見募集の期間とアップルの声明に注目したい。", "src": "GOV.UK（競争・市場庁の案、10月20日）· BBCニュース（英国、アップルにアクセス拡大を求める、10月20日）· シティAM（iPhoneの非接触決済をめぐる取り締まり、10月20日）"},
+    "i2":{"kick": "ビジネス · 報道照合 ✓ 4社", "title": "レボリュートの利用者、他のサイトにも影響した障害の最中に支払いができなかったと訴え", "what": "レボリュートの利用者は10月20日、アプリで支払いができない、または資金にアクセスできないと訴えた。BBCニュースは、障害が「複数のサービス」に及び、数千人の利用者が問題を訴えたと伝えている。ガーディアンの見出しは、同社が「サービスの中断」に見舞われるなか、数百万人がアプリやカードを使えなかったとしている。シティAMは、利用者が支払いをできなかったと報じている。イブニング・スタンダードは、グーグル・クラウドが、ライトムーブなどのサイトにも影響した障害を謝罪したと報じている。影響を受けた人数は報道で食い違っている。", "why": "多くの人がメインの口座を一つのアプリに頼っているため、障害が起きると、レジで支払ったり送金したりできなくなりうる。共有のクラウド事業者の不具合は、どれほど多くのサービスが同じインフラに依存しているかも示している。", "me": "アプリだけの銀行は数時間使えなくなることがあるので、必要な支払いのために予備のカードか現金を持っておきたい。二重に請求されたり、支払いが失敗したりした場合は、明細を確認して銀行に連絡すること。", "a": "報道に出る利用者や論者は、レジでカードが拒否され、口座にアクセスできなくなった人々など、障害そのものに焦点を当てている。", "b": "レボリュートの説明は、シティAMとガーディアンが伝えるところでは「サービスの中断」であり、イブニング・スタンダードは、原因の一部を銀行自身のシステムではなくクラウド事業者の障害に置いている。", "say": "確認されている点は、10月20日にレボリュートと他のサイトに影響した障害があり、クラウド事業者が謝罪したこと。確認されていない点は、影響を受けた利用者の数と、原因がすべて事業者にあったのかどうか。レボリュートによる原因の説明に注目したい。", "src": "BBCニュース（レボリュートの障害、10月20日）· ガーディアン（レボリュートのサービス中断、10月20日）· イブニング・スタンダード（グーグル・クラウドの障害、10月20日）· シティAM（利用者が支払いできず、10月20日）"},
+    "i3":{"kick": "サッカー · 報道照合 ✓ 2社", "title": "監査規制当局、マンチェスター・シティの会計を調査中　ただし正式な調査は開始せず", "what": "BBCニュースは10月20日、監査規制当局がマンチェスター・シティの会計を調べていると報じている。正式な調査は始まっていないが、規制当局は問題について問い合わせを行っているという。オランダの業界メディアであるAccountant.nlは、2026年10月に、BDOが対象期間の大半でクラブの監査を担当したと報じている。同紙は、財務報告評議会がBDOや会計を作成した人々に対して正式な調査を始めていないこと、クラブは公益事業体ではないため、クラブの監査監督はICAEWにあることを伝えている。マンチェスター・シティは同じ夜、チャンピオンズリーグでAEKアテネに勝ち、フィル・フォーデンがハットトリックを決めたと、ガーディアンは報じている。", "why": "規制当局が動けるかどうかは、だれを監督しているかにかかっている。公益事業体の監査は財務報告評議会（FRC）の管轄で、それ以外のクラブは専門職団体のICAEWの管轄になる。それによって、だれが監査人を調べ、どんな制裁がありうるかが決まる。", "me": "サポーターにとって、きょうピッチ上で何かが変わることはない。問い合わせは、会計がどう監査されたかに関するもので、試合結果ではない。", "a": "規制当局の立場は、BBCニュースが伝えるところでは、正式な調査はせずに問い合わせを行っており、選択肢を開いたままにしているというものだ。", "b": "Accountant.nlの見方は、クラブが公益事業体ではないため、管轄の問題がBDOと英国の監査監督制度の双方に圧力をかけているというものだ。", "say": "BBCニュースが確認している点は、問い合わせはあるが正式な調査はないこと。確認されていない点は、正式な案件に進むのかどうかと、どの団体が主導するのか。規制当局またはICAEWの声明に注目したい。", "src": "BBCニュース（監査規制当局の問い合わせ、10月20日）· Accountant.nl（マンチェスター・シティとBDO、2026年10月）"},
+    "i4":{"kick": "医療 · 報道照合 ✓ 2社", "title": "NHSの創設理念への国民の支持が英国全体で低下していると、ガーディアンが報道", "what": "ガーディアンは10月20日、NHSの創設理念への国民の支持が英国全体で低下していると報じた。専門家は、この低下を経済的困窮の高まりと、移民への見方の変化に結びつけているという。キングス・ファンドは2024年3月に、2023年の英国社会意識調査で、必要なときに無料でケアを受けられることを91%が支持し、税による財源を82%が支持し、すべての人が利用できることを82%が支持したと報告した。同じ発表は、NHSへの国民の満足度が24%で、半数超の52%が不満だったと報告している。", "why": "原則への支持は、税で賄う医療サービスにとって主な政治的な守りになってきた。それが弱まれば、自己負担や保険、利用の制限を求める議論が、とくに制度に負荷がかかっているときに耳を傾けられやすくなる。", "me": "この調査は、NHSのケアを受ける権利を変えない。ケアは利用時に無料のままだ。ただ、だれが対象になるべきかという考え方が移りつつあることは示している。", "a": "ガーディアンが引く専門家は、この低下は、サービスの拒否ではなく、家計への圧力と移民をめぐる議論の変化を映していると論じている。", "b": "創設理念の擁護者は、キングス・ファンドがまとめた2023年のような以前の調査を挙げ、そこでは大多数が、無料のケア、税による財源、すべての人の利用をなお支持していたと指摘する。", "say": "確認されている点は、ガーディアンが伝える支持の低下と、専門家が挙げる理由。確認されていない点は、最新の調査での低下の大きさで、入手できる要約には示されていない。調査の全数値に注目したい。", "src": "ガーディアン（NHSの創設理念の調査、10月20日）· キングス・ファンド（英国社会意識調査2023の結果、2024年3月）"},
+    "i5":{"kick": "ビジネス · 報道照合 ✓ 2社", "title": "テムズ・ウォーターの債権者、救済案を主導する元労働党閣僚を確保と、ガーディアンが報道", "what": "ガーディアンは10月20日、テムズ・ウォーターの債権者が、救済案を主導する元労働党の閣僚を確保したと報じた。ITVニュースは8月25日、貸し手が救済案が認められれば取締役会を刷新する計画だと報じていた。債権者グループのロンドン・アンド・バレー・ウォーターは、秋に規制当局のオフワットと政府の同意を得たいと考えており、早ければ10月に資金が尽きる可能性があると警告していたと、8月と9月の報道は伝えている。当時の環境相エマ・レイノルズ氏は6月、この計画は顧客と環境を守るのに十分ではないと考えていると述べ、のちにデイム・アンジェラ・イーグルが、アンディ・バーナム氏によって環境相に任命された。", "why": "テムズ・ウォーターは数百万人の顧客にサービスを提供し、多額の債務を抱えている。債権者による救済には、オフワットと政府の承認が必要なので、政治経験のある人物は、案への支持を得るのに役立つかもしれない。", "me": "水道料金とサービスにすぐ影響はない。この決定は、だれが会社を所有して運営するか、顧客と債権者のどちらがより多くの費用を負うかを決めることになる。", "a": "債権者の見方は、報じられているところでは、民間による救済なら国有化なしで会社を守れ、取締役会の刷新も伴うというものだ。", "b": "AJベルが引く議員グループを含む批判派は、債権者の救済案は捨てるべきだと論じ、閣僚は、どんな計画も顧客と環境を守らなければならないと述べている。", "say": "確認されている点は、任命とこれまでの取締役会の計画に関するガーディアンの報道。確認されていない点は、この閣僚の役割と規制当局の判断。オフワットと政府の反応に注目したい。", "src": "ガーディアン（テムズ・ウォーターの債権者、10月20日）· ITVニュース（債権者が取締役会の刷新を計画、8月25日）"}
+  };
+
+  const G = {
+    "英国コロナ公的調査":{"f": "公的調査", "d": "英国のパンデミック対応を調べる独立の公的調査。", "w": "介護部門の報告書を公表した。"},
+    "モジュール6":{"f": "公的調査", "d": "介護部門を扱う調査の段階。", "w": "10月20日に公表された報告書。"},
+    "防護の輪":{"f": "政治", "d": "介護施設に張られていたとされる保護を指す言い回し。", "w": "調査が根拠なしと認定した。"},
+    "介護施設":{"f": "社会的ケア", "d": "成人向けの入居型・看護付きの施設。", "w": "報告書の焦点。"},
+    "PPE":{"f": "医療", "d": "個人用防護具。マスクやガウンなど。", "w": "施設は入手に苦労した。"},
+    "DNACPR":{"f": "医療", "d": "心肺蘇生を試みないという決定（Do Not Attempt Cardiopulmonary Resuscitation）。", "w": "調査は、一律に使う国の方針の証拠は見つからなかったとした。"},
+    "ハンコック":{"f": "政治", "d": "マット・ハンコック氏。パンデミック時の保健相。", "w": "「防護の輪」の主張をした。"},
+    "イブニング・スタンダード":{"f": "メディア", "d": "ロンドンの日刊紙。", "w": "「根拠なし」の認定を見出しにした。"},
+    "LBC":{"f": "メディア", "d": "ロンドンのトーク・ニュース放送局。", "w": "主張がなされたのは2020年5月と報じている。"},
+    "オープンデモクラシー":{"f": "メディア", "d": "独立系のニュース組織。", "w": "ハンコック氏の先の審問での譲歩を報じた。"},
+    "RAF":{"f": "国防", "d": "英国空軍（Royal Air Force）。", "w": "戦闘機と給油機を提供する。"},
+    "タイフーン":{"f": "国防", "d": "ユーロファイター・タイフーン。多用途の戦闘機。", "w": "ガーディアンが名前を挙げた。"},
+    "フーシ派":{"f": "地政学", "d": "イランが支援する武装勢力。イエメンの多くを支配する。", "w": "攻撃の発信元。"},
+    "国防省":{"f": "政府", "d": "軍を所管する英国政府の省庁。", "w": "作戦の最新情報を公表した。"},
+    "A400M":{"f": "国防", "d": "エアバスのアトラス軍用輸送機。", "w": "派遣に加わった。"},
+    "スカイ・セイバー":{"f": "国防", "d": "英国の地上配備型防空システム。", "w": "すでにサウジアラビアにある。"},
+    "空中給油":{"f": "国防", "d": "飛行中の航空機に燃料を補給すること。", "w": "取り決めは90日間延長された。"},
+    "ボイジャー":{"f": "国防", "d": "RAFの空中給油機。", "w": "9月に示された。"},
+    "BBCスリー":{"f": "メディア", "d": "BBCの若者向けチャンネル。", "w": "放送チャンネルとしては終了する。"},
+    "BBCスコットランド":{"f": "メディア", "d": "スコットランド向けのBBCテレビチャンネル。", "w": "放送チャンネルとしては終了する。"},
+    "ラジオ4エクストラ":{"f": "メディア", "d": "BBCのデジタルラジオ局。", "w": "番組はBBCサウンズに移る。"},
+    "BBCサウンズ":{"f": "メディア", "d": "BBCの音声配信サービス。", "w": "ラジオ4エクストラの番組を載せる。"},
+    "iPlayer":{"f": "メディア", "d": "BBCの動画配信サービス。", "w": "BBCスコットランドはここでチャンネルとして残る。"},
+    "リニア放送":{"f": "メディア", "d": "編成に沿って流れる放送のテレビ・ラジオ。", "w": "サービスはリニア放送としては終わる。"},
+    "マット・ブリッティン":{"f": "メディア", "d": "BBCの会長（director-general）。", "w": "今回の確認はつらいものになると述べた。"},
+    "キャピタルゲイン税":{"f": "税", "d": "資産を売ったときの利益にかかる税。", "w": "財務相が引き上げを否定した。"},
+    "予算案":{"f": "経済", "d": "財務相が税と歳出について示す年次の表明。", "w": "10月28日に予定されている。"},
+    "財務相":{"f": "政府", "d": "英国の財政を担う閣僚。", "w": "ジョン・ヒーリー氏が務める。"},
+    "ヒーリー":{"f": "政治", "d": "ジョン・ヒーリー氏。財務相。", "w": "引き上げを求める声を退けた。"},
+    "労働党":{"f": "政治", "d": "与党。", "w": "一部の有力者が税率をそろえることを求めた。"},
+    "課徴金":{"f": "税", "d": "企業や活動に課される負担金。", "w": "銀行に対するものが報じられている。"},
+    "財務省":{"f": "政府", "d": "英国の財政を所管する省庁。", "w": "税の決定は財政イベントで示すものだとしている。"},
+    "ベイドノック":{"f": "政治", "d": "ケミ・ベイドノック氏。保守党党首。", "w": "予算案を批判した。"},
+    "英国気象庁":{"f": "天気", "d": "英国の国の気象機関（Met Office）。", "w": "嵐に名前をつけた。"},
+    "ストーム・オースティン":{"f": "天気", "d": "2026/27年シーズン最初の名前つきの嵐。", "w": "黄色警報の理由になった。"},
+    "風の黄色警報":{"f": "天気", "d": "英国気象庁の3段階の警報で最も低いもの。", "w": "イングランド南部とウェールズの一部に出ている。"},
+    "アイルランド気象局":{"f": "天気", "d": "アイルランドの国の気象機関（Met Éireann）。", "w": "オースティンは同局の90周年を記念する。"},
+    "突風":{"f": "天気", "d": "短時間だけ強まる風。", "w": "吹きさらしの沿岸部では時速70マイルまで。"},
+    "競争・市場庁":{"f": "規制", "d": "英国の競争規制当局。", "w": "アップルへの案を示した。"},
+    "非接触決済":{"f": "決済", "d": "かざすだけで支払う技術。", "w": "案の対象となる技術。"},
+    "レボリュート":{"f": "銀行", "d": "英国のデジタル銀行。", "w": "障害に見舞われた。"},
+    "グーグル・クラウド":{"f": "テクノロジー", "d": "クラウドコンピューティングのプラットフォーム。", "w": "障害を謝罪した。"},
+    "BDO":{"f": "会計", "d": "監査法人。", "w": "対象期間の大半で監査を担当した。"},
+    "NHS":{"f": "医療", "d": "国民保健サービス（National Health Service）。", "w": "その原則への支持が低下している。"},
+    "テムズ・ウォーター":{"f": "公益事業", "d": "ロンドンとテムズ川流域に水道を供給する会社。", "w": "債権者による救済案の対象。"},
+    "債権者":{"f": "金融", "d": "お金を貸している側。", "w": "救済案を主導している。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

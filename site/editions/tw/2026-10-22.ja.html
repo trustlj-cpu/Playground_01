@@ -1,0 +1,374 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>加権指数 · 21日終値 · 終値データはまだ出そろわず</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7757.17</b>米S&amp;P500種指数 · 21日終値 · 0.58%上昇</div>
+    </div>
+    <div class="dateline"><span>第18号 · 朝刊</span><b>2026年10月22日 木曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会 · 台風<span>✓ 2社 · 陸上警報の実際の発表時刻と各県市の休業・休校は未確認</span></div>
+      <h2 class="hl">強い台風薔琵が接近　海上警報は発表済み、陸上警報は早ければきょう昼前後</h2>
+      <p class="deck">気象署は薔琵が23日に台湾へ最接近すると予想し、宜蘭、花蓮と北部を警戒区域に入れた。台湾北部が襲われる確率は約6割。</p>
+      <div class="body">
+        <p>中央気象署は21日午後11時30分、強い台風薔琵（Champi）の海上台風警報を発表した。第1弾の警戒範囲は台湾北東部の海上、台湾南東部の海上（蘭嶼、緑島を含む）とバシー海峡で、自由時報が伝えた。気象署の説明では、薔琵は23日に台湾へ最も近づく見通しで、進路が変わらなければ、早ければ22日昼前後に陸上台風警報を発表する。ほかの報道は、午後の発表を見込むと書いている。自由時報はさらに、気象署が、台湾の陸地はなお薔琵の進路の「誤差」の範囲内にあり、台風が近づく間に勢力がさらに強まり暴風圏が広がるおそれもあると注意を促し、台湾に最も近づくのは金曜だと伝えた。気象署はまた、薔琵の進路は先の予想よりやや西に修正されたとして、宜蘭、花蓮と北部地域は警戒を高める必要があり、台湾北部が台風に襲われる確率は今も6割あると指摘した。</p>
+        <p>休業・休校については、自由時報が、気象署が17県市の風速と雨量が休業・休校の基準に達すると評価したと報じた。《Taipei Times》は、気象署が金曜と土曜は嵐の影響が最も強い2日間だと警告し、薔琵は弱まる可能性があるものの、当局者は高波の危険を引き続き注意したと伝えた。台風論壇は、風速7級の暴風圏が台湾全土を覆うおそれがあると指摘し、風雨が最も激しい時間帯を説明した（自由時報）。台風の影響で、新竹県の統一地方選挙の候補者番号のくじ引きは、休業・休校になった場合は10/27に延期される。台湾シリーズも、台北市の休業・休校の有無に合わせて調整した最新の日程を発表した。台東農改場は、農家向けの台風対策を示した。陸上警報が出るか、警戒範囲がどう調整されるかは、気象署の昼前後の最新発表を待つ必要があり、現時点では未確認だ。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>6割</b><span>台湾北部が薔琵に襲われる確率</span></div>
+        <div><b>17県市</b><span>風速・雨量が休業・休校の基準に達する</span></div>
+        <div><b>10/27</b><span>新竹県の番号くじ引きの延期日</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">社会 · 越境の脅し<span>✓ 2社 · 「殺し屋を雇って偽の交通事故」との説明の裏付け状況は未確認</span></div>
+      <h3 class="hl">黄逸豪氏に「中国が殺し屋を雇い偽の交通事故」との指摘　5人が起訴、矢板明夫氏が法改正を促す</h3>
+      <div class="one">
+        <p>相声（漫才）コメディアンの黄逸豪氏は、公演で中国共産党と習近平氏をたびたび皮肉っており、これまでに中国人の指示で、国境を越えてペンキや糞尿をまかれる脅迫を受けた。自由時報によると、21日にはさらに、中国側が殺し屋を雇って偽の交通事故を起こし、黄逸豪氏の「手足を断つ」ようにさせようとしたとの話が飛び出し、世論で議論を呼んでいる。自由娯楽は、台湾派のネット著名人・八炯氏も脅されたことがあるとして内幕を明かしたと伝えた。自由時報によると、同じく越境弾圧を受けたことのある矢板明夫氏は、藍白の立法委員に法改正で穴をふさぐよう強く訴えた。《Taipei Times》は、中国に関わるこの襲撃事件で5人が起訴されたと伝えた。黄逸豪氏は検察・警察の捜査に感謝し、国民党立法院党団の総召傅崐萁氏に関連立法への支持を呼びかけた。報道は、「手足を断つ」との説明の裏付け状況を伝えておらず、起訴された5人がその説明と同一の事件かどうかにも触れていない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>信民協会の世論調査：蒋万安氏が沈伯洋氏に17ポイント差で後れ、国民党が警鐘</b><em>信民協会の世論調査で、蒋万安氏が沈伯洋氏に17ポイント後れていることが分かり、国民党の議員候補・李明璇氏は笑い話にしてはいけないと述べた。</em><span>政治 · ✓ 1社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>Meta、ニューメキシコ州への250億ドルの賠償を裁判官が命じる</b><em>陪審がMetaはユーザーを欺いたと評決した後、裁判官は21日、Metaにニューメキシコ州へ250億ドルにのぼる支払いを命じた。</em><span>国際 · ✓ 1社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>当局がGrabとFoodpandaの合併を阻止　報道はUberの出資関係に言及</b><em>《Taipei Times》によると、当局はGrabとFoodpandaの合併を阻止し、Uber EatsとGrabが長年提携してきたこと、UberがGrab株を持っていることにも触れた。</em><span>財経 · ✓ 1社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>刑事局：選挙戦の人気商品が詐欺の口実に　32人が被害、損失700万超</b><em>刑事警察局の集計では被害は計32件で、すべてネットオークション詐欺、損失は700万元超。詐欺グループは統一地方選挙の人気商品で罠を仕掛けた。</em><span>社会 · ✓ 1社</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>米食品輸入業者ゲラートが提訴　トランプ氏のカナダ産品への50%関税の取り消しを求める</b><em>ゲラート・グローバル・グループは20日、米国際貿易裁判所に提訴し、カナダ産品の一部に課した50%の関税の取り消しと還付を求めた。</em><span>財経 · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">財経 · 米国株<span>✓ 3社 · SpaceXとテスラの合併案が正式に進むかは未確認</span></div>
+      <h3 class="hl">SpaceXの決算がAI期待を支え米国株は上昇　S&amp;P500種指数は0.58%高</h3>
+      <div class="body">
+        <p>中央社によると、マスク氏率いる宇宙開発企業SpaceXは20日の米国株の取引終了後、9月30日までの前四半期の売上高が予想を上回り、前年比で1倍超増えたと発表した。人工知能（AI）とスターリンク（Starlink）衛星事業の急伸が背景にある。中央社が21日にロンドンから外電をまとめて伝えたところでは、SpaceXは上場後初めて四半期黒字を計上し、欧州の主要株式市場は21日に上昇して終えた。</p>
+        <p>中央社はさらに、スーパー・マイクロ・コンピューター（Super Micro Computer）も四半期決算を発表し、SpaceXとともにAI関連株への投資家の自信を支えたと伝えた。米国株の主要指数は21日に上昇して終え、相場データによると、S&amp;P500種指数は21日に7757.17ポイントで終え、0.58%上昇した。前日の米国株は、ダウ工業株30種平均が500ポイント超の大幅上昇で引け、資金は工業株に向かい、国際原油価格は下がった。ブルームバーグによると、SpaceXとテスラは合併の可能性を協議しており、マスク氏は支持を表明した。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">国際 · ロシア・ウクライナ<span>✓ 3社 · 米ロ中サミットの日程と場所、三者協議の時期は未確認</span></div>
+      <h3 class="hl">トランプ氏「ロシア・ウクライナ戦争、終結に最も近いかも」　プーチン氏は来月の三者協議再開に同意</h3>
+      <div class="body">
+        <p>米国のトランプ大統領は22日、ホワイトハウスで記者団に、ロシア・ウクライナ戦争はこれまでで最も終結に近づいたかもしれないとの認識を示し、ロシアのプーチン大統領が拘束していた米国人1人を釈放したことに謝意を述べた、とAFP通信が伝えた。米国のウィトコフ特使（Steve Witkoff）はSNSに、プーチン氏との会談は「建設的」だったが「重要な作業」はまだ残っていると書いた。</p>
+        <p>クレムリン当局者は、プーチン氏が21日、来月ワシントンおよびキーウとの「三者協議」を再開することに同意したと述べ、2月以来初めての同様の協議になる可能性がある。クレムリンはさらに、プーチン氏、トランプ氏と中国の習近平国家主席の三者会談が「準備中」だとし、プーチン氏とウィトコフ氏の会談でもこの件に触れたという（AFP通信、ブルームバーグ）。自由時報は「11月に米ロ中三者サミットが形に」との題で報じた。ロイターによると、ウクライナのゼレンスキー大統領は11月初めにロシア、米国との新たな協議を望んでいる。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2月</b><span>前回の米ロ・ウクライナ三者協議の時期</span></div>
+        <div><b>11月</b><span>クレムリンが述べた三者協議とサミットの準備時期</span></div>
+        <div><b>1人</b><span>ロシア側が釈放した拘束中の米国人</span></div>
+      </div></div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">テクノロジー · セキュリティ<span>✓ 2社 · 台湾で既にサイトが侵入されたかは未確認</span></div>
+      <h3 class="hl">PHPに深刻な脆弱性2件　スコアはいずれも9.2　資安署が機関・企業に早期修正を呼びかけ</h3>
+      <div class="body">
+        <p>デジタル発展部資安署は22日、オープンソースのサーバー側スクリプト言語PHPのセキュリティチームが緊急のセキュリティ更新を公開し、深刻な脆弱性2件を修正したと明らかにした。深刻度スコアはいずれも9.2点で、攻撃者が認証なしに外部から任意のコードを実行できるおそれがあると、中央社が伝えた。資安署は機関と企業に、早急に修正を終えるよう呼びかけた。</p>
+        <p>自由時報によると、PHPの脆弱性が公表されると、サイト運営者は慌てて保護措置を取り、欧州などの政府サイトは22日、ハッキング対策で相次いでオフラインにした。統計では、どの言語を使っているか識別できるサイトの約75%がPHPを使っている。報道は、影響範囲はPHPで構築された広範なサイトに及ぶと説明しており、台湾で既にサイトが侵入されたかどうかには、現時点で触れていない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>9.2点</b><span>2件の脆弱性の深刻度スコア</span></div>
+        <div><b>2件</b><span>今回の緊急更新で修正された深刻な脆弱性</span></div>
+        <div><b>75%</b><span>言語を識別できるサイトのうちPHPを使う割合</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>薔琵は台湾に上陸することが確定し、全土が台風休みになる。</b> <span>自由時報によると、気象署は21日深夜に海上台風警報だけを発表し、陸上警報は早ければ22日昼前後で、台湾の陸地もなお進路の誤差の範囲内にある。休業・休校は各県市政府が公告するもので、現時点では未確認。</span></div>
+        <div><b>PHPの脆弱性が影響するのは欧州の政府サイトだけで、台湾は影響を受けない。</b> <span>中央社によると、デジタル発展部資安署は台湾の機関と企業にPHPの修正を早急に終えるよう既に呼びかけた。自由時報は欧州の政府サイトがオフラインになったと伝え、統計では言語を識別できるサイトの約75%がPHPを使っている。台湾で被害を受けたサイトがあるかどうかは、報道は触れていない。</span></div>
+        <div><b>米ロ中三者サミットは日程と場所がもう決まった。</b> <span>AFP通信、ブルームバーグによると、クレムリンは三者会談が「準備中」だと述べただけで、プーチン氏とウィトコフ氏の会談でも触れられた。日程と場所は報じられていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/22（木）</b><span>気象署は昼前後に薔琵の陸上台風警報を発表する見通しで、各県市政府も休業・休校を公告する。新竹県の候補者番号のくじ引きが延期されるかは、現地が休みになるかで決まる。</span><b>今週</b><span>薔琵は23日（金）に台湾へ最接近すると予想され、金曜と土曜が影響の最も強い2日間になる。台湾シリーズの日程は台北市の休業・休校の有無に応じて調整される。</span><b>その後</b><span>クレムリンは、プーチン氏が来月の米ロ・ウクライナ三者協議の再開に同意したと述べ、ゼレンスキー氏は11月初めの会談を望んでいる。米ロ中三者サミットはなお準備中で、日程は未公表。</span><b>読者へ</b><span>PHPでサイトを構築している組織は、資安署の公告と照らし合わせ、更新を適用済みか確認してほしい。台風期間の警報や休みの情報は、気象署と各県市政府の公告を基準にしてほしい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会 · 台風 · ✓ 2社 · 陸上警報の実際の発表時刻と各県市の休業・休校は未確認", "title": "強い台風薔琵が接近　海上警報は発表済み、陸上警報は早ければきょう昼前後", "what": "中央気象署は21日午後11時30分、強い台風薔琵の海上台風警報を発表した。第1弾の警戒範囲は台湾北東部の海上、南東部の海上（蘭嶼、緑島を含む）とバシー海峡で、自由時報が伝えた。気象署は薔琵が23日に台湾へ最も近づくと予想し、進路が変わらなければ、早ければ22日昼前後に陸上台風警報を発表する。自由時報によると、台湾の陸地はなお進路の誤差の範囲内にあり、台風が近づく間に勢力が強まるおそれもある。報道は、台湾北部が襲われる確率は約6割で、宜蘭、花蓮と北部が警戒区域に入ったと指摘する。《Taipei Times》は、気象署が金曜と土曜は影響の最も強い2日間だと警告し、薔琵は弱まる可能性があるが高波の危険はなお残ると伝えた。ほかに、17県市の風速・雨量が休業・休校の基準に達するとの報道もあり、新竹県の候補者番号のくじ引きは、休業・休校になれば10/27に延期される。", "why": "台風警報は海上と陸上の2段階がある。陸上警報が出れば、台風の暴風圏が台湾の陸地に達すると見込まれることを意味し、各県市の休業・休校の判断、農業の防護、交通の手配が動き出す。進路が誤差の範囲内にあるということは、やや西や東にずれるだけで各地の風雨の強さと休みの範囲が変わるということだ。", "me": "北部、宜蘭、花蓮に住む人は、きょう昼前後の陸上警報に注意し、住んでいる県市政府の休業・休校の公告を確認してほしい。木曜から土曜にかけて出張、飛行機、屋外の予定がある人は、先に航空便や行事が変更されないか確かめておくとよい。", "a": "気象署と台風論壇の見方は警戒を高める方向だ。暴風圏が大きくなる可能性があり、風速7級の暴風圏が台湾全土を覆うおそれがあり、台湾北部が襲われる確率は6割に達するため、台風対策の物資と予定を早めに整える必要がある。", "b": "《Taipei Times》は薔琵が弱まる可能性にも触れており、進路になお誤差があることから、影響の程度と休業・休校の範囲は予報が更新されるたびに変わる。現在の予測は確定ではない。", "say": "確認されているのは、海上警報が出たことと、気象署が23日に最接近すると予想していることだ。未確認なのは、陸上警報の実際の発表時刻、警戒する県市、各県市が休みになるかどうかだ。きょう昼前後の気象署の発表と各県市政府の公告が、最も見るべき二つだ。", "src": "自由時報（薔琵の海上警報と進路の報道、10月22日）· Taipei Times（気象署が2日間の影響を警告、10月22日）"},
+    "s2":{"kick": "社会 · 越境の脅し · ✓ 2社 · 「殺し屋を雇って偽の交通事故」との説明の裏付け状況は未確認", "title": "黄逸豪氏に「中国が殺し屋を雇い偽の交通事故」との指摘　5人が起訴、矢板明夫氏が法改正を促す", "what": "相声（漫才）コメディアンの黄逸豪氏は、公演で中国共産党と習近平氏をたびたび皮肉っており、これまでに中国人の指示で、国境を越えてペンキや糞尿をまかれる脅迫を受けたと、自由時報は伝えた。自由時報によると、21日にはさらに、中国側が殺し屋を雇って偽の交通事故を起こし、黄逸豪氏の「手足を断つ」ようにさせようとしたとの話が飛び出した。自由娯楽は、台湾派のネット著名人・八炯氏も脅されたことがあるとして内幕を明かしたと伝えた。自由時報によると、同じく越境弾圧を受けたことのある矢板明夫氏は、藍白の立法委員に法改正で穴をふさぐよう強く訴えた。《Taipei Times》は、中国に関わるこの襲撃事件で5人が起訴されたと伝えた。黄逸豪氏は捜査にあたった人員に感謝し、国民党立法院党団の総召傅崐萁氏に関連立法への支持を呼びかけた。", "why": "越境弾圧とは、外国勢力が国外の批判者に圧力や脅しをかけることだ。こうした事件で国外の人物が指示し、国内の人員が実行した場合、捜査と起訴で扱うのは指示した者の身元、資金の流れ、適用する法条であり、法律がどこまで及ぶかが、法改正を訴える理由になる。", "me": "一般の人にとって、この事件が関わるのは言論の表現と身の安全だ。法改正の議論が始まれば、越境した脅し、買収された者の刑事責任、通報窓口に影響する。この種の問題に関心のある人は、立法院がその後、関連草案を審議日程に載せるかに注目するとよい。", "a": "法改正を訴える側、黄逸豪氏と矢板明夫氏を含め、は、現行法には穴があり、中国が指示する越境の脅しに対処するには補強が必要だと考えている。", "b": "報道で名指しされた藍白の立法委員は、これらの報道ではまだ反応していない。「殺し屋を雇って偽の交通事故」との説明の裏付け状況についても報道は触れておらず、すでに起訴された5人の事件と同一かどうかを直接結びつけることはできない。", "say": "確認されているのは、黄逸豪氏が先にペンキをまかれる脅迫を受けたこと、5人が起訴されたこと、本人が立法を呼びかけていることだ。未確認なのは、「手足を断つ」との説明の捜査結果だ。きょうは検察・警察が新しい説明について話すか、立法院で法改正案を出す人が現れるかに注目したい。", "src": "自由時報（黄逸豪氏の事件と矢板明夫氏、10月22日）· Taipei Times（5人が起訴、10月22日）"},
+    "s3":{"kick": "財経 · 米国株 · ✓ 3社 · SpaceXとテスラの合併案が正式に進むかは未確認", "title": "SpaceXの決算がAI期待を支え米国株は上昇　S&P500種指数は0.58%高", "what": "中央社によると、SpaceXは20日の米国株の取引終了後、9月30日までの前四半期の売上高が予想を上回り、前年比で1倍超増えたと発表した。AIとスターリンク衛星事業の急伸が背景にある。中央社が21日にロンドンから外電をまとめて伝えたところでは、SpaceXは上場後初めて四半期黒字を計上し、欧州の主要株式市場は21日に上昇して終えた。中央社はさらに、スーパー・マイクロも四半期決算を発表し、米国株の主要指数は21日に上昇して終えたと伝えた。相場データによると、S&P500種指数は21日に7757.17ポイントで終え、0.58%上昇した。中央社によると、20日のダウ工業株30種平均は500ポイント超の大幅上昇で引け、資金は工業株に向かい、国際原油価格は下がった。ブルームバーグによると、SpaceXとテスラは合併の可能性を協議しており、マスク氏は支持を表明した。", "why": "AI関連株は近ごろ投資家に慎重に見られており、核心の疑問は巨額の投資が実際の売上と利益に変わるのかどうかだ。SpaceXとスーパー・マイクロの決算は具体的な数字を示し、市場がAIサプライチェーンを見直す新たな材料になった。台湾のサーバーと半導体のサプライチェーンも、同じ注目の線上にある。", "me": "台湾株のAI関連や電子の大型株を持つ人は、きょうの寄り付きで市場が米国株のムードに追随するかを見たい。米国株のETFを持つ人は、S&P500種指数が上昇を続けるかに注目できる。両替や送金をする人は、米ドルの動きにも注意できる。", "a": "報道の中で楽観的な見方は、SpaceXの売上倍増と初の四半期黒字は、AI投資に成果が出始めたことを示し、株価の回復にはファンダメンタルズの裏付けがあるというものだ。", "b": "もう一つの見方は、20日の報道が投資家のAI株への慎重な姿勢に触れ、資金が工業株に向かった時期もあったというものだ。一、二社の決算が全体のAI需要を代表するかは、さらに多くの企業の決算で確かめる必要がある。", "say": "確認されているのは、SpaceXとスーパー・マイクロの決算が予想を上回り、米国株が上昇して終えたことだ。未確認なのは、SpaceXとテスラの合併案が正式に進むかどうかだ。きょうは台湾株の寄り付きが追随するか、続くハイテク大手の決算が勢いを保つかを見る。", "src": "中央社（SpaceXとスーパー・マイクロの決算、10月21日）· 自由時報（欧州株と米国株の引け、10月22日）· ブルームバーグ（SpaceXとテスラの合併協議、10月21日）"},
+    "s4":{"kick": "国際 · ロシア・ウクライナ · ✓ 3社 · 米ロ中サミットの日程と場所、三者協議の時期は未確認", "title": "トランプ氏「ロシア・ウクライナ戦争、終結に最も近いかも」　プーチン氏は来月の三者協議再開に同意", "what": "米国のトランプ大統領は22日、ホワイトハウスで記者団に、ロシア・ウクライナ戦争はこれまでで最も終結に近づいたかもしれないとの認識を示し、ロシアのプーチン大統領が拘束していた米国人1人を釈放したことに謝意を述べた、とAFP通信が伝えた。米国のウィトコフ特使はSNSに、プーチン氏との会談は「建設的」だったが「重要な作業」はまだ残っていると書いた。クレムリン当局者は、プーチン氏が21日、来月ワシントンおよびキーウとの「三者協議」を再開することに同意したと述べ、2月以来初めての同様の協議になる可能性がある。クレムリンはさらに、プーチン氏、トランプ氏と習近平氏の三者会談が「準備中」だとし、AFP通信、ブルームバーグが伝えた。ロイターによると、ウクライナのゼレンスキー大統領は11月初めにロシア、米国との新たな協議を望んでいる。", "why": "三者協議の再開は、停戦交渉のルートが再び開くことを意味し、ロシア・ウクライナ情勢が落ち着くかの指標でもある。エネルギーと食料の価格、欧州の安全保障、サプライチェーンのリスクはいずれも戦争の行方に関わり、台湾の輸入コストと輸出市場も間接的に影響を受ける。", "me": "原油価格とエネルギーコストが気になる人は、協議の動きが国際原油価格に与える影響に注意できる。欧州やロシア・ウクライナ関連の貿易を手がける企業は、その後の制裁と輸送条件に調整があるかを見る必要がある。", "a": "トランプ氏とウィトコフ氏の発言は前向きで、協議は建設的で、終戦は最も近いかもしれないという。クレムリンが三者協議の再開に同意したことも、交渉再開のシグナルと見られている。", "b": "ウィトコフ氏は「重要な作業」がまだ残っていると強調し、三者協議は前回が2月でその後は止まっていた。米ロ中サミットも「準備中」にすぎず日程と場所は公表されていないため、楽観的な説明はまだ実現を待つ段階だ。", "say": "確認されているのは、クレムリンがプーチン氏は来月の三者協議の再開に同意したと述べ、ウィトコフ氏が会談は建設的だったと語ったことだ。未確認なのは、協議の日程、場所、米ロ中サミットの時期だ。きょうはクレムリンとキーウが時期を説明するか、ゼレンスキー氏が望む11月初めの会談が組まれるかを見る。", "src": "自由時報（トランプ氏のロシア・ウクライナ発言、ウィトコフ氏の会談、10月22日）· AFP通信（クレムリンが三者協議とサミットを語る、10月21日）· ロイター（ゼレンスキー氏が11月初めの会談を希望、10月21日）"},
+    "s5":{"kick": "テクノロジー · セキュリティ · ✓ 2社 · 台湾で既にサイトが侵入されたかは未確認", "title": "PHPに深刻な脆弱性2件　スコアはいずれも9.2　資安署が機関・企業に早期修正を呼びかけ", "what": "デジタル発展部資安署は22日、PHPのセキュリティチームが緊急のセキュリティ更新を公開し、深刻な脆弱性2件を修正したと明らかにした。深刻度スコアはいずれも9.2点で、中央社が伝えた。資安署は、攻撃者が認証なしに外部から任意のコードを実行できるおそれがあるとして、機関と企業に早急な修正を呼びかけた。自由時報によると、脆弱性の公表後、サイト運営者は慌てて保護措置を取り、欧州などの政府サイトは22日、ハッキング対策で相次いでオフラインにした。統計では、どの言語を使っているか識別できるサイトの約75%がPHPを使っている。報道は、台湾で既にサイトが侵入されたかどうかには触れていない。", "why": "PHPは多くのサイトのバックエンドで使われるスクリプト言語で、脆弱性がログインなしで遠隔からコードを実行できるものなら、攻撃者がサーバーを乗っ取りデータを盗むおそれがある。9.2点は高い深刻度のスコアで、修正の速さがリスクの期間の長さを決めるため、所管機関が公に呼びかけている。", "me": "企業サイト、EC、政府機関サイトの管理者は、きょうまずサーバーのPHPのバージョンを洗い出し、そのうえで更新を適用する必要がある。一般の利用者が自分で対処する必要はないが、よく使うサービスがメンテナンスを告知していないかに注意できる。", "a": "資安署の立場は、早急な修正が最優先で、攻撃者はログインなしで侵入できるおそれがあるため、機関と企業は待つべきではない、というものだ。", "b": "欧州の一部の政府サイトが先にオフラインにしたのは、運営者がサービスを止めてでもリスクを下げたいということを示す。ただ、オフラインにすれば市民のサービス利用に影響し、すべての組織にそうできる条件があるわけでもない。", "say": "確認されているのは、PHPが緊急更新を公開したこと、スコアが9.2であること、欧州のサイトがオフラインになったことだ。未確認なのは、台湾で既に被害を受けたサイトがあるかどうかだ。きょうは資安署と各機関が修正完了を公告するか、PHPの公式が脆弱性の詳細を説明するかを見る。", "src": "中央社（資安署の公告、10月22日）· 自由時報（欧州の政府サイトがオフライン、10月22日）"},
+    "i1":{"kick": "政治 · ✓ 1社", "title": "信民協会の世論調査：蒋万安氏が沈伯洋氏に17ポイント差で後れ、国民党が警鐘", "what": "信民協会が台北市長の世論調査を発表し、国民党籍の現職市長・蒋万安氏が民進党の候補・沈伯洋氏に17ポイント後れていることが分かったと、自由時報は伝えた。国民党は21日に2026年選挙戦の定例記者会見を開き、台北市議会議員候補の李明璇氏は、この世論調査をもう笑い話にしてはいけないと率直に述べた。自由時報はさらに、再選を目指す桃園市長の張善政氏が21日に取材に応じ、沈伯洋氏が巻き起こした「洋流」について、昨年の大規模リコール運動の際の民進党陣営（緑営）の盛り上がりに似ていると語り、陣営は2014年の逆転劇の再現を警戒していると伝えた。氏は、有権者に熱狂のあとは理性に立ち返るよう呼びかけた。", "why": "統一地方選挙の候補者は世論調査をもとに資源と戦略を判断することが多く、差が開けば陣営の選挙運動のやり方や有権者への訴えが変わる。国民党が公に警鐘を鳴らしたのは、内部で油断を避けたいということだ。", "me": "台北市の有権者は、各調査の標本と調査方法に注意できる。選挙戦に関心のある人は、単独の世論調査を見たときは、異なる機関の結果と照らし合わせてから傾向を判断するとよい。", "a": "国民党内部の一つの見方は、世論調査の差をもう笑い話にしてはならず、警戒を高めて選挙戦略を修正する必要がある、というものだ。", "b": "もう一つの見方は張善政氏のもので、「洋流」を昨年の大規模リコールの盛り上がりにたとえ、2014年の逆転劇を例に、選挙前の勢いが最終的な得票とは限らないと注意を促している。", "say": "確認されているのは、信民協会の世論調査で17ポイント後れていることと、国民党が公に警鐘を鳴らしたことだ。未確認なのは、この調査の標本と、他機関の結果が一致するかどうかだ。きょうは国民党が選挙戦のペースを調整するか、ほかの世論調査が公表されるかを見たい。", "src": "自由時報（信民協会の世論調査と国民党の反応、10月22日）"},
+    "i2":{"kick": "国際 · ✓ 1社", "title": "Meta、ニューメキシコ州への250億ドルの賠償を裁判官が命じる", "what": "自由時報によると、陪審は、ソーシャルメディア大手のMetaがFacebookのプライバシーとコンテンツ審査の方針でユーザーを欺き、法的責任を負うべきだと評決した。裁判官は21日、Metaにニューメキシコ州へ250億ドルにのぼる支払いを命じた。報道はケンブリッジ・アナリティカの不祥事を題材に、これがMetaがその不祥事で科された重い罰だと説明している。Metaが控訴するか、支払いがどう行われるかは、報道は触れていない。", "why": "この判決は、州政府がプラットフォームのプライバシーとコンテンツ審査のやり方について訴訟を起こせることを示す。250億ドルという額は、IT企業の訴訟リスクとデータ管理の見積もりに影響し、ほかの州や国が追随する可能性もある。", "me": "Facebookとその傘下のサービスを使う人は、近くプラットフォームがプライバシー設定や利用規約を変更しないか注意できる。台湾の広告主やコンテンツクリエイターも、プラットフォームの方針変更による影響に注意できる。", "a": "裁判官と陪審の評決は、プラットフォームのユーザーに対する責任を強調する方向で、Metaはプライバシーとコンテンツ審査の方針でユーザーを欺いたので州政府に賠償すべきだという。", "b": "現時点の報道にMetaの反応は含まれていないため、会社が控訴するのか、賠償額をどう見ているのかは、双方の見方のうち欠けている部分だ。", "say": "確認されているのは、裁判官が21日にMetaにニューメキシコ州へ250億ドルにのぼる支払いを命じたことだ。未確認なのは、Metaが控訴するか、実際の支払い時期だ。きょうはMetaが公に反応するか、判決がほかの州に引用されるかを見る。", "src": "自由時報（Metaにニューメキシコ州への賠償命令、10月22日）"},
+    "i3":{"kick": "財経 · ✓ 1社", "title": "当局がGrabとFoodpandaの合併を阻止　報道はUberの出資関係に言及", "what": "《Taipei Times》によると、当局はGrabとFoodpandaの合併を阻止した。報道は、Uber Eatsが他の市場で長年Grabと提携してきたことと、UberがGrabの株式を持っていることに触れている。報道は「Close ties」を小見出しに、これらの関係が審査の際に挙げられた背景だと説明している。報道の要約は、処分の具体的な法条を示しておらず、Grabが異議を申し立てたかどうかも説明していない。", "why": "フードデリバリーのプラットフォームが合併すると市場シェアが集中するため、所管機関は消費者価格、配達員の取り分、飲食店の交渉余地を評価する。合併を阻止したのは、現在の競争構造のもとで、審査機関がリスクはなお対処すべきだと判断したということだ。UberとGrabの出資関係は、市場構造の分析をさらに複雑にしている。", "me": "フードデリバリーをよく使う人にとって、短期的には、プラットフォームの価格やクーポンが合併の有無で変わることは通常ない。飲食店と配達員は、プラットフォームのその後の戦略に注意できる。", "a": "所管機関が合併を阻止した見方は、市場シェアの過度な集中を避け、プラットフォーム間の競争を保つというものだ。", "b": "プラットフォーム側の見方としては、合併でリソースと規模を統合できるというものが考えられる。ただ、現時点の報道にはGrabやFoodpandaの主張は含まれていないため、この側の論点は補う必要がある。", "say": "確認されているのは、所管機関が合併を阻止し、報道がUberのGrab株保有に触れていることだ。未確認なのは、Grabが異議を唱えるかどうかだ。きょうはGrabが公に反応するかを見る。", "src": "Taipei Times（GrabとFoodpandaの合併が阻止される、10月22日）"},
+    "i4":{"kick": "社会 · ✓ 1社", "title": "刑事局：選挙戦の人気商品が詐欺の口実に　32人が被害、損失700万超", "what": "自由時報によると、年末の統一地方選挙は選挙戦が激しく、選挙戦の人気商品も詐欺グループが罠を仕掛ける口実になっている。刑事警察局の集計では、現在計32件の被害があり、いずれもネットオークションの詐欺手口で、損失は700万元超。刑事局は、詐欺グループが選挙関連の売り手を装って罠を仕掛けたと述べた。詐欺グループの人数と摘発の状況は、報道は示していない。", "why": "選挙期間の記念品や関連グッズには買い手がつき、詐欺グループはその熱気と時間的な圧力を利用して素早く注文させられる。ネットオークションは対面で確かめることができず、低価格や数量限定の口実で送金に誘い込みやすく、損失が出る。", "me": "選挙関連グッズを買いたい人は、履行保証のあるプラットフォームや代引きを使い、個人間の振り込みはしないほうがよい。低価格・数量限定の口実を見たら、先に売り手の評価と公式の窓口を調べてほしい。", "a": "刑事局の見方は、市民が警戒を高める必要があり、詐欺グループが選挙の熱気を利用して罠を仕掛けているというもので、報道は参考として被害件数と損失を挙げている。", "b": "もう一つの見方は、プラットフォームと売り手の責任だ。現時点の報道は、プラットフォームに防止の仕組みが既にあるかに触れておらず、この側の説明は補う必要がある。", "say": "確認されているのは、被害32件、損失700万元超、すべてネットオークションの手口であることだ。未確認なのは、詐欺グループがすでに摘発されたかどうかだ。きょうは刑事局が詐欺防止の注意喚起や摘発の進展を新たに公表するかを見る。", "src": "自由時報（刑事局の詐欺統計、10月22日）"},
+    "i5":{"kick": "財経 · ✓ 2社", "title": "米食品輸入業者ゲラートが提訴　トランプ氏のカナダ産品への50%関税の取り消しを求める", "what": "中央社によると、米国の主要食品輸入業者の一つ、ゲラート・グローバル・グループは20日、米国際貿易裁判所に提訴し、米国のトランプ大統領がカナダ産品の一部に課した50%の関税の取り消しを求めた。報道は、訴訟が還付も求めていると伝える。裁判所の審理日程は報道が示しておらず、ホワイトハウスや通商代表部の反応にも触れていない。自由時報も同じ報道を転載した。", "why": "関税は輸入業者がまず納め、コストは小売価格に転嫁されるおそれがある。企業が訴訟で関税に異議を唱えれば、裁判所が大統領の課税権限について解釈を示す可能性があり、その後の還付と通商政策の方向に影響する。台湾メーカーが米国へ輸出する場合も、関税の法的な面の変化に注意が要る。", "me": "米国向けに輸出、または食品を輸入する台湾の事業者は、訴訟が関税の適用や還付に影響するかを見ておくとよい。消費者は、短期的には価格がすぐ変わることはない。", "a": "ゲラートの見方は、50%の関税が輸入コストを生んでおり、取り消して還付すべきだというものだ。", "b": "政府側の見方は報道に見当たらない。一般には、ホワイトハウスや通商官僚が課税の法的根拠を説明するのを待つ必要があり、現時点ではこの見方は欠けている。", "say": "確認されているのは、ゲラートが20日に提訴し、50%の関税の取り消しを求めたことだ。未確認なのは、裁判所がいつ審理するか、政府がどう反応するかだ。きょうはほかの輸入業者が追随するか、ホワイトハウスが声明を出すかを見る。", "src": "中央社（ゲラートが提訴、10月21日）· 自由時報（同じ事件の報道、10月21日）"}
+  };
+  const G = {
+    "中央気象署":{"f": "気象", "d": "台湾で天気予報と台風警報を担当する政府機関。", "w": "薔琵の海上警報を発表し、陸上警報の時期を予告した。"},
+    "海上台風警報":{"f": "気象", "d": "台風が海上の航行に影響するおそれのあるときに出す警報。", "w": "21日深夜に薔琵に対して発表された。"},
+    "陸上台風警報":{"f": "気象", "d": "台風の暴風圏が陸地に達すると見込まれるときに出す警報。", "w": "気象署は早ければ22日昼前後に発表する。"},
+    "暴風圏":{"f": "気象", "d": "台風の周りで風速が7級以上になる範囲。", "w": "台風論壇は、薔琵の風速7級の暴風圏が台湾全土を覆うおそれがあると指摘した。"},
+    "バシー海峡":{"f": "地理", "d": "台湾とフィリピンのバタン諸島の間の海域。", "w": "第1弾の海上警報の警戒範囲に入った。"},
+    "蘭嶼":{"f": "地理", "d": "台東沖の離島。", "w": "台湾南東部の海上の警戒範囲に属する。"},
+    "緑島":{"f": "地理", "d": "台東沖の離島。", "w": "蘭嶼とともに警戒に入った。"},
+    "休業・休校":{"f": "行政", "d": "台風などの災害で、地方政府が出勤・登校の停止を宣言すること。", "w": "17県市の風雨が休業・休校の基準に達するとの報道。"},
+    "台東農改場":{"f": "農業", "d": "台東県の農業改良と指導を担う機関。", "w": "台風の前後の農作物の防護方法を示した。"},
+    "統一地方選挙":{"f": "政治", "d": "台湾で県市長や議員など地方公職を同じ日に選ぶ選挙。", "w": "年末の選挙。新竹県の番号くじ引きが台風の影響を受ける。"},
+    "黄逸豪":{"f": "人物", "d": "相声（漫才）コメディアン。公演で中国共産党をたびたび皮肉る。", "w": "中国が殺し屋を雇い偽の交通事故を起こそうとしたと指摘された。"},
+    "越境弾圧":{"f": "政治", "d": "外国勢力が国外にいる異論者や批判者に圧力をかける行為。", "w": "矢板明夫氏らもこの種の脅しを受けたことがある。"},
+    "矢板明夫":{"f": "人物", "d": "評論家。報道によると越境弾圧を受けたことがある。", "w": "藍白の立法委員に法改正で穴をふさぐよう訴えた。"},
+    "傅崐萁":{"f": "人物", "d": "国民党立法院党団の総召。", "w": "黄逸豪氏が関連立法への支持を呼びかけた。"},
+    "八炯":{"f": "人物", "d": "台湾のネット上のオピニオンリーダー。", "w": "自由娯楽によると、自身も脅されたとして内幕を明かした。"},
+    "習近平":{"f": "人物", "d": "中国の国家主席。", "w": "黄逸豪氏の事件と米ロ中三者会談の報道の両方に出てくる。"},
+    "SpaceX":{"f": "企業", "d": "マスク氏率いる宇宙開発企業。", "w": "決算が米国株とAI株への自信を支えた。"},
+    "スターリンク":{"f": "企業", "d": "SpaceXの低軌道衛星ネットワークサービス。", "w": "AI事業とともに前四半期の売上を押し上げた。"},
+    "スーパー・マイクロ・コンピューター":{"f": "企業", "d": "AIサーバーを製造する米国企業。", "w": "四半期決算も市場を支えた。"},
+    "ダウ工業株30種平均":{"f": "財経", "d": "米国の大型優良株30銘柄で構成する株価指数。", "w": "20日は500ポイント超の大幅上昇で引けた。"},
+    "S&P500種指数":{"f": "財経", "d": "米国の大型上場企業500社の株価指数。", "w": "21日は7757.17ポイントで終え、0.58%上昇した。"},
+    "デジタル発展部資安署":{"f": "機関", "d": "台湾のデジタル発展部で情報セキュリティを担当する部署。", "w": "機関と企業にPHPの脆弱性の早期修正を呼びかけた。"},
+    "PHP":{"f": "テクノロジー", "d": "サイトのバックエンドで広く使われるオープンソースのスクリプト言語。", "w": "深刻な脆弱性が2件見つかった。"},
+    "任意のコード":{"f": "セキュリティ", "d": "攻撃者が指定して被害システム上で実行させるプログラム。", "w": "脆弱性により、攻撃者が外部から実行できるおそれがある。"},
+    "深刻度スコア":{"f": "セキュリティ", "d": "脆弱性のリスクの高さを測る点数で、満点は10点。", "w": "2件の脆弱性はいずれも9.2点。"},
+    "ウィトコフ":{"f": "人物", "d": "米国の特使で、プーチン氏と会談した。", "w": "会談は建設的だったが、重要な作業はまだ残っていると述べた。"},
+    "クレムリン":{"f": "機関", "d": "ロシア大統領府。", "w": "プーチン氏が三者協議の再開に同意したと述べた。"},
+    "三者協議":{"f": "外交", "d": "米国、ロシア、ウクライナの協議。", "w": "2月以来初めての再開になる可能性がある。"},
+    "プーチン":{"f": "人物", "d": "ロシア大統領。", "w": "米国人を釈放し、協議の再開に同意した。"},
+    "トランプ":{"f": "人物", "d": "米国大統領。", "w": "ロシア・ウクライナ戦争は終結に最も近いかもしれないと語り、また輸入業者から関税をめぐって提訴された。"},
+    "ゼレンスキー":{"f": "人物", "d": "ウクライナ大統領。", "w": "11月初めにロシア、米国との新たな協議を望んでいる。"},
+    "信民協会":{"f": "機関", "d": "台北市長の世論調査を発表した民間団体。", "w": "調査で蒋万安氏が17ポイント後れていることが分かった。"},
+    "沈伯洋":{"f": "人物", "d": "民進党の台北市長候補。", "w": "調査で蒋万安氏をリードし、「洋流」を巻き起こしたと言われる。"},
+    "蒋万安":{"f": "人物", "d": "国民党籍の台北市長で、再選を目指す。", "w": "調査で沈伯洋氏に17ポイント後れた。"},
+    "刑事警察局":{"f": "機関", "d": "警政署の下の捜査部門。", "w": "選挙戦の商品をめぐる詐欺32件を集計した。"},
+    "Meta":{"f": "企業", "d": "Facebookと傘下プラットフォームの親会社。", "w": "ニューメキシコ州に250億ドルの賠償を命じられた。"},
+    "ニューメキシコ州":{"f": "地理", "d": "米国南西部の州。", "w": "Metaに対する高額の賠償判決を得た。"},
+    "Grab":{"f": "企業", "d": "東南アジアの配車・フードデリバリーのプラットフォーム。", "w": "Foodpandaとの合併が阻止された。"},
+    "Foodpanda":{"f": "企業", "d": "フードデリバリーのプラットフォームブランド。", "w": "合併案が所管機関に阻止された。"},
+    "国際貿易裁判所":{"f": "法律", "d": "米国で貿易・関税の事件を審理する連邦裁判所。", "w": "ゲラートがここに提訴した。"},
+    "ゲラート・グローバル・グループ":{"f": "企業", "d": "米国の主要食品輸入業者の一つ。", "w": "カナダ産品への50%の関税の取り消しを求めている。"},
+    "関税":{"f": "貿易", "d": "輸入品が入るときに課される税。", "w": "トランプ氏はカナダ産品の一部に50%を課した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

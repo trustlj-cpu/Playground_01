@@ -1,0 +1,340 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>60,459.58</b>日経平均 · 11/10(火)終値 · 前日比+2.87%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,549.94</b>S&amp;P500 · 11/9(月)終値 · 前日比+2.35%</div>
+    </div>
+    <div class="dateline"><span>No. 37 · 夕刊</span><b>2026年11月10日(火)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="nvidia">
+      <div class="kick">国際 · 米中・AI半導体<span>✓ 4媒体 · 捜査の対象・範囲と匿名当局者の主張は未確認</span></div>
+      <h2 class="hl">トランプ氏がエヌビディアCEOの女性関係をめぐり「FBIが捜査中」と明言、CEOは不倫を認め謝罪</h2>
+      <p class="deck">トランプ大統領は9日、フアンCEOの女性関係をめぐってFBIが捜査していると述べた。フアン氏からは疑惑を知らなかったと聞いており、その説明を信じているという。</p>
+      <div class="body">
+        <p>トランプ米大統領は9日、半導体大手エヌビディアのジェンスン・フアンCEOと、ある女性との関係をめぐって、FBI(米連邦捜査局)が捜査していると述べた。フアン氏から女性をめぐる疑惑は全く知らなかったと聞かされており、その説明を信じているとも語った。フアン氏は先に従業員宛ての文書で不倫を認めて謝罪し、同社の取締役会が独立調査を始めている。今回の発言で、疑惑は社内の調査にとどまらず、米政府の捜査の対象にもなっているという形で語られた。</p>
+        <p>匿名の米当局者らは、この女性が中国情報機関の協力者の疑いがあると主張している。ただ、当局者の名前も根拠も公表されておらず、確認されていない。中国外務省の報道官は10月30日、この疑惑を「根拠のない憶測」と退けた。エヌビディアは、フアン氏が顧客企業の幹部と会うのはCEOの通常の仕事の範囲だと説明している。株価は下がったが、下げ幅は集計によって数字が異なるため、ここでは示さない。トランプ氏は先に、反する事実が見つからない限りフアン氏を助言役に置き続けたいとの考えも示した。FBIが誰を、どこまで調べているのかについて、FBI自身の説明は確認できていない。取締役会の調査の期限と結果も、公式には示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="nikkei">
+      <div class="kick">経済 · 株式<span>✓ 3媒体 · 上昇の理由は発言者の説明が未確認</span></div>
+      <h3 class="hl">日経平均は6万459円58銭で取引を終え、2日続伸 終値で6万円台を回復</h3>
+      <div class="one">
+        <p>10日の東京株式市場で、日経平均株価の終値は前日比1,684円08銭(2.87%)高の6万459円58銭(60,459.58円)だった。上げは2日続き、終値としては6万円台を回復した。日経平均は11月6日に5.96%下げて57,434.77円で終えており、9日の58,775.50円を経て、6日の終値から2営業日で3,024.81円(5.27%)戻したことになる。100円だった6日の終値が、2営業日で約105円になった計算だ。 上げの理由について、特定の発言者による説明は今回確認できていない。そのため、値動きを個別の材料に結びつけることは控える。9日の米S&amp;P500は7,549.94で取引を終え、前日比2.35%上昇していた。6日の終値は57,434.77円で、5.96%の下げの前の水準にはまだ届いていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="shohizei"><b>食料品の消費税減税法案、参院で11日に審議入り 高市首相が出席して質疑へ</b><em>参院議院運営委員会の理事会で与野党が正式に合意した。法案は衆院が6日に可決し、参院に送られている。</em><span>政治 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="marshall"><b>マーシャル諸島のハイネ大統領が来日し、高市首相と会談へ</b><em>政府が10日に発表した。会談の議題や正確な日程などの詳細は、まだ確認できていない。</em><span>外交 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="taifu"><b>非常に強い台風32号が小笠原諸島に接近、10日夜遅くから11日未明に最接近へ</b><em>台風32号は「非常に強い」勢力で、暴風と高波に厳重な警戒が必要だ。10日夜遅くから11日未明に最も近づく見込みである。</em><span>気象 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="ukr"><b>米・ロ・ウクライナの高官協議が10日にUAEで始まる、約9カ月ぶりの再開</b><em>戦後の安全保障体制などをめぐって意見が交わされる見通しだ。協議は10日と11日の日程で、アブダビで開かれる。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="glp1"><b>日本でも使われるマンジャロなど肥満症治療薬に、米FDAが視力低下の警告を求める</b><em>米FDAは米国時間の9日、GLP1受容体作動薬の添付文書に急激な視力低下の恐れを加えるよう求めた。日本の当局の対応は発表に含まれていない。</em><span>医療 · ✓ 2媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="kakei">
+      <div class="kick">経済 · 家計<span>✓ 3媒体 · 10月以降に持ち直すかは未確認</span></div>
+      <h3 class="hl">9月の家計調査、2人以上世帯の実質消費支出は前年同月比6.8%減 10か月連続のマイナス</h3>
+      <div class="body">
+        <p>総務省が10日に発表した9月の家計調査によると、2人以上の世帯が消費に使ったお金は、物価の変動を除いた実質で前年の同じ月より6.8%少なかった。減少は10か月連続で、前年の9月に100円使っていた家計が、今年は約93円しか使わなかった計算になる。家計調査は、家計が実際にいくら使ったかを全国の世帯に尋ねて調べる統計で、個人消費の勢いを見る基礎になる。</p>
+        <p>総務省は、長雨など天候不順で外出や買い物を控える動きがあったことや、夏物の需要が減ったことが影響したとみている。前年割れが10か月続いており、天候という一時的な要因だけで説明できるのかは、総務省の説明では示されていない。10月以降に持ち直すのかどうかは、まだ分からない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="anpo3">
+      <div class="kick">政治 · 安全保障<span>✓ 3媒体 · 防衛費の水準と核政策の結論は未確認</span></div>
+      <h3 class="hl">安保3文書の改定へ自民・維新の作業チームが初会合、政府は「相手の目的達成を拒否する能力」を基本に</h3>
+      <div class="body">
+        <p>安全保障関連の3文書の改定に向け、自民党と日本維新の会の実務者による作業チームが10日、初会合を開いた。政府側は防衛力強化の方向性を示し、相手の目的達成を拒否する能力を持つことを基本的な考え方に掲げた。無人機やAIを使った新しい戦い方への対応も説明した。協議は防衛費と核政策が焦点になる。</p>
+        <p>両党は日米同盟を強化する方針では一致した。一方、維新は非核三原則のうち「持ち込ませず」の記述の見直しや、原子力潜水艦の早期導入を求めており、自民の提言には触れられていない。政府は改定を年内に進める考えで、防衛費をどこまで増やすのかや、核政策の結論は示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="honda">
+      <div class="kick">産業 · 自動車<span>✓ 3媒体 · 生産するモデルは未発表</span></div>
+      <h3 class="hl">ホンダが米オハイオ州に約30億ドルで新工場、2029年に生産開始へ</h3>
+      <div class="body">
+        <p>ホンダは9日、米国オハイオ州に新しい自動車工場をつくると発表した。投資額は約30億ドルで、2029年に生産を始める計画だ。年間の生産能力は24万台増え、ホンダによると雇用は2,000人を超える。工場は既存のイーストリバティー工場とメアリーズビル工場の間に建てる。</p>
+        <p>ハイブリッド車、ガソリン車、電気自動車のいずれもつくれる設計で、生産するモデルはまだ発表されていない。米国はホンダの販売の約4割を占める市場だ。日本国内の生産への影響は、今回の発表では示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>約30億ドル</b><span>新工場の投資額</span></div>
+        <div><b>24万台</b><span>増える年間の生産能力</span></div>
+        <div><b>2029年</b><span>生産開始の計画</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>フアンCEOはすでに辞任または解任された</b> <span>9日の時点でフアン氏はCEOを続けている。取締役会は独立調査を始めた段階で、調査の結果や処遇の決定は示されていない。</span></div>
+        <div><b>FBIがフアンCEO本人を捜査している</b> <span>トランプ大統領は、FBIがフアン氏と女性との関係について捜査していると述べた。誰を、どこまで調べているのかについて、FBI自身の説明は確認できていない。</span></div>
+        <div><b>9月の消費支出の落ち込みは天候だけが原因だ</b> <span>総務省は、長雨など天候不順と夏物需要の減少が影響したとみている。天候以外の要因の有無は、総務省の説明では示されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>明日 · 水 11月11日</b><span>参院本会議で消費税減税法案が審議入りし、高市首相が出席して質疑を受ける。台風32号は小笠原諸島に最も近づく時間帯を過ぎ、暴風と高波の被害状況が分かる。UAEでの米・ロ・ウクライナ協議は2日目に入る日程で、結果の説明が出るかを見る。</span><b>今週</b><span>エヌビディアの取締役会による独立調査の進め方と、FBIの捜査について当局が説明するかを見る。日経平均が11日以降も終値で6万円台を保つかも確かめたい。</span><b>読者へ</b><span>FBIの捜査や取締役会の調査は、当事者の公式な説明が出てから受け止めたい。株価は取引時間中の値ではなく、一日の終値で見る。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "nvidia":{"kick": "国際 · 米中・AI半導体 · ✓ 4媒体 · 捜査の対象・範囲と匿名当局者の主張は未確認", "title": "トランプ氏がエヌビディアCEOの女性関係をめぐり「FBIが捜査中」と明言、CEOは不倫を認め謝罪", "what": "トランプ米大統領は9日、エヌビディアのフアンCEOと、ある女性との関係について、FBIが捜査していると述べた。フアン氏から女性をめぐる疑惑は全く知らなかったと聞かされ、その説明を信じているとも語った。フアン氏は従業員宛ての文書で不倫を認めて謝罪している。同社の取締役会は独立調査を始めた。匿名の米当局者らは、女性が中国情報機関の協力者の疑いがあると主張しているが、当局者の名前も根拠も公表されていない。中国外務省の報道官は10月30日、疑惑を根拠のない憶測だと退けた。エヌビディアは、フアン氏と顧客企業の幹部との接触は通常の業務の範囲だと説明している。株価は下落したが、下げ幅は集計ごとに異なる。", "why": "エヌビディアはAI向け半導体の中心にいる企業で、CEOの去就や米中関係への波及は、市場と産業の両方に響く。大統領が捜査の存在に言及したことで、疑惑は企業内の調査から政府の捜査へと位置づけが変わった。ただしFBIが何を対象に調べているかは語られておらず、事実の段階はまだ初期である。", "me": "米国株や、同社を組み入れた投資信託を持つ人は、保有先に同社が入っているかを確かめたい。同社の半導体を使う国内のAI関連事業者にとっても、供給や取引の方針が変わるのかが気になる点になる。", "a": "民主党のジェフリーズ氏は、対処すべき本当の懸念があるとの認識を示している。国の安全保障に関わる人物と外国側の接点が取り沙汰される以上、独立した調べを求める立場である。", "b": "投資家のビル・アックマン氏やイーロン・マスク氏は、フアン氏を支持する姿勢を示した。大統領も、反する事実が見つからない限りフアン氏を助言役に置き続けたいとの考えで、疑惑が確認されるまで処遇を変える必要はないという立場である。", "say": "確認できたのは、大統領が9日にFBIの捜査に言及したこと、フアン氏が不倫を認めて謝罪したこと、取締役会が独立調査を始めたことである。確認できていないのは、FBIの捜査の対象と範囲、匿名当局者らの主張の根拠、調査の結果だ。FBI自身の説明と、取締役会の調査の進め方が示されるかを見たい。", "src": "NHK(エヌビディアCEOと中国情報機関の協力者女性の疑惑 FBIが捜査、11/10) · 朝日新聞(エヌビディアCEOめぐる中国スパイ疑惑 FBIが捜査 トランプ氏、11/10) · 毎日新聞(トランプ氏「FBIが捜査中」、11/10) · 時事通信(スパイ疑惑、FBIが調査 株価下落―トランプ氏、11/10)"},
+    "nikkei":{"kick": "経済 · 株式 · ✓ 3媒体 · 上昇の理由は発言者の説明が未確認", "title": "日経平均は6万459円58銭で取引を終え、2日続伸 終値で6万円台を回復", "what": "10日の日経平均株価の終値は6万459円58銭(60,459.58円)で、前日より1,684円08銭、2.87%高かった。2日続けて上昇し、終値で6万円台を回復した。6日の終値は57,434.77円で、この日は5.96%下げていた。9日の終値は58,775.50円で、2.33%上げていた。9日の米S&P500は7,549.94で取引を終え、2.35%上昇した。", "why": "終値は市場が一日の取引を終えて確定した値で、取引時間中の上げ下げより日ごとの比較に向く。6日の急落と、その後2日間の戻しを同じ終値で並べると、今回の動きの大きさがつかめる。ただし上げの理由を語った当事者は確認できておらず、原因は断定できない。", "me": "日経平均に連動する投資信託などを持つ人は、評価額が6日の急落前の水準にどこまで戻ったかを、終値ベースで見直したい。短い期間に大きく動いた日が続いたので、積立の金額や売買の時期は一日の値動きだけで決めず、自分の計画に沿って考えたい。", "a": "戻りが続いたことを、急落からの落ち着きと読む立場である。2日で5%超戻し、終値で6万円台に乗った点を根拠にする。", "b": "まだ急落前の水準には届いていないため、値動きの荒さは残っているとみる立場である。6日の下げ幅が大きかった分、戻りも大きく振れた点を重く見る。", "say": "確認できたのは、10日の終値が60,459.58円で、6万円台を回復したことである。確認できていないのは、上げの理由を語った発言者や、この水準が定着するかどうかだ。11日の終値が6万円台を保つかを見たい。", "src": "朝日新聞(日経平均、一時6万円台回復、11/10) · 共同通信(東証終値1684円高、11/10) · ABEMA TIMES(日経平均6万円台回復、11/10)"},
+    "kakei":{"kick": "経済 · 家計 · ✓ 3媒体 · 10月以降に持ち直すかは未確認", "title": "9月の家計調査、2人以上世帯の実質消費支出は前年同月比6.8%減 10か月連続のマイナス", "what": "総務省は10日、9月の家計調査を発表した。2人以上の世帯の消費支出は、物価の変動を除いた実質で前年の同じ月より6.8%減った。減少は10か月連続である。総務省統計調査部は、長雨など天候不順で外出や買い物を控える動きがあったことや、夏物の需要が減ったことが影響したとみている。", "why": "家計調査は、家計が実際にいくら使ったかを測る統計で、個人消費の勢いを見る基礎になる。前年割れが10か月続いたことで、天候という一時的な要因だけで足りるのかが焦点になる。", "me": "家計の支出は、天候や物価の変化を受けて月ごとに振れる。自分の家計でも、食料や衣料の支出が前年と比べてどう動いたかを見直すと、数字の意味をつかみやすい。", "a": "総務省の説明に沿って、9月の落ち込みは長雨などの一時的な要因が大きいとみる読み方である。", "b": "前年割れが10か月続いており、天候だけでは説明しきれないとみる読み方である。", "say": "確認できたのは、9月の実質消費支出が6.8%減で、10か月連続のマイナスだったことである。確認できていないのは、10月以降に天候の影響が消えれば持ち直すのかどうかだ。10月分の家計調査で減少が続くかを見たい。", "src": "NHK(9月家計調査 実質の消費支出6.8%減 10か月連続の減少、11/10) · 朝日新聞(9月の消費支出、実質6.8%減 6年ぶり減少幅、11/10) · 時事通信(9月消費支出、6.8%減 10カ月連続、11/10)"},
+    "anpo3":{"kick": "政治 · 安全保障 · ✓ 3媒体 · 防衛費の水準と核政策の結論は未確認", "title": "安保3文書の改定へ自民・維新の作業チームが初会合、政府は「相手の目的達成を拒否する能力」を基本に", "what": "自民党と日本維新の会の実務者による安保3文書改定の作業チームが10日、初会合を開いた。政府側は防衛力強化の方向性を示し、相手の目的達成を拒否する能力を持つことを基本的な考え方に掲げた。無人機やAIを使った新しい戦い方への対応も説明した。両党は日米同盟を強化する方針では一致した。維新は非核三原則のうち「持ち込ませず」の記述の見直しと原子力潜水艦の早期導入を提言しており、自民の提言にはこの2点は触れられていない。政府は改定を年内に進める考えである。", "why": "3文書は、日本の安全保障の方針と防衛力の整備を定める基本の文書で、改定の内容は防衛費の水準や装備の方向に直結する。自民と維新で重視する点が異なるため、協議の中でどこまで一本化できるかが、改定の中身を左右する。", "me": "防衛費をどこまで増やすかは、税や国債を通じて将来の負担にもつながる。改定案が固まる段階で数字が出るため、そこで確認したい。", "a": "防衛力の強化を急ぐ立場は、新しい戦い方に対応するために年内の改定が必要だとする。日米同盟の強化で両党が一致した点を土台にする。", "b": "核政策や防衛費の水準は国民の負担と国の姿勢に関わるため、拙速に決めず丁寧な議論を求める立場である。維新と自民で提言の内容が分かれている点を重く見る。", "say": "確認できたのは、10日に作業チームが初会合を開き、政府が方向性を示したことだ。確認できていないのは、防衛費の水準と、非核三原則や原子力潜水艦の扱いの結論である。次回以降の会合で核政策の議論に入るかを見たい。", "src": "NHK(安保3文書改定へ 政府側が防衛力強化の方向性を示す、11/10) · 時事通信(3文書改定へ協議スタート 自維、防衛費・核政策焦点、11/10) · 朝日新聞(「ブレーキ役」不在の影響は 安保3文書で自民・維新が与党協議へ、11/9)"},
+    "honda":{"kick": "産業 · 自動車 · ✓ 3媒体 · 生産するモデルは未発表", "title": "ホンダが米オハイオ州に約30億ドルで新工場、2029年に生産開始へ", "what": "ホンダは9日、米国オハイオ州に新しい自動車工場をつくると発表した。投資額は約30億ドルで、2029年に生産を始める計画である。年間の生産能力は24万台増える。ホンダによると、雇用は2,000人を超える。工場は既存のイーストリバティー工場とメアリーズビル工場の間に建てる。ハイブリッド車、ガソリン車、電気自動車のいずれもつくれる設計で、生産するモデルはまだ発表されていない。", "why": "米国はホンダの販売の約4割を占める市場で、需要が伸びるハイブリッド車の生産を現地で増やす狙いがある。工場の新設は大きな投資で、生産開始まで約3年かかるため、足元の販売より先を見た計画である。", "me": "ホンダ車に乗る人や株主には、すぐに価格や配当が変わる話ではない。日本の工場や取引先への影響は、今回の発表では示されていない。", "a": "米国での現地生産を増やすことで、需要の変化に素早く対応できるとみる立場である。", "b": "投資額が大きく、生産開始が2029年とまだ先であるため、需要の変化や政策の変更に左右されるリスクを重く見る立場である。", "say": "確認できたのは、約30億ドル、2029年に生産開始、年24万台の能力増という発表の内容である。確認できていないのは、生産するモデルと、日本国内の生産への影響だ。生産するモデルの発表を見たい。", "src": "The Japan Times(Honda to spend $3 billion on new hybrid car plant in Ohio、11/10) · 読売新聞(ホンダ、オハイオ州に新工場建設へ、11/10) · 47NEWS(ホンダ、米オハイオ州に新工場建設へ、11/10)"},
+    "shohizei":{"kick": "政治 · ✓ 2媒体", "title": "食料品の消費税減税法案、参院で11日に審議入り 高市首相が出席して質疑へ", "what": "参議院議院運営委員会の理事会は10日、食料品の消費税減税関連法案を11日の参院本会議で審議入りさせ、高市首相の出席を求めて質疑を行うことで、与野党が正式に合意した。法案は衆院で6日に可決され、参院に送られている。野党6党の参院国対委員長は9日、委員会での実質的な審議入りは首相の出席が条件だとの認識で一致した。与党は参院で過半数に届いておらず、国民民主党と公明党に賛同を求める見通しである。政府・与党は今国会の会期末の12月12日までの成立を目指している。", "why": "参院では与党が過半数に届かないため、野党の協力なしには法案が成立しない。首相が本会議に出席して質疑に答えるかどうかは、審議の入口だけでなく、野党の対応にも関わる。会期末までの日数が限られる中で、審議日程が成立の可否を左右する。", "me": "食料品の消費税が下がるかどうかは、買い物の負担に直結する。法案が成立するか、いつから適用されるかは、今後の審議と採決で決まる。決まっていない段階の見込みを前提に家計の予定を立てるのは避けたい。", "a": "法案の早期成立を求める立場は、衆院で可決された以上、参院でも日程を詰めて会期内に結論を出すべきだとする。食料品の負担を早く軽くすることを重く見る。", "b": "野党側は、首相が出席して財源や給付の詳細を説明することを審議の条件にしている。説明が尽くされる前に実質審議を急ぐことに慎重な立場である。", "say": "確認できたのは、11日に参院本会議で審議入りし、首相が出席して質疑を行うことで与野党が正式に合意したことである。確認できていないのは、成立の見通しと、野党の賛否だ。11日の質疑で首相が財源や給付をどこまで説明するかを見たい。", "src": "NHK(消費税減税法案 参院であす審議入り 与野党が議運委で正式合意、11/10) · 時事通信(実質審議入り、高市首相出席が条件 参院野党、11/9)"},
+    "marshall":{"kick": "外交 · ✓ 2媒体", "title": "マーシャル諸島のハイネ大統領が来日し、高市首相と会談へ", "what": "政府は10日、マーシャル諸島のハイネ大統領が来日すると発表した。ハイネ大統領は高市首相と会談する。木原官房長官は、マーシャル諸島を基本的な価値と原則を共有する重要なパートナーと位置づけた。来年夏に横浜で開かれる太平洋島サミットに向けた連携にも期待を示した。来日の具体的な日程は、2媒体のうち1媒体の記載に基づき、ここでは確定した情報として扱わない。", "why": "官房長官が来年夏の太平洋島サミットに触れたことから、今回の訪問は首脳級の会議に向けた準備の一環でもある。会談で何が合意されるのかは、まだ発表されていない。", "me": "家計や仕事にすぐ響く話ではない。会談の結果が発表されたら、日本が島しょ国とどんな協力を約束したか、来日の日程と合わせて確かめたい。", "a": "首脳の往来が続くこと自体を、二国間の関係の厚みを示すものとして重く見る立場である。官房長官が重要なパートナーと位置づけた点を根拠にする。", "b": "訪問は日程の発表の段階で、会談の中身がまだ示されていないため、成果の評価は会談後に分けて見る立場である。", "say": "確認できたのは、来日と首相との会談の予定である。確認できていないのは、正確な日程と、会談の議題や合意の中身だ。会談後に共同の発表が出るかを見たい。", "src": "NHK(マーシャル諸島 ハイネ大統領が来日へ 高市首相と会談も、11/10) · 時事通信(マーシャル大統領、24日来日、11/10)"},
+    "taifu":{"kick": "気象 · ✓ 2媒体", "title": "非常に強い台風32号が小笠原諸島に接近、10日夜遅くから11日未明に最接近へ", "what": "非常に強い台風32号は、10日夜遅くから11日未明にかけて小笠原諸島に最も近づく見込みである。気象庁は、暴風とうねりを伴う高波、土砂災害への警戒を呼びかけている。風や波、雨の予想値は報道ごとに異なる可能性があり、ここでは数字を示さない。台風は小笠原諸島を過ぎて東へ進む見込みである。", "why": "島しょ部は船や飛行機の便が止まると、本土との行き来が絶たれやすい。最接近が夜から未明にかけてのため、暗い中での避難や外出の判断が難しくなる。", "me": "小笠原諸島に住む人や旅行の予定がある人は、船や飛行機の運航情報を気象庁と運航会社で確かめたい。本土でも、高波の影響が出る海岸には近づかない。", "a": "最接近の時間帯が過ぎるまで外出を控えるのが基本だという立場である。暴風と高波の両方を重く見る。", "b": "台風が東へ進む予報のため、本土への影響は小さいとみて、小笠原諸島での備えに注意を向けるべきだという立場である。", "say": "確認できたのは、10日夜遅くから11日未明の最接近の見込みと、暴風・高波への警戒の呼びかけである。確認できていないのは、被害の有無だ。11日朝に小笠原諸島の被害や交通の状況が示されるかを見たい。", "src": "NHK(台風32号 小笠原諸島に接近へ 暴風や高波に警戒、11/10) · 共同通信(台風32号が小笠原諸島に接近 暴風、高波に警戒、11/10)"},
+    "ukr":{"kick": "国際 · ✓ 2媒体", "title": "米・ロ・ウクライナの高官協議が10日にUAEで始まる、約9カ月ぶりの再開", "what": "米国が仲介する米国、ロシア、ウクライナの高官協議が、10日からアラブ首長国連邦(UAE)で始まる。3者の協議が開かれるのは約9カ月ぶりである。戦後の安全保障体制などをめぐって意見が交わされる見通しである。協議は10日と11日の2日間の日程で、アブダビで開かれる。", "why": "停戦や和平の条件は、領土や安全の保証をめぐる隔たりが大きい。9カ月ぶりに3者が同じ場で協議することで、条件を詰める入口には立つが、合意に近づくかどうかは、協議の結果が出るまで分からない。", "me": "協議の結果は、原油や穀物の価格、日本企業のロシア向けの事業に関わる可能性がある。まず2日間の協議で何が決まるのかを確かめたい。決まらなかった場合も、次の協議の日程が示されるかが手がかりになる。", "a": "協議の再開を、和平に向けた前進の機会とみる立場である。", "b": "核心の領土問題で隔たりが大きいままで、再開だけで進展を期待するのは早いとみる立場である。協議の中身が示されるまで、評価は保留すべきだと考える。", "say": "確認できたのは、10日に高官協議が始まり、約9カ月ぶりの再開であることだ。確認できていないのは、協議の中身と合意の有無である。11日に結果の発表があるかを見たい。", "src": "NHK(米・ロ・ウクライナの高官協議開始へ 和平へ進展あるか焦点、11/10) · 朝日新聞(米・ロ・ウ協議、9カ月ぶり再開、11/9)"},
+    "glp1":{"kick": "医療 · ✓ 2媒体", "title": "日本でも使われるマンジャロなど肥満症治療薬に、米FDAが視力低下の警告を求める", "what": "米食品医薬品局(FDA)は9日、肥満症や2型糖尿病の治療に使われるGLP1受容体作動薬について、急激な視力低下につながる恐れがあると発表した。対象には、マンジャロ、ゼップバウンド、オゼンピック、ウゴービなど、この仲間の薬が広く含まれる。FDAは製薬企業に、非動脈炎性前部虚血性視神経症のリスクを添付文書の警告に加えるよう求めた。患者には、片方の目の突然の痛みのない視力低下があれば、すぐ報告するよう呼びかけている。リリーは、FDAの発表はGLP1の作用をもつ薬全般に当てはまり、自社の薬に固有の知見に触れたものではないとしている。", "why": "GLP1受容体作動薬は肥満や糖尿病の治療で広く使われている薬で、注意喚起は服用者が多い分、影響が広い。今回は薬の種類ごとの注意ではなく、同じ仲間の薬全体への対応である点が特徴だ。", "me": "服用中の人は、自己判断で中止せず、視力の異変に気づいたらすぐ処方した医師に相談する。日本での扱いは、今後の国内の発表で確かめたい。", "a": "リスクを知らせる表示の追加を、患者が早く異変に気づくための前進とみる立場である。", "b": "薬の利点も大きいため、不安だけが先に広がって必要な治療をやめてしまうことを心配する立場である。", "say": "確認できたのは、FDAが9日に警告を出し、添付文書への記載を求めたことだ。確認できていないのは、日本の薬での扱いと、発症の頻度の数字の確定である。国内の当局や製薬企業が追加の説明を出すかを見たい。", "src": "共同通信(マンジャロ、視力低下の恐れ 肥満治療、米FDAが警告、11/10) · ブルームバーグ(FDA Adds Warning Label to Obesity Drugs for Eye Condition、11/9)"}
+  };
+  const G = {
+    "独立調査":{"f": "ガバナンス", "d": "組織の外部の人や、利害のない委員が行う調査。身内の調査より中立とされる。", "w": "エヌビディアの取締役会がフアン氏をめぐって始めた。"},
+    "取締役会":{"f": "ガバナンス", "d": "会社の経営方針を決め、経営陣を監督する機関。", "w": "フアン氏の行動について独立調査を始めた。"},
+    "終値":{"f": "金融", "d": "市場がその日の取引を終えるときに付いた最後の値段。", "w": "日経平均の10日の終値が6万円台を回復した。"},
+    "続伸":{"f": "金融", "d": "株価が続けて上がること。", "w": "日経平均は9日に続き10日も上げた。"},
+    "日経平均":{"f": "金融", "d": "東京証券取引所に上場する代表的な225銘柄の株価から算出する指数。", "w": "10日は6万円台を回復した。"},
+    "実質":{"f": "経済", "d": "物価の変動の影響を除いた数字。名目と区別して使う。", "w": "9月の消費支出は実質で6.8%減った。"},
+    "家計調査":{"f": "統計", "d": "総務省が家計の収入や支出を毎月調べる統計。", "w": "9月分は実質で6.8%減だった。"},
+    "消費支出":{"f": "統計", "d": "家計が商品やサービスの購入に使ったお金。", "w": "2人以上世帯の9月分が前年を下回った。"},
+    "安保3文書":{"f": "安全保障", "d": "日本の安全保障の方針と防衛力の整備を定める3つの基本文書。", "w": "自民・維新の作業チームが改定の協議を始めた。"},
+    "非核三原則":{"f": "安全保障", "d": "核兵器を持たず、作らず、持ち込ませないという日本の方針。", "w": "維新が「持ち込ませず」の記述の見直しを求めている。"},
+    "原子力潜水艦":{"f": "安全保障", "d": "原子力を動力にする潜水艦。長く潜ったまま行動できる。", "w": "維新が早期の導入を求めている。"},
+    "審議入り":{"f": "政治", "d": "国会で法案の本格的な審議が始まること。", "w": "減税法案が11日に参院で審議入りする。"},
+    "議院運営委員会":{"f": "政治", "d": "国会の運営や審議日程を話し合う委員会。", "w": "参院の議院運営委員会の理事会が日程で合意した。"},
+    "GLP1受容体作動薬":{"f": "医療", "d": "血糖や食欲に関わるホルモンの働きを助ける薬。糖尿病や肥満症の治療に使う。", "w": "FDAが視力低下の恐れを警告した。"},
+    "添付文書":{"f": "医療", "d": "薬の効き目や副作用などを記した公式の説明書。", "w": "FDAが警告の追加を製薬企業に求めた。"},
+    "高官協議":{"f": "外交", "d": "政府の高い立場の担当者による話し合い。首脳会談の前段階にもなる。", "w": "米・ロ・ウクライナの3者が10日に始めた。"},
+    "生産能力":{"f": "産業", "d": "工場が一定の期間につくれる製品の最大の量。", "w": "ホンダの新工場で年24万台増える。"},
+    "ハイブリッド車":{"f": "産業", "d": "エンジンとモーターの両方で走る車。", "w": "ホンダの新工場が対応できる車種の一つ。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

@@ -1,0 +1,340 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>57,434.77</b>日経平均 · 11/6終値 · 前日比-5.96%(5か月半ぶりに6万円割れ)</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,353.73</b>S&amp;P500 · 11/5終値 · 前日比-4.36%</div>
+    </div>
+    <div class="dateline"><span>No. 34 · 朝刊</span><b>2026年11月7日(土)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="shohizei">
+      <div class="kick">政治 · 税制<span>✓ 4媒体 · 衆院本会議の賛否の票数は未確認</span></div>
+      <h2 class="hl">消費減税法案が衆院を通過 全野党が反対、自民議員4人が採決に加わらず 参院は11日に審議入り</h2>
+      <p class="deck">食料品の消費税を2年間1%に下げる法案が6日の衆院本会議で可決された。参議院は11日、首相の出席を求めて質疑に入る。</p>
+      <div class="body">
+        <p>食料品の消費税率を来年4月から2年間、1%に引き下げる法案が、6日午後の衆議院本会議で賛成多数により可決され、参議院に送られた。野党はすべて反対した。与党の自民党からは石破氏、小渕氏らが採決に加わらず、その数は4人にのぼった。高市首相は、この点について「コメントを控える」と述べている。同じ日の昼前には、衆議院の財務金融委員会が自民党と日本維新の会の賛成多数でこの法案を可決していた。国民民主党は本会議の採決で反対する方針を示していた。委員会の可決から本会議の可決まで、法案は同じ日のうちに進んだ。</p>
+        <p>法案は減税に合わせて、所得に応じた支援金を設ける内容を含む。高市首相は6日の委員会で、この支援金の対象を勤労者の3割以上とする方向で検討する考えを示した。野党は「中身が分からない」「財源の説明がない」などと批判している。参議院では自民党と立憲民主党の国会対策委員長が会談し、11日に本会議を開いて首相の出席を求め、質疑を行って審議入りすることで合意した。国会の会期は12月12日までで、与党は参議院で少数のため、野党の対応が成立の行方を左右する。本会議での賛成と反対の人数、財源の具体策は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="leak">
+      <div class="kick">社会 · サイバー<span>✓ 4媒体 · 佐川急便の流出の範囲と原因は未確認</span></div>
+      <h3 class="hl">佐川急便、最大5323万件の情報が流出した可能性 政府は緊急対策パッケージを決定</h3>
+      <div class="one">
+        <p>宅配大手の佐川急便が不正アクセスを受け、荷物の送り主と送り先の氏名や住所など最大5323万件が外部に流出した可能性がある。親会社のSGホールディングスの高垣考志取締役が6日、決算発表の会見で明らかにし、被害の状況は調べている最中だと説明した。同じ日に、ネット損保の三井ダイレクト損害保険は、契約者の氏名、住所、電話番号など23万件あまりが漏れたと発表した。NTTスマイルエナジーは、10月の不正アクセスで顧客のポイントが不正に交換されたと明らかにした。NTTドコモでも最大29万件余の顧客情報が流出し、前田義晃社長が6日の会見で陳謝した。 相次ぐ流出を受けて、政府は6日に「緊急対策パッケージ」を決定した。個人情報を扱う企業に不要なデータの消去を求め、攻撃を未然に防ぐため、能動的サイバー防御を含めて戦略的に実行する。能動的サイバー防御とは、攻撃の兆候を事前につかみ、攻撃元への対処も行う仕組みだ。攻撃を強制的に遮断する検討を加速し、被害防止のための新しいチームもつくる。人員の増強や設備の拡充も盛り込まれ、対策の強化に100億円が充てられる。総務省は同じ日、ドコモが契約者の同意なく電話番号などをアマゾンジャパンに渡していたとして、再発防止を求める行政指導を行った。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="shinkin"><b>128の信用金庫で窓口とATMが停止、午後6時前に他行宛て送金を除き復旧</b><em>6日午後1時半すぎから、窓口の取引とATMの入出金ができなくなった。他の金融機関宛ての送金は復旧していない。</em><span>金融 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="rice"><b>スーパーのコメ平均価格は5キロ2816円、12週ぶりに前の週より値上がり</b><em>11月1日までの1週間の平均は、前の週より28円高かった。値上がりは12週ぶりで、価格は税込みだ。</em><span>暮らし · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="tokuryu"><b>匿名・流動型犯罪グループ対策の法案、通信内容の遠隔把握を可能に</b><em>指示役らのスマートフォンでの通信内容を遠隔で把握できるようにする法案が、衆院の委員会で可決された。</em><span>法・治安 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="growth"><b>政府、成長戦略の「重点項目」16項目を確認 フィジカルAIや自動運転</b><em>ロボットを自律的に動かすフィジカルAIや自動運転技術など16項目を、成長戦略の重点項目に位置づけた。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kaigo"><b>厚生労働省、訪問介護の新たな支援策の案を示す 事業者の経営難で</b><em>経営が厳しい訪問介護の事業者に向けた新たな支援策の案を、6日に示した。サービス維持が課題だ。</em><span>社会保障 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="okinawa">
+      <div class="kick">政治 · 沖縄<span>✓ 3媒体 · 具体的な負担軽減策は未確認</span></div>
+      <h3 class="hl">13年ぶりに沖縄政策協議会 首相「基地負担軽減を目に見える形で」</h3>
+      <div class="body">
+        <p>高市首相は6日、沖縄政策協議会に出席し、沖縄の米軍基地の負担軽減を「目に見える形」で実現すると述べた。「基地負担軽減に力を尽くす」とも語っている。沖縄政策協議会は、沖縄の基地問題や振興策をめぐって政府と県が話し合う場で、開かれたのは13年ぶりになる。首相が示したのは方針で、どの基地のどの負担を、いつまでにどう減らすのかという具体的な内容は、6日の時点で確認できていない。協議会で県側がどのような要望を伝えたのかも、まだ分からない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="taiwan">
+      <div class="kick">外交 · 日中<span>✓ 2媒体 · 中国側の発言の詳細は未確認</span></div>
+      <h3 class="hl">高市首相の「台湾有事」答弁から1年 官房長官は「中国は重要な隣国」、中国は改めて批判</h3>
+      <div class="body">
+        <p>高市首相が国会で台湾有事に関する答弁をしてから、7日で1年になる。首相は、台湾をめぐる有事が日本の存立危機事態にあたりうるとの考えを示していた。木原官房長官は6日の記者会見で、中国は「重要な隣国」だと述べた一方、この答弁を撤回するかどうかには触れなかった。中国外務省の副報道局長は同じ日、首相の答弁をあらためて批判した。中国側の発言の細かい内容は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="payroll">
+      <div class="kick">経済 · 米国<span>✓ 1媒体 · 失業率と賃金の伸びは未確認</span></div>
+      <h3 class="hl">米国の10月の就業者数は16万5000人増 市場予想を大きく上回る</h3>
+      <div class="body">
+        <p>米国で6日に発表された10月の雇用統計で、農業分野以外の就業者数は前の月より16万5000人増え、市場の予想を大きく上回った。就業者数は、働いて給料を得ている人がどれだけ増えたかを示す数字で、米国の景気の強さを測る代表的な指標になっている。円相場や株価に影響を及ぼす統計として、市場が毎月注目している。</p>
+        <p>雇用が強いと賃金や物価が上がりやすく、FRB(連邦準備制度理事会)が金利を高めに保つ理由になりうる。FRBが今後どう動くかを見通すうえで、来週発表される物価の動向が次の焦点になる。5日のニューヨーク市場ではS&amp;P500が4.36%下げていて、この雇用統計を受けた6日の値動きは、まだ最終的な終値が出ていない。失業率や賃金の伸びは、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>16万5000人</b><span>10月の農業分野以外の就業者の増加数</span></div>
+        <div><b>来週</b><span>次の焦点になる物価の統計の発表時期</span></div>
+        <div><b>FRB</b><span>金融政策を決める米国の中央銀行</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>佐川急便の5323万件は、すでにすべて流出した</b> <span>SGホールディングスの取締役は、最大5323万件が流出した可能性があると6日の会見で述べ、被害の状況は調査中だと説明した。実際に流出した件数は確認されていない。</span></div>
+        <div><b>消費減税の支援金は、働く人全員がもらえる</b> <span>高市首相は6日の衆議院の委員会で、支援金の対象を勤労者の3割以上とする方向で検討する考えを示した。全員ではなく、所得に応じた対象になる見通しで、最終的な条件は決まっていない。</span></div>
+        <div><b>日米の株価の急落は、米国の中間選挙の結果が原因だと確定している</b> <span>日経平均が6日に5.96%下げたことについて、政府や取引所から原因の公式な説明は示されていない。原因は確認できていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 土 11月7日</b><span>128の信用金庫で、他の金融機関宛ての送金が復旧したかを確かめる。佐川急便の調査で、流出した件数が確定するかも見る。</span><b>来週</b><span>11日に参議院の本会議が開かれ、高市首相の出席のもと消費減税法案の質疑が始まる。9日(月)には東京市場が開き、米国の物価統計の発表も控える。</span><b>あとで</b><span>国会の会期は12月12日まで。消費減税法案が会期内に成立するかが、参議院の野党の対応しだいで決まる。</span><b>読者へ</b><span>身に覚えのない不在通知やポイント交換の通知は、リンクを開かず、公式のアプリやサイトから確認する。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "shohizei":{"kick": "政治 · 税制 · ✓ 4媒体 · 衆院本会議の賛否の票数は未確認", "title": "消費減税法案が衆院を通過 全野党が反対、自民議員4人が採決に加わらず 参院は11日に審議入り", "what": "食料品の消費税率を来年4月から2年間、1%に引き下げる法案が、6日午後の衆議院本会議で賛成多数で可決された。野党はすべて反対し、自民党から4人が採決に加わらなかった。石破氏、小渕氏らが採決を棄権したと伝えられている。高市首相は退席について「コメントを控える」と述べた。昼前には衆議院の財務金融委員会が、自民党と日本維新の会の賛成多数で可決していた。首相は委員会で、減税と合わせて導入する支援金の対象を勤労者の3割以上とする方向で検討する考えを示した。参議院は11日に本会議を開き、首相の出席を求めて質疑を行う。", "why": "消費税は税収の大きな柱で、食料品の税率を下げれば毎日の買い物に直接響く。一方で財源が示されなければ、将来の増税や国債の発行で穴を埋めることになりうる。与党が参議院で少数のため、野党の対応しだいで成立の時期と内容が変わる。", "me": "食料品の税率が下がるのは来年4月からで、今すぐ値段が変わるわけではない。支援金の対象になるかどうかは、働き方や所得で決まる見通しなので、条件が固まる過程を確認したい。", "a": "賛成する側は、物価高が続くなかで食料品の負担を早く軽くすることを重視する。委員会で議論は深まってきたと説明している。", "b": "反対する野党は、支援金の中身が分からないまま採決するのは問題だと訴える。財源の説明がないことも批判している。与党内にも異論があり、棄権が出た。", "say": "確認できたのは、衆院を通過したこと、全野党が反対したこと、参院の審議入りが11日であることだ。確認できていないのは、賛成と反対の人数と、財源の具体策である。11日の質疑で首相が支援金と財源をどう説明するかを見たい。", "src": "毎日新聞(衆院通過・退席、11/6) · NHK(参院11日審議入り、11/6) · 時事通信(採決棄権、11/6) · 朝日新聞(首相答弁、11/6)"},
+    "leak":{"kick": "社会 · サイバー · ✓ 4媒体 · 佐川急便の流出の範囲と原因は未確認", "title": "佐川急便、最大5323万件の情報が流出した可能性 政府は緊急対策パッケージを決定", "what": "宅配大手の佐川急便が不正アクセスを受け、荷物の送り主と送り先の氏名や住所など最大5323万件が外部に流出した可能性がある。親会社のSGホールディングスの高垣考志取締役が、6日の決算発表の会見で説明した。被害の状況は調査中である。三井ダイレクト損害保険は、契約者の氏名、住所、電話番号など23万件あまりが漏れたと発表した。NTTスマイルエナジーでは、顧客のポイントが不正に交換されていた。政府は6日に緊急対策パッケージを決定し、個人情報を扱う企業に不要なデータの消去を求めた。攻撃の強制遮断の検討を加速し、新しいチームをつくる。", "why": "荷物の送り主と送り先の情報は、誰が誰に何を送るかという生活の記録そのものだ。氏名と住所が出回ると、なりすましの詐欺や迷惑な連絡に使われうる。企業ごとの被害が重なり、政府が全体の対策を出す段階に入った。", "me": "身に覚えのない荷物の不在通知や、ポイント交換の通知が来たら、メッセージ内のリンクを開かず、公式のアプリやサイトから確認したい。使っていない通販やサービスの登録は整理しておく。", "a": "企業側は、被害の範囲を調べて公表することが先だとする。不要な個人データを持たない運用に変える動きも出ている。", "b": "政府の対策に対しては、攻撃元への対応をどこまで認めるかなど、運用に手探りの面が残るという見方がある。民間の備えが追いつくかも課題だ。", "say": "確認できたのは、佐川急便に流出の可能性があること、政府が6日に対策をまとめたことだ。確認できていないのは、流出の実際の件数と原因である。SGホールディングスの調査結果と、政府の新しいチームの顔ぶれを見たい。", "src": "NHK(佐川急便・三井ダイレクト損保、11/6) · 時事通信(緊急対策パッケージ、11/6) · 毎日新聞(人員・設備の強化、11/6) · 朝日新聞(未然防止の体制、11/6)"},
+    "okinawa":{"kick": "政治 · 沖縄 · ✓ 3媒体 · 具体的な負担軽減策は未確認", "title": "13年ぶりに沖縄政策協議会 首相「基地負担軽減を目に見える形で」", "what": "高市首相は6日、沖縄政策協議会に出席した。沖縄の米軍基地の負担軽減を「目に見える形」で実現すると述べ、力を尽くす考えを示した。沖縄政策協議会は、沖縄の基地や振興策について政府と県が話し合う場である。開催は13年ぶりだった。首相が示したのは方針であり、具体的な負担軽減の中身と時期は、6日の時点で示されていない。県側の発言の詳しい内容も確認できていない。", "why": "基地の負担は、騒音や事故への不安、土地の使い方など、沖縄の暮らしに直結する問題だ。13年ぶりに協議の場が開かれたことで、国と県の対話が再開する入り口になりうる。具体策が示されなければ、言葉だけにとどまる。", "me": "沖縄に住む人や、基地周辺の自治体に関わる人は、今後の協議の日程と議題を確認したい。それ以外の人も、国と地方の話し合いがどう進むかは、基地や予算の議論に影響するので注目しておきたい。", "a": "政府側は、首相が協議会で基地負担の軽減を「目に見える形で」進めると述べたことを前面に出している。13年ぶりの開催が県政の交代と関係するかどうかについて、政府は公式には説明していない。", "b": "県側が何を求めたのかは、確認できていない。13年も開かれなかった協議の場で、国と県の考え方がどこまで近づくかは、これからの議論にかかっている。", "say": "確認できたのは、首相が「目に見える形」で負担軽減に取り組むと述べたことだ。確認できていないのは、具体策と時期である。次の協議の日程と、県側が何を求めるかを見たい。", "src": "毎日新聞(協議会13年ぶり開催、11/6) · 朝日新聞(首相発言、11/6) · 時事通信(速報、11/6)"},
+    "taiwan":{"kick": "外交 · 日中 · ✓ 2媒体 · 中国側の発言の詳細は未確認", "title": "高市首相の「台湾有事」答弁から1年 官房長官は「中国は重要な隣国」、中国は改めて批判", "what": "高市首相が国会で台湾有事に関する答弁をしてから、7日で1年になる。首相は、台湾をめぐる有事が日本の存立危機事態にあたりうるとの考えを示していた。木原官房長官は6日の記者会見で、中国は「重要な隣国」だと述べた。答弁を撤回するかどうかには触れなかった。中国外務省の副報道局長は6日、首相の答弁をあらためて批判した。", "why": "存立危機事態は、日本が直接攻撃されていなくても、密接な関係にある国への攻撃で日本の存立が脅かされる場合に、自衛隊が武力を使えるとする考え方だ。台湾をめぐって首相が具体的に言及したため、中国が強く反発し、日中関係の火種になっている。", "me": "日中の関係は、貿易や観光、日本企業の中国での事業に影響しうる。中国に取引先や旅行の予定がある人は、両政府の発言の変化を確認しておきたい。", "a": "日本政府は、従来の安全保障政策を変えたわけではないという立場をとり、中国との対話は続ける姿勢を示している。", "b": "中国側は、1年たっても首相の答弁を批判し続けている。中国外務省の副報道局長は、6日にもあらためて批判した。", "say": "確認できたのは、官房長官が撤回に触れず、中国が批判を続けたことだ。確認できていないのは、中国側の発言の詳しい中身である。両政府が対話の場を設けるかを見たい。", "src": "毎日新聞(中国副報道局長の批判、11/6) · 時事通信(官房長官の会見、11/6)"},
+    "payroll":{"kick": "経済 · 米国 · ✓ 1媒体 · 失業率と賃金の伸びは未確認", "title": "米国の10月の就業者数は16万5000人増 市場予想を大きく上回る", "what": "米国で6日に発表された10月の雇用統計で、農業分野以外の就業者数は前の月より16万5000人増えた。市場の予想を大きく上回った。雇用統計は円相場や株価に影響を及ぼす指標である。FRB(連邦準備制度理事会)の金融政策を見通すうえで、来週に発表される物価の動向が焦点になっている。失業率と賃金の伸びは、確認できていない。5日のニューヨーク市場ではS&P500が4.36%下げて取引を終えていた。", "why": "雇用が強いと、人々の収入が増えて物価も上がりやすくなる。FRBは物価を抑えるために金利を高めに保つことがあり、金利が高いと株価や円相場に影響が出る。5日の株安のあとで、この統計は市場の落ち着きを左右する材料になった。", "me": "外貨や米国株、投資信託を持つ人は、来週の物価統計の日程を確認しておきたい。円相場の動きは、輸入品の値段や海外旅行の費用にも響く。", "a": "強い数字は米国の景気が底堅い証拠で、企業の業績にも追い風だとみる見方がある。", "b": "一方で、強すぎる雇用は利下げを遠ざけ、金利の高止まりが株価の重しになるとみる見方もある。数字の良し悪しの評価は割れている。", "say": "確認できたのは、就業者数が16万5000人増えたことだ。確認できていないのは、失業率と賃金、そして市場の反応の理由である。市場の値動きについて、公式な原因の説明は出ていない。来週の物価統計を見たい。", "src": "NHK(米国の雇用統計、11/7)"},
+    "shinkin":{"kick": "金融 · ✓ 1媒体", "title": "128の信用金庫で窓口とATMが停止、午後6時前に他行宛て送金を除き復旧", "what": "東海・北陸地方から西の地域にある128の信用金庫で、6日午後1時半すぎから、窓口での取引やATMでの入出金ができなくなった。午後6時前に、ほかの金融機関宛ての送金を除いてサービスが復旧した。他の金融機関宛ての送金は、復旧が確認できていない。原因は、確認できていない。", "why": "信用金庫は地域の預金と融資を担い、窓口やATMが止まると、給料の引き出しや支払いなど日々の暮らしに支障が出る。復旧の時間帯が夕方の6時前だったため、その日の支払いに間に合わなかった人もいたかもしれない。128もの金庫が同じ時刻に止まったことは、共通の仕組みが関わっていた可能性を考えさせるが、原因は示されていない。", "me": "信用金庫を使っている人は、他行宛ての送金が使えるようになったかを、取引先の画面や窓口のお知らせで確認したい。支払いの期限が近い人は、早めに金庫へ連絡しておく。", "a": "金融機関側は、復旧を優先し、利用者への影響を最小限にしたい立場だ。", "b": "利用者側からは、原因の説明と、同じ障害を防ぐ対策を求める声が出るとみられる。", "say": "確認できたのは、128の信用金庫が停止し、送金を除いて復旧したことだ。確認できていないのは、原因と、送金の復旧時期である。各金庫の発表を見たい。", "src": "NHK(信用金庫のサービス復旧、11/6)"},
+    "rice":{"kick": "暮らし · ✓ 1媒体", "title": "スーパーのコメ平均価格は5キロ2816円、12週ぶりに前の週より値上がり", "what": "全国のスーパーで11月1日までの1週間に販売されたコメの平均価格は、5キロ当たり税込みで2816円だった。前の週より28円値上がりした。値上がりは12週ぶりである。全国のスーパーの販売価格を集めた平均である。値上がりの理由は、確認できていない。", "why": "コメは毎日の食費の中心で、価格が上がると家計に直接響く。12週続いた値下がりが止まったことで、価格が下げ止まりに向かうのかが注目される。前の週との差は28円で、5キロの袋を買うごとに、その分だけ支払いが増えた計算になる。", "me": "コメを買う人は、5キロ2816円という目安を覚えておくと、店ごとの値段を比べやすい。まとめ買いを考える人は、来週の数字も確認したい。家計の食費を月ごとに記録している人は、コメの代金の変化も一緒に書き留めておくと、値動きの影響が分かりやすい。", "a": "値上がりは一時的な動きで、全体として価格は落ち着いているとみる見方がある。", "b": "1回の値上がりで傾向が変わったとは言えず、数週間の動きを見る必要があるとの見方もある。", "say": "確認できたのは、2816円で、12週ぶりに値上がりしたことだ。確認できていないのは、値上がりの理由である。来週の数字が続けて上がるかを見たい。", "src": "NHK(コメの平均価格、11/6)"},
+    "tokuryu":{"kick": "法・治安 · ✓ 1媒体", "title": "匿名・流動型犯罪グループ対策の法案、通信内容の遠隔把握を可能に", "what": "「トクリュウ」とは、匿名・流動型犯罪グループの略で、指示役らがメンバーを入れ替えながら犯罪を重ねるグループのことだ。このグループへの対策として、指示役らのスマートフォンでの通信内容を遠隔で把握できるようにする法案が、6日に衆議院の内閣委員会で、賛成多数で可決された。本会議での採決の日程は、確認できていない。", "why": "指示役は匿名で連絡を取り合うため、実行役を捕まえても全体像がつかみにくい。通信内容を把握できれば捜査が進みやすくなる一方、通信の秘密を侵すおそれがあり、範囲と手続きの決め方が問われる。委員会で可決されただけで、法律になったわけではない。", "me": "特殊詐欺や強盗のニュースが身近な人は、法案の対象や要件を確認したい。自分の通信が調べられる場合の条件が、どう決められるかも大切になる。", "a": "賛成する側は、犯罪グループの中心に迫るには通信の把握が必要だとする。", "b": "慎重な側は、通信の秘密や個人の自由を守るため、対象を絞り、裁判所の関与を求める。", "say": "確認できたのは、衆院の委員会で賛成多数で可決されたことだ。確認できていないのは、本会議の日程と、対象になる範囲である。今後の審議で歯止めがどう設けられるかを見たい。", "src": "NHK(トクリュウ対策法案の委員会可決、11/6)"},
+    "growth":{"kick": "経済 · ✓ 1媒体", "title": "政府、成長戦略の「重点項目」16項目を確認 フィジカルAIや自動運転", "what": "政府は6日、成長戦略の実行に向けて、ロボットを自律的に動かせる「フィジカルAI」や自動運転技術など16項目を「重点項目」に位置づけることを確認した。重点項目は、予算や制度の見直しを優先して進める分野を示す。16項目の全体の内容と、予算の規模は、確認できていない。", "why": "日本は人手不足が進んでおり、ロボットや自動運転は労働力を補う手段になりうる。重点項目に入ると、予算や規制の見直しが優先されやすい。ただし、どの技術がいつ暮らしに届くかは、これから決まる。", "me": "ロボットや自動運転に関わる企業で働く人や、投資を考える人は、重点項目に何が入るかを確認したい。生活では、無人の配送や運転の実用化が早まる可能性がある。", "a": "成長を促したい側は、国が重点分野を示せば民間の投資が動きやすくなるとみる。", "b": "一方、分野を絞りすぎると他の産業への支援が薄くなるとの懸念も出る。", "say": "確認できたのは、16項目を重点項目にすることだ。確認できていないのは、具体的な予算と期限である。今後の予算編成で、重点項目にどれだけ配分されるかを見たい。あわせて、規制の見直しがどの分野から始まるかも確かめたい。企業の投資計画に影響するため、発表の続報に注意したい。", "src": "NHK(成長戦略の重点項目、11/6)"},
+    "kaigo":{"kick": "社会保障 · ✓ 1媒体", "title": "厚生労働省、訪問介護の新たな支援策の案を示す 事業者の経営難で", "what": "厚生労働省は6日、訪問介護の事業者に向けた新たな支援策の案を示した。訪問介護は、自宅で介護を受けられる仕組みで、高齢化社会に欠かせない制度である。経営が厳しい事業者も出ている。案の具体的な金額や、いつから実施するかは、確認できていない。", "why": "訪問介護は、ヘルパーが家を訪ねて介護を行うため、移動の時間などで採算が取りにくい。事業者が減ると、自宅での介護を望む高齢者が行き場を失い、家族の負担も重くなる。支援策が案の段階であることも押さえておきたい。", "me": "親の介護を考えている人は、地域の訪問介護の事業者が続けられるかを確認したい。ケアマネジャーに相談し、代わりの選択肢も調べておくと安心だ。", "a": "事業者側は、人手不足と報酬の低さから、支援を急いでほしい立場だ。", "b": "国の財政を重視する側は、支援の効果と財源を見極める必要があると指摘する。", "say": "確認できたのは、厚生労働省が支援策の案を示したことだ。確認できていないのは、金額と開始時期である。案がいつ正式に決まるかを見たい。あわせて、事業者への支援がヘルパーの賃金の改善につながるかどうかも、確かめたい。介護の現場で働く人や利用する家族にとって、続報は大切になる。", "src": "NHK(訪問介護の支援方針、11/6)"}
+  };
+  const G = {
+    "本会議":{"f": "国会", "d": "衆議院・参議院の全議員が出席して開く会議。法案の最終的な採決はここで行う。", "w": "6日に衆議院の本会議で法案が可決された。"},
+    "財務金融委員会":{"f": "国会", "d": "衆議院で税や金融を専門に審議する委員会。本会議の前に法案を詳しく調べる。", "w": "昼前にこの委員会が法案を可決した。"},
+    "国会対策委員長":{"f": "国会", "d": "党の国会での日程や交渉を取り仕切る役職。各党の間で審議の日取りを調整する。", "w": "自民党と立憲民主党の国会対策委員長が11日の審議入りで合意した。"},
+    "審議入り":{"f": "国会", "d": "法案の質疑や討論が正式に始まること。", "w": "参議院は11日に審議入りする。"},
+    "会期":{"f": "国会", "d": "国会が開かれている期間。会期内に成立しなかった法案は、原則として次に持ち越せない。", "w": "会期は12月12日まで。"},
+    "不正アクセス":{"f": "IT・安全保障", "d": "他人のIDやパスワードを使うなどして、許可なくシステムに入ること。", "w": "佐川急便などで被害が報告された。"},
+    "能動的サイバー防御":{"f": "IT・安全保障", "d": "攻撃の兆候を事前につかみ、攻撃元への対処も行う仕組み。", "w": "政府の緊急対策パッケージに含まれる。"},
+    "個人情報":{"f": "法律", "d": "氏名や住所、電話番号など、特定の個人を識別できる情報。", "w": "企業に不要なデータの消去を求めた。"},
+    "行政指導":{"f": "行政", "d": "法的な強制力はないが、役所が企業などに改善を求める働きかけ。", "w": "総務省がドコモに行った。"},
+    "存立危機事態":{"f": "安全保障", "d": "日本が攻撃されなくても、密接な関係にある国への攻撃で日本の存立が脅かされる事態。自衛隊が武力を使える条件の一つ。", "w": "首相の答弁の中心になった言葉。"},
+    "雇用統計":{"f": "経済", "d": "米国の労働省が毎月発表する、働く人の数や失業率などの統計。", "w": "10月分が6日に発表された。"},
+    "就業者数":{"f": "経済", "d": "働いて収入を得ている人の数。景気の強さを測る目安になる。", "w": "農業分野以外で16万5000人増えた。"},
+    "FRB":{"f": "金融", "d": "連邦準備制度理事会。米国の中央銀行で、金利などの金融政策を決める。", "w": "雇用統計はFRBの動きを見通す材料になる。"},
+    "信用金庫":{"f": "金融", "d": "地域の中小企業や住民を主な相手にする金融機関。", "w": "128の信用金庫で障害が起きた。"},
+    "匿名・流動型犯罪グループ":{"f": "法律・治安", "d": "メンバーが入れ替わりながら、匿名で連絡を取り合って犯罪を重ねるグループ。「トクリュウ」と略される。", "w": "対策の法案が委員会を通った。"},
+    "フィジカルAI":{"f": "技術", "d": "ロボットなど現実の機械を、AIが自律的に動かす技術。", "w": "16項目の重点項目に含まれた。"},
+    "重点項目":{"f": "経済", "d": "政府が優先して予算や制度の見直しを進める分野。", "w": "成長戦略で16項目に決まった。"},
+    "訪問介護":{"f": "社会保障", "d": "ヘルパーが自宅を訪ねて介護を行うサービス。", "w": "厚生労働省が支援策の案を示した。"},
+    "成長戦略":{"f": "経済", "d": "政府が経済を伸ばすために決める、分野ごとの方針と施策の計画。", "w": "重点項目が確認された。"},
+    "支援金":{"f": "社会保障", "d": "減税とあわせて、所得に応じて支給するとされる給付金。", "w": "対象は勤労者の3割以上とする方向で検討される。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

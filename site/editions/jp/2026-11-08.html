@@ -1,0 +1,338 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>57,434.77</b>日経平均 · 11/6(金)終値 · 前日比-5.96%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,376.86</b>S&amp;P500 · 11/6(金)終値 · 前日比+0.31%</div>
+    </div>
+    <div class="dateline"><span>No. 35 · 朝刊</span><b>2026年11月8日(日)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="jishin">
+      <div class="kick">社会 · 防災<span>✓ 4媒体 · 人的被害の全体像と復旧の見通しは未確認</span></div>
+      <h2 class="hl">愛知県で震度5強 静岡県西部が震源のM5.7、津波の心配なし</h2>
+      <p class="deck">8日午前1時4分ごろ、静岡県西部を震源とする地震があり、愛知県知多市で震度5強を観測した。津波の心配はなく、気象庁は今後1週間程度、同程度の揺れの地震に注意するよう呼びかけている。</p>
+      <div class="body">
+        <p>8日午前1時4分ごろ、静岡県西部を震源とする地震があり、愛知県知多市で震度5強の揺れを観測した。地震の規模を示すマグニチュードは5.7で、静岡県浜松市でも震度5弱を記録している。震度は、ある場所の揺れの強さを表す階級で、5強は物につかまらないと歩くことが難しい揺れにあたる。気象庁は津波の心配はないとして、8日午前3時5分から記者会見を開いた。今後1週間程度は、最大で震度5強程度の揺れを伴う地震に注意するよう求めている。</p>
+        <p>政府は午前1時7分、首相官邸の危機管理センターに官邸連絡室を設置し、被害の確認を進めている。愛知県警によると、南知多道路、知多半島道路、知多横断道路、中部空港連絡道路、名古屋瀬戸道路の5本が上下線とも全線通行止めになった。震度4を観測した愛知県豊橋市では、自動車販売店のショーウィンドウのガラスが大きく割れた。JR東海によると、午前2時半の時点で、寝台特急「サンライズ瀬戸・出雲」が浜松市内の高塚駅と舞阪駅の間で安全確認のため止まり、乗客は車内で待機していた。けが人の数など人的被害の全体像と、道路や鉄道の復旧の見通しは、8日朝の時点で確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="krakow">
+      <div class="kick">国際 · ポーランド<span>✓ 4媒体 · 動機と容疑者の背景は公式には未確認</span></div>
+      <h3 class="hl">ポーランド・クラクフの中央広場で銃撃、6人が死亡し15人が負傷</h3>
+      <div class="one">
+        <p>ポーランド南部の都市クラクフの中央市場広場で7日午後、軍服姿の男が車から無差別に発砲し、6人が死亡、15人が負傷した。当局によると、容疑者は警察官に撃たれて拘束され、病院に運ばれた。死者の数は当初の5人から6人に増えた。国防相のコシニャク=カミシュ氏は「テロ行為だ」と述べ、確認されていない情報を広めないよう呼びかけた。 ナブロツキ大統領の報道官は、8日と9日の2日間を国としての服喪の期間とする手続きを大統領が始めたと明らかにした。トゥスク首相も現地に向かっている。動機や容疑者の身元、背景は、警察や検察から公式には示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="skate"><b>フィギュアの中国杯で千葉百音が優勝、ペアの長岡・森口組は初の表彰台</b><em>女子フリーで前半首位の千葉選手が安定した演技で逃げ切った。ペアは長岡、森口組が3位に入り、GPで初めて表彰台に立った。</em><span>スポーツ · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="bus"><b>淡路島の高速道路で高速バスから出火、運転手と乗客計22人は避難しけがなし</b><em>神戸淡路鳴門道の明石海峡大橋付近で、大阪発高知行きの高速バスから出火した。全員が車外へ避難し、けが人は出ていない。</em><span>社会 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="his"><b>消費者庁、HIS子会社のモバイルWi-Fiレンタル料の割引表示を不当表示と判断</b><em>期間限定の割引と表示しながら、期間が過ぎても割引率がさらに高いキャンペーンを実施していた。消費者庁が7日に明らかにした。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="boat"><b>茨城県北茨城市で漁船が座礁、乗っていた親子3人のうち50代の息子と娘が死亡</b><em>7日、小型漁船が海岸で座礁し、親子3人が海に投げ出されて病院に運ばれた。このうち50代の息子と娘の死亡が確認された。</em><span>社会 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="waseda"><b>早稲田大学の学園祭が開幕、物価高が運営にも及び「少しでも安く」</b><em>例年およそ20万人が訪れる早稲田祭が7日に始まった。多くの人でにぎわう一方、物価高の影響が学園祭の運営にも出ている。</em><span>経済 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="jt">
+      <div class="kick">国際 · 日ロ関係<span>✓ 3媒体 · 措置の根拠と期間は未確認</span></div>
+      <h3 class="hl">ロシアがJT子会社3社を一時管理下に 外務省幹部が抗議し撤回を要求</h3>
+      <div class="body">
+        <p>ロシアのプーチン大統領は6日、日本たばこ産業(JT)グループのロシア国内にある3つの現地法人を、一時的にロシア企業の管理下に置く大統領令に署名した。5日にも国内の生産拠点について同様の措置が取られており、今回はその追加にあたる。「一時管理」は、企業の経営を一定の期間、別の組織に委ねる措置を指す。</p>
+        <p>日本の外務省の幹部は7日、ロシア外務省を訪れて措置に抗議し、撤回を求めた。ロシア側が措置の根拠をどう説明しているか、管理がいつまで続くのか、株の所有権がどうなるのかは、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="nz">
+      <div class="kick">国際 · ニュージーランド<span>✓ 4媒体 · 議席数と新政権の枠組みは未確認</span></div>
+      <h3 class="hl">ニュージーランド総選挙、与党と最大野党がほぼ互角 連立の行方は見通せず</h3>
+      <div class="body">
+        <p>ニュージーランドで7日に総選挙の投票があり、開票が進んでいる。暫定集計では、ラクソン首相の中道右派・国民党と最大野党の労働党が得票でほぼ並び、与党がわずかに先行している。どちらも単独で政権をつくれる議席には届かず、少数政党の議席が行方を左右する見通しで、新興の政党も議席を得る見込みだ。</p>
+        <p>ラクソン首相は、結果は接戦で予断を許さないとしながら、政権に残る道はあるとの認識を示した。連立の協議が必要になるため、新政権の顔ぶれが固まるまでには時間がかかる可能性がある。政権交代となるかどうかは、8日の時点で見通せていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="nakayama">
+      <div class="kick">社会 · 訃報<span>✓ 4媒体 · 亡くなった日と死因は未確認</span></div>
+      <h3 class="hl">プロボウラーの中山律子さんが84歳で死去 ボウリングブームの立役者</h3>
+      <div class="body">
+        <p>1970年代のボウリングブームをけん引したプロボウラーの中山律子さんが亡くなった。84歳だった。7日に訃報が伝えられた。「さわやか律子さん」の愛称で親しまれ、女子プロボウラーの1期生として活躍した。</p>
+        <p>協会の会長も務め、競技の発展に力を尽くした。ボウリングを日本中に広めた人物として、多くの人に記憶されている。亡くなった日や死因、葬儀の日程は、7日夜の時点で公表されたことを確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>84歳</b><span>亡くなった時の年齢</span></div>
+        <div><b>1970年代</b><span>ボウリングブームの時代</span></div>
+        <div><b>1期生</b><span>女子プロボウラーの草分け</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>今回の地震で津波が来る</b> <span>気象庁は、津波の心配はないと発表した。ただし、今後1週間程度は震度5強程度の地震に注意するよう呼びかけている。</span></div>
+        <div><b>クラクフの中心部には、銃撃のとき警察官がいなかった</b> <span>ポーランド当局は、警察官が容疑者を撃って拘束し、病院に運んだと説明している。国防相は、確認されていない情報を広めないよう呼びかけた。</span></div>
+        <div><b>ロシアはJTの工場や資産を没収した</b> <span>プーチン大統領の大統領令は、JTの現地法人を一時的にロシア企業の管理下に置くという内容である。所有権が移ったとは確認されていない。日本の外務省は抗議し、撤回を求めた。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 日 11月8日</b><span>気象庁が呼びかける同程度の地震への注意が続く。ポーランドは8日と9日の服喪の手続きが始まった。ニュージーランドの開票が進み、最終の議席が出るかを見る。</span><b>来週</b><span>9日(月)に東京市場が開き、COP31も同じ9日に始まる。11日(水)には参議院で消費減税法案の審議が始まる予定だ。</span><b>あとで</b><span>ロシアによるJT子会社の一時管理が、いつまで続くのかを見る。ニュージーランドで連立の協議が進み、新政権の顔ぶれが固まるかも確かめる。</span><b>読者へ</b><span>地震や事件の速報は、気象庁や警察、政府など発表した当事者の情報で確かめてから受け止めたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "jishin":{"kick": "社会 · 防災 · ✓ 4媒体 · 人的被害の全体像と復旧の見通しは未確認", "title": "愛知県で震度5強 静岡県西部が震源のM5.7、津波の心配なし", "what": "8日午前1時4分ごろ、静岡県西部を震源とする地震があった。マグニチュードは5.7で、愛知県知多市で震度5強、静岡県浜松市で震度5弱を観測した。気象庁は津波の心配はないと発表し、8日午前3時5分から記者会見を開いた。同庁は今後1週間程度、最大で震度5強程度の揺れを伴う地震に注意するよう呼びかけている。政府は午前1時7分に首相官邸の危機管理センターへ官邸連絡室を設置した。愛知県警によると、愛知県内の5本の道路が全線通行止めになった。震度4の豊橋市では車の販売店のガラスが割れ、浜松市内では寝台特急が一時止まった。", "why": "震度5強は、物につかまらないと歩くのが難しい揺れで、棚の物が落ちたり家具が動いたりする。夜中の1時台に起きたため、就寝中に揺れに遭った人が多く、停電や交通の止まりが朝の通勤・通学に響くかどうかが焦点になる。気象庁が1週間の注意を呼びかけたのは、大きな地震のあとに同じ規模の地震が続くことがあるからだ。", "me": "愛知・静岡・岐阜・三重などに家族や取引先がある人は、安否と交通の状況を公的な情報で確かめたい。家具の固定、飲料水や懐中電灯の置き場所、避難経路を、この1週間のうちに見直しておく。", "a": "揺れの強さのわりに津波がなく、大規模な被害の報告も限られているため、落ち着いて備えを点検する機会だとみる見方がある。停電や断水の長引きはまだ報告されていない。", "b": "南海トラフ巨大地震との関連を気にする声もある。関連があるかどうかの評価は、今後の観測と専門家の分析を待つ段階である。", "say": "確認できたのは、震度5強の揺れ、津波の心配がないこと、1週間の注意の呼びかけである。確認できていないのは、けが人の数と、道路・鉄道の復旧の時期だ。今日は気象庁の追加の発表と、各社の運転再開の情報を見たい。", "src": "NHK(震度と気象庁の呼びかけ・官邸連絡室、11/8) · 毎日新聞(知多市の震度5強とM5.7、11/8) · 時事通信(愛知で震度5強、11/8) · 日テレNEWS(静岡県の震度5弱、11/8)"},
+    "krakow":{"kick": "国際 · ポーランド · ✓ 4媒体 · 動機と容疑者の背景は公式には未確認", "title": "ポーランド・クラクフの中央広場で銃撃、6人が死亡し15人が負傷", "what": "ポーランド南部クラクフの中央市場広場で7日午後、男が車から無差別に発砲した。死者は6人、負傷者は15人と当局が説明している。容疑者は警察官に撃たれて拘束され、病院に運ばれた。国防相のコシニャク=カミシュ氏は記者会見で「テロ行為だ」と述べ、確認されていない情報を広めないよう呼びかけた。大統領の報道官は、ナブロツキ大統領が8日と9日を国の服喪の期間とする手続きを始めたと明らかにした。トゥスク首相は現地に向かった。ウクライナのゼレンスキー大統領は犠牲者の遺族に弔意を示した。", "why": "観光客も集まる歴史的な広場が標的になり、欧州の市民が日常を過ごす場所の安全が改めて問われる。容疑者の動機が政治的なものか個人的なものかで、国内の議論も、各国の警備の強化の仕方も変わる。早い段階では死者5人と伝えられたが、その後6人に増えており、数字は確定していない。", "me": "欧州の旅行や出張の予定がある人は、外務省の海外安全情報を確かめたい。現地の知人や家族がいる場合は、安否の連絡が取れているかを、公式のSNSなどで確かめる。", "a": "元特殊部隊の司令官だったポルコ氏は、警察官が勇敢に対応したので被害がこれ以上広がらなかったと述べ、中央広場には車が入れないようにすべきだと指摘した。", "b": "事件の直後は誤った情報も出回るため、警察や政府の発表を待つべきだとの声もある。警察は目撃者に情報の提供を呼びかけており、捜査はこれからである。", "say": "確認できたのは、6人の死亡、15人の負傷、容疑者の拘束、国の服喪の手続きである。動機と容疑者の背景は公式に示されていない。今日は捜査当局の説明と、服喪の始まりを見たい。", "src": "朝日新聞(5人死亡、11/8) · The Guardian(6人死亡・15人負傷、11/7) · BBC(銃撃の概要、11/7) · Reuters(中央広場で6人死亡、11/7)"},
+    "jt":{"kick": "国際 · 日ロ関係 · ✓ 3媒体 · 措置の根拠と期間は未確認", "title": "ロシアがJT子会社3社を一時管理下に 外務省幹部が抗議し撤回を要求", "what": "ロシアのプーチン大統領は6日、日本たばこ産業(JT)グループのロシア国内にある3つの現地法人を、一時的にロシア企業の管理下に置く大統領令に署名した。5日にも、国内にあるJT関連の生産拠点について同様の措置が取られていた。日本の外務省の幹部は7日、ロシア外務省を訪れ、措置に抗議し、撤回を求めた。ロシアが措置の根拠をどう説明しているかは確認できていない。管理がいつまで続くのか、株の所有権がどうなるのかも、公表された範囲では分かっていない。", "why": "日本企業の資産が、相手国の大統領令で現地企業の管理下に移る形になると、事業の継続だけでなく、得られた利益を日本に戻せるかという問題が生じる。今回は日本の企業が対象になった。", "me": "ロシアで事業をする会社の社員や取引先、JTの株を持つ人には、業績への影響が気になる。たばこの値段や供給が変わるかは、現時点で示されていない。", "a": "ロシアで事業を続ける日本企業の資産が、相手国の判断で動かされかねないと警戒する見方がある。", "b": "措置は「一時的」とされており、交渉で解決する余地があるとの見方もある。外務省が直ちに抗議し撤回を求めたことで、協議の入り口はできた。", "say": "確認できたのは、6日の大統領令と、7日の外務省の抗議である。確認できていないのは、措置の理由と期間、所有権の扱いである。今日はJTの発表と、外務省の次の対応を見たい。", "src": "NHK(大統領令への署名と外務省の抗議、11/8) · 毎日新聞(JT工場がロシア管理下に、11/7) · Yahoo!ニュース(JT法人3社を一時管理下に追加、11/7)"},
+    "nz":{"kick": "国際 · ニュージーランド · ✓ 4媒体 · 議席数と新政権の枠組みは未確認", "title": "ニュージーランド総選挙、与党と最大野党がほぼ互角 連立の行方は見通せず", "what": "ニュージーランドで7日に総選挙の投票があり、開票が続いている。暫定集計では、ラクソン首相の中道右派・国民党と最大野党の労働党が、得票でほぼ並んでいる。与党がわずかにリードしているとの集計もある。国民党も労働党も、少数政党の協力がなければ政権をつくれる議席に届いていない。新興の政党も議席を得る見込みである。ラクソン首相は、結果は接戦で予断を許さないとしながら、政権に残る道はあると述べた。8日の時点で、どの党が政権をつくるか明らかになる見込みは小さい。", "why": "議席が少数政党に分かれるため、第1党がそのまま政権を握るとは限らない。どの党と組むかの交渉で政策が決まるので、結果が出てから政権の姿が見えるまでに数週間かかることがある。同国は日本にとって、農産物や安全保障で結びつきのある国だ。", "me": "ニュージーランドへの旅行や留学、乳製品や果物などの輸入に関わる人は、新政権の通商の姿勢を気にしておきたい。政権が固まるまでの間、大きな政策の変更は起きにくい。", "a": "与党が先行しているとの集計から、政権が続くとみる見方がある。首相が政権に残る道はあると述べたことも、その見方を支えている。", "b": "接戦で、少数政党の動きひとつで逆転しうるため、政権交代の可能性は消えていないとみる見方もある。最終の議席が出るまで、判断は難しい。", "say": "確認できたのは、国民党と労働党がほぼ互角で、単独で過半数に届いていないことである。確認できていないのは、最終の議席数と、新政権の枠組みである。今日は開票の進み具合と、少数政党の態度を見たい。", "src": "毎日新聞(与党が暫定集計でやや優勢、11/7) · 朝日新聞(大接戦で与党がわずかにリード、11/7) · CNA(首相は政権に戻る道を見るが接戦、11/7) · The Guardian(結果は接戦で数週間の不透明感、11/7)"},
+    "nakayama":{"kick": "社会 · 訃報 · ✓ 4媒体 · 亡くなった日と死因は未確認", "title": "プロボウラーの中山律子さんが84歳で死去 ボウリングブームの立役者", "what": "プロボウラーの中山律子さんが亡くなった。84歳だった。7日に訃報が伝えられた。「さわやか律子さん」の愛称で知られ、1970年代にボウリングが大流行した時期の中心にいた。女子プロボウラーの1期生で、のちに協会の会長も務めた。競技の発展に貢献したと紹介されている。亡くなった日、死因、葬儀の日程は、7日夜の時点で公表されたことを確認できていない。", "why": "1970年代のボウリングは、レーンが全国に増え、多くの人が楽しむ娯楽になった。その顔として女性の選手が人気を集めた。訃報は、当時を知る世代にとって、時代の記憶を振り返る機会になる。", "me": "ボウリングを楽しんだ世代には、懐かしさとともに受け止められる。若い世代は、競技の歴史を知るきっかけにできる。家族や友人とレーンに立った記憶を、あらためて話してみるのもよい。", "a": "ブームをつくった功績を伝え、競技の魅力を次の世代に引き継ぐべきだとの声がある。協会の会長として競技の発展に尽くしたことを評価する声も続いている。", "b": "ボウリング人口は当時より減っているため、競技が再び広がるには新しい工夫が要るとの見方もある。", "say": "確認できたのは、84歳での死去と、ブームをけん引した経歴である。確認できていないのは、亡くなった日と死因だ。喪主や葬儀の発表を待ちたい。", "src": "NHK(死去と経歴、11/7) · 朝日新聞(84歳で死去、11/7) · 時事通信(ブームの立役者、11/7) · Yahoo!ニュース(元プロボウラー死去、11/7)"},
+    "skate":{"kick": "スポーツ · ✓ 3媒体", "title": "フィギュアの中国杯で千葉百音が優勝、ペアの長岡・森口組は初の表彰台", "what": "フィギュアスケートのグランプリシリーズ第3戦、中国杯は7日に女子フリーが行われた。前半首位の千葉百音選手が安定した演技を見せ、優勝した。ペアのフリーでは、長岡、森口組が3位に入り、グランプリシリーズで初めて表彰台に立った。女子では山下真瑚選手が6位だった。男子は前日のショートプログラムで三浦佳生選手が首位に立ち、佐藤駿選手も100点を超えていた。千葉選手は優勝のあと、不安が演技ににじみ出たと振り返り、信じる心を持ち続けたと語った。長岡、森口組はけがを乗り越えての表彰台だった。", "why": "グランプリシリーズは、上位が進むファイナルへの出場権を争う大会で、優勝すると有利になる。千葉選手の優勝は、ファイナルに向けた前進として受け止められている。ペアの表彰台は、日本の層の厚さを示す結果の一つだ。", "me": "日本の選手が出る次の大会の日程を確かめたい。ファイナルの出場が決まる流れを知ると、観戦が楽しくなる。", "a": "千葉選手の安定感がファイナルでの争いに生きるとみる見方がある。", "b": "演技に不安が出たと本人が話しており、次の大会までに立て直せるかを見守る声もある。", "say": "確認できたのは、千葉選手の優勝と、長岡、森口組の3位である。ファイナルの出場が決まるかは、今後の大会の結果による。", "src": "NHK(千葉百音が優勝、11/7) · 毎日新聞(千葉選手とペアの表彰台、11/7) · 時事通信(長岡、森口組が初の表彰台、11/7)"},
+    "bus":{"kick": "社会 · ✓ 3媒体", "title": "淡路島の高速道路で高速バスから出火、運転手と乗客計22人は避難しけがなし", "what": "7日夜、兵庫県の淡路島を通る神戸淡路鳴門道の明石海峡大橋付近で、高速バスから出火した。バスは大阪発高知行きだった。運転手と乗客計22人は全員が避難し、けが人は出ていない。乗客は21人で、運転手を含めると22人になる。火が出た原因は、7日夜の時点で確認できていない。車両の型式や、道路の通行止めの有無は、今回確認できた範囲では分かっていない。", "why": "高速道路でバスが燃えると、避難の遅れが大きな被害につながる。今回は全員が無事に逃げられた。原因の調査では、車両の状態や整備の記録が確かめられる。出火の場所が明石海峡大橋の近くだったため、避難の安全も確認の対象になる。高速バスの運行会社の説明も待たれる。", "me": "高速バスに乗るときは、非常口の場所を確かめておきたい。火や煙に気づいたら、運転手の指示にしたがって速やかに降りる。", "a": "全員が無事に避難できたのは、運転手や乗客の落ち着いた行動によるものだとみる見方がある。", "b": "原因の特定が遅れると、同じ型のバスの安全が気になるとの声も出る。", "say": "確認できたのは、出火と、全員の避難、けが人がいないことである。確認できていないのは、出火の原因だ。事業者や警察の説明を待ちたい。", "src": "毎日新聞(淡路島で高速バスから出火、11/7) · 朝日新聞(神戸淡路鳴門道でバス火災、11/7) · 47NEWS(大阪発高知行きのバスから出火、11/8)"},
+    "his":{"kick": "経済 · ✓ 1媒体", "title": "消費者庁、HIS子会社のモバイルWi-Fiレンタル料の割引表示を不当表示と判断", "what": "消費者庁は7日、大手旅行会社エイチ・アイ・エスの子会社が、モバイルWi-Fiのレンタル料の表示に不当な点があったと明らかにした。子会社は、レンタル料を期間限定で割り引くと表示していた。ところが、その期間を過ぎても、さらに割引率の高いキャンペーンを実施していた。消費者庁は、こうした表示が不当表示にあたると判断した。対象の期間や、割引の幅の細かな数字は、今回の確認できた範囲では分かっていない。", "why": "期間限定という表示は、今買わないと損だと思わせる力を持つ。期間が過ぎてもっと安くなるなら、消費者が買う時期の判断を誤る。表示の信頼性を守るために、国が不当表示に目を光らせている。", "me": "期間限定や「今だけ」の表示を見たら、前後の価格やキャンペーンの履歴を確かめてから決めたい。旅行先で通信機器を借りるときも、料金を複数社で比べる。", "a": "消費者を誤らせる表示は正されるべきだと、消費者保護の立場から歓迎する声がある。", "b": "企業側には、キャンペーンの設計と表示の管理を徹底するよう求める声がある。", "say": "確認できたのは、消費者庁が不当表示と判断したことである。確認できていないのは、命令の内容と、会社の対応だ。会社の発表を待ちたい。", "src": "NHK(HIS子会社の不当表示、11/7)"},
+    "boat":{"kick": "社会 · ✓ 3媒体", "title": "茨城県北茨城市で漁船が座礁、乗っていた親子3人のうち50代の息子と娘が死亡", "what": "7日、茨城県北茨城市の海岸で小型の漁船が座礁した。船には親子3人が乗っており、海に投げ出されるなどして病院に運ばれた。このうち50代の息子と娘の死亡が確認された。一時は2人が心肺停止の状態と伝えられていた。座礁の原因や、残る1人の容体は、7日夜の時点で確認できていない。事故が起きたのは7日で、親子3人が一緒に船に乗っていた。座礁の時刻や、船が出た港は、今回確認できた範囲では分かっていない。", "why": "小型の漁船は、波や風の影響を受けやすい。海岸近くでの座礁は、操船の誤りだけでなく、天候や海の状態も関わる。原因は海上保安部などの調べを待つことになる。家族で乗った船で起きたため、遺族や地元の漁業関係者への影響も大きい。", "me": "海や岸壁で作業や釣りをする人は、救命胴衣を着けるなど、落水に備えたい。冬に向かう海は水温が下がるため、短い時間でも体力を奪われやすい。", "a": "亡くなった2人を悼み、再発の防止を求める声がある。", "b": "原因が分かるまでは、判断を急がず、調べを待つべきだとの声もある。", "say": "確認できたのは、座礁と、2人の死亡である。確認できていないのは、座礁の原因と、残る1人の容体だ。海上保安部の発表を待ちたい。", "src": "NHK(親子3人乗りの漁船が座礁、11/7) · 毎日新聞(小型漁船が座礁、11/7) · 朝日新聞(漁船から転落か、11/7)"},
+    "waseda":{"kick": "経済 · ✓ 1媒体", "title": "早稲田大学の学園祭が開幕、物価高が運営にも及び「少しでも安く」", "what": "早稲田大学の学園祭「早稲田祭」が7日に始まった。例年およそ20万人が訪れる。多くの人でにぎわう一方、物価高の影響が学園祭の運営にも及んでいる。運営側は「少しでも安く」と話している。具体的な価格や、出店の数の変化は、今回確認できた範囲では分かっていない。開幕は11月に入ってすぐの7日で、学園祭の季節の始まりにあたる。", "why": "学生の運営でも、仕入れや資材の値上がりは重い負担になる。来場者の財布の事情もあり、安さを保つ工夫が求められる。学園祭のシーズンに入ったばかりで、運営の工夫は来場者の満足にも関わる。", "me": "学園祭に行く人は、食べ物の価格が例年と違うかもしれない。事前に予算を決めておくと落ち着いて楽しめる。人出が多い日は混雑するので、時間に余裕をもって出かけたい。", "a": "物価高でも、学生が工夫して続ける姿を応援したいとの声がある。例年のにぎわいを保つ取り組みだと評価する見方である。", "b": "値上げをしないと運営が苦しくなるため、来場者にも一定の負担を求める声もある。", "say": "確認できたのは、開幕と、物価高が運営に及んでいることである。具体的な価格の変化や出店の数など、具体的な数字は、運営側の発表を待ちたい。今日の来場者の動きも見たい。", "src": "NHK(早稲田祭が開幕、物価高の影響、11/7)"}
+  };
+  const G = {
+    "震度":{"f": "防災", "d": "ある場所での揺れの強さを0から7までの階級で表したもの。5と6には弱と強がある。", "w": "愛知県で5強を観測した。"},
+    "マグニチュード":{"f": "防災", "d": "地震そのものの規模を表す数字。数字が1大きいと、エネルギーは約32倍になる。", "w": "今回は5.7だった。"},
+    "震源":{"f": "防災", "d": "地震の揺れが最初に発生した地下の場所。", "w": "静岡県西部が震源だった。"},
+    "津波":{"f": "防災", "d": "地震などで海面が大きく持ち上がり、陸に押し寄せる波。", "w": "今回は心配がないとされた。"},
+    "官邸連絡室":{"f": "行政", "d": "大きな災害の発生直後に、首相官邸の危機管理センターに置かれる情報収集の体制。", "w": "午前1時7分に設置された。"},
+    "危機管理センター":{"f": "行政", "d": "首相官邸にある、災害や事件の情報を集めて対応を決める場所。", "w": "官邸連絡室が置かれた場所。"},
+    "大統領令":{"f": "国際政治", "d": "大統領が議会の議決を待たずに出せる命令。", "w": "JT子会社の一時管理を定めた。"},
+    "一時管理":{"f": "国際政治", "d": "企業の経営を、一定の期間、別の組織に委ねる措置。", "w": "JTの3つの現地法人が対象になった。"},
+    "服喪":{"f": "国際政治", "d": "亡くなった人を悼んで、一定の期間、慎み深く過ごすこと。", "w": "ポーランドが8日と9日を服喪の期間とする手続きを始めた。"},
+    "テロ":{"f": "安全保障", "d": "政治的な目的などのために、市民を狙って暴力を使う行為。", "w": "国防相がクラクフの銃撃を「テロ行為」と述べた。"},
+    "少数政党":{"f": "政治", "d": "議席の少ない政党。議席が割れると、連立の鍵を握ることがある。", "w": "ニュージーランドの政権の行方を左右する。"},
+    "連立":{"f": "政治", "d": "複数の政党が協力して政権をつくること。", "w": "ニュージーランドでは協議が必要になる。"},
+    "暫定集計":{"f": "政治", "d": "開票の途中で出す、途中経過の集計。最終結果と変わることがある。", "w": "接戦のため結果が変わりうる。"},
+    "政権交代":{"f": "政治", "d": "選挙などで、政権を担う党が入れ替わること。", "w": "ニュージーランドでは見通せていない。"},
+    "不当表示":{"f": "消費者", "d": "商品やサービスの内容や価格を、実際よりよく見せるような表示。", "w": "HIS子会社の割引表示が該当すると判断された。"},
+    "座礁":{"f": "海事", "d": "船が浅瀬や岩に乗り上げて動けなくなること。", "w": "北茨城で漁船が座礁した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

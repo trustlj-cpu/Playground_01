@@ -1,0 +1,337 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,059.69</b>KOSPI · 11/06(金) 終値 · 前日比-6.02%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>24,315.0</b>ナスダック · 11/05(木) 終値 · 前日比-5.52%</div>
+    </div>
+    <div class="dateline"><span>第34号 · 朝刊</span><b>2026年11月7日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="p1">
+      <div class="kick">政治 · 国会<span>報道照合 ✓ 4社 · 特検法の施行時期と特検候補の推薦日程は未確定</span></div>
+      <h2 class="hl">『捏造起訴特検法』が国会通過…賛成167票・反対1票、国民の力は欠席し7日から院外闘争</h2>
+      <p class="deck">国会は6日の本会議で、捏造起訴特検法を賛成167票、反対1票で可決した。国民の力は採決を欠席し、7日から院外闘争に入る。</p>
+      <div class="body">
+        <p>『捏造起訴特検法』が6日、国会本会議を通過した。正式名称は『ユン・ソンニョル政権の検察庁、国家情報院、監査院など国家機関の捏造捜査・捏造起訴の疑惑の真相究明のための特別検察官任命等に関する法律』だ。共に民主党は、国民の力が5日から続けてきたフィリバスター(無制限討論)を24時間余りで採決によって終わらせ、この日午後4時の本会議で、在席168人のうち賛成167票、反対1票で法案を可決した。反対票を投じたのは改革新党のイ・ジュヨン議員で、国民の力の議員たちは採決に加わらなかった。イ・ジェミョン政権の発足後、7番目の特検だ。民主党、国民の力、祖国革新党が候補を1人ずつ推薦すれば、イ・ジェミョン大統領がそのうちの1人を任命し、20日の準備期間を経て、最大309人規模の特検チームが発足する。</p>
+        <p>捜査対象には、イ大統領が起訴された事件6件が入っている。可決された案は、4日に法制司法委員会が修正したもので、論争になった公訴取り消しの条項は外れた。法案は、捜査機関の証拠の選別・欠落、違法に収集した証拠の使用といった、捏造捜査・捏造起訴の疑惑を調べさせるものだ。国民の力は、イ大統領の事件を狙った『防弾立法』だとして、7日から院外闘争に乗り出すと明らかにした。イ・ウォンソク前検察総長は、権力分立を崩す違憲立法だと批判した。与党である民主党のチョン・ソンホ議員は、この日のラジオ番組のインタビューで『もう少し熟議の過程が必要ではなかったかという気がする』と語った。チョ・グク祖国革新党革新政策研究院長は、特検が、すでに効力を失った旧刑事訴訟法を準用するようにした部分が、違憲・違法の問題を生むと、フェイスブックに書いた。法が公布される時期と、特検候補の推薦日程は、まだ出ていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="p2">
+      <div class="kick">経済 · 金融<span>報道照合 ✓ 2社 · 免除の細かな適用日程は未確認</span></div>
+      <h3 class="hl">当局、証券会社の信用融資の担保比率140%維持義務を3か月免除…強制売りを減らし下げ幅を緩和</h3>
+      <div class="one">
+        <p>政府は6日、証券会社の信用融資の担保比率維持義務を3か月間免除することにした。イ・ヒョンイル経済副首相兼財政経済部長官が、政府ソウル庁舎で金融委員会、金融監督院、韓国銀行などと会議を開いた後に出した措置だ。信用融資は、投資家が証券会社からお金を借りて株を買う取引だ。証券会社は、貸したお金に対する担保の価値を140%以上に保たせてきた。株価が下がってこの比率を下回ると、担保にとった株を強制的に売ることができる。これを反対売買という。免除期間は、担保比率が140%を下回っても、証券会社がすぐに株を処分しなくてよい。当局は、担保価値が下がった投資家の株が強制的に処分されることを減らし、株式市場の追加の下落圧力を和らげる狙いだと説明した。この日KOSPIは、取引開始3分でサーキットブレーカーが発動された後、5,059.69で取引を終え、6.02%下がった。政府は、市場の変動性がさらに大きくなれば、市場安定措置を追加すると明らかにしている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="q1"><b>欧州の航空機・放送局に爆破予告が相次ぐ…爆発物の発見はなく、背後は未確認</b><em>5日に少なくとも27便が影響を受け、6日には放送局の社屋で避難が行われた。アイルランドは、組織的な撹乱の試みである可能性に言及した。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q2"><b>ファイブアイズを含む10か国、ジョシュア・ウォンの懲役10年に『不当な起訴の中止』を促す</b><em>ウォンは国家安全維持法上の外国勢力との結託の容疑で、10年を追加で言い渡された。香港政府は、根拠のない悪意ある攻撃をやめるよう反論した。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q3"><b>ケニアのカルト教団指導者マッケンジー、191人殺害の容疑で懲役200年を言い渡される</b><em>子どもを含む191人を死なせた容疑が認められ、犠牲者の多くは餓死した。言い渡された刑期は懲役200年だ。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q4"><b>欧州15か国の100余りの団体がデータセンター反対デモ…オランダではMSの工事現場に乱入</b><em>米国の中間選挙で建設に反対する候補が相次いで勝った後、欧州にもデモが広がった。デモ隊は、建設の中止と、水・電力の負担の解消を求めた。</em><span>国際 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="q5"><b>ウォール街のヘッジファンド、AI株の急落で10年余りで最大規模のポジション縮小</b><em>AI関連株が急落し、大手ヘッジファンドが保有株を大きく減らしている。ある運用会社は、金融を除くほぼすべての業種を売り、人員も減らした。</em><span>経済 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="p3">
+      <div class="kick">経済 · 仮想資産<span>報道照合 ✓ 4社 · 脅迫者の身元とサービス再開の時期は未確認</span></div>
+      <h3 class="hl">ゴパックス、ハッキング脅迫メールを受け出金・売買を中断…ホットウォレットの資産はコールドウォレットへ移管、実際の被害はまだなし</h3>
+      <div class="body">
+        <p>仮想資産取引所のゴパックスは6日、ハッキングを予告する脅迫メールを受け取り、利用者の資産を守る措置に入った。ゴパックスはこの日午後2時55分から出金を止め、インターネットにつながったホットウォレットにあった資産の大部分を、インターネットから切り離したコールドウォレットに移していると明らかにした。午後3時53分からは、仮想資産の売買サービスも一時中断した。ホットウォレットは、入出金をすぐに処理するためにインターネットにつないでおいた財布で、コールドウォレットは、接続を切っておいた財布だ。資産をコールドウォレットに移せば、外部からの侵入で奪われる危険が減る。今回の措置は脅迫への先制的な対応で、現在まで実際の被害は発生していないと伝えられている。資産を移す間は、利用者が入出金と取引を使えない。この日はKOSPIがサーキットブレーカーで急落した日であり、利用者は相場が大きく揺れる時間に売買注文を出せなかった。脅迫を送った側の身元と要求内容、サービスが再開される時期は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="p4">
+      <div class="kick">経済 · 米国<span>報道照合 ✓ 3社 · FRBの公式反応は未確認</span></div>
+      <h3 class="hl">米国の10月の雇用16万5000人増…予想を上回り、12月の利上げ観測が強まる</h3>
+      <div class="body">
+        <p>米労働統計局が6日に発表した10月の雇用指標で、非農業部門の雇用が16万5000増えた。市場予想を大きく上回る『サプライズ』の増加だ。事前予想の一つは5万9000人増で、9月の増加幅は、予想の8万4000人を大きく下回る2万9000人だった。非農業の雇用は、農業を除くすべての産業で、1か月の間に増えた雇用の数だ。失業率は4.2%から4.1%に下がった。雇用が予想より良く出れば、中央銀行が物価を抑えるために金利を上げる余地が大きくなるため、市場では、米FRBが12月に利上げするという観測が強まった。この日のニューヨーク株式市場は、ハイテク株が反発するなか、この指標を消化しながら、まちまちで始まった。BofAのストラテジスト、カバナは5日、FRBの利上げ局面が終わったとみるのは早いと語った。ハセットは、ある放送のインタビューで、今回の指標はFRBが金利を上げるべきだという意味ではないと主張した。FRB関係者の公式な反応は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="p5">
+      <div class="kick">国際 · 中東<span>報道照合 ✓ 3社 · タンカーの被害は海上当局が確認していない</span></div>
+      <h3 class="hl">イラン革命防衛隊『ホルムズでタンカー2隻が機雷に衝突・火災』と主張…海上当局は確認せず</h3>
+      <div class="body">
+        <p>イランのイスラム革命防衛隊は6日(現地時間)、ホルムズ海峡を通過しようとしたタンカー2隻が機雷に衝突して火災が起きたと主張した。革命防衛隊は同じ日、米国の無人機1機を撃墜したとも明らかにした。海上当局はタンカーの被害をまだ確認しておらず、無人機の撃墜に対する米国側の立場も確認されていない。米国の中間選挙の後も、イランは圧力をかけ続けている。先立つ5日にもイランは、この海峡でタンカー3隻が被害を受けたと発表したが、被害船舶の数は発表ごとに違って伝えられている。機雷は、水中に敷いておき、船が触れたり近づいたりすると爆発する爆発物だ。</p>
+        <p>外交面では、イランの高官がカタールを通じて米国に核交渉の提案書を伝え、米国がこれを検討中だと語った。韓国政府は5日、清海部隊の作戦区域を、ホルムズ海峡付近のオマーン南方の外洋まで広げることにし、国会の同意手続きを踏む。タンカー被害の主張が事実と確認されるか、米国が軍事対応に出るかが、続けて見るべき点だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2隻</b><span>革命防衛隊が機雷への衝突・火災を主張したタンカーの数</span></div>
+        <div><b>3隻</b><span>5日にイランが被害を発表したタンカーの数</span></div>
+        <div><b>1機</b><span>革命防衛隊が撃墜したと主張する米軍の無人機</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>捏造起訴特検法には、イ・ジェミョン大統領の事件の公訴を取り消す条項が入っている。</b> <span>国会の法制司法委員会が4日に法案を修正して、論争になった公訴取り消しの条項を外し、6日の本会議でこの修正案が可決された。野党は、いまも大統領の事件を狙った法だと主張している。</span></div>
+        <div><b>ゴパックスの仮想資産がすでにハッキングで奪われた。</b> <span>ゴパックスは、脅迫メールを受けた先制措置だと明らかにし、現在まで実際の被害は発生していないと伝えられている。脅迫を送った側の身元は確認されていない。</span></div>
+        <div><b>欧州の航空機への爆破予告の背後はロシアだ。</b> <span>ロシアが疑われるという話は出ているが証拠はなく、背後を主張した団体もない。アイルランド政府は、組織的な撹乱の試みである可能性にだけ言及し、捜索で爆発物は発見されなかった。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 土 11月7日</b><span>国民の力が、捏造起訴特検法に反対する院外闘争を始める。6日夜に取引を終えたニューヨーク株式市場の方向と、ゴパックスのサービス再開の告知を確認すべきだ。</span><b>今週</b><span>9日月曜日にKOSPIが取引を始める。信用融資の担保比率維持義務の免除の細かな適用方法と、政府の追加の市場安定措置の有無が変数だ。</span><b>その後</b><span>捏造起訴特検法の公布後、20日の準備期間のうちに、特検候補の推薦が行われる。米FRBの12月の会合で、利上げの可否が決まる。</span><b>読者へ</b><span>信用融資を使っているなら、証券会社の告知で、自分の担保比率と免除の適用の有無をまず確認しよう。取引所の利用者は、公式の告知以外のリンクを押さないようにしよう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "p1":{"kick": "政治 · 国会 · ✓ 4社 · 特検法の施行時期と特検候補の推薦日程は未確定", "title": "『捏造起訴特検法』が国会通過…賛成167票・反対1票、国民の力は欠席し7日から院外闘争", "what": "『捏造起訴特検法』が6日、国会本会議を通過した。国会は在席168人のうち賛成167票、反対1票で可決し、反対票は改革新党のイ・ジュヨン議員が投じた。国民の力の議員たちは採決を欠席した。民主党は、国民の力のフィリバスターを24時間余りで採決によって終結させたうえで、この日午後4時の本会議で法案を処理した。特検は、民主党、国民の力、祖国革新党が候補を1人ずつ推薦すれば、大統領が1人を任命する方式で、20日の準備期間を経て、最大309人規模で発足する。捜査対象には、イ・ジェミョン大統領が起訴された事件6件が含まれる。可決された案は、4日に法制司法委員会が修正したもので、公訴取り消しの条項が外れた。国民の力は、7日から院外闘争に乗り出すと明らかにした。", "why": "特検は、検察とは別に捜査の人員と権限を別途に整える仕組みなので、誰が候補を推薦し、誰が任命するかが、そのまま捜査の中立性をめぐる論争につながる。大統領本人の事件が捜査対象に入っており、任命権も大統領にあるため、法案の趣旨とは別に、構造そのものが争点になった。野党が採決を欠席して院外に出れば、予算案など残る国会日程まで、協議が難しくなりうる。", "me": "すぐに暮らしが変わる法ではないが、政治の対立が長引けば、予算案や民生法案の処理が遅れうる。どの事件がどんな根拠で捜査対象になるかは、法の条文と施行時期を自分で確認して判断するのがよい。", "a": "与党側は、ユン・ソンニョル政権の検察による捏造捜査・捏造起訴の疑惑を、国家機関ではない別の捜査で明らかにすべきだとみる。公訴取り消しの条項を外した修正案で野党と法曹界の懸念を和らげ、特検候補を三つの政党が推薦するようにして均衡を取ったと説明する。", "b": "野党と一部の法曹界は、大統領自身の裁判の事件を、大統領が任命した特検が再び調べる構造であり、司法体系の私物化だと批判する。与党である民主党の中でも、チョン・ソンホ議員が熟議がもっと必要だったと語り、チョ・グク院長は、旧刑事訴訟法の準用に違憲の疑いがあると指摘した。", "say": "確認されたのは、採決の結果(賛成167票、反対1票)、特検の任命方式、公訴取り消し条項の削除、野党の7日の院外闘争の予告だ。確認されていないのは、法の公布時期と特検候補の推薦日程、憲法訴願や違憲審判が起こされるかどうかだ。きょう見るものは、院外集会の規模と、与野党の協議が予算案に広がるかどうかだ。", "src": "東亜日報(特検法の国会通過の採決結果、11/6) · 京郷新聞(現政権の7番目の特検、11/6) · SBS(民主党主導の通過と国民の力の反発、11/6) · 韓国経済新聞(野党の院外闘争の予告、11/6)"},
+    "p2":{"kick": "経済 · 金融 · ✓ 2社 · 免除の細かな適用日程は未確認", "title": "当局、証券会社の信用融資の担保比率140%維持義務を3か月免除…強制売りを減らし下げ幅を緩和", "what": "政府は6日、証券会社の信用融資の担保比率維持義務を3か月間免除することにした。イ・ヒョンイル経済副首相兼財政経済部長官が、政府ソウル庁舎で金融委員会、金融監督院、韓国銀行などと会議を開いた後に出た措置だ。信用融資は証券会社からお金を借りて株を買う取引で、証券会社は担保比率140%以上を保たせてきた。株価の下落でこの比率が崩れると、証券会社が担保の株を強制的に処分する反対売買が出る。免除期間は、比率が140%に届かなくても、反対売買にすぐ乗り出さなくてよい。当局は、担保価値が下がった投資家の株が強制的に売られることを減らし、株式市場の追加の下落圧力を和らげる狙いだと明らかにした。この日KOSPIは、6.02%下がった5,059.69で取引を終えた。", "why": "指数が急落すると、借金で買った株の担保価値がまず減り、反対売買で出た売り物がまた株価を押し下げる悪循環が生じる。義務を解けば、この輪を一時的に断ち切り、投資家が持ちこたえる時間を稼げる。ただ、株価が下がり続ければ借金はそのまま残って損失が膨らみうるので、免除は下落を防ぐ措置ではなく、速度を遅らせる措置だ。", "me": "信用融資や未収金取引を使っているなら、証券会社の告知を確認して、免除の適用範囲と自分の担保比率を直接点検しなければならない。免除が解ける3か月後には、一度に返済の負担が来うるので、借金の規模を今減らすかどうか、判断してみる必要がある。", "a": "反対売買が連鎖して出ると、正常な価格形成が難しくなるため、急落期には強制処分を少し遅らせるのが、市場への衝撃を減らすという見方がある。過去の急落期にも似た免除が実施されたことがある点を、根拠に挙げる。", "b": "反対に、免除はリスクを膨らませた投資家の損失を先送りするだけだという見方がある。株価がさらに下がれば、証券会社の貸倒れの負担と投資家の借金がともに膨らみ、のちにより大きな衝撃が来うるというのだ。", "say": "確認されたのは、3か月の免除の決定、140%の基準、会議に出席した機関、当局が明らかにした狙いだ。確認されていないのは、免除の細かな適用日程と証券会社ごとの対応、証券市場安定ファンドや空売りの制限のような追加措置の有無だ。きょう見るものは、9日月曜日の取引開始前の証券会社の告知と、政府の追加発表だ。", "src": "朝鮮日報(証券会社の信用融資の担保比率維持義務の3か月免除、11/6) · 聯合ニュース(当局の信用融資の担保比率140%の免除、11/6)"},
+    "p3":{"kick": "経済 · 仮想資産 · ✓ 4社 · 脅迫者の身元とサービス再開の時期は未確認", "title": "ゴパックス、ハッキング脅迫メールを受け出金・売買を中断…ホットウォレットの資産はコールドウォレットへ移管、実際の被害はまだなし", "what": "仮想資産取引所のゴパックスは6日、ハッキングを予告する脅迫メールを受け取った。ゴパックスはこの日午後2時55分から出金を中断し、インターネットにつながったホットウォレットの資産の大部分を、インターネットから切り離したコールドウォレットに移していると明らかにした。午後3時53分からは、仮想資産の売買サービスも一時中断した。ホットウォレットは、入出金の処理のためにインターネットにつないでおいた財布だ。ゴパックスのこの措置はハッキングの脅威への先制的な対応で、現在まで実際の被害は発生していないと伝えられている。脅迫を送った側の身元、要求内容、サービスの再開時期は公開されていない。", "why": "取引所は利用者の資産を代わりに預かっているので、ハッキングの予告ひとつだけでも、利用者が一斉に出金を求める事態が生じうる。資産をコールドウォレットに移せば侵入の危険は減るが、その間、利用者は資産を売ることも移すこともできない。取引所が脅迫の事実を公開してサービスを止めたのは、被害が広がる前に信頼を守ろうとする選択だ。", "me": "ゴパックスを利用中なら告知を確認し、フィッシングの文字メッセージや偽の案内サイトに気をつけなければならない。取引所に預けた資産が大きいなら、分散して保管する必要があるか、一度点検してみられる。公式のアプリと公式の告知以外のリンクは、押さないのが安全だ。", "a": "先制的に出金と売買を止め、資産を安全な財布に移した判断は、被害を防ぐ定石だという見方がある。実際の被害が出る前に止めた点を評価する。", "b": "利用者は、急落相場で取引が止まり、資産を処分できない被害を受けうるし、脅迫にサービスを止める前例が、ほかの脅迫を呼びうるという見方がある。利用者に再開の日程をもっと具体的に知らせるべきだという指摘も出うる。", "say": "確認されたのは、脅迫メールの受信、出金(午後2時55分)と売買(午後3時53分)の中断、コールドウォレットへの移管、まだ実際の被害が知られていない点だ。確認されていないのは、脅迫者の正体と要求、再開の時期、当局の点検計画だ。きょう見るものは、ゴパックスの再開の告知と金融当局の発表だ。", "src": "聯合ニュース(ゴパックス、ハッキングの脅威で入出金と売買を中断、11/6) · 京郷新聞(出金と売買を一時中断、11/6) · 東亜日報(仮想資産取引を全面中断、11/6) · 朝鮮日報(入出金と売買サービスを中断、11/6)"},
+    "p4":{"kick": "経済 · 米国 · ✓ 3社 · FRBの公式反応は未確認", "title": "米国の10月の雇用16万5000人増…予想を上回り、12月の利上げ観測が強まる", "what": "米労働統計局が6日に発表した10月の雇用指標で、非農業部門の雇用が16万5000増えた。市場予想を大きく上回る数値だ。事前予想の一つは5万9000人増で、9月の増加幅は2万9000人だった。失業率は4.2%から4.1%に下がった。この結果が出た後、12月の利上げ観測が強まったという報道が続いた。この日のニューヨーク株式市場は、ハイテク株が反発するなか、この指標を消化しながら、まちまちで始まった。ハセットは、ある放送のインタビューで、今回の雇用指標はFRBが金利を上げるべきだという意味ではないと主張した。", "why": "雇用が強ければ賃金と消費が支えられて物価が下がりにくいとみるため、中央銀行は金利をもっと上げるべきだという圧力を受ける。金利が上がればドルが強くなり、リスク資産からお金が抜けやすく、ウォンと国内株式市場にも負担だ。1か月の数値が予想と大きく違うため、その後の修正値と来月の指標が方向を決める。", "me": "利上げ観測が強まれば、貸出金利と為替レートが上がりうるので、変動金利の貸出があるなら、返済の負担を点検してみる価値がある。ドルへの両替や海外投資の計画があるなら、為替レートの変動幅が大きくなりうる点を念頭に置けばよい。", "a": "強い雇用は景気がまだ堅調だという証拠であり、物価を抑えるには金利をもっと上げるべきだという見方がある。市場が12月の利上げを織り込み始めたのも、こうした解釈から出ている。", "b": "反対に、1か月の指標だけで利上げを決められず、雇用はのちに修正されることが多いという見方がある。ハセットの主張のように、今回の指標がそのまま利上げの根拠ではないというのだ。", "say": "確認されたのは、16万5000の増加、失業率4.1%、12月の利上げ観測の強まりの報道、ニューヨーク株式市場のまちまちの始まりだ。確認されていないのは、FRB関係者の公式な反応と来月の修正値だ。きょう見るものは、6日のニューヨーク株式市場の引けと、米国債金利の動きだ。", "src": "聯合ニュース(10月の雇用16万5000人のサプライズ増加、11/6) · KBSニュース(10月の雇用16万5000人、11/6) · ブルームバーグ放送(ハセットのインタビュー、11/6)"},
+    "p5":{"kick": "国際 · 中東 · ✓ 3社 · タンカーの被害は海上当局が確認していない", "title": "イラン革命防衛隊『ホルムズでタンカー2隻が機雷に衝突・火災』と主張…海上当局は確認せず", "what": "イランのイスラム革命防衛隊は6日(現地時間)、ホルムズ海峡を通過しようとしたタンカー2隻が機雷に衝突して火災が起きたと主張した。革命防衛隊は同じ日、米国の無人機1機を撃墜したとも明らかにした。海上当局は、タンカーの被害をまだ確認していない。先立つ5日には、イランが、タンカー3隻がホルムズ海峡で被害を受けたと発表した。イランの高官は、カタールを通じて米国に核交渉の提案書を伝え、米国が検討中だと語った。韓国政府は5日、清海部隊の作戦区域を、ホルムズ付近のオマーン南方の外洋まで広げることにした。", "why": "ホルムズ海峡は中東の原油が世界へ出ていく要路なので、タンカーが被害を受けたという知らせだけでも、運賃、保険料、国際原油価格が揺れる。韓国は原油の大部分を輸入する国なので、海峡の安全が物価に直結する。被害の主張が一方からしか出ていない状態なので、事実確認がされるまでは、市場も外交も不確実性を抱えて動く。", "me": "ガソリン・軽油の価格や、航空券の燃油サーチャージが上がりうる。エネルギーの比重が大きい業種に投資しているなら、原油価格の変動幅が大きくなりうる点を念頭に置く価値がある。すぐに生活用品の価格が変わる段階ではない。", "a": "イランは、自国が設置した機雷を避けない規定違反の船舶が被害を受けたという立場を示したことがある。イラン側は、海峡の通航を統制する権限が自分たちにあるとみる。", "b": "反対に、国際海運側は、海峡の通航の自由が保障されるべきで、一方的な機雷の設置と船舶への攻撃は違法だとみる。革命防衛隊の主張は独立して確認されておらず、米国側の立場も確認されていない点を指摘する。", "say": "確認されたのは、革命防衛隊の主張、海上当局の未確認、イラン高官の核提案書の伝達の発言だ。確認されていないのは、タンカーの実際の被害、無人機の撃墜の有無、米国の対応だ。きょう見るものは、海運当局の事件の確認の有無と、国際原油価格だ。", "src": "聯合ニュース(イラン、ホルムズのタンカー2隻の機雷衝突を主張・総合、11/6) · 京郷新聞(海上当局の確認はなし、11/6) · ストレーツ・タイムズ(タンカー3隻の被害報告、11/5)"},
+    "q1":{"kick": "国際 · ✓ 報道3件", "title": "欧州の航空機・放送局に爆破予告が相次ぐ…爆発物の発見はなく、背後は未確認", "what": "欧州全域で今週ずっと、爆破予告が続いている。5日(現地時間)、ロンドン、ダブリン、ヘルシンキなどを結ぶ少なくとも27便の航空便が爆破予告を受け、一部は緊急着陸したり引き返したりし、戦闘機が護衛につくこともあった。捜索で爆発物や不審物は発見されなかった。6日には、アイルランド国営放送RTEなど放送局の事務所で、脅迫により避難が行われ、航空便18便が追加で影響を受けた。アイルランド政府は、組織的な撹乱の試みである可能性に言及した。背後を主張した側はなく、ロシアの関与が疑われているが証拠はないと伝えられている。", "why": "航空会社は、脅迫が偽物に見えても安全規定上、引き返しや点検をしなければならず、費用と遅延が大きくなる。わずかな費用で大規模な混乱を起こせるので、脅迫そのものがひとつの攻撃手段になる。背後が明らかになっていない状態では、責任をめぐる攻防と、保安強化の議論が長引きうる。", "me": "欧州行きの航空便を予約したなら、遅延や引き返しの可能性に備えて、航空会社の告知を確認し、日程に余裕を持たせるのがよい。保険の約款で、遅延・欠航の補償の範囲も見てみる価値がある。", "a": "アイルランド側は、複数の国にまたがる脅迫が同じ方式で繰り返される点から、組織的な撹乱キャンペーンである可能性が高いとみる。", "b": "一部の専門家は、証拠なしに特定の国を背後に挙げるのは早計だとみる。模倣犯罪や個人のいたずらが重なった可能性があり、まだどんな団体も責任を主張していない点を、根拠に挙げる。", "say": "確認されたのは、脅迫が相次いだこと、航空便少なくとも27便(5日)と18便(6日)への影響、爆発物の未発見だ。確認されていないのは、背後と動機だ。きょう見るものは、当局の捜査発表と追加の脅迫の有無だ。", "src": "聯合ニュース(欧州の爆破予告、背後は不明のまま、11/7) · 東亜日報(欧州の旅客機27便に爆破予告、11/6) · ガーディアン(欧州の航空便18便に追加の脅迫、11/6)"},
+    "q2":{"kick": "国際 · ✓ 報道3件", "title": "ファイブアイズを含む10か国、ジョシュア・ウォンの懲役10年に『不当な起訴の中止』を促す", "what": "香港の民主化活動家ジョシュア・ウォンが5日、国家安全維持法に関連する外国勢力との結託の容疑で、懲役10年を追加で言い渡された。ウォンは30歳で、すでに6年近く拘束されている。米国と英国を含む10か国が、ファイブアイズの同盟国とともに共同声明を出し、不当な起訴の即時中止を促した。香港政府は、外国勢力が根拠のない悪意ある攻撃をやめるべきだと反論した。", "why": "国家安全維持法の裁判は、香港の政治的自由と司法の独立がどこまで維持されているかを測る物差しとして使われる。多くの国が一斉に声明を出したのは、外交問題に広がったという意味だ。中国と香港当局は内政干渉だと対抗しており、対立が続きうる。", "me": "韓国の読者への直接の影響は大きくないが、香港でビジネスや旅行をする場合は、現地の法の適用範囲を確認してみる価値がある。人権と貿易をあわせて扱う国際社会の圧力が、韓国の外交にも影響しうる。", "a": "10か国は、香港の国家安全維持法が政治的な反対意見を処罰するために使われているとみて、起訴の中止を求める。", "b": "香港政府は、法に基づく正当な手続きであり、外国勢力の介入が問題だと反論する。法治を尊重せよという立場だ。", "say": "確認されたのは、懲役10年の追加言い渡し、10か国の共同声明、香港政府の反論だ。確認されていないのは、控訴の有無と、声明に韓国政府が加わったかどうかだ。きょう見るものは、中国外交部の公式な反応だ。", "src": "聯合ニュース(米・英など10か国、ウォンの懲役10年に声明、11/7) · CBC(カナダなど、不当な起訴の中止を促す、11/6) · サウスチャイナ・モーニング・ポスト(香港政府の反発、11/6)"},
+    "q3":{"kick": "国際 · ✓ 報道3件", "title": "ケニアのカルト教団指導者マッケンジー、191人殺害の容疑で懲役200年を言い渡される", "what": "ケニアの裁判所が6日、カルト教団の指導者ポール・マッケンジーに懲役200年を言い渡した。マッケンジーは自らを牧師だとした人物で、子どもを含む191人を死なせた容疑が認められた。犠牲者の多くは餓死し、新生児や乳児も含まれていた。マッケンジーは信者たちに、苦痛と死がイエスのもとへ行く道だと説いたと伝えられている。裁判で反省する態度は見られなかった。", "why": "カルト教団が信者に断食を求め、大規模な人命被害につながった事件なので、宗教団体の監督と早期通報体制の穴が表れた。懲役200年は、事実上の終身刑を超える刑期で、罪質を反映したものだ。", "me": "韓国で直接影響を受ける事件ではないが、極端な教義が家族や知人を孤立させる事例は、どの国にもある。周囲に、断食・財産の献納を求める団体があるなら、自治体や相談機関に問い合わせられる。", "a": "人権団体と遺族は、大規模な死亡を防げなかった当局の責任も問うべきで、今回の言い渡しが再発防止のきっかけになるべきだとみる。", "b": "一部は刑期が長すぎて実効性がないという見方を示すが、被害の規模を考えれば厳罰は避けられなかったという意見が優勢だ。", "say": "確認されたのは、191人死亡の容疑、懲役200年、犠牲者の多くが餓死した点だ。確認されていないのは、控訴の有無と、未発見の犠牲者の規模だ。きょう見るものは、ケニア政府の後続対策の発表だ。", "src": "聯合ニュース(ケニアのカルト教団指導者に懲役200年・総合、11/7) · ル・モンド(マッケンジーに懲役200年、11/6) · シュピーゲル(宗教指導者に懲役200年、11/6)"},
+    "q4":{"kick": "国際 · ✓ 報道2件", "title": "欧州15か国の100余りの団体がデータセンター反対デモ…オランダではMSの工事現場に乱入", "what": "米国の中間選挙で、人工知能データセンターの建設に反対する候補が相次いで勝った後、欧州でもデータセンター反対デモが広がった。欧州15か国の100余りの団体が参加し、オランダではデモ隊がマイクロソフトの工事現場に乱入した。デモ隊は建設の中止を求め、水と電力の供給への負担、気候目標を問題にした。一部の集計では、デモが計画された国が16か国だと伝えている。", "why": "データセンターは電力と冷却水を大量に使うので、地域住民の電気料金や水の供給の問題に広がる。米国の選挙結果が欧州のデモにつながった点は、AIインフラの拡大への反発が国境を越えて広がるという意味だ。", "me": "国内の半導体と電力企業の業績は、海外のデータセンター投資の影響を受ける。投資の規模が減ったり、遅れたりしうる点を念頭に置けばよい。", "a": "反対側は、AIブームが水と電力網、気候目標を脅かすとして、建設をひとまず止め、住民の同意を得るべきだとみる。", "b": "業界側は、データセンターが雇用と税収を増やし、AI競争力に欠かせないとして、電力網の費用を企業が負担する方式で解決できるとみる。", "say": "確認されたのは、15か国100余りの団体のデモと、オランダの工事現場への乱入だ。確認されていないのは、デモが実際の建設の中止につながるかどうかだ。きょう見るものは、欧州各国政府の許認可の方針だ。", "src": "聯合ニュース(欧州でも広がるデータセンター反対、15か国のデモ、11/6) · DW(アムステルダムのマイクロソフト用地に乱入、11/6)"},
+    "q5":{"kick": "経済 · ✓ 報道3件", "title": "ウォール街のヘッジファンド、AI株の急落で10年余りで最大規模のポジション縮小", "what": "米国ニューヨーク株式市場を襲った人工知能関連株の急落のなか、ウォール街の大手ヘッジファンドが、10年余りで最も大きな幅でポジションを減らしているという報道が出た。ヘッジファンドのサムリン・キャピタルは、金融を除くほぼすべての業種の株を売り、シニアアナリストを解雇した。あるAI専門のヘッジファンドは、10月の1か月で33%下落した。ヘッジファンドが保有株を投げ売りし、人員も減らしているという報道も続いた。", "why": "ヘッジファンドが一斉にポジションを減らせば、売り物が株価の下落をさらに大きくする悪循環が生じる。彼らの売りは、国内の半導体株の外国人の需給にも影響しうる。", "me": "国内の半導体の大型株やAI関連のファンドに投資中なら、外国人の売り圧力が続きうる点を念頭に置く価値がある。短期の変動に驚いて急いで決めるより、投資期間と比重をまず確認するのがよい。", "a": "ポジションの縮小は、過熱を冷ます整理の過程であり、その後の反発の土台になるという見方がある。", "b": "反対に、大型投資家がリスクを減らすこと自体がAI投資への期待が折れるシグナルであり、下落がさらに続きうるという見方がある。", "say": "確認されたのは、ヘッジファンドの大規模なポジション縮小、サムリン・キャピタルの業種整理と人員削減、あるAIヘッジファンドの10月の33%下落の報道だ。確認されていないのは、縮小の最終的な規模と続く期間だ。きょう見るものは、6日のニューヨーク株式市場の引けと、ヘッジファンドの持ち株変動の開示だ。", "src": "聯合ニュース(米国株急落でヘッジファンドが最大のポジション縮小、11/7) · ブルームバーグ(サムリンの金融以外の売りと人員削減、11/6) · ウォール・ストリート・ジャーナル(ヘッジファンドのポジション処分と人員削減、11/6)"}
+  };
+  const G = {
+    "フィリバスター":{"f": "政治・国会", "d": "国会で少数党が、法案の処理を遅らせようと、議事進行の発言を長く続ける無制限討論。", "w": "国民の力が特検法を阻もうと使い、24時間余りで採決によって終わった。"},
+    "在席":{"f": "政治・国会", "d": "採決のとき、本会議場に実際に席にいた議員の数。", "w": "在席168人のうち167人が賛成した。"},
+    "法制司法委員会":{"f": "政治・国会", "d": "国会で、法案の法律的な体系と字句を審査する常任委員会。", "w": "4日、この委員会が特検法を修正した。"},
+    "公訴取り消し":{"f": "法律", "d": "検事がすでに始まった裁判の起訴を、自ら取り下げること。", "w": "論争になった公訴取り消しの条項が、修正案から外れた。"},
+    "特検":{"f": "法律", "d": "検察ではない別の捜査機関が特定の事件を捜査する、特別検察官の制度。", "w": "捏造起訴の疑惑を捜査するための7番目の特検だ。"},
+    "院外闘争":{"f": "政治・国会", "d": "政党が、国会の外で集会を開いて抗議する政治活動。", "w": "国民の力が7日から始める。"},
+    "信用融資":{"f": "金融・株式市場", "d": "証券会社からお金を借りて株を買う取引。", "w": "担保比率の維持義務が3か月免除される。"},
+    "担保比率":{"f": "金融・株式市場", "d": "借りたお金に対する、担保にとった株の価値の比率。", "w": "140%を下回ると、強制処分の対象になる。"},
+    "反対売買":{"f": "金融・株式市場", "d": "担保価値が足りないとき、証券会社が投資家の株を強制的に売ること。", "w": "免除期間は、すぐに行わなくてよい。"},
+    "ホットウォレット":{"f": "仮想資産", "d": "インターネットにつながり、入出金をすぐに処理する仮想資産の財布。", "w": "ゴパックスが資産の大部分をここから移した。"},
+    "コールドウォレット":{"f": "仮想資産", "d": "インターネットから切り離して保管するため、ハッキングの危険が低い仮想資産の財布。", "w": "ゴパックスが資産をここに移した。"},
+    "非農業":{"f": "経済指標", "d": "農業を除くすべての産業で、1か月の間に増減した雇用の数。", "w": "10月は16万5000増えた。"},
+    "FRB":{"f": "金融・通貨", "d": "米国の中央銀行である連邦準備制度で、政策金利を決める。", "w": "12月の利上げ観測が強まった。"},
+    "機雷":{"f": "安保・軍事", "d": "水中に敷いておき、船が触れたり近づいたりすると爆発する爆発物。", "w": "タンカー2隻が衝突したとイランが主張した。"},
+    "革命防衛隊":{"f": "安保・中東", "d": "イランの正規軍とは別に、最高指導者に直属するエリート武装組織。", "w": "タンカーの被害と無人機の撃墜を主張した。"},
+    "ポジション":{"f": "金融・株式市場", "d": "投資家が保有する株式・先物など投資資産の状態と規模。", "w": "ヘッジファンドがポジションを大きく減らした。"},
+    "ヘッジファンド":{"f": "金融・株式市場", "d": "少数の投資家のお金を集め、空売りなどさまざまな方法で運用する私募ファンド。", "w": "10年余りで最大の規模で減らしている。"},
+    "国家安全維持法":{"f": "法律", "d": "香港で、国家の安全を害するとみなす行為を処罰する法。", "w": "ウォンの追加の懲役言い渡しの根拠になった。"},
+    "ファイブアイズ":{"f": "安保・情報", "d": "米国・英国・カナダ・オーストラリア・ニュージーランド5か国の情報共有同盟。", "w": "10か国の声明に、この同盟国が含まれた。"},
+    "失業率":{"f": "経済指標", "d": "働こうとする人のうち、仕事がない人の割合。", "w": "10月は4.2%から4.1%に下がった。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

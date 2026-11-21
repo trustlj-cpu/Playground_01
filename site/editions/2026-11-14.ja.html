@@ -1,0 +1,342 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,290.53</b>KOSPI · 11/13(金) 終値 · 前の取引日比0.98%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>699.66</b>KOSDAQ · 11/13(金) 終値 · 前の取引日比0.77%下落</div>
+    </div>
+    <div class="dateline"><span>第41号 · 朝刊</span><b>2026年11月14日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="mk">
+      <div class="kick">社会 · 個人情報<span>報道照合 ✓ 4社 · 侵入経路・追加流出の有無は未確認</span></div>
+      <h2 class="hl">『みんなの創業』第2期の参加者818人の個人情報が流出…第1期の事故から5カ月</h2>
+      <p class="deck">中小ベンチャー企業部が13日に確認した。名前・電話番号・メールが流出し、事業に参加した民間企業1社がハッキングを受けた。</p>
+      <div class="body">
+        <p>中小ベンチャー企業部は13日、創業支援事業『みんなの創業』の第2期で、参加者818人の個人情報が流出したと明らかにした。流出したのは、名前、電話番号、メールアドレスだ。同部の自社システムが破られたのではなく、事業に参加した民間の人工知能(AI)ソリューション提供企業50社のうち1社が、外部からのハッキング攻撃を受けて情報が流出した。10月に発足式を開いた第2期事業で起きた事故だ。同じ事業では6月にも、第1期の参加者5000人のメールアドレスや創業アイデアなどが流出したことがあり、5カ月でふたたび事故が起きたことになる。今回の規模は第1期より小さいが、電話番号まで含まれた。</p>
+        <p>第1期のときは、中小ベンチャー企業部と国家情報院の合同調査で、サービス画面には見えなくてもサーバーが送り出すAPI(プログラム同士がデータをやり取りする通路)に非公開の情報が入っており、その情報を解く暗号鍵まで一緒に露出したと整理された。今回は、ハッキングされた提供企業がどんな経路で破られたのか、818人以外の参加者や事業計画書のような資料まで漏れたのかは、確認されていない。中小ベンチャー企業部が明らかにした事実は、流出の兆候を確認したというところまでで、侵入経路と責任の所在は、調査結果が出て初めて分かる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="cn">
+      <div class="kick">外交 · 韓中<span>報道照合 ✓ 4社 · 合意文書の有無・具体的な議題は未確認</span></div>
+      <h3 class="hl">韓中外交長官、北京で3カ月ぶりに会談…APECを前に朝鮮半島問題を協議</h3>
+      <div class="one">
+        <p>チョ・ヒョン外交部長官は13日、北京の釣魚台迎賓館で、王毅中国外交部長と外交長官会談を開いた。8月に王部長がソウルを訪れて以来、3カ月ぶりだ。チョ長官は冒頭発言で「朝鮮半島問題は大韓民国の死活的利益だ」と述べ、朝鮮半島の平和と安定は両国の共同の利益だとして、情勢の進展のために戦略的意思疎通を引き続き強化しようと語った。王部長は、韓中関係が改善と発展の正常な軌道に戻ったと述べ、人的交流1000万人に期待すると明らかにした。会談は、来週中国の深圳で開かれるアジア太平洋経済協力(APEC)首脳会議を前に開かれた。チョ長官は出国の際、今回の会談でAPECを前に両国が調整すべきことと北朝鮮問題を扱うと説明し、中国が北朝鮮をAPECに招待する可能性は大きくないと述べた。両長官が合意文書や共同発表文を出したか、具体的にどんな議題をどこまで合意したかは、確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="ksh"><b>裁判所、キム・スヒョン側に広告中断期間のモデル料11億ウォンの返還を命じる判決</b><em>水原地裁第14民事部は、プロムバイオの請求を認め、11億5980万ウォン余りを支払うよう判決した。広告の実施が中断された期間のモデル料だ。</em><span>芸能 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="wr"><b>ウリ銀行のチョン・ジンワン頭取、1年の再任候補に推薦…任期は2027年末まで</b><em>ウリ金融持株の子会社代表取締役候補推薦委員会が13日、チョン頭取を推薦した。今月末の株主総会で確定すれば、任期は2027年12月31日までだ。</em><span>金融 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="gg"><b>京畿道の来年の本予算42兆ウォン台を編成…地方債2462億ウォンをまた発行</b><em>2027年の本予算案は42兆1946億ウォンだ。地方債2462億ウォンをまた発行し、可用財源の減少幅は集計ごとに異なる。</em><span>財政 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="ai"><b>高病原性AI、鎮川・坡州で追加確認…防疫当局が危険注意報を発令</b><em>13日、鎮川の種鴨農場と坡州のウズラ農場で確認され、今冬の家禽農場での発生は6件になった。検疫本部は危険注意報を出した。</em><span>防疫 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="bm"><b>釜馬抗争の民主闘争宣言文・取材原稿、国の予備文化遺産に選定</b><em>釜山市は、宣言文とキム・テギョンの取材原稿が国家遺産庁の予備文化遺産に選定されたと13日に明らかにした。釜馬民主抗争は1979年10月に起きた。</em><span>社会 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="fb">
+      <div class="kick">スポーツ · サッカー<span>報道照合 ✓ 4社 · 不和説の実体・モレノ監督の去就は未確認</span></div>
+      <h3 class="hl">サッカー韓国代表、サウジに2-3で敗れる…サウジ戦での3失点は42年ぶり</h3>
+      <div class="body">
+        <p>サッカー韓国代表は現地時間13日、カタールのドーハのジャーシム・ビン・ハマド・スタジアムで開かれたサウジアラビアとの親善試合で、2-3で敗れた。前半のアディショナルタイムに先制点を許した韓国は、後半の序盤、オ・ヒョンギュの同点ゴールで均衡を保った。だが、すぐにまたリードを許し、3分の間にもう1点を失って1-3まで突き放された。後半24分、ファン・ヒチャンのカットバックを受けたイ・ジェソンが1点を返したが、それ以上は追えなかった。韓国がサウジに3点を許したのは1984年以来42年ぶりで、サウジに敗れたのは2005年8月のワールドカップ最終予選での0-1の敗戦以来21年ぶりだ。この試合で、歴代Aマッチの戦績は5勝9分け6敗となった。</p>
+        <p>ロベルト・モレノ暫定監督は試合後、「失望する結果だ」として、17日のカタール戦で巻き返しを準備すると語った。試合前、選手団の間に不和説が流れ、選手団は声明文を出してともにやる意向を明らかにしたところだった。ソン・フンミンは先発でフルタイム出場したが、Aマッチ60ゴール目は生まれなかった。モレノ監督は今月末に契約が切れ、その後の去就はまだ発表されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="mh">
+      <div class="kick">社会 · 裁判<span>報道照合 ✓ 4社 · 判決理由は未確認</span></div>
+      <h3 class="hl">裁判所、ビリーフラボ・ソースミュージックによるミン・ヒジンへの25億ウォンの損害賠償請求を棄却</h3>
+      <div class="body">
+        <p>ソウル西部地裁民事合議12部(キム・ジンヨン部長判事)は13日、HYBE傘下のレーベルであるビリーフラボとソースミュージックがミン・ヒジン前ADOR代表を相手に起こした損害賠償請求を、それぞれ棄却した。ビリーフラボは、ミン前代表の「ILLITがNewJeansをコピーした」という趣旨の発言で被害を受けたとして20億ウォンを、ソースミュージックは5億ウォンを請求し、合わせて25億ウォン規模だ。ミン前代表がビリーフラボを相手に起こした50億ウォン規模の損害賠償の反訴も棄却された。訴訟費用は、訴えを起こしたビリーフラボとソースミュージック、反訴を起こしたミン前代表が、それぞれ負担する。</p>
+        <p>ビリーフラボとソースミュージックは判決に遺憾を示し、ただちに控訴すると明らかにした。ミン前代表側は、消耗的な論争に終止符を打つとの立場を出した。裁判所がどんな理由で請求を認めなかったのか、発言の事実関係を問うたのかは、まだ確認されていない。今回は1審判決なので、控訴審で改めて争うことができる。ミン前代表は2月にも、HYBEとの255億ウォンのプットオプション訴訟で、1審の勝訴判決を受けた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="ua">
+      <div class="kick">国際 · ウクライナ<span>報道照合 ✓ 3社 · ロシアの欧州参加受け入れ・捕虜交換の規模は未確認</span></div>
+      <h3 class="hl">米特使のプーチン面会後、ウクライナ終戦交渉に欧州の参加が取り沙汰…捕虜交換を推進</h3>
+      <div class="body">
+        <p>スティーブ・ウィトコフ米特使とジャレッド・クシュナーは12日、プーチン・ロシア大統領と会った。ロシア大統領補佐官のウシャコフは、対話が実質的で建設的、率直で生産的だったと述べた。二人はそのあとアイルランドでゼレンスキー・ウクライナ大統領と会い、ゼレンスキーは、その結果として捕虜が解放されると明らかにするとともに、次の交渉に欧州が直接参加することになったのを歓迎した。クシュナーは、米国がこの戦争で最大規模の捕虜交換のために動いていると述べた。</p>
+        <p>13日にダブリンで非公式首脳会議を開いたEUは、ドイツ・フランス・英国・イタリア・ポーランドの5カ国とEUが、欧州の代表として次の交渉に参加すると明らかにした。ただし、交渉がいつどこで開かれるのか、ロシアが欧州の参加を受け入れたのか、捕虜交換がどのくらいの規模でいつ行われるのかは、確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>5カ国+EU</b><span>EUが示した欧州側の交渉参加主体(ドイツ・フランス・英国・イタリア・ポーランド)</span></div>
+        <div><b>2回連続</b><span>12日に米国の特使がプーチン、続いてゼレンスキーと面会</span></div>
+        <div><b>未定</b><span>次の交渉の日付・場所と捕虜交換の規模は発表されていない</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>サッカー韓国代表の選手団が、不和のせいでサウジ戦で本来の力を出せなかったという話が出回っている。</b> <span>選手団が試合前に声明文を出し、ともにやる意向を明らかにしただけで、不和の具体的な内容は公開されたものがなく、確認されていない。</span></div>
+        <div><b>裁判所が、「ILLITがNewJeansをコピーした」というミン・ヒジン前代表の発言が事実だと認めたという話が出回っている。</b> <span>ソウル西部地裁が確認したのは、ビリーフラボ・ソースミュージックの請求とミン前代表の反訴を棄却したという点までで、発言の事実関係を判断したかは確認されていない。</span></div>
+        <div><b>モレノ暫定監督が、サウジ戦の敗戦でただちに退くという話が出回っている。</b> <span>モレノ監督は今月末に契約が切れるが、去就についての発表はまだなく、本人は17日のカタール戦を準備すると語った。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 土 11月14日</b><span>全国がおおむね曇りで、明け方からほとんどの地域で雨が降る。中小ベンチャー企業部が『みんなの創業』の流出企業への措置をさらに明らかにするか、ビリーフラボ・ソースミュージックが控訴状を出すかは、見ておく価値がある。</span><b>今週</b><span>17日のカタールとの親善試合で、今年の代表チームの日程が終わる。来週は、中国の深圳でAPEC首脳会議が開かれる。</span><b>その後</b><span>今月末のウリ銀行の株主総会で頭取の選任が確定し、モレノ監督の契約も満了する。ウクライナ終戦交渉の日付は、まだ発表されていない。</span><b>読者へ</b><span>『みんなの創業』第2期に参加したなら、中小ベンチャー企業部と該当企業の個別の案内を確認し、出所不明の創業支援のショートメッセージやリンクは開かないのがよい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "mk":{"kick": "社会 · 個人情報 · ✓ 4社 · 侵入経路・追加流出の有無は未確認", "title": "『みんなの創業』第2期の参加者818人の個人情報が流出…第1期の事故から5カ月", "what": "中小ベンチャー企業部は13日、第2次『みんなの創業』の参加者を支援する企業で、個人情報が流出した兆候を確認したと明らかにした。流出の対象は参加者818人で、項目は名前、電話番号、メールアドレスだ。事業に参加した民間の人工知能ソリューション提供企業50社のうち1社が、外部からのハッキング攻撃を受けたものだ。同じ事業の第1次では、6月に参加者5000人のメールアドレスや創業アイデアの要約などが流出した。そのとき、中小ベンチャー企業部と国家情報院の合同調査で、APIに非公開の情報が入っており、暗号鍵まで露出したとの結果が出た。個人情報保護委員会の調査と警察の捜査の結果は、第1次のとき、追って発表するとしていた状態だった。", "why": "公共の創業支援は、申請書に名前・連絡先・事業アイデアを集める構造なので、一度漏れると、なりすましの連絡やフィッシングに使われうる。しかも、同じ事業で5カ月のうちに2度、事故が起きたなら、再発防止策が実際に機能したかが争点になる。中小ベンチャー企業部のシステムではなく参加企業が破られたという点は、委託・協力企業のセキュリティ管理の責任をどこまで問うかにつながる。", "me": "第2期に応募した、あるいは参加企業のサービスを使ったことがあるなら、中小ベンチャー企業部と該当企業の個別の案内を確認するのが先だ。知らない番号から来る創業支援・投資相談の連絡やリンクは開かず、案内メッセージでも公式チャンネルで改めて確認するのがよい。", "a": "セキュリティの専門家の間では、第1期のときにAPIの設計の問題が指摘されたのに似た事故が繰り返されたとして、公共事業が速度に偏り、セキュリティ点検が後回しになったとの批判が出ている。委託企業まで含めた点検体制が必要だという主張だ。", "b": "中小ベンチャー企業部は、事故が自社のシステムではなく参加企業で起きたと明らかにした。これを根拠に、自社システムのセキュリティとは別に、参加企業のセキュリティ管理が争点だという見方だ。", "say": "確認されたのは、818人、名前・電話番号・メール、企業1社のハッキングまでだ。侵入経路と追加流出は確認されていない。きょうは、中小ベンチャー企業部が該当企業の名前と措置を公開するか、個人情報保護委員会が調査に着手するかを見ればよい。", "src": "聯合ニュース(第2次みんなの創業の個人情報流出の確認、11/13) · 京郷新聞(参加者818人の流出、11/13) · 東亜日報(5カ月ぶりの再流出、11/13) · SBS(818人の個人情報流出、11/13)"},
+    "cn":{"kick": "外交 · 韓中 · ✓ 4社 · 合意文書の有無・具体的な議題は未確認", "title": "韓中外交長官、北京で3カ月ぶりに会談…APECを前に朝鮮半島問題を協議", "what": "チョ・ヒョン外交部長官は13日、北京の釣魚台迎賓館で、王毅中国外交部長と韓中外交長官会談を行った。8月に王部長がソウルを訪問してから3カ月ぶりの会談だ。チョ長官は冒頭発言で、朝鮮半島問題は大韓民国の死活的利益であり、朝鮮半島の平和と安定は両国の共同の利益だと述べた。情勢の進展のために、両国の戦略的意思疎通を引き続き強化しようとも語った。王部長は、韓中関係が改善と発展の正常な軌道に戻ったと述べ、人的交流1000万人に期待すると明らかにした。チョ長官は出国前、中国が北朝鮮をAPECに招待する可能性は大きくないと述べた。中国の深圳でのAPECは来週開かれる。", "why": "APEC首脳会議を前に開かれた長官級の会談なので、首脳会談の議題と雰囲気をうかがう場だ。朝鮮半島問題を韓国の『死活的利益』と明言したのは、北朝鮮関連の議論で韓国が排除されてはならないというメッセージと読める。チョ長官は出国前、中国の米朝仲介の意思と、北朝鮮の招待の可能性についての質問に答えた。", "me": "韓中関係がほぐれれば、観光・貿易・サプライチェーンの分野で、日程や手続きが変わりうるので、関連業種で働く人には直接の影響がある。人的交流1000万人という目標は、ビザや航空便の拡大の議論につながりうる。旅行の計画があるなら、発表される後続措置を確認する価値がある。", "a": "韓国側は、北朝鮮問題で中国との意思疎通を広げつつ、韓国の利益を明確にするのが先だという見方だ。死活的利益という表現には、朝鮮半島の情勢が韓国の知らないうちに整理されてはならないという意味が込められている。", "b": "中国側は、関係が正常な軌道に戻ったという点を前面に出し、協力の拡大を強調する。人的交流とアジア太平洋共同体の構想を掲げ、経済・人的分野の協力をまず育てようとする取り組みだ。", "say": "確認されたのは、両長官の発言までで、共同発表文や合意事項は確認されていない。昨日の紙面にあった歴訪の知らせから続く新しい展開は、APEC直前に両国が会い、朝鮮半島問題を直接扱ったという点だ。きょうは、外交部が会談の結果をさらに明らかにするか、首脳会談の日程が出るかを見ておく価値がある。", "src": "聯合ニュース(韓中外交長官会談、11/13) · 東亜日報(チョ・ヒョン長官と王毅部長の会談での発言、11/13) · 韓国経済(チョ・ヒョン長官と王毅部長の発言の速報、11/13) · 朝鮮日報(APECを前にした北京での会談、11/13)"},
+    "fb":{"kick": "スポーツ · サッカー · ✓ 4社 · 不和説の実体・モレノ監督の去就は未確認", "title": "サッカー韓国代表、サウジに2-3で敗れる…サウジ戦での3失点は42年ぶり", "what": "サッカー韓国代表は現地時間13日、カタール・ドーハのジャーシム・ビン・ハマド・スタジアムでサウジアラビアと親善試合を行い、2-3で敗れた。前半のアディショナルタイムに先制点を許し、0-1で前半を終えた。後半の序盤にオ・ヒョンギュが同点ゴールを決めたが、その後3分の間にもう1点を許して1-3となった。後半24分にイ・ジェソンが1点を返した。サウジに3点を許したのは1984年以来42年ぶりで、サウジに敗れたのは2005年8月以来初めてだ。歴代の対戦成績は5勝9分け6敗だ。ロベルト・モレノ暫定監督は試合後、17日のカタール戦を準備すると語った。", "why": "モレノ暫定監督は今月末に契約が切れ、今回の2連戦が今年最後の日程なので、結果の重みが大きい。試合内容に不和説が重なり、代表チームの運営全般への疑問が大きくなっている。来年1月にサウジで開かれるアジアカップを前に、守備の組織が揺らいだ点が表れた。", "me": "代表戦をよく見るファンなら、17日のカタール戦が今年最後のAマッチだという点を覚えておく価値がある。監督の去就が決まれば、来年のアジアカップの準備日程や選手の選考方式も変わりうる。", "a": "試合後のファンの反応と解説は、守備の組織力の崩壊と戦術変化の乏しさを指摘し、監督の責任論に重みを置く。プレッシングとビルドアップの両方が精緻でなかったとの指摘だ。", "b": "別の見方は、親善試合という性格と暫定体制の限界を考慮すべきだというものだ。一試合の結果で結論を出すより、17日の試合とその後の協会の決定を見て判断しようという立場だ。", "say": "確認されたのは、スコアと得点の状況、モレノ監督の発言までだ。不和説の具体的な内容と監督の去就は確認されていない。きょうは、協会が監督の問題をいつ整理するか、17日のカタール戦で先発の変化があるかを見ておく価値がある。", "src": "聯合ニュース(韓国2-3サウジの親善試合、11/14) · 東亜日報(サウジ戦で21年ぶりの敗北、11/14) · 朝鮮日報(サウジ戦での3失点、11/14) · 京郷新聞(声明文とサウジ戦での敗戦、11/14)"},
+    "mh":{"kick": "社会 · 裁判 · ✓ 4社 · 判決理由は未確認", "title": "裁判所、ビリーフラボ・ソースミュージックによるミン・ヒジンへの25億ウォンの損害賠償請求を棄却", "what": "ソウル西部地裁民事合議12部は13日、ビリーフラボとソースミュージックがミン・ヒジン前ADOR代表を相手に起こした損害賠償請求を、それぞれ棄却した。ビリーフラボの請求額は20億ウォン、ソースミュージックの請求額は5億ウォンで、合わせて25億ウォン規模だ。ビリーフラボの訴訟は、ミン前代表の「ILLITがNewJeansをコピーした」という趣旨の発言を問題にしたものだ。ミン前代表がビリーフラボを相手に起こした50億ウォン規模の反訴も棄却された。訴訟費用は、訴えを起こした側がそれぞれ負担する。ビリーフラボとソースミュージックは遺憾を示してただちに控訴すると言い、ミン前代表側は、消耗的な論争に終止符を打つと明らかにした。", "why": "この判決は、芸能事務所内部の対立から出た公開の発言が、どこまで損害賠償責任につながるのかを分ける事例になる。HYBEとミン前代表の間には、プットオプション訴訟など複数の紛争が続いており、この結果がほかの訴訟にも影響するのか注目される。", "me": "K-POPのファンや業界で働く人なら、アーティスト所属法人間の紛争が、ファンダムや契約関係に及ぼす影響を追ってみる価値がある。一般の読者にとっては、特定の発言が名誉毀損や損害賠償につながるには立証が必要だという点を示す事例だ。", "a": "判決を歓迎する側は、公開の発言や問題提起が法的に保護される余地を確認したとみる。大手事務所の訴訟が批判の発言を萎縮させうるという見方だ。", "b": "HYBE傘下のレーベル側は、判決に遺憾を示し、控訴審で請求の趣旨を改めて主張するとの立場だ。", "say": "確認されたのは、請求と反訴がともに棄却されたことと、双方の立場までだ。裁判所が発言の事実関係を判断したかは確認されていない。きょうは、控訴状の提出の有無と、判決理由が公開されるかを見ておく価値がある。", "src": "聯合ニュース(ビリーフラボ・ソースミュージックの1審敗訴、11/13) · 東亜日報(25億ウォンの損害賠償訴訟での敗訴とただちに控訴、11/13) · 京郷新聞(ビリーフラボの20億ウォンの損害賠償訴訟での敗訴、11/13) · KBS(1審敗訴、ただちに控訴、11/13)"},
+    "ua":{"kick": "国際 · ウクライナ · ✓ 3社 · ロシアの欧州参加受け入れ・捕虜交換の規模は未確認", "title": "米特使のプーチン面会後、ウクライナ終戦交渉に欧州の参加が取り沙汰…捕虜交換を推進", "what": "ロシア大統領補佐官のウシャコフは、プーチン大統領がスティーブ・ウィトコフ米特使とジャレッド・クシュナーと面会したと12日に明らかにし、対話が実質的で建設的、率直で生産的だったと述べた。ゼレンスキー・ウクライナ大統領は、二人にアイルランドで会ったあと、捕虜が解放されると明らかにし、次の交渉に欧州が参加することを歓迎した。クシュナーは、米国がこの戦争で最大規模の捕虜交換のために動いていると述べた。EUは13日、ドイツ・フランス・英国・イタリア・ポーランドの5カ国とEUが、欧州の代表として次の交渉に参加すると明らかにした。交渉の日程と場所は発表されていない。", "why": "これまで米国とロシアが中心になって進んできた終戦の議論に、欧州が正式な参加者として加わるかが、交渉の構図を変える。欧州は、ウクライナの安全保障と制裁の問題で、直接の利害が大きい。捕虜交換は、交渉が実際に進展しているかを示す、最も目に見える指標だ。", "me": "韓国では、油価・穀物価格と防衛産業の輸出、エネルギー需給を通じて、戦争の展開の影響を受ける。終戦交渉が速度を上げれば、エネルギー・原材料の価格と為替に変動要因が生じうるので、関連業種は、後続の発表を見ておく価値がある。", "a": "欧州側の見方は、ウクライナの安全保障と欧州の安全保障がかかった問題なので、欧州が交渉のテーブルに着くべきだというものだ。ただし、誰が代表を務めるかをめぐって、EUの機構と主要国の間に意見の違いがあるとの観測も出ている。", "b": "ロシア側は、面会が生産的だったと明らかにした。欧州の参加と捕虜交換についての具体的な立場は、まだ確認されていない。", "say": "確認されたのは、面会があったこと、各側の説明、そしてEUが欧州の代表の参加を明らかにしたことだ。合意された日程や捕虜交換の規模は確認されていない。きょうは、ロシア側の反応と、次の交渉の日付が発表されるかを見ておく価値がある。", "src": "聯合ニュース(EUの欧州代表の参加、11/14) · BBC(ゼレンスキーの欧州参加の歓迎、11/13) · クレムリン発言録(ウシャコフによる面会の説明、11/12)"},
+    "ksh":{"kick": "芸能 · ✓ 報道3件", "title": "裁判所、キム・スヒョン側に広告中断期間のモデル料11億ウォンの返還を命じる判決", "what": "水原地裁第14民事部は13日、健康機能食品企業のプロムバイオが、俳優のキム・スヒョンと所属事務所を相手に起こした損害賠償訴訟で、原告に11億5980万ウォン余りを支払うよう判決した。プロムバイオは、広告モデルだったキム・スヒョン側のイメージが失墜したため広告の実施を中断し、その期間のモデル料を取り戻すとして訴訟を起こした。裁判長はムン・ヒョノ判事だ。今回の判決は1審だ。キム・スヒョン側は、判決に不服の意向を示したと伝えられた。判決の具体的な理由は、まだ詳しく伝えられていない。", "why": "広告モデル契約で、モデルのイメージ低下が広告主の損失と認められれば、モデル料の返還責任が生じうるという判断なので、芸能界の広告契約の慣行に影響しうる。訴訟は、刑事手続きとは別に、民事で責任を問う構造だ。", "me": "一般の読者には、広告・スポンサー契約に『イメージ毀損時のモデル料返還』条項があるかを確認する契機になる。個人事業者やインフルエンサーの契約にも、似た条項があるかもしれない。", "a": "広告主側は、イメージが毀損されたモデルには広告の成果を期待できず、広告を止めたのは合理的だとみる。すでに支払った対価を取り戻すべきだという論理だ。", "b": "キム・スヒョン側は、判決は不当だという立場で、不服の意向を示したと伝えられた。責任の範囲が広すぎるという見方だ。", "say": "確認されたのは、裁判所がモデル料11億ウォン台を返すよう命じたところまでだ。判決の理由と控訴の有無は、さらに確認が必要だ。きょうは、キム・スヒョン側の公式の立場と、控訴状の提出を見ておく価値がある。", "src": "聯合ニュース(キム・スヒョン側へのモデル料返還判決、11/13) · 京郷新聞(モデル料11億ウォンの返還判決、11/13) · 韓国経済(広告中断のモデル料の返還、11/13)"},
+    "wr":{"kick": "金融 · ✓ 報道2件", "title": "ウリ銀行のチョン・ジンワン頭取、1年の再任候補に推薦…任期は2027年末まで", "what": "ウリ金融持株は13日、子会社代表取締役候補推薦委員会を開き、ウリ銀行のチョン・ジンワン頭取を次期ウリ銀行頭取の候補に推薦したと明らかにした。チョン頭取は58歳だ。今月末に予定されたウリ銀行の株主総会で選任が最終確定すれば、任期は2027年12月31日までだ。今回の推薦は、1年の再任にあたる。ウリ金融持株は、ウリ銀行の持株会社だ。チョン頭取は現在、ウリ銀行を率いている。", "why": "銀行頭取の任期は、銀行の戦略と組織に連続性を与えるのか、入れ替えるのかを示す。持株会社の会長と銀行頭取の呼吸は、貸出・収益構造や健全性の管理にも影響する。再任が確定すれば、現在の経営陣の戦略がもう一年続く。", "me": "ウリ銀行の顧客にとって、さしあたり変わることはない。ただし、預金・貸出商品の戦略や店舗運営の方向は、新しい任期の経営計画に従って変わりうる。", "a": "再任を肯定的にみる側は、経営の連続性と、現在の戦略の安定した履行を強調する。任期の途中で指揮部が替わる混乱を避けられる点も、長所に挙げる。", "b": "慎重な側は、任期が1年にとどまるだけに、中長期の課題を進める余力が限られるとみる。今回の決定が、株主総会でそのまま確定するかも見守らなければならないという立場だ。", "say": "確認されたのは、候補の推薦と任期の期限だ。選任は、まだ最終確定ではない。再任の事由は、発表されたものがなく、確認されていない。きょうは、株主総会の日程と、持株会社レベルの後続人事を見ておく価値がある。", "src": "韓国経済(チョン・ジンワン・ウリ銀行頭取の1年の再任、11/13) · 東亜日報(ウリ銀行頭取の再任推薦、11/13)"},
+    "gg":{"kick": "財政 · ✓ 報道2件", "title": "京畿道の来年の本予算42兆ウォン台を編成…地方債2462億ウォンをまた発行", "what": "京畿道は、2027年度の本予算案を42兆1946億ウォンで編成した。京畿道は来年も地方債2462億ウォンを発行することにし、3年間の累積の地方債が2兆ウォンに迫る。可用財源は今年より減り、その減少幅は、1兆ウォンとみる集計と2兆4000億ウォンとみる集計があって食い違う。京畿道は、財政が厳しい状況でも民生予算を守る編成だと説明した。国費の確保のため国会の前に状況室も稼働し、目標額は5兆4350億ウォンだ。", "why": "地方債は、将来の世代が返す借金なので、累積の規模が大きくなれば、利子の負担が次の予算を圧迫する。可用財源が減れば、新しい事業より義務的な支出を先に埋めることになり、住民が体感する事業が減りうる。", "me": "京畿道民は、交通・福祉・保育の事業の優先順位が変わりうる。道の予算を受ける団体なら、事業費が変動する可能性も念頭に置く価値がある。地域の事業に頼る団体や業者は、来年の予算審議の結果を確認する必要がある。", "a": "財政の健全性を優先する側は、地方債への依存を減らし、支出の構造調整をすべきだとみる。", "b": "京畿道は、民生事業を守るための編成だと説明している。", "say": "確認されたのは、総額、地方債の規模、国費の目標だ。可用財源の減少幅は集計ごとに違い、一つに断定しがたい。きょうは、道議会の審議で、どんな事業が調整されるかを見ておく価値がある。", "src": "聯合ニュース(京畿道の本予算42.2兆ウォンの編成と地方債、11/13) · KBS(京畿道の来年度本予算案の編成、11/13)"},
+    "ai":{"kick": "防疫 · ✓ 報道3件", "title": "高病原性AI、鎮川・坡州で追加確認…防疫当局が危険注意報を発令", "what": "中央事故収拾本部は13日、忠北・鎮川の種鴨農場と、京畿・坡州のウズラ農場で、高病原性鳥インフルエンザが確認されたと明らかにした。鎮川の農場は、抗原の精密検査でH5N1型と確認され、約2200羽が埋却処分された。11月3日に家禽農場で初めて発生して以来、今冬の国内の家禽農場での発生は6件に増えた。農林畜産検疫本部は同じ日、高病原性AI危険注意報を発令し、家禽農場の防疫を強化すると明らかにした。京畿・忠北・全南光州・仁川などで相次いで発生した。", "why": "渡り鳥が飛来する時期に、野生の鳥から農場へ広がれば、短期間に発生件数が増えうるので、初期の遮断が重要だ。危険注意報は、農場の出入りの統制と消毒を強化せよという合図だ。家禽類の殺処分は、農家の被害と、卵・鴨肉の需給に影響する。", "me": "家禽農場で働く人や近隣の住民は、野生の鳥に近づくのを避け、防疫の規則を守らなければならない。", "a": "防疫当局は、発生の時期が早いだけに、先制的な遮断と移動制限を強化すべきだという立場だ。", "b": "農家側は、殺処分の補償と防疫費用の負担が大きく、支援の拡大が必要だとみる。", "say": "確認されたのは、確認された農場2カ所と、今冬の6件、危険注意報の発令までだ。今後、発生がどれだけ増えるかは、確認されていない。きょうは、追加の確認と、卵の価格の動向を見ておく価値がある。", "src": "聯合ニュース(高病原性AI危険注意報の発令、11/13) · 東亜日報(鎮川・坡州でAIを確認、11/13) · 京郷新聞(鎮川の種鴨農場でAIを確認、11/13)"},
+    "bm":{"kick": "社会 · ✓ 報道2件", "title": "釜馬抗争の民主闘争宣言文・取材原稿、国の予備文化遺産に選定", "what": "釜山市は13日、釜馬民主抗争の民主闘争宣言文と、釜馬民主抗争のキム・テギョン取材原稿が、国家遺産庁の予備文化遺産に選定されたと明らかにした。釜馬民主抗争は、1979年10月に釜山と馬山一帯で起きた民主化運動だ。予備文化遺産は、保存・管理が必要な近現代の遺産を、指定の前にあらかじめ保護する制度だ。選定された資料は、抗争当時の宣言文と取材の記録だ。釜山市は、選定の事実を公開し、保存と活用の方策を引き続き設ける趣旨で明らかにした。正式な指定ではなく、選定の段階の決定だ。", "why": "近現代の民主化運動の記録は、保存の状態が弱く、失われる危険が大きい。予備文化遺産への選定は、正式な指定の前から保護の根拠を設け、記録物を体系的に管理させる。", "me": "釜馬民主抗争の記録物が、展示や教育に活用されれば、市民が直接資料に触れる機会が増える。地域の歴史に関心があるなら、釜山市と関連の記念財団の展示日程を確認してみる価値がある。", "a": "地域社会は、抗争の記録を国家のレベルで保存することになった意味が大きいとみる。", "b": "専門家たちは、選定のあとに、実際の保存予算と公開の方式が続かなければならないと指摘する。", "say": "確認されたのは、選定の事実と、対象の資料2件だ。正式な指定の有無と日程は、確認されていない。きょうは、釜山市の後続の保存計画を見ておく価値がある。", "src": "聯合ニュース(釜馬抗争の宣言文の予備文化遺産への選定、11/13) · 京郷新聞(釜馬抗争の取材原稿の予備文化遺産、11/13)"}
+  };
+  const G = {
+    "API":{"f": "セキュリティ", "d": "プログラム同士がデータをやり取りする通路", "w": "第1期の流出のとき、非公開の情報がこの通路に入っていたと整理された。"},
+    "反訴":{"f": "法", "d": "被告が同じ裁判で、逆に原告を相手に起こす訴訟", "w": "ミン・ヒジン前代表がビリーフラボを相手に50億ウォンの反訴を起こしたが、棄却された。"},
+    "損害賠償":{"f": "法", "d": "不法行為や契約違反で生じた損害を、金銭で償わせる制度", "w": "ビリーフラボ・ソースミュージックが請求し、キム・スヒョン側にもモデル料の返還が判決された。"},
+    "棄却":{"f": "法", "d": "裁判所が、訴訟の請求を認めないこと", "w": "ビリーフラボ・ソースミュージックの請求と、ミン前代表の反訴が、いずれも棄却された。"},
+    "1審":{"f": "法", "d": "裁判を最初に行う段階の判決", "w": "ミン・ヒジン訴訟の判決は1審で、双方が控訴で争える。"},
+    "控訴":{"f": "法", "d": "1審判決に不服で、上級の裁判所に改めて裁判を求めること", "w": "ビリーフラボとソースミュージックが、控訴すると明らかにした。"},
+    "プットオプション":{"f": "金融", "d": "決めておいた価格で株式を売れる権利", "w": "ミン前代表は、2月にHYBEとの255億ウォンのプットオプション訴訟で、1審の勝訴判決を受けた。"},
+    "外交長官会談":{"f": "外交", "d": "二国の外交責任者が会って、懸案を議論する会談", "w": "チョ・ヒョン長官と王毅部長が、13日に北京で行った。"},
+    "APEC":{"f": "外交", "d": "アジア太平洋経済協力。環太平洋21の経済圏の協議体", "w": "来週、中国の深圳で首脳会議が開かれ、今回の会談はそれに先立って行われた。"},
+    "死活的利益":{"f": "外交", "d": "国家の生存に直結し、譲歩しにくい利益", "w": "チョ長官が、朝鮮半島問題をこう表現した。"},
+    "戦略的意思疎通":{"f": "外交", "d": "核心の懸案で、立場をあらかじめ合わせる高位級のコミュニケーション", "w": "チョ長官が、両国の間での強化に期待を示した。"},
+    "捕虜交換":{"f": "安全保障", "d": "交戦の当事者が、互いに拘束した捕虜を取り替えること", "w": "クシュナーは、米国が最大規模の交換を推進中だと述べた。"},
+    "非公式首脳会議":{"f": "外交", "d": "公式の定例会議でない形式で開かれる、首脳間の協議", "w": "EUが13日にダブリンで、終戦交渉への参加を議論した場だ。"},
+    "可用財源":{"f": "財政", "d": "政府が実際に自由に使える予算の余力", "w": "京畿道の可用財源が今年より減り、減少幅は集計ごとに違う。"},
+    "本予算":{"f": "財政", "d": "一年の予算を最初に確定する予算案", "w": "京畿道が、2027年の本予算案を42兆1946億ウォンで編成した。"},
+    "地方債":{"f": "財政", "d": "地方自治体が借りて使うお金について発行する債券", "w": "京畿道が、来年2462億ウォンをまた発行する。"},
+    "子会社代表取締役候補推薦委員会":{"f": "金融", "d": "持株会社が、系列会社の代表を選ぶために置く推薦機構", "w": "13日、チョン・ジンワン頭取を推薦した。"},
+    "株主総会":{"f": "金融", "d": "株主たちが、会社の重要な事項を決める会議", "w": "ウリ銀行頭取の選任が、今月末の株主総会で確定する。"},
+    "高病原性AI":{"f": "防疫", "d": "ニワトリやアヒルなどを大量に死なせうる鳥インフルエンザ", "w": "鎮川・坡州の農場で、追加で確認された。"},
+    "危険注意報":{"f": "防疫", "d": "発生の危険が高まったとき、防疫を強化せよと出す警報", "w": "検疫本部が、13日に発令した。"},
+    "家禽農場":{"f": "防疫", "d": "ニワトリ・アヒル・ウズラなどの家禽類を育てる農場", "w": "今冬の家禽農場での発生が、6件になった。"},
+    "予備文化遺産":{"f": "文化財", "d": "正式な指定の前にあらかじめ保護する、近現代の遺産", "w": "釜馬抗争の記録物2件が、選定された。"},
+    "モデル料":{"f": "契約", "d": "広告モデルが、出演の対価として受け取るお金", "w": "裁判所が、広告中断期間のモデル料の返還を判決した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

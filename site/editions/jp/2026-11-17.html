@@ -1,0 +1,337 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>59,662.02</b>日経平均 · 16日終値 · 前営業日比2.42%安</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>TOPIX · 16日の確定終値は取得できず</div>
+    </div>
+    <div class="dateline"><span>No. 44 · 朝刊</span><b>2026年11月17日(火)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="trumpkim">
+      <div class="kick">国際 · 外交<span>✓ 5媒体 · 会談の有無・場所・日程は未確認、北朝鮮側の反応は未確認、中ロ首脳会談18日と経済・貿易の議題は1媒体、ウクライナが議題かは米側説明が食い違い</span></div>
+      <h2 class="hl">トランプ氏、北朝鮮の金正恩総書記と「会うかもしれない」　アジア歴訪の出発前に述べる</h2>
+      <p class="deck">トランプ米大統領は16日、アジア訪問に向けてホワイトハウスを出発する際、北朝鮮の金正恩総書記と会う可能性があると述べた。決まったわけではなく、北朝鮮側の反応は伝えられていない。</p>
+      <div class="body">
+        <p>トランプ米大統領は16日、アジア訪問に向けてホワイトハウスを出発する際、記者団の取材に応じ、北朝鮮の金正恩(キム・ジョンウン)総書記と会う可能性があると述べた。言葉は「会うかもしれない」にとどまり、日程は決まっていない。会うとすれば中国で、と問われる場面があり、実現するかどうかは習近平国家主席次第だとも話した。総書記とは、北朝鮮の朝鮮労働党で最も高い役職の呼び名だ。実現すれば、フィリピンと中国を回る今回の日程を大きく変える可能性があると伝えられている。一方で、会う場所も時間も決まっておらず、北朝鮮側がこの発言に反応したかどうかは確認されていない。</p>
+        <p>トランプ氏はフィリピンと中国で開かれる首脳会議に出席する。中国・深圳では19日、習氏とロシアのプーチン大統領を交えた3人の首脳会談が予定されている。3人がそろう会談は初めてとされ、核軍縮(核兵器の数を減らしたり使い方を制限したりすること)が話し合われる見通しだ。ロシア高官は、中国とロシアの首脳会談が18日にあり、トランプ氏との会談は調整中だと話したと伝えられているが、この点は1件の報道にとどまり、確認できていない。議題をめぐっては、ウクライナを取り上げるかどうかで米側の説明が食い違っており、どちらが正しいかは確認できていない。経済や貿易も話題になるとトランプ氏が述べたと伝えられているが、これも1件の報道にとどまる。会談の時刻などの細部も、報道ごとに扱いが分かれている。米朝の対話が再び動くのか、深圳での3首脳会談の話題にとどまるのかは、現時点で分からない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="nakano">
+      <div class="kick">社会 · 事件<span>✓ 4媒体 · 動機・男と女性の関係・現場の詳しい場所は未確認</span></div>
+      <h3 class="hl">東京・中野で20代くらいの女性が刺され死亡　強盗殺人未遂の疑いで男を逮捕</h3>
+      <div class="one">
+        <p>16日夜、東京都中野区の路上で、20代くらいの女性が刃物で刺され、搬送先の病院で死亡が確認された。警視庁は、30代から40代くらいの男を強盗殺人未遂の疑いで逮捕し、事件に至ったいきさつを調べている。強盗殺人未遂は、強盗の際に人を殺そうとした疑いにあたる罪名だ。事件があったのは16日の夜で、女性は20代くらいとされるものの、名前や勤め先は公表されていない。 男は女性が勤める店の客だったと伝えられ、男が「冷たくあしらわれた」と話しているとの報道もある。ただ、警視庁が公式に説明した内容としては確認できておらず、動機や事件の経緯は明らかになっていない。女性の名前や凶器の種類も確認されていない。現場は中野駅の近くの住宅街と伝えられ、近くの住民からは不安の声が出ていると伝えられている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="joban"><b>茨城県かすみがうら市の常磐道下り線で車7台が絡む事故　男性2人が搬送、1人が大けが</b><em>16日午前、常磐自動車道の下り線でダンプカーと乗用車など7台が関係する事故があった。男性2人が病院に運ばれ、うち1人が大けがをした。</em><span>社会 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="grammy"><b>グラミー賞の新設部門「最優秀アジア・ポップ」に、日本のBABYMETALとLiSAがノミネート</b><em>新設のアジア・ポップ部門の候補に、日本のBABYMETALとLiSAが入った。韓国やフィリピンの歌手やグループも候補に挙がっている。</em><span>音楽 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kirin"><b>キリンビール、オンラインショップ会員のメールアドレス約5万8000件が外部に漏えいしたと発表</b><em>不正アクセスの影響で、会員のメールアドレス約5万8000件が外部に漏れたと会社が説明している。漏れた情報には名前や住所も含まれるという。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="haze"><b>ASEAN、国境を越える煙害を「深刻な地域課題」と位置づけ　対策を強化へ</b><em>インドネシアの大規模な森林火災で出た煙が周辺国にも広がり、深刻な大気汚染を引き起こしている。ASEANは加盟国による対策の強化に動く。</em><span>環境 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="toyama"><b>富山市の交番襲撃事件の差し戻し審で、弁護側が「死刑を科すべきではない」と主張</b><em>2018年に交番の警察官と警備員が殺害された事件で、元自衛官の被告の弁護人は、拳銃を奪う目的はなく強盗殺人罪は成立しないなどと述べた。</em><span>司法 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="bond">
+      <div class="kick">文化 · 映画<span>✓ 4媒体 · 新作の公開時期は1媒体、撮影開始の時期は未確認</span></div>
+      <h3 class="hl">次期ジェームズ・ボンドはロバート・パティンソンさん　アマゾンMGMが発表</h3>
+      <div class="body">
+        <p>アマゾンMGMスタジオは16日、人気スパイ映画「007」シリーズの主人公ジェームズ・ボンド役に、英国の俳優ロバート・パティンソンさん(40)を起用すると発表した。7人目のボンドで、2021年公開の「ノー・タイム・トゥ・ダイ」を最後に降板したダニエル・クレイグさんの後任になる。アマゾンが製作を引き継いでから初めてのボンド選びで、新作は「デューン」シリーズのドゥニ・ヴィルヌーヴ監督が手がける。パティンソンさんは「007を任されたのは一生の名誉だ」とコメントした。</p>
+        <p>新作は26作目にあたる。公開は2028年より前にはならないと伝えられているが、これは1件の報道にとどまり、公式には確認できていない。撮影の開始時期や共演者、あらすじも公表されていない。数か月にわたって複数の俳優の名前が取り沙汰されてきたが、発表されたのはパティンソンさんだけだ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="vulcan">
+      <div class="kick">科学技術 · 宇宙<span>✓ 4媒体 · 失敗の原因と今後の打ち上げ日程は未確認、約9か月ぶりの打ち上げは1媒体</span></div>
+      <h3 class="hl">ロケット「ヴァルカン」が打ち上げ直後に失敗　アマゾンの衛星40機が失われる</h3>
+      <div class="body">
+        <p>ボーイングとロッキード・マーチンの合弁会社ユナイテッド・ローンチ・アライアンス(ULA)の大型ロケット「ヴァルカン」が、現地時間の15日に米フロリダ州から打ち上げられた直後に異常を起こし、積んでいたアマゾンのインターネット衛星40機を軌道に届けられなかった。ULAによると、異常が起きたのは離陸からおよそ10分後だ。搭載物(ペイロード)は失われた。ULAにとって、ミッション全体が失敗に終わったのは初めてと伝えられている。</p>
+        <p>アマゾンは「期待に応えられなかった」という趣旨のことを述べた。失敗の原因は明らかになっていない。失われた衛星は、アマゾンが低軌道に多数の衛星を並べる衛星網(コンステレーション)「アマゾン・リーオ」の一部で、米スペースXの「スターリンク」と競う計画だ。ヴァルカンの打ち上げは約9か月ぶりだったと伝えられているが、1件の報道にとどまる。次の打ち上げ日程は示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="weapons">
+      <div class="kick">国際 · 安全保障<span>✓ 2媒体 · 会議の結果と各国の立場の詳細は未確認、米ロの抵抗は1媒体</span></div>
+      <h3 class="hl">自律型致死兵器の規制をめぐる国連の会議がジュネーブで開幕　米ロは抵抗してきたと伝えられる</h3>
+      <div class="body">
+        <p>特定通常兵器使用禁止制限条約(CCW)の第7回再検討会議が、16日からスイスのジュネーブで開かれている。会期は20日までの5日間と伝えられている。再検討会議とは、条約の運用を見直すために加盟国が集まる会合のことをいう。議題の一つが、人が個々の攻撃を判断せずに標的を選んで攻撃できる「自律型致死兵器システム」の扱いで、フランスなど欧州の複数の首都は、規制のための文書を採択したい考えだと伝えられている。条約は、過度な被害を与える通常兵器の使用を禁止したり制限したりする国際条約だ。</p>
+        <p>一方で、ロシアと米国は規制に向けた動きに抵抗してきたと伝えられているが、これは1件の報道にとどまる。欧州の動きも同じ報道に基づくもので、各国が正式にどの立場を示したかは確認できていない。人工知能(AI)の軍事利用が進む中で、各国の代表は、開発が進む兵器にどのような歯止めをかけるかを話し合う。結論が出るのは会期が終わる20日以降で、合意に至るかどうかは現時点で分からない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>7回目</b><span>条約の再検討会議の回数</span></div>
+        <div><b>5日間</b><span>16日から20日までと伝えられる会期</span></div>
+        <div><b>2か国</b><span>規制への動きに抵抗してきたと伝えられる米国とロシア</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>トランプ氏が金正恩総書記との会談を決めた。</b> <span>決定は確認されていない。トランプ氏自身は「会うかもしれない」と述べ、実現は習近平国家主席次第だとも話した。北朝鮮側の反応は伝えられていない。</span></div>
+        <div><b>政府は、有事に協力する企業に補償する方針を固めた。</b> <span>安保3文書の見直しで、有事の備えを「社会全体で」進め、協力する企業への補償も盛り込む方針だとの報道が1件ある。政府の公式発表としては確認できていない。</span></div>
+        <div><b>中野の事件で逮捕された男は、被害者が勤める店の客だった。</b> <span>客だったと伝えられているが、警視庁の公式な説明としては確認できていない。動機や事件の経緯も明らかになっていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 11月17日(火)</b><span>トランプ氏のアジア訪問の日程と、北朝鮮の金正恩総書記と会うかどうかについて、北朝鮮側が何か発表するかを待つ。高市首相が韓国の李在明大統領とマニラで会談する予定と伝えられている。</span><b>18日(水)</b><span>ロシア高官は、中国とロシアの首脳会談が開かれると話したと伝えられている。1件の報道にとどまるため、実際に開かれるかを確かめたい。</span><b>19日(木)</b><span>中国・深圳で、米中ロの3首脳会談が予定されている。核軍縮のほか、中国が示していない議題の中身と、会談後の各国の発表を確かめたい。</span><b>読者の方へ</b><span>今朝の記事のうち、中野の事件で男が店の客だったという点、ボンドの新作の公開時期、ヴァルカンの打ち上げが約9か月ぶりだったという点は、いずれも報道が限られています。確認された事実と、報道だけの部分を分けて読んでください。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "trumpkim":{"kick": "国際 · 外交 · ✓ 5媒体 · 会談の有無・場所・日程は未確認、北朝鮮側の反応は未確認、中ロ首脳会談18日と経済・貿易の議題は1媒体、ウクライナが議題かは米側説明が食い違い", "title": "トランプ氏、北朝鮮の金正恩総書記と「会うかもしれない」　アジア歴訪の出発前に述べる", "what": "トランプ米大統領は16日、アジア訪問に向けてホワイトハウスを出発する際、記者団に対し、北朝鮮の金正恩総書記と会う可能性があると述べた。発言は「会うかもしれない」というもので、実現するかどうかは習近平国家主席次第だとも話した。場所は中国が念頭にあると伝えられている。トランプ氏はフィリピンと中国で開かれる首脳会議に出席する予定だ。中国・深圳では19日に米中ロの3首脳会談が予定されており、核軍縮が話し合われる見通しだ。ロシア高官は、中ロ首脳会談が18日にあると述べたと伝えられている。北朝鮮側の反応は確認されていない。", "why": "米朝の首脳が直接会うかどうかは、北朝鮮の核とミサイルをめぐる交渉が再び動くかを左右する。しかも会談の舞台とされる中国は、北朝鮮にとって最も近い大国で、習氏の意向が結果に影響すると本人が示した形だ。3首脳会談の直前に出た発言であり、その場の話題が核軍縮に広がる可能性もある。", "me": "日本にとっては、北朝鮮の核・ミサイル問題と拉致問題の行方に直結する。米朝が直接話した場合、日本の安全保障や外交の方針にも影響が及び得る。日本政府がどう反応するかは、今のところ伝えられていない。", "a": "対話の再開を歓迎する立場は、首脳同士が直接話せば停滞した交渉を動かせると考える。トランプ氏が以前から金氏との対話に前向きな姿勢を見せてきたことも、この見方の背景にある。", "b": "慎重な立場は、会うと言っただけで日程も議題も決まっていない点を重く見る。北朝鮮が核をめぐる要求に応じる姿勢を見せていない以上、実質的な成果につながるかは分からないという見方だ。", "say": "確認されているのは、トランプ氏が「会うかもしれない」と述べたことと、習氏次第だと話したことの2点だ。会談の日程、場所、北朝鮮の受け止めはまだ確認されていない。18日の中ロ首脳会談という情報も1件の報道にとどまる。今日は、トランプ氏のフィリピン到着後の日程と、北朝鮮側が何か発表するかを見たい。", "src": "NHK(トランプ氏の発言, 11/16) · 朝日新聞(出発前の発言, 11/17) · 時事通信(習主席次第, 11/17) · 毎日新聞(会談の可能性, 11/17) · ストレーツ・タイムズ(中国での会談の可能性, 11/16)"},
+    "nakano":{"kick": "社会 · 事件 · ✓ 4媒体 · 動機・男と女性の関係・現場の詳しい場所は未確認", "title": "東京・中野で20代くらいの女性が刺され死亡　強盗殺人未遂の疑いで男を逮捕", "what": "16日夜、東京都中野区の路上で、20代くらいの女性が刃物で刺された。女性は搬送先の病院で、死亡が確認された。警視庁は、30代から40代くらいの男を強盗殺人未遂の疑いで逮捕した。男は女性が勤める店の客だと伝えられている。男が「冷たくあしらわれた」と話しているとの報道もあるが、警視庁の説明としては確認できていない。現場は中野駅近くの住宅街と伝えられ、警視庁は事件のいきさつを調べている。", "why": "夜の住宅街での事件で、近くの住民に強い不安が広がっていると伝えられている。逮捕時点の罪名は捜査の進み方で変わることがあり、動機や被害者との関係が分かるまでは、経緯を断定できない。", "me": "夜道を一人で歩くときは、人通りのある道を選び、周りの様子に注意するとよい。身近な人が不安を感じているときは、警察の相談窓口に連絡できることを知っておくと動きやすい。", "a": "事実の確認を重視する立場は、男と女性の関係や動機が警視庁から正式に説明されるまで、報じられた内容を確定したものとして扱わないことを大切にする。", "b": "再発防止を重視する立場は、飲食店など接客の場で働く人が客から危害を受けないための対策に目を向ける。職場や地域での見守り、相談の仕組みづくりが課題になるという考えだ。", "say": "確認されているのは、20代くらいの女性が刺されて亡くなったこと、警視庁が男を強盗殺人未遂の疑いで逮捕したことだ。客だったという情報や男の発言は報道ベースで、動機はまだ分かっていない。今日は警視庁の発表で、被害者の身元や逮捕容疑の詳しい内容が示されるかを見たい。", "src": "NHK(女性が死亡・男を逮捕, 11/17) · 毎日新聞(強盗殺人未遂容疑で逮捕, 11/16) · 朝日新聞(住民の不安, 11/16) · 時事通信(強殺未遂容疑, 11/16)"},
+    "bond":{"kick": "文化 · 映画 · ✓ 4媒体 · 新作の公開時期は1媒体、撮影開始の時期は未確認", "title": "次期ジェームズ・ボンドはロバート・パティンソンさん　アマゾンMGMが発表", "what": "アマゾンMGMスタジオは16日、人気スパイ映画「007」シリーズの次の主人公ジェームズ・ボンド役に、英国の俳優ロバート・パティンソンさん(40)を起用すると発表した。7人目のボンドとなり、2021年公開の「ノー・タイム・トゥ・ダイ」を最後に降板したダニエル・クレイグさんの後任になる。アマゾンがシリーズの製作を引き継いでから初めての配役だ。新作はシリーズ26作目で、ドゥニ・ヴィルヌーヴ監督が手がける。パティンソンさんは「007を任されたのは一生の名誉だ」とコメントした。公開は2028年より前にはならないと伝えられている。", "why": "ボンド役の交代は、シリーズが数年にわたって新作を出していない期間の終わりを意味する。長く続くシリーズでは、主役の選び方が作品の雰囲気や観客の期待を大きく左右する。アマゾンにとっては、買収したシリーズの新たな出発点になる。", "me": "映画好きの人にとっては、旧作を見直したり、新作の公開までの数年間を楽しみにしたりするきっかけになる。ただ、公開は先で、今できる確実なことは多くない。", "a": "歓迎する立場は、俳優としての実績に期待する。シリーズで続いてきた英国らしい洗練に、新しい世代の演技が加わると見る。", "b": "慎重な立場は、候補が絞られる過程で期待が高まり過ぎた面があるとして、実際の新作を見るまで評価を保留する。新作の出来を見てから評価したいという考え方だ。", "say": "確認されているのは、アマゾンMGMスタジオが発表したことと、パティンソンさんが7人目のボンドになること、監督がヴィルヌーヴ氏であることだ。公開時期が2028年より前にはならないという情報は1件の報道にとどまり、撮影の始まる時期は分かっていない。今日は、共演者や撮影の日程が公表されるかを見たい。", "src": "毎日新聞(配役の発表, 11/17) · ストレーツ・タイムズ(発表の内容, 11/16) · ル・モンド(26作目・7人目, 11/16) · DW(配役の確認, 11/16)"},
+    "vulcan":{"kick": "科学技術 · 宇宙 · ✓ 4媒体 · 失敗の原因と今後の打ち上げ日程は未確認、約9か月ぶりの打ち上げは1媒体", "title": "ロケット「ヴァルカン」が打ち上げ直後に失敗　アマゾンの衛星40機が失われる", "what": "ボーイングとロッキード・マーチンの合弁会社ユナイテッド・ローンチ・アライアンス(ULA)の大型ロケット「ヴァルカン」が、現地時間の15日、米フロリダ州から打ち上げられた。ULAによると、離陸からおよそ10分後に異常が起き、搭載していたアマゾンのインターネット衛星40機を軌道に届けられなかった。衛星はすべて失われた。ULAにとってミッション全体が失敗に終わったのは初めてと伝えられている。アマゾンは「期待に応えられなかった」という趣旨で述べた。失敗の原因は明らかになっていない。", "why": "打ち上げ失敗で、アマゾンが進めてきた低軌道の衛星通信網の整備が遅れる可能性がある。この網は米スペースXの「スターリンク」と競う計画で、衛星の数が増えるほどサービスの範囲が広がる。原因の調査結果によっては、ヴァルカンの次の打ち上げの時期にも影響が出る。", "me": "衛星インターネットを使うサービスの開始時期が先送りになる可能性がある。日本での提供時期など、身近なサービスへの影響は今のところ伝えられていない。", "a": "打ち上げ事業者の側に立つ見方は、新型ロケットの初期には失敗があり得るとして、原因の究明と再発防止を待つことを重く見る。", "b": "競争の面に着目する見方は、スターリンクと競う中で、アマゾンの衛星網の整備が遅れれば、通信分野での競争力に響くと考える。", "say": "確認されているのは、15日の打ち上げ直後に異常が起きたこと、衛星40機が失われたこと、原因が不明であることだ。約9か月ぶりの打ち上げだったという情報は1件の報道にとどまる。今日は、ULAが調査の進み方や次の打ち上げ日程について何を示すかを見たい。", "src": "ストレーツ・タイムズ(打ち上げ失敗・衛星40機, 11/16) · DW(初のミッション失敗, 11/16) · ル・フィガロ(アマゾンのコメント, 11/16) · CBSニュース(ULA初の失敗, 11/15)"},
+    "weapons":{"kick": "国際 · 安全保障 · ✓ 2媒体 · 会議の結果と各国の立場の詳細は未確認、米ロの抵抗は1媒体", "title": "自律型致死兵器の規制をめぐる国連の会議がジュネーブで開幕　米ロは抵抗してきたと伝えられる", "what": "特定通常兵器使用禁止制限条約(CCW)の第7回再検討会議が、16日からスイスのジュネーブで開かれ、20日まで続くと伝えられている。議題の一つは、人の判断を介さずに標的を選んで攻撃できる兵器「自律型致死兵器システム」の扱いだ。フランスなど欧州の複数の首都は、規制のための文書の採択を目指していると伝えられている。ロシアと米国は、こうした規制の動きに抵抗してきたと伝えられている。人工知能(AI)の軍事利用が進む中で、各国の代表が歯止めの掛け方を話し合っている。", "why": "AIを使う兵器は開発が先行しており、使い方のルールが整う前に戦場で使われる懸念がある。誰が責任を負うのかも、人が攻撃を判断しない場合ははっきりしない。ここで合意できなければ、規制のない状態が続く。", "me": "日本の暮らしに直接の影響はすぐには出ない。ただ、防衛の分野で人工知能をどう使うかという議論は日本でも進んでおり、国際的なルールの行方は日本の方針づくりにも関わる。", "a": "規制を求める立場は、人が命にかかわる判断をしないことは倫理に反するとして、法的な拘束力を持つ文書を急ぐべきだと考える。", "b": "規制に慎重な立場は、技術の定義が難しく、先に縛ると自国の防衛力が下がると考える。既存の国際法の枠内で対応できるという見方もある。", "say": "確認されているのは、会議が16日に始まったこと、自律型致死兵器の扱いが議題になっていることだ。ロシアと米国が抵抗してきたという情報は1件の報道にとどまる。今日は、各国の発言で文書の採択に向けた動きが具体化するかを見たい。", "src": "ニューヨーク・タイムズ(会議の開始と米ロの抵抗, 11/16) · ル・モンド(欧州の動き・会期, 11/16)"},
+    "joban":{"kick": "社会 · ✓ 2媒体", "title": "茨城県かすみがうら市の常磐道下り線で車7台が絡む事故　男性2人が搬送、1人が大けが", "what": "16日午前、茨城県かすみがうら市の常磐自動車道の下り線で、車7台が関係する事故があった。ダンプカーと乗用車などが絡んだと伝えられている。男性2人が病院に運ばれ、うち1人が大けがをした。警察が事故の詳しい状況を調べている。事故の原因や、運ばれた2人の年齢は明らかになっていない。", "why": "高速道路では、前の車が急に止まると後ろの車が連鎖して追突し、多重事故になりやすい。原因が分からない段階では、運転者の過失かどうかも含めて判断できない。", "me": "高速道路を走るときは、前の車との間隔を十分に空け、渋滞や事故の情報を事前に確認するとよい。事故に遭ったときは、車を安全な場所に移し、警察に連絡する。", "a": "現時点で分かった事実を重視する立場は、警察の調べで原因が明らかになるまで、運転者の責任を推測しないことを大切にする。", "b": "安全対策を重視する立場は、車間距離の確保や速度の管理など、事故を減らす運転習慣の周知を求める。", "say": "確認されているのは、車7台が関係する事故が16日午前に起き、2人が搬送されて1人が大けがをしたことだ。原因はまだ分かっていない。今日は、警察が事故の原因について何か発表するかを見たい。", "src": "NHK(常磐道で7台の事故, 11/16) · 毎日新聞(ダンプカーと乗用車など7台, 11/16)"},
+    "grammy":{"kick": "音楽 · ✓ 4媒体", "title": "グラミー賞の新設部門「最優秀アジア・ポップ」に、日本のBABYMETALとLiSAがノミネート", "what": "米グラミー賞の第69回の候補が16日に発表され、新設の「最優秀アジア・ポップ・パフォーマンス」部門に、日本のBABYMETALとLiSAが入った。この部門には、韓国やフィリピンの歌手やグループも候補に挙がっている。フィリピンからはSB19とBINIが候補になった。授賞式は来年2月7日に米ロサンゼルスで開かれる予定だ。新部門は今回が初めての設置となる。", "why": "アジアの音楽が、米国の音楽賞で独立した部門として扱われた形だ。日本や韓国、フィリピンのファンにとっては、自国の歌手が世界の舞台で評価される機会になる。", "me": "音楽に関心のある人にとっては、受賞の行方に加えて、各国の候補の曲を聴き比べる機会になる。授賞式は来年2月で、結果が出るまでには時間がある。", "a": "歓迎する立場は、アジアの音楽が国際的な賞で独立した部門を得たことに意味があるとして、幅広い国や地域の候補が並ぶ点を評価する。", "b": "慎重な立場は、アジアの多様な音楽を一つの部門にまとめることの難しさに目を向ける。地域でくくる分け方に疑問を持つ見方だ。", "say": "確認されているのは、新部門が設けられたこと、日本からBABYMETALとLiSAが候補になったこと、授賞式が来年2月7日であることだ。受賞者が決まるのは授賞式の日だ。今日は、日本の候補者が発表するコメントなどを見たい。", "src": "ジャパンタイムズ(日本勢のノミネート, 11/17) · ラプラー(SB19とBINIの候補入り, 11/16) · フィリピン・インクワイアラー(新部門の候補, 11/16) · ニューヨーク・タイムズ(授賞式の日程, 11/16)"},
+    "kirin":{"kick": "経済 · ✓ 1媒体", "title": "キリンビール、オンラインショップ会員のメールアドレス約5万8000件が外部に漏えいしたと発表", "what": "キリンビールは16日、同社が運営するオンラインショップの会員のメールアドレスが、不正アクセスの影響で外部に漏えいしたと発表した。件数は約5万8000件だ。会社の説明によると、漏えいした情報には、メールアドレスのほかに名前や住所も含まれる。ほかにどの情報が漏れたのか、漏えいが起きた時期、不正アクセスの具体的な手口は確認されていない。会社が会員にどのような対応を求めるかも、現時点では確認されていない。", "why": "名前や住所と結びついたメールアドレスが外部に出ると、本物らしい迷惑メールや偽の連絡に使われやすくなる。個人が自分で防げる範囲は限られるため、会社の対応が重要になる。", "me": "会員だった人は、会社からの連絡を確認し、身に覚えのないメールやリンクを開かないようにする。同じパスワードを他のサービスで使っている場合は、変更するとよい。", "a": "会社の説明を待つ立場は、漏えいの範囲や原因が会社から正式に示されるまで、被害の広がりを断定しない。", "b": "利用者の保護を重視する立場は、注意の呼びかけや再発防止策の公表を、会社に早く求める。", "say": "確認されているのは、会社が約5万8000件のメールアドレスの漏えいを発表したことだ。報道は1件で、被害の有無や原因はまだ分かっていない。今日は、会社が会員に向けて公表する案内の内容を見たい。", "src": "NHK(オンラインショップ会員のメールアドレス漏えい, 11/16)"},
+    "haze":{"kick": "環境 · ✓ 1媒体", "title": "ASEAN、国境を越える煙害を「深刻な地域課題」と位置づけ　対策を強化へ", "what": "インドネシアで起きた大規模な森林火災により、大量の煙が周辺国にも広がり、深刻な大気汚染を引き起こしている。ASEAN(東南アジア諸国連合)は、国境を越えて広がる大気汚染を「深刻な地域課題」と位置づけ、対策を強める方針を打ち出した。マニラで開かれているASEANの首脳会議の場での動きだ。対策の具体的な内容や期限は確認されていない。火災の原因についても、確認されていない。", "why": "煙は国境を越えて健康被害を広げ、呼吸器の病気を持つ人や子ども、高齢者に大きな影響を与える。一つの国の対応だけでは解決しにくく、加盟国が協力する枠組みが問われる。", "me": "東南アジアに旅行や出張で行く予定のある人は、現地の大気の状況を確認し、必要に応じてマスクなどで備えるとよい。日本への影響は今のところ伝えられていない。", "a": "協力の強化を求める立場は、国境を越える問題は地域の枠組みで取り組むことが欠かせないと考える。", "b": "慎重な立場は、各国の事情が異なるため、実効性のある対策に合意できるかには課題が残ると見る。", "say": "確認されているのは、ASEANが煙害を「深刻な地域課題」と位置づけて対策強化に動くことだ。報道は1件で、具体策は示されていない。今日は、首脳会議の場で具体的な対策が示されるかを見たい。", "src": "NHK(ASEANの煙害対策, 11/16)"},
+    "toyama":{"kick": "司法 · ✓ 1媒体", "title": "富山市の交番襲撃事件の差し戻し審で、弁護側が「死刑を科すべきではない」と主張", "what": "2018年、富山市の交番で警察官が殺害され、拳銃が奪われて近くにいた警備員も殺害された事件の差し戻し審が、16日に開かれた。元自衛官の被告の弁護人は、拳銃を奪う目的はなく強盗殺人罪は成立しないなどとして、検察側の主張に反論した。弁護人は、死刑を科すべきではないとも主張した。差し戻し審とは、上級の裁判所が判決を取り消して、下級の裁判所に審理をやり直させる裁判のことだ。判決の期日は確認されていない。", "why": "強盗殺人罪が成立するかどうかは、拳銃を奪う目的が犯行前にあったかで判断が分かれる。罪名によって、死刑を含む刑の重さが変わるため、この争点が量刑に直結する。", "me": "裁判員として裁判に参加する可能性は誰にでもある。事件の争点が何で、どの証拠が判断に使われるのかを丁寧に確認することが大切だと分かる事例だ。", "a": "検察側に近い立場は、警察官と警備員の2人が殺害された結果の重さを重視し、厳しい刑を求める。", "b": "弁護側の立場は、拳銃を奪う目的がなかったとして罪名そのものを争い、死刑は科すべきではないと主張する。", "say": "確認されているのは、差し戻し審が16日に開かれたこと、弁護人が死刑を科すべきではないと述べたことだ。報道は1件で、検察側の主張の詳細や判決の日は分かっていない。今日は、審理の次回期日が示されるかを見たい。", "src": "NHK(差し戻し審での弁護側の主張, 11/16)"}
+  };
+  const G = {
+    "核軍縮":{"f": "国際安全保障", "d": "核兵器の数を減らしたり、使い方を制限したりすること。", "w": "深圳の3首脳会談で話し合われる見通しの題材。"},
+    "総書記":{"f": "国際政治", "d": "北朝鮮の朝鮮労働党で最も高い役職の呼び名。", "w": "トランプ氏が会う可能性に触れた相手の肩書き。"},
+    "強盗殺人未遂":{"f": "司法", "d": "強盗の際に人を殺そうとした疑いにあたる罪名。", "w": "警視庁が男を逮捕した容疑の罪名。"},
+    "合弁会社":{"f": "経済", "d": "複数の会社が資金を出し合って共同で作った会社。", "w": "ヴァルカンを運用するULAは、ボーイングとロッキード・マーチンの合弁会社。"},
+    "ペイロード":{"f": "宇宙", "d": "ロケットが運ぶ人工衛星や貨物など、目的の荷物のこと。", "w": "ヴァルカンの搭載物は、アマゾンの衛星40機だった。"},
+    "低軌道":{"f": "宇宙", "d": "地球から比較的近い高さを回る軌道。通信の遅れが小さい。", "w": "アマゾンは低軌道に多数の衛星を並べる計画。"},
+    "コンステレーション":{"f": "宇宙", "d": "多数の衛星を組み合わせて一つのサービスをつくる衛星の網。", "w": "アマゾン・リーオは、スターリンクと競う衛星網。"},
+    "特定通常兵器使用禁止制限条約":{"f": "国際法", "d": "過度に被害を与える通常兵器の使用を禁止または制限する国際条約。略称CCW。", "w": "ジュネーブで第7回の再検討会議が開かれている。"},
+    "再検討会議":{"f": "国際法", "d": "条約の運用状況を見直すために、加盟国が定期的に集まる会合。", "w": "CCWの第7回会議が20日まで開かれる。"},
+    "自律型致死兵器システム":{"f": "国際安全保障", "d": "人が個々の攻撃を判断せずに、標的を選んで攻撃できる兵器。", "w": "規制のための文書を採択するかが焦点。"},
+    "不正アクセス":{"f": "情報セキュリティ", "d": "他人のIDやパスワードを使うなどして、許可なくシステムに入ること。", "w": "キリンビールの会員情報の漏えいの原因とされる。"},
+    "漏えい":{"f": "情報セキュリティ", "d": "守るべき情報が、外部に漏れて出てしまうこと。", "w": "会員のメールアドレス約5万8000件が外部に漏れた。"},
+    "煙害":{"f": "環境", "d": "森林火災などで出た煙が広がり、健康や生活に被害を及ぼすこと。", "w": "ASEANが国境を越える煙害への対策を強める。"},
+    "差し戻し審":{"f": "司法", "d": "上級の裁判所が判決を取り消し、下級の裁判所に審理をやり直させる裁判。", "w": "富山市の交番襲撃事件の裁判が差し戻し審で開かれた。"},
+    "強盗殺人罪":{"f": "司法", "d": "強盗が人を死なせた場合に成立する罪。刑が非常に重い。", "w": "弁護側は、この罪は成立しないと主張した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

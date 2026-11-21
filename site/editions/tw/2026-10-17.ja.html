@@ -1,0 +1,360 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>47,111</b>加権指数 · 16日終値 · 1日で3.11%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 台湾版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>7,659</b>米国株S&amp;P500 · 16日終値 · 1日で1.09%下落</div>
+    </div>
+    <div class="dateline"><span>第13号 · 朝刊</span><b>2026年10月17日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · 立法院<span>報道照合 ✓ 5社 · 388億台湾ドルの財源の数字は民進党団の主張にすぎず、政府は確認していない</span></div>
+      <h2 class="hl">65歳以上の健康保険料免除、三読で可決　財源が最大の争点に</h2>
+      <p class="deck">国民党と民衆党が共同で《老人福祉法》を改正し、所得税率が20%に満たない高齢者の健康保険料は全額を政府が補助する。民進党団は、財源が示されていないと批判している。</p>
+      <div class="body">
+        <p>立法院は16日、《老人福祉法》改正案を三読で可決した。核心は、65歳以上で総合所得税率が20%に満たない高齢者の健康保険料を政府が補助し、本人はもう払わなくてよくなる点だ。この改正は国民党と民衆党の両党の立法委員が共同で進め、与野党協議が決裂した末に、採決にたどり着いた。</p>
+        <p>反対の声は、お金をどこから持ってくるのかに集中している。民進党団は、改正に財源の裏付けがないと述べ、388億台湾ドルの穴があると指摘した。この数字は民進党団が出したもので、本号では他の情報源に独立した公式試算を確認できておらず、読者は一方の主張として受け止めたい。また、ある媒体は見出しで、この案により1人当たり年に約3,000台湾ドル多く払う可能性があると指摘した。これは報道による試算と見出しの表現で、同じく公式の数字の裏付けはなく、詳細はなお確認が必要だ。</p>
+        <p>衛生福利部長もこの案に公に反応したが、本号で入手できた資料は見出しだけで、主張を完全には伝えられない。別の元衛生福利部次官の王必勝氏は16日、若者が「健康保険料ももう払いたくない」と話すのを耳にしたと述べ、これは制度崩壊の始まりだと考えている。これは個人的な観察と論評で、調査データではないが、制度設計の最も敏感な点を突いている。健康保険は助け合いで成り立っており、無料の境界が広がれば、保険料を払う意欲が揺らがないかという点だ。</p>
+        <p>今後の注目点はいくつかある。行政院が覆議を提出するか、別に予算を組むか。補助を中央政府の予算が負担するのか、健康保険基金が吸収するのか。そして、その後の法改正や憲法解釈の申し立てが出るかどうか。年末の地方選挙が迫るなか、この「福祉カード」は両党によって選挙戦の文脈に持ち込まれており、攻防は今後も続くと見られる。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>65歳</b><span>対象となる高齢者の年齢のしきい値</span></div>
+        <div><b>20%</b><span>所得税率がこの区分に満たない人は納付不要</span></div>
+        <div><b>388億台湾ドル</b><span>民進党団が「示されていない」とする財源の額（単一の情報源）</span></div>
+      </div></div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>三読<i>立法</i></b><p>法案が立法院で三回の審議を経て正式に可決される最後の関門。可決後は総統に送られて公布される。</p></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">経済 · 株式<span>報道照合 ✓ 3社 · TSMCのADRの下落幅は単一の情報源のみ</span></div>
+      <h3 class="hl">AI・半導体株が連日急落　台湾株は金曜の終値で3.11%の大幅安</h3>
+      <div class="one">
+        <p>台湾株の加権指数は16日、3.11%安の47,111.26ポイントで引けた。外電のまとめ（CNBC、自由時報の転載）によると、月曜から木曜までの4取引日で、世界のAI・半導体大手20社の時価総額は約32兆元が吹き飛んだ（元の報道は本号で通貨を明記しておらず、原文で確認されたい）。なかでも韓国のサムスンとSKの打撃が最も大きかった。原因は、米国のさらなる利上げ、AI投資の過熱、中国のメモリー技術の進展への懸念とされる。 別の報道は、台指期の夜間取引が激しく振れ、フィラデルフィア半導体株指数が急落し、TSMCのADRが一時5%超下落したと伝えている。この数字は現時点で単一の情報源にしか見られず、参考にとどめたい。米国株では、S&amp;P500が16日に1.09%安で引けた。これに先立つ15日にはダウ平均が500ポイント超上げて引けており、投資家がAI以外の銘柄に向かったためだった。欧州株は15日、ハイテク業界へのエクスポージャーが低いことから上昇し、16日もエヌビディアと米連邦準備制度理事会（FRB）のウォーシュ議長が市場を落ち着かせに動いたのを受けて高く引けた。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>−3.11%</b><span>加権指数 10/16の1日</span></div>
+        <div><b>−1.09%</b><span>S&amp;P500 10/16</span></div>
+        <div><b>約32兆</b><span>AI・チップ株の4日間の時価総額の消失（CNBC）</span></div>
+      </div></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>米財政赤字、2兆米ドル近くに</b><em>2021年以来の高水準</em><span>国際 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>米国、「シャドーフリート」制裁の緩和を検討</b><em>ブレント原油は横ばい</em><span>国際 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>エヌビディアとFRB、投資家をなだめる</b><em>欧州株は上昇</em><span>国際 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>プーチン氏、教皇のウクライナ人道支援構想を支持</b><em>オレシキ町の民間人への物資</em><span>国際 · 単一の情報源</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>パラオ大統領「小国は手を携えるべきだ」</b><em>中国の強引な行動を抑えるため</em><span>政治 · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">地方 · 台北<span>報道照合 ✓ 2社 · 実施時期と関連措置は不明</span></div>
+      <h3 class="hl">蒋万安氏、都市更新の要件緩和を発表　自主整合の意向要件を50%に引き下げ</h3>
+      <div class="body">
+        <p>台北市長の蒋万安氏は16日、市が都市更新の要件を緩和すると述べた。第1段階の自主整合の意向は75%から50%に下げられ、過半数の住民に意向があれば、市が乗り出して試算を支援する。大規模な都市更新案については、基準容積率を225%から300%に引き上げる。これは2社が共通して報じた内容だ。</p>
+        <p>狙いは、高い同意要件に阻まれてきた老朽化した地区で、再建を始めやすくすることだ。ただ、容積の引き上げは周辺の交通や公共施設、既存住民の権利にも関わり、いつ実施するのか、自治条例の改正が必要なのかについて、本号の資料は説明していない。年末の台北市長選は秒読みに入っており、都市更新は有権者の関心が高い住まいの問題だ。各陣営が今後どう反応するかが注目される。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">社会 · 交通<span>✓ 2本の報道 · 同じメディア系列</span></div>
+      <h3 class="hl">台南の鉄道地下化、きょう開通　地上の線路は歴史に</h3>
+      <div class="body">
+        <p>台南の鉄道地下化の第1段階が17日、正式に開通した。自由時報によると、16日夜10時ごろに最終の南下列車が旧駅を出た後、施工チームは深夜の運休というわずか数時間を使って、送電停止と封鎖、レールの切断と接続、軌道の移設、バラストの埋め戻し、突き固め、信号試験を終え、南北両端の軌道を一夜で切り替えた。</p>
+        <p>市長の陳世凱氏は、これは終点ではないと述べた。今後も工事と周辺の都市整合が残る、という意味だ。この事業は17年かけて進められてきた。開通後、市街地の踏切による分断は次第に解消されていくが、本号の資料は今後の詳しい日程を示しておらず、工費の数字にも触れていない。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">政治 · 選挙戦<span>✓ 2本の報道 · 署名が案件として成立するかは未定</span></div>
+      <h3 class="hl">国民党の中央委員が趙少康氏の除名求め署名　党中央「望ましくない」</h3>
+      <div class="body">
+        <p>国民党の中央委員の江永雄氏が署名活動を始め、党の考紀委員会に、元中広会長の趙少康氏の党籍を除名するよう求めた。理由は、趙氏が民進党の台北市長候補の沈伯洋氏に2度インタビューしたことだ。国民党文伝会の陳以信主任委員は、党中央は党内の同志がこのことで争いを起こすのを望まず、選挙戦の肝心な時期に自ら陣形を乱すことはなおさら望まないと答えた。別の報道は江永雄氏の経歴を掘り下げ、毛沢東を懐かしみ、中国の国慶節を祝ったことがあり、中国の台商（台湾系ビジネスマン）の党代表の身分で中央委員に選ばれたと指摘したが、これは単一の媒体の説だ。</p>
+        <p>同じ日、中央選挙管理委員会は、有罪が確定し保護観察がまだ終わっていないため、王育敏氏の主任の何博倫氏は立候補登録ができないと公告した。複数の媒体が報じた。このほか、豪国防軍司令官の韓蒙德氏は共同通信のインタビューで、中国の台湾周辺の動きを「極めて注意深く注視する」と述べた。台湾と国交のあるパラオのウィップス（惠恕仁）大統領もポリティコに対し、小国は手を携えて、中国の南太平洋での強引な行動を抑えなければならないと語った。韓国国防部は、アデン湾の部隊の活動範囲の拡大は、ホルムズ海峡への派兵ではないと釈明した。</p>
+      </div>
+      <div class="more">全文とDailyDropの考えを開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>米国の2026会計年度の財政赤字が2兆米ドル近くに拡大し、2021年以来の高水準に<span>中央社、自由時報</span></li>
+        <li>米国が世界の「シャドーフリート」タンカーへの制裁緩和を検討、ブレント原油価格は横ばい<span>中央社、自由時報</span></li>
+        <li>エヌビディアとFRBのウォーシュ議長が投資家をなだめ、欧州株は上昇<span>中央社、自由時報</span></li>
+        <li>プーチン氏とローマ教皇レオ14世が電話会談し、ウクライナ南部オレシキ町の民間人への物資輸送への支持を表明<span>自由時報</span></li>
+        <li>韓国国防部：アデン湾の部隊の活動範囲をオマーン湾まで広げるが、ホルムズ海峡の戦闘には関与しない<span>自由時報</span></li>
+        <li>中央選挙管理委員会、王育敏氏の主任の何博倫氏は立候補登録ができないと公告<span>複数の媒体</span></li>
+        <li>経済成長率の予測、39年ぶりの高さに（中華経済研究院）<span>台北タイムズ</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「高齢者の健康保険料免除で、1人当たり年に3,000台湾ドル多く払うことになる」</b> <span>メディアの見出しにある試算で、本号では政府の公式試算は見当たらない。388億台湾ドルの財源の穴は民進党団の主張で、どちらもまだ独立して裏付けられていない。</span></div>
+        <div><b>「TSMCのADRはすでに5%超暴落した」</b> <span>Yahoo!ニュースの1本の報道にしか見られず、夜間取引中の数字で、2つ目の情報源による確認はない。終値の結果として扱わないでほしい。</span></div>
+        <div><b>「趙少康氏はすでに除名された」</b> <span>現時点では、中央委員が署名を始め、考紀委員会の審議を求めた段階にすぎない。国民党文伝会は争いを望まないと述べており、除名の決定はまだない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう 10/17（土）</b><span>台南の鉄道地下化の第1段階が正式に開通。台中で「全球極限体能鋼鉄大会」（17、18日）。新北市美術館で2つの展覧会が開幕。</span><b>今週末</b><span>あす18日は重陽節。高齢者の健康保険料免除案のその後に注意し、行政院が覆議や財源手当てで反応するかを見る。</span><b>その後</b><span>年末の地方選挙が秒読みに入り、都市更新、福祉、党内の争いが攻防の焦点になる。国民党の考紀委員会が署名の件を扱うかを見る。</span><b>読者へ</b><span>本号の市場の数字は、引け済みのものだけを採った。情報源が単一の説には、すべて明記してある。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "政治 · 立法院 · 報道照合 ✓ 5社 · 388億台湾ドルの財源の数字は民進党団の主張にすぎず、政府は確認していない", "title": "65歳以上の健康保険料免除、三読で可決　財源が最大の争点に", "what": "立法院は16日、《老人福祉法》改正案を三読で可決した。内容は、65歳以上で総合所得税率が20%に満たない高齢者の健康保険料を政府が補助するというもの。国民党と民衆党が共同で進め、与野党協議が決裂した後、採決に付された。民進党団は、388億台湾ドルの財源が示されていないと批判している。", "why": "健康保険の財政と世代間の公平に関わり、年末の選挙の重要な争点でもある。", "me": "あなたやご家族が65歳以上なら、保険料の払い方が変わる可能性がある。ほかの人の負担への影響は、公式の試算を待つ必要がある。", "a": "", "b": "", "say": "免除の境界と財源が、この福祉を長く続けられるかを左右する。", "src": "自由時報、中央社など5社（抽出）"},
+    "s2":{"kick": "経済 · 株式 · 報道照合 ✓ 3社 · TSMCのADRの下落幅は単一の情報源のみ", "title": "AI・半導体株が連日急落　台湾株は金曜の終値で3.11%の大幅安", "what": "台湾株の加権指数は16日に3.11%安で引け、47,111.26ポイントとなった。S&amp;P500も同日に1.09%安で引けた。外電は、AI・半導体の大手の時価総額が4日間で約32兆元消えたと伝え、原因には米国の利上げ、AI投資の過熱、中国のメモリー技術の進展への懸念があるとしている。", "why": "台湾株は半導体への集中度が高く、AI株の売りは指数にそのまま表れる。", "me": "台湾株や関連ETFを持つ人は、基準価額が影響を受ける可能性がある。短期の変動が大きいので、自分のリスク許容度で判断してほしい。", "a": "", "b": "", "say": "AI株の調整が世界の市場を動かし、台湾株は衝撃がより深かった。", "src": "自由時報、中央社、Yahoo!ニュース"},
+    "s3":{"kick": "地方 · 台北 · 報道照合 ✓ 2社 · 実施時期と関連措置は不明", "title": "蒋万安氏、都市更新の要件緩和を発表　自主整合の意向要件を50%に引き下げ", "what": "台北市長の蒋万安氏は16日、都市更新の要件を緩和すると発表した。第1段階の自主整合の意向は75%から50%に下げ、大規模な都市更新案の基準容積率は225%から300%に引き上げる。実施時期は、本号では説明が見当たらない。", "why": "要件が下がれば、より多くの老朽化した地区が再建に動き出せるが、住民の権利をめぐる争いを招く可能性もある。", "me": "台北の古い建物に住む人は、将来、都市更新を始める条件が緩くなる可能性がある。", "a": "", "b": "", "say": "過半数の住民に意向があれば、市が試算を支援する。", "src": "中央社、自由時報"},
+    "s4":{"kick": "社会 · 交通 · ✓ 2本の報道 · 同じメディア系列", "title": "台南の鉄道地下化、きょう開通　地上の線路は歴史に", "what": "台南の鉄道地下化の第1段階が17日に開通した。前夜に最終列車が旧駅を出た後、施工チームは深夜の数時間で南北両端の軌道を切り替え、信号試験も終えた。市長の陳世凱氏は、これは終点ではないと述べた。", "why": "地下化によって、市街地の鉄道が交通と都市の発展を分断する状況を和らげられる。", "me": "台南の通勤客や旅行者は、きょうから新しい路線に乗る。", "a": "", "b": "", "say": "17年かかった工事が、一夜で切り替わった。", "src": "自由時報"},
+    "s5":{"kick": "政治 · 選挙戦 · ✓ 2本の報道 · 署名が案件として成立するかは未定", "title": "国民党の中央委員が趙少康氏の除名求め署名　党中央「望ましくない」", "what": "国民党の中央委員の江永雄氏が署名活動を始め、考紀委員会に趙少康氏の党籍を除名するよう求めた。趙氏が民進党の台北市長候補の沈伯洋氏に2度インタビューしたためだ。国民党文伝会の陳以信主任委員は、党内の争いは望ましくないと述べた。", "why": "選挙戦が秒読みに入るなか、党内の亀裂は台北市長選の動員に影響する。", "me": "台北市長選に注目する人は、青陣営がまとまれるかに目を向けるとよい。", "a": "", "b": "", "say": "党中央は、選挙戦の肝心な時期に自ら陣形を乱すことを望んでいない。", "src": "自由時報、中央社"},
+    "i1":{"kick": "国際 · ✓ 2社", "title": "米財政赤字、2兆米ドル近くに", "what": "米政府の発表によると、2026会計年度の財政赤字は2兆米ドル近くまで膨らみ、2021年以来の高水準となった。", "why": "赤字が膨らむと、米国債の供給と金利の見通しに影響する。", "me": "為替や世界の資金の流れに、間接的に影響する可能性がある。", "a": "", "b": "", "say": "赤字は5年ぶりの高水準。", "src": "中央社、自由時報"},
+    "i2":{"kick": "国際 · ✓ 2社", "title": "米国、「シャドーフリート」制裁の緩和を検討", "what": "米国は世界のシャドーフリートのタンカーへの制裁を緩和することを検討しており、ブレント原油価格は15日にほとんど変わらなかった。中東の紛争により、市場には地政学的なリスクプレミアムが残っている。", "why": "原油価格はインフレと輸送コストに影響する。", "me": "原油価格や電気料金の見通しに影響する可能性がある。", "a": "", "b": "", "say": "原油は横ばいだが、リスクは残る。", "src": "中央社、自由時報"},
+    "i3":{"kick": "国際 · ✓ 2社", "title": "エヌビディアとFRB、投資家をなだめる", "what": "エヌビディアと米連邦準備制度理事会（FRB）のウォーシュ議長が投資家をなだめる動きに出て、欧州株は16日に上昇して引けた。15日の欧州株も、ハイテク業界へのエクスポージャーが低いことから上昇した。", "why": "AIの売りがすべての市場には広がっていないことを示す。", "me": "分散して持つことは、単一の産業の変動を和らげるのに役立つ。", "a": "", "b": "", "say": "欧州株は相対的に堅調だ。", "src": "中央社、自由時報"},
+    "i4":{"kick": "国際 · 単一の情報源", "title": "プーチン氏、教皇のウクライナ人道支援構想を支持", "what": "ロシアのプーチン大統領はローマ教皇レオ14世と電話会談し、ウクライナ南部でロシア側が支配するオレシキ町の民間人に物資を運ぶバチカンの構想への支持を表明し、ロシア側は協力する用意があると述べた。現時点では単一の媒体の報道しか見当たらない。", "why": "戦闘の最中では珍しい人道面での協力の表明だが、実現するかはなお見極めが必要だ。", "me": "台湾への直接の影響は限られる。", "a": "", "b": "", "say": "ロシア側は協力を表明したが、実現はこれからだ。", "src": "自由時報（単一の情報源）"},
+    "i5":{"kick": "政治 · ✓ 2社", "title": "パラオ大統領「小国は手を携えるべきだ」", "what": "台湾と国交のあるパラオのウィップス（惠恕仁）大統領はポリティコの取材に対し、小国が手を携えてこそ中国の南太平洋での強引な行動を抑えられると述べ、太平洋の平和は米国だけの責任であってはならないとの考えも示した。", "why": "国交国の台湾に対する立場を示すとともに、地域の安全保障をめぐる議論も映している。", "me": "台湾の外交空間に関わる。", "a": "", "b": "", "say": "小国は手を携えるべきだ。", "src": "中央社、自由時報"}
+  };
+  const G = {
+    "三読":{"f": "立法", "d": "法案が立法院で最後に審議される段階。可決後は総統に送られて公布される。", "w": "老人福祉法改正案が16日に三読で可決された。"},
+    "老人福祉法":{"f": "法規", "d": "高齢者の福祉と介護の措置を定める法律。", "w": "今回の改正は健康保険料の補助に関わる。"},
+    "健康保険料":{"f": "社会保険", "d": "全民健康保険の保険料。", "w": "65歳以上で条件を満たす人は政府が補助する。"},
+    "総合所得税率":{"f": "税務", "d": "個人の総合所得の区分に応じて適用される税率。", "w": "20%に満たない人は免除の対象になる。"},
+    "民進党団":{"f": "政治", "d": "民進党の立法院における党籍の立法委員の団体。", "w": "388億台湾ドルの財源が示されていないと批判した。"},
+    "加権指数":{"f": "金融", "d": "台湾株全体の動きを示す指標。", "w": "16日の終値は3.11%安。"},
+    "S&P500":{"f": "金融", "d": "米国の大手上場企業500社の株価指数。", "w": "16日に1.09%安で引けた。"},
+    "ダウ平均":{"f": "金融", "d": "ダウ工業株平均。米国の重要な株価指標。", "w": "15日に500ポイント超上げて引けた。"},
+    "フィラデルフィア半導体株指数":{"f": "金融", "d": "米国の半導体株の動きを示す指数。", "w": "夜間取引中に急落した。"},
+    "ADR":{"f": "金融", "d": "預託証券。外国企業が米国で上場して取引できるようにするもの。", "w": "TSMCのADRの下落幅は単一の情報源のみ。"},
+    "エヌビディア":{"f": "企業", "d": "米国のAIチップ大手Nvidia。", "w": "投資家をなだめる動きに出た。"},
+    "FRB":{"f": "金融", "d": "米国の中央銀行（連邦準備制度理事会）。", "w": "ウォーシュ議長も市場をなだめた。"},
+    "都市更新":{"f": "都市計画", "d": "都市の老朽化した地区の再建。", "w": "台北が要件を緩和した。"},
+    "容積率":{"f": "都市計画", "d": "敷地に建てられる延べ床面積の比率。", "w": "大規模な都市更新案の基準容積率は300%に引き上げられる。"},
+    "考紀委員会":{"f": "政治", "d": "国民党で、党員の考課と規律を扱う機関。", "w": "署名は、同会に趙少康氏の除名を求めている。"},
+    "中央委員":{"f": "政治", "d": "国民党中央の意思決定メンバーの一人。", "w": "江永雄氏が署名を始めた。"},
+    "中央選挙管理委員会":{"f": "選挙事務", "d": "中央選挙委員会（中選会）。", "w": "何博倫氏は立候補登録ができないと公告した。"},
+    "保護観察":{"f": "司法", "d": "刑事裁判に基づき、受刑者を監督する措置。", "w": "何博倫氏はまだ終わっていない。"},
+    "シャドーフリート":{"f": "エネルギー", "d": "制裁を逃れて石油を運ぶタンカーの船団。", "w": "米国は関連する制裁の緩和を検討している。"},
+    "ブレント原油":{"f": "エネルギー", "d": "国際原油価格の指標の一つ。", "w": "価格は横ばい。"},
+    "財政赤字":{"f": "財政", "d": "政府の支出が収入を上回る部分。", "w": "米国は2兆米ドル近く。"},
+    "ホルムズ海峡":{"f": "地政学", "d": "ペルシャ湾の出口にあたる重要なエネルギー航路。", "w": "韓国は戦闘には関与しないとしている。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

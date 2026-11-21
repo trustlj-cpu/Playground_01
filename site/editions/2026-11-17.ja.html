@@ -1,0 +1,339 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,100.50</b>KOSPI · 11/16 終値 · 前営業日比3.59%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>665.65</b>KOSDAQ · 11/16 終値 · 前営業日比4.86%下落</div>
+    </div>
+    <div class="dateline"><span>第44号 · 朝刊</span><b>2026年11月17日 火曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="kim">
+      <div class="kick">外交 · 米朝<span>報道照合 ✓ 4社 · 北朝鮮・中国側の反応と実際の会談の有無は未確認</span></div>
+      <h2 class="hl">トランプ大統領「中国でキム・ジョンウン委員長に会うかも…習近平主席次第」…北朝鮮・中国の反応は確認されず</h2>
+      <p class="deck">ドナルド・トランプ米大統領が16日(現地時間)、アジア歴訪に出発するにあたり、中国・深圳でのAPECを機に、キム・ジョンウン北朝鮮国務委員長に会う可能性があると語った。</p>
+      <div class="body">
+        <p>ドナルド・トランプ米大統領は16日(現地時間)、アジア歴訪に出発する前に記者団に対し、キム・ジョンウン北朝鮮国務委員長に会うかもしれないと語った。どこで会うのかという問いには「中国で」と答え、キム委員長が中国に来られるかは「習近平主席次第だ」と述べた。中国・深圳では18〜19日にアジア太平洋経済協力(APEC)首脳会議が開かれ、トランプ大統領はこれを機に習主席と会談する予定だ。歴訪日程には、17日にフィリピン・マニラで開かれるASEAN首脳会議への出席も入っている。ただし今回の発言は、会談が決まったという意味ではない。日付と場所、北朝鮮の意向は発言から出ておらず、北朝鮮と中国の公式な反応も確認されていない。</p>
+        <p>トランプ大統領は、キム委員長と直接会ったことのある唯一の現職の米大統領だ。2人が最後に会ったのは2019年で、その後、首脳間の交渉は続いていない。昨年の慶州APECの際にも、トランプ大統領は会う意思を示したが、北朝鮮側の呼応はなかった。キム委員長は昨年9月、北京での軍事パレードで習主席、プーチン・ロシア大統領と並んで立ったことがあり、中国訪問自体が前例のないことではない。変数は、19日と取り沙汰される米中ロ3者首脳会談だ。中国側の公式な確認はなく、ロシア大統領府はプーチン大統領が19〜20日にタジキスタンを訪問すると明らかにしており、日程がどうかみ合うかは分からない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="amend">
+      <div class="kick">政治 · 改憲<span>報道照合 ✓ 5社 · 改憲案の内容と国会の採決日程は未定</span></div>
+      <h3 class="hl">チョ・ジョンシク国会議長、改憲推進を公式化…国民の力「局面転換用、今の政権で改憲はない」</h3>
+      <div class="one">
+        <p>チョ・ジョンシク国会議長は16日午前、記者会見を開き、国会主導の改憲推進を公式化した。国会議長直属の憲法改正諮問委員会を発足させ、キム・ヒョンオ、チョン・セギュン両元国会議長を共同委員長に委嘱した。改憲の3大原則として、国会主導、現職大統領の連任の除外、与野党の合意と国民の同意を示し、来年を改憲推進の好機に挙げた。大統領の連任問題は終結したと考えているとも語った。諮問委が出す案は、その後に与野党が構成する改憲特別委員会に移される予定だ。国民の力はただちに反発した。チョ議長の改憲論は局面転換用であり、今の政権で改憲はないという立場だ。共に民主党は、国会主導の改憲論議の第一歩だとして歓迎した。改憲案は、国会の総議員の3分の2以上、つまり300人のうち200人以上の賛成で議決され、続いて国民投票を経て確定する。議席構図上、国民の力が反対すれば議決は難しいという分析も出ている。改憲案の内容と採決時期は決まっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="shin"><b>シン・ドンビン会長の長男シン・ユヨル、ロッテ社長に昇進…グループ経営戦略を統括</b><em>シン・ユヨル社長は入社6年で昇進し、経営戦略室を担う。従来の未来成長室が経営戦略室に改編された。</em><span>経済 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="grammy"><b>ジェニー『ドラキュラ』、グラミー最優秀レコード賞の候補に…レイは11部門で最多</b><em>第69回グラミー賞のノミネートが16日に発表された。アイブとキキは、新設のアジアン・ポップ部門の候補に入った。</em><span>文化 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="tg"><b>ヨルダンに続きイラクもテレグラムを遮断…当局「国家安全保障上の懸念」</b><em>ヨルダンとイラクの当局は16日、国家安全保障を理由にメッセンジャーのテレグラムを遮断した。イラクは、違法コンテンツへの措置が不十分だったと明らかにした。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="ai"><b>京畿・金浦のウズラ農場でH5型AI抗原を確認…高病原性かどうか検査中</b><em>農林畜産食品部は16日、金浦市のウズラ農場でH5型の鳥インフルエンザ抗原が確認されたと明らかにした。高病原性かどうかは精密検査で見極める。</em><span>畜産 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="bh"><b>イラン、バーレーンの米軍基地にドローン攻撃を主張…当事者ごとに説明が食い違う</b><em>15日、イラン革命防衛隊は、バーレーンの米軍基地のレーダーをドローンで攻撃したと主張した。バーレーン軍は、防空網がこれを迎撃したと明らかにした。</em><span>国際 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="tax">
+      <div class="kick">社会 · 試験とAI<span>報道照合 ✓ 4社 · 停止の範囲と追加の不正合格者は未確認</span></div>
+      <h3 class="hl">税理士試験のAI不正騒動で政府TFが稼働…首相「無効・受験資格の停止を迅速に」</h3>
+      <div class="body">
+        <p>首席合格者がAIによる不正行為を認めて自首した15日の翌日の16日、政府が後続措置を急いだ。国務総理は、試験の無効と受験資格の停止の措置を迅速に進めると明らかにした。政府は当該合格者の試験を無効にする手続きに入り、受験資格は5年間停止される見通しだと伝えられた。停止の対象を税理士試験に限るのか、国家資格試験全般に広げるのかは、報道ごとに食い違っている。</p>
+        <p>財政経済部は、再発防止策を協議する『税理士試験不正行為対応TF』を構成した。青瓦台が15日、国家資格試験全体のAI活用による不正の疑い事例を全数調査せよと指示したのに続き、試験場の監督方式をどう変えるかが次の課題だ。韓国税理士会は、修習中の税理士の検証を強化すると明らかにした。2027年度の修能が19日で2日後に迫っており、試験監督のAI対応にも関心が集まる。この合格者のほかに不正合格者がいるかどうかは、確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="ye">
+      <div class="kick">国際 · 中東<span>報道照合 ✓ 5社 · 更迭の理由とフーシ派の現在の前線は未確認</span></div>
+      <h3 class="hl">サウジ、フーシ派と戦うイエメン連合軍司令官を更迭…イエメン軍は紅海の要衝から撤退</h3>
+      <div class="body">
+        <p>サウジアラビアは16日、イエメン内戦に介入している連合軍の司令官を交代させた。サウジ国営通信は、勅令により司令官の中将が国防相顧問に移り、軍参謀総長が職位を維持したまま連合軍司令官を兼ねると伝えた。更迭の理由を公式に明らかにしたかは、確認されていない。</p>
+        <p>交代は、親イラン反政府勢力のフーシ派が勢力を広げるなかで出た。イエメン政府は、連合軍側の兵力が紅海の入り口のバブ・エル・マンデブ一帯から退き、アデンの防衛に集中すると明らかにした。イエメン軍の情報筋は、フーシ派がアデンから西へ約100km離れた海岸地域まで達したと伝えたが、独立して確認されていない。フーシ派は15日、リヤド近郊の石油パイプラインと空港を狙ったと主張したが、サウジは確認していない。戦況がどう変わるかは、まだ分からない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="nv">
+      <div class="kick">国際 · 半導体と政治<span>報道照合 ✓ 4社 · 保有額の正確な規模と取引時期は未確認</span></div>
+      <h3 class="hl">トランプ大統領、エヌビディア株を最大6,200万ドル保有…財産申告書の分析報道</h3>
+      <div class="body">
+        <p>米メディアによる財産申告書の分析によると、ドナルド・トランプ大統領は8月末時点で、エヌビディア株を1,300万〜6,200万ドル分保有していると推定される。申告書は金額を区間でしか記さないため、正確な規模は分からない。最大値の6,200万ドルはウォン建てで約830億ウォンと報じられたが、1社は620億ウォンと記しており、換算が食い違う。報道は、大統領が昨年末にエヌビディアの高性能チップH200の中国輸出を承認したことにも触れた。これについてのホワイトハウスの立場は、確認されていない。</p>
+        <p>報道は、エヌビディアの経営陣交代の波紋のなかで出た。エヌビディアは11月12日、ジェンスン・フアンが社長・CEO・取締役を直ちに退くと発表し、最高財務責任者(CFO)のコレット・クレスが暫定CEOを務める。辞任の背景として報じられた疑惑は、確定した事実として発表されておらず、フアン前CEOは国家安全保障を脅かしたことはないと否定したと伝えられた。復帰を求めるオンライン請願が続くなか、復帰を協議しているとの報道と、取締役会は検討していないという匿名関係者の発言が食い違っている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>最大6,200万ドル</b><span>8月末時点のエヌビディア株の推定最大値</span></div>
+        <div><b>1,300万ドル</b><span>同じ分析の推定最小値</span></div>
+        <div><b>11月12日</b><span>エヌビディアがフアンCEOの辞任を発表した日</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>トランプ大統領とキム・ジョンウン委員長の中国での会談が、事実上確定した</b> <span>トランプ大統領は「会うかもしれない」と述べ、キム委員長の中国訪問は習近平主席次第だと語っただけだ。日付と場所は出ておらず、北朝鮮と中国の公式な反応も確認されていない。</span></div>
+        <div><b>19日の米中ロ3者首脳会談が確定した</b> <span>会談が取り沙汰されているが、中国側の公式な確認はない。ロシア大統領府は、プーチン大統領が19〜20日にタジキスタンを訪問すると発表しており、深圳の日程とどうかみ合うかは確認されていない。</span></div>
+        <div><b>エヌビディア取締役会が、ジェンスン・フアンのCEO復帰を決めた</b> <span>エヌビディアは11月12日、フアンCEOの即時辞任を発表し、コレット・クレスCFOが暫定CEOを務めている。復帰を協議しているとの報道と、取締役会は検討していないという匿名関係者の発言が食い違っており、会社の公式な決定は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 火 11月17日</b><span>トランプ大統領のマニラのASEAN日程中の、キム・ジョンウン委員長との会談に関する追加発言と北朝鮮・中国の反応、チョ・ジョンシク議長の改憲諮問委の後続日程と国民の力の対応、財政経済部の税理士試験TFの初の対策を見ておきたい。ウクライナ支援国による『ラムシュタイン』形式の国防連絡グループ会議も、17日に開かれる。</span><b>今週</b><span>18〜19日の中国・深圳APEC首脳会議、19日の2027年度の修能、19日と取り沙汰される米中ロ3者会談(中国側の確認なし)、プーチン大統領の19〜20日のタジキスタン訪問が続く。エヌビディアの決算発表も、今週に予定されている。</span><b>その後</b><span>改憲論議は来年の推進を目標とし、改憲案の内容と採決日程は決まっていない。税理士試験の無効・受験資格の停止の確定時期と、グラミー賞授賞式の結果もまだ残っている。</span><b>読者へ</b><span>トランプ大統領の発言は可能性であって、日程ではない。エヌビディア株の規模は区間の推定値であり、バーレーン攻撃は当事者ごとにドローンの数と被害の説明が異なる。確認された事実と主張を区別して見ておきたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "kim":{"kick": "外交 · 米朝 · ✓ 4社 · 北朝鮮・中国側の反応と実際の会談の有無は未確認", "title": "トランプ大統領「中国でキム・ジョンウン委員長に会うかも…習近平主席次第」…北朝鮮・中国の反応は確認されず", "what": "トランプ大統領は16日(現地時間)、ワシントンでアジア歴訪の出発前に記者団の質問に答えた。キム・ジョンウン委員長に会う可能性について、「中国で会うかもしれない」と述べた。キム委員長が中国に来られるかは、習近平国家主席次第だと語った。APEC首脳会議は、18〜19日に中国・深圳で開かれる。トランプ大統領は、今回の歴訪で習主席との会談が予定されている。19日の米中ロ3者首脳会談が取り沙汰されているが、中国側の公式な確認は出ていない。ロシア大統領府は、プーチン大統領が19〜20日にタジキスタンを訪問すると発表した。北朝鮮と中国の公式な反応は確認されていない。", "why": "米朝の首脳が最後に会ったのは2019年で、その後、対話は止まっている。中国が招待の主体になれば、米朝接触の舞台と速度を北京が握ることになる。韓国は朝鮮半島問題の当事者だが、この構図に直接加わっておらず、結果によって対北朝鮮政策の前提が変わりうる。", "me": "首脳の接触が実際に実現すれば、対北朝鮮外交のニュースと市場の地政学的な変数が、一度に動きうる。ただし今は可能性を語った段階であり、確定した日程が出るまでは、旅行や投資の判断を変える根拠にはならない。18〜19日のAPEC日程と公式発表を待てばよい。", "a": "対話再開のシグナル論: トランプ大統領が場を開いておいたことを、膠着を破る機会とみる見方だ。習主席が招待の形で仲介すれば、北朝鮮が応じやすくなるとみる。昨年と違って開催地が中国だという点を、根拠に挙げる。", "b": "慎重論: 発言は可能性にすぎず、北朝鮮が応じる根拠はまだないという見方だ。昨年の慶州APECの際にも似た意思表明があったが、実現しなかった。一部の専門家は、中国がAPECの議題が米朝問題に隠れることを望まないかもしれないとみる。", "say": "確認されたのは、トランプ大統領が可能性を語り、その鍵を習主席に委ねたという点だ。北朝鮮と中国の応答、会談日程、19日の3者首脳会談が実現するかは、確認されていない。きょうは、マニラ日程中の追加発言と、深圳現地での中国側の発表を見ておきたい。", "src": "聯合ニュース(トランプ大統領の発言、11/16) · 韓国経済(発言速報、11/16) · 朝鮮日報(発言報道、11/17) · ブルームバーグTV(映像、11/16)"},
+    "amend":{"kick": "政治 · 改憲 · ✓ 5社 · 改憲案の内容と国会の採決日程は未定", "title": "チョ・ジョンシク国会議長、改憲推進を公式化…国民の力「局面転換用、今の政権で改憲はない」", "what": "チョ・ジョンシク国会議長は16日午前、改憲に関する記者会見を開いた。国会議長直属の憲法改正諮問委員会を発足させ、キム・ヒョンオ、チョン・セギュン両元国会議長を共同委員長に委嘱した。議長は、国会主導、現職大統領の連任の除外、与野党の合意と国民の同意を3大原則として示した。来年を改憲推進の好機として挙げ、大統領の連任問題は終結したと考えていると語った。国民の力は、局面転換用だとして、今の政権で改憲はないと明らかにし、議長の辞任を求めた。共に民主党は、国会主導の改憲論議の第一歩だとして歓迎した。改憲案の議決には、国会の総議員の3分の2以上が必要で、その後、国民投票を経る。", "why": "憲法改正は、国会の3分の2の賛成と国民投票という2つの関門をともに越えなければならず、原則の段階で与野党が割れれば、日程そのものが揺らぐ。議長が現職大統領の連任を論議から外したのは、最も大きな政治的争点をあらかじめ遮断する仕掛けだ。野党が指摘するように、予算審査が始まる時期に改憲カードが出ただけに、政局の優先順位争いに発展しうる。", "me": "改憲がただちに暮らしを変えるわけではないが、大統領の任期、権力構造、基本権の条項が論議の対象になれば、選挙日程と政策の方向に影響する。国民投票まで進めば、すべての有権者が直接票を投じる。今は案がない段階なので、与野党の協議の枠組みができるかを見ればよい。", "a": "改憲必要論: 40年近くたった憲法が現実に追いついていないという見方だ。議長が原則を先に明らかにし、元議長2人を前面に立てたのは、超党派の論議を試みたものとみる。来年が好機だという判断も、論議をこれ以上先送りしないという意味だと解釈する。", "b": "反対・慎重論: 国民の力は、予算審査が始まる日に改憲カードを切ったことを、局面転換だと批判する。今の政権で改憲を論議する理由はなく、議長は仲裁者の役割に集中すべきだという立場だ。議席構図上、野党が反対すれば議決は難しいという分析もある。", "say": "確認されたのは、議長の記者会見、諮問委の発足と共同委員長の委嘱、国民の力の反対の立場だ。改憲案の内容、国会の採決時期、国民投票の有無は決まっていない。きょうは、国民の力が諮問委への参加そのものを拒むのか、予算審査日程と改憲論議がどうかみ合うかを見ておきたい。", "src": "聯合ニュース(国民の力の反応、11/16) · 韓国日報(共同委員長の委嘱、11/16) · イートゥデイ(国民の力の反応、11/16) · スペシャルタイムズ(国民の力の立場、11/16) · チャンネルA(記者会見の予告、11/16)"},
+    "tax":{"kick": "社会 · 試験とAI · ✓ 4社 · 停止の範囲と追加の不正合格者は未確認", "title": "税理士試験のAI不正騒動で政府TFが稼働…首相「無効・受験資格の停止を迅速に」", "what": "税理士試験の首席合格者は15日、AIを使った不正行為を認め、警察に自首した。16日、国務総理は、試験の無効と受験資格の停止を迅速に進めると明らかにした。政府は当該合格者の試験を無効にする手続きに入り、受験資格は5年間停止される見通しだと伝えられた。停止の範囲が税理士試験に限られるのか、国家資格試験全般なのかは、報道が食い違っている。財政経済部は、税理士試験不正行為対応TFを構成し、再発防止策を協議する。韓国税理士会は、修習中の税理士の検証を強化すると明らかにした。青瓦台は15日、国家資格試験全体のAI活用による不正の疑い事例を全数調査せよと指示した。この合格者以外の不正合格者は、確認されていない。", "why": "資格試験は、合格証を持つ人がそのまま専門サービスを担うという社会的な約束だ。不正が明らかになれば、同じ試験の合格者全体の信頼が揺らぐため、政府は無効処理と再発防止をあわせて示さなければならない。超小型カメラと生成AIを組み合わせた手口は、従来の監督方式では見抜きにくく、探知機器と監督体制の改編が争点だ。", "me": "税務・会計の資格を準備する受験生は、試験場への持ち込み規定と監督が強化されうる点を念頭に置けばよい。税務代理を任せる個人と自営業者は、代理人の資格の履歴に関心を持つことができる。19日に修能を受ける受験生と家族は、持ち込み禁止品をもう一度確認するのがよい。", "a": "厳正対応論: 首席合格という象徴性が大きいだけに、無効と受験制限に加えて、刑事責任まではっきり問うべきだという見方だ。受験資格5年の停止は、再発を防ぐ最小限のシグナルだとみる。全数調査を急いで、同じ手口の不正がさらにないかを見極めるべきだという。", "b": "制度補完論: 個人の逸脱にとどまらず、不正が試験当時の監督では見抜けなかった点が核心だという見方だ。処罰とは別に、探知機器、監督人員、電子機器の持ち込み統制をどう変えるかのほうが重要だとみる。修能を前に不安が広がらないよう、具体的な補強策を示すべきだという声もある。", "say": "確認されたのは、政府の無効手続きの開始、受験資格の停止の方針、財政経済部のTF構成だ。停止の範囲と期間の法的根拠、不正合格者の追加の有無、修能の監督補強策は、まだ確定していない。きょうは、TFの初の対策と全数調査の範囲が出るかを見ておきたい。", "src": "韓国経済(首相の発言、11/16) · SBS(財政経済部の対応TF、11/16) · ニューシス(試験無効手続きの開始、11/16) · ハンギョレ(受験資格5年の停止、11/16)"},
+    "ye":{"kick": "国際 · 中東 · ✓ 5社 · 更迭の理由とフーシ派の現在の前線は未確認", "title": "サウジ、フーシ派と戦うイエメン連合軍司令官を更迭…イエメン軍は紅海の要衝から撤退", "what": "サウジアラビアは16日、イエメン内戦でフーシ派反政府勢力と戦う連合軍の司令官を交代させた。サウジ国営通信が勅令を引用して伝えた内容で、従来の司令官である中将は、国防相顧問に移る。軍参謀総長が職位を維持したまま、連合軍司令官を兼ねる。イエメン政府は、連合軍側の兵力がバブ・エル・マンデブ一帯から退き、アデンの防衛に集中すると明らかにした。イエメン軍の情報筋は、フーシ派がアデン西方の約100kmの海岸地域に達したと伝えたが、独立した確認はない。フーシ派は15日、リヤド近郊の石油パイプラインと空港を狙ったと主張し、サウジはこれを確認していない。更迭の理由は、公式発表では確認されていない。", "why": "イエメン南西部の海岸とバブ・エル・マンデブは、紅海に入る関門であるため、海上物流とエネルギー価格に直結する。司令官の交代は、サウジが戦場の状況を軽く見ていないというシグナルかもしれないが、理由が公式に説明されておらず、断定するには早い。イランと米国の衝突が続く地域情勢と重なり、中東の前線が広がる危険も一緒に高まる。", "me": "紅海の関門が揺らげば、海上運賃とエネルギー価格が上がりうるため、輸出入業者とエネルギー輸入単価に間接的な影響を与える。中東路線を使う旅行と物流は、運航のお知らせを確認する必要がある。今のところ、国内の物価が動くという根拠はない。", "a": "圧力シグナル論: 司令官の交代と兵力の撤退が同じ時期に伝えられたことを、連合軍が圧迫されている証拠とみる見方だ。フーシ派が海岸沿いに進撃し、サウジ本土まで狙っていると主張している点を、根拠に挙げる。指揮系統を急いで引き締める措置だと解釈する。", "b": "再整備論: 兵力の撤退は、防衛線を縮めてアデンの防衛に集中するための選択だというイエメン政府の説明に、重みを置く見方だ。フーシ派の攻撃の主張は、サウジが確認していない一方的な主張だという点を指摘する。指揮官の交代を戦況悪化の証拠と断定することはできないとみる。", "say": "確認されたのは、勅令による司令官の交代と、イエメン政府が明らかにした兵力の撤退だ。更迭の理由、フーシ派の実際の進撃地点、サウジ本土への攻撃の有無は、確認されていない。きょうは、サウジの追加説明とアデン防衛線の変化を見ておきたい。", "src": "聯合ニュース(連合軍司令官の更迭、11/16) · 京郷新聞(更迭の報道、11/16) · 韓国経済(イエメン軍の撤退、11/16) · ロイター(イエメン政府軍の後退、11/15) · FinancialJuice(フーシ派の主張とサウジの未確認、11/15)"},
+    "nv":{"kick": "国際 · 半導体と政治 · ✓ 4社 · 保有額の正確な規模と取引時期は未確認", "title": "トランプ大統領、エヌビディア株を最大6,200万ドル保有…財産申告書の分析報道", "what": "米メディアによる財産申告書の分析によると、トランプ大統領は8月末時点で、エヌビディア株を1,300万〜6,200万ドル分保有していると推定される。申告書は金額を区間で記すため、正確な規模は分からない。最大値はウォン建てで約830億ウォンと報じられたが、1社は620億ウォンと記しており、換算が食い違う。報道は、大統領が昨年末にエヌビディアのH200チップの中国輸出を承認したことにも触れた。エヌビディアは11月12日、ジェンスン・フアンが社長・CEO・取締役を直ちに退くと発表した。コレット・クレスCFOが暫定CEOを務める。フアン前CEOの復帰を求める請願が続くなか、復帰協議の報道と、取締役会は検討していないという匿名関係者の発言が食い違っている。ホワイトハウスの立場は、確認されていない。", "why": "大統領が規制の決定を下しうる企業の株を持っていれば、政策判断が私益と絡んでいるのではないかという疑いが生まれる。チップの輸出統制は米中関係と安全保障のかかった決定であるため、利益相反の論争は、そのまま政治的争点になる。エヌビディアの経営陣交代と重なり、AIチップ政策全般を見直そうという要求に広がりうる。", "me": "エヌビディアのニュースとAI半導体の規制ニュースは、サムスン電子、SKハイニックスのような国内の半導体株とKOSPIの変動につながる。海外株やAI関連ファンドを持つ投資家は、規制と経営の不確実性が一度に大きくなった点を知っておく価値がある。ただし今回の報道だけで、株価の方向を語る根拠はない。", "a": "責任追及論: 輸出緩和の決定と株式の保有が重なった以上、独立した調査と、売却や白紙信託のような措置が必要だという見方だ。議会が輸出許可と情報評価に関する資料を求めているとの報道も、同じ流れだ。", "b": "釈明・慎重論: 申告書は区間の金額であるため規模の推定には限界があり、保有と政策決定の因果関係は立証されていないという見方だ。大統領の資産は独立した運用会社が担うという点が、反論の根拠として示される。復帰をめぐる論争とは別に、事実関係から確認すべきだとみる。", "say": "確認されたのは、申告書の分析報道と、エヌビディアのCEO交代の発表だ。保有規模の正確な値、取引時期、政策決定との関係、フアン前CEOの復帰の有無は、確認されていない。きょうは、ホワイトハウスと議会の反応、今週予定のエヌビディアの決算発表で、新経営陣が何を語るかを見ておきたい。", "src": "聯合ニュース(大統領の保有株、11/16) · 韓国経済(保有額の増加、11/16) · 京郷新聞(エヌビディアの波紋、11/16) · SBS(財産申告の分析、11/16)"},
+    "shin":{"kick": "経済 · ✓ 報道4件", "title": "シン・ドンビン会長の長男シン・ユヨル、ロッテ社長に昇進…グループ経営戦略を統括", "what": "シン・ドンビン・ロッテ会長の長男シン・ユヨル氏が16日、社長に昇進した。入社6年目での昇進だ。シン社長は、グループの経営戦略を統括する経営戦略室を担う。従来の未来成長室が経営戦略室に改編された。この組織は、新事業、グローバル拡大、長期戦略、事業ポートフォリオの再編とAI転換を扱う。今回の人事は、ロッテグループの年末の定期役員人事に含まれている。昇進前の職級は報道ごとに異なり、確認されていない。", "why": "グループの戦略組織の責任者の座は、投資と事業再編の方向を決める場所だ。オーナー一族の3世がこの座に就いたことで、経営権の承継の速度と方向が人事で表れた点が注目される。新事業の発掘と事業再編を、1つの組織に集めたものだ。", "me": "ロッテ系列会社の従業員、協力会社、株主は、新事業と事業再編の方向がこの組織で決まりうる点を知っておく価値がある。一般の消費者がすぐに体感する変化は、確認されていない。今後、系列会社の買収・売却のニュースがどう出るかを見ればよい。", "a": "定着論: 入社6年で戦略組織を任せたのは、後継構図を早く固めて経営の不確実性を減らす選択だという見方だ。グローバルとAI転換の課題を一度に任せ、実務の検証を経させるという説明を、根拠に挙げる。", "b": "検証論: 経営の成果が十分に検証される前に、社長の肩書と戦略統括を任されたのは早いという見方だ。オーナー一族中心の人事が、成果中心の人事とどうバランスをとるか、見守る必要があるとみる。", "say": "確認されたのは、昇進と経営戦略室を統括する補職だ。昇進前の職級、今後の兼職、具体的な事業再編計画は、確認されていない。きょうは、系列会社の後続人事と、経営戦略室の最初の課題が出るかを見ておきたい。", "src": "東亜日報(昇進の報道、11/16) · SBS(昇進の報道、11/16) · 京郷新聞(3世経営の本格化、11/16) · 韓国経済(入社6年で昇進、11/16)"},
+    "grammy":{"kick": "文化 · ✓ 報道4件", "title": "ジェニー『ドラキュラ』、グラミー最優秀レコード賞の候補に…レイは11部門で最多", "what": "第69回グラミー賞のノミネートが16日(現地時間)発表された。英国の歌手レイが11部門でノミネートされ、女性歌手の年間最多ノミネート記録で、ビヨンセと並んだ。ブラックピンクのジェニーは、『ドラキュラ』で主要部門の最優秀レコード賞の候補に入り、ベスト・ポップ・デュオ/グループ部門の候補にも指名された。アイブとキキは、新設のアジアン・ポップ部門の候補に入った。授賞式の結果は、ノミネート発表のあとの別の授賞式で決まる。", "why": "グラミーのノミネートは、アルバムと海外ツアー、グローバルなファンダムにつながる評価の指標だ。ジェニーが主要部門の候補に入り、アジアン・ポップ部門が新設されたことで、K-POPが主要部門と新設部門で同時に評価を受けることになった。レイの11部門は、今年の審査構図で最も大きな比重だ。", "me": "音楽ファンは、ノミネート作品を先に聴いてみて、授賞式の日程を待てばよい。所属事務所の株価や音源ランキングにすぐ影響があるかは、確認されていない。", "a": "期待論: ジェニーの主要部門のノミネートを、K-POPのソロ歌手が主要部門で認められた場面とみる見方だ。アジアン・ポップの新設部門の候補に2組が入ったことも、K-POPの影響力を示すという。", "b": "慎重論: ノミネートは受賞ではなく、レイをはじめとする競合する候補も手ごわいという見方だ。主要部門はポップ市場全体と競うだけに、ノミネートそのものを成果とみながら、結果は別に見守る必要があるとみる。", "say": "確認されたのは、ジェニーの最優秀レコード賞のノミネート、アイブ・キキのアジアン・ポップ部門のノミネート、レイの11部門のノミネートだ。受賞結果と授賞式の日程は、まだ明らかになっていない。きょうは、ノミネート全体の名簿と海外の反応を見ておきたい。", "src": "聯合ニュース(ジェニーのノミネート、11/16) · 韓国経済(ジェニー・アイブ・キキのノミネート、11/16) · 京郷新聞(ジェニーのノミネート、11/16) · BBC(レイが最多ノミネート、11/16)"},
+    "tg":{"kick": "国際 · ✓ 報道3件", "title": "ヨルダンに続きイラクもテレグラムを遮断…当局「国家安全保障上の懸念」", "what": "ヨルダンとイラクの当局は16日、国家安全保障を理由にメッセンジャーのテレグラムを遮断すると明らかにした。ヨルダンは、公安局が過激主義のコンテンツと違法コンテンツを防ぐための措置だと説明した。イラク通信メディア委員会は、テレグラムが違法コンテンツに必要な措置をとらず、イラクの法律に従わなかったと明らかにした。テレグラムは、両国の発表に即座には立場を示さなかった。ヨルダンでは、先月の教会への攻撃で9人が死亡し、今月はアンマンで保安要員が死亡した別の攻撃があったとの報道がある。イラクが過去にテレグラムを遮断した時期は、報道ごとに異なる。", "why": "メッセンジャーの遮断は、過激主義のプロパガンダの遮断と表現の自由がぶつかる問題だ。2つの国が同じ日に同じアプリを遮断したことで、地域の安全保障の不安がデジタル統制につながる流れが表れた。遮断が実際に全国でどの程度機能しているかは、まだ分かっていない。", "me": "当該地域に家族や事業のある人は、連絡手段を点検する必要があるかもしれない。国内でテレグラムが遮断されるという意味ではない。中東への出張や旅行を控えているなら、現地の通信のお知らせを確認するのがよい。", "a": "安保論: 過激主義組織がメッセンジャーを勧誘とプロパガンダに使っているだけに、プラットフォームが協力しなければ遮断は避けられないという見方だ。両国の当局が違法コンテンツへの措置を求めたが、応答が足りなかったと明らかにした点を、根拠に挙げる。", "b": "アクセス権への懸念論: 全面遮断は、一般の利用者のコミュニケーションや、報道・市民社会の活動まで妨げるという見方だ。プラットフォームへの圧力の手段として使われれば、表現の自由を損ねうるため、範囲と期間が透明であるべきだとみる。", "say": "確認されたのは、両国の当局の遮断発表と、国家安全保障という公式の理由だ。遮断の実際の範囲、期間、テレグラムの立場は、確認されていない。きょうは、テレグラムの対応と、ほかの国で似た措置が出るかを見ておきたい。", "src": "聯合ニュース(ヨルダン・イラクの遮断、11/16) · アルジャジーラ(両国の遮断、11/16) · ザ・ナショナル(遮断の発表、11/16)"},
+    "ai":{"kick": "畜産 · ✓ 報道1件", "title": "京畿・金浦のウズラ農場でH5型AI抗原を確認…高病原性かどうか検査中", "what": "農林畜産食品部は16日、京畿道金浦市のウズラ農場でH5型の鳥インフルエンザ(AI)抗原が確認されたと明らかにした。高病原性かどうかは、精密検査で確認中だ。抗原の検出は、AIウイルスのたんぱく質が出たという意味で、高病原性の確定とは別の段階だ。精密検査の結果が出れば、防疫措置の強度が決まる。今回の抗原の検出は、1つの出どころの発表を通じてのみ確認された。", "why": "抗原の検出段階では、精密検査の結果によって、殺処分や移動制限のような防疫措置の範囲が変わる。ウズラ農場は、鶏卵とウズラの卵の供給につながっており、冬の渡り鳥の移動期に入って、防疫の負担が大きくなる時期だ。", "me": "鶏卵とウズラの卵の価格は、高病原性の確定の有無と殺処分の規模によって変わりうるため、今は見守る段階だ。農場周辺の居住者や家きん類関連の従事者は、防疫当局の移動制限のお知らせを確認する必要がある。", "a": "初動防疫強化論: 抗原が確認された段階から、移動統制と消毒を急いでこそ、拡散を防げるという見方だ。冬のAIの発生が続いてきただけに、先制的な対応が必要だとみる。", "b": "過剰な懸念への警戒論: 抗原の検出は高病原性の確定ではないため、精密検査の結果の前に断定してはならないという見方だ。不必要な不安と農家の被害を大きくしないよう、確定の有無を見守る必要があるとみる。", "say": "確認されたのは、農林畜産食品部のH5型抗原の確認発表だ。高病原性かどうか、殺処分の範囲、疫学的な関係は、確認されていない。この知らせは1つの報道に頼っているだけに、きょうは、農林畜産食品部の精密検査の結果の発表を見ておきたい。", "src": "聯合ニュース(農林畜産食品部の発表と金浦農場の抗原検出、11/16)"},
+    "bh":{"kick": "国際 · ✓ 報道3件", "title": "イラン、バーレーンの米軍基地にドローン攻撃を主張…当事者ごとに説明が食い違う", "what": "イランの革命防衛隊は15日、バーレーンの米軍基地のレーダー施設をドローンで攻撃したと主張した。バーレーン軍は、防空網が攻撃を迎撃したと明らかにし、バーレーン外務省は攻撃を非難した。サウジアラビア、カタール、ヨルダン、エジプトも、攻撃を非難した。ドローンの数と被害をめぐって、説明が食い違っている。革命防衛隊はドローン6機を使ったと述べ、米軍が2機を撃墜し被害はないと明らかにしたとの報道があるが、別の報道は、米軍が日曜日の主張に立場を示さなかったと伝えている。3日間で2度目のバーレーン攻撃の主張であり、2日前の似た主張は、米中央軍司令部が否定した。", "why": "バーレーンは米軍基地のある湾岸国であるため、攻撃が繰り返されれば、湾岸諸国の拡戦への懸念とエネルギー輸送の不安が大きくなる。当事者ごとにドローンの数と被害の規模を違うように語り、事実関係の確認が難しい点が、緊張を高める。", "me": "中東情勢は、国際原油価格と為替に影響を与える。今回の攻撃の主張だけで国内の物価が動くという根拠は、まだない。湾岸地域への旅行や出張を控えている人は、外交部の安全のお知らせを確認する必要がある。", "a": "拡戦警戒論: 繰り返される攻撃の主張が湾岸国を巻き込み、衝突を広げうるという見方だ。周辺国の連鎖的な非難を根拠に、外交的な緊張緩和が急務だとみる。", "b": "主張検証論: 革命防衛隊の戦果の主張は誇張されているかもしれず、米軍とバーレーン軍はほとんど迎撃したと述べているという見方だ。数字と被害が食い違っているだけに、独立した確認の前に断定してはならないとみる。", "say": "確認されたのは、革命防衛隊の攻撃の主張とバーレーン軍の迎撃の発表、周辺国の非難だ。ドローンの数、被害の規模、米軍の公式の立場は、食い違っているか確認されていない。きょうは、米中央軍司令部の公式の説明と、追加の攻撃があるかを見ておきたい。", "src": "ガーディアン(攻撃の主張とバーレーンの防御、11/15) · ワシントン・ポスト(イランの2度の攻撃、11/15) · The Hill(バーレーンの迎撃、11/15)"}
+  };
+  const G = {
+    "アジア太平洋経済協力":{"f": "外交", "d": "アジア・太平洋地域の21の経済が、貿易と投資の協力を話し合う協議体(APEC)。", "w": "18〜19日に中国・深圳で首脳会議が開かれる。"},
+    "3者首脳会談":{"f": "外交", "d": "3つの国の首脳が一堂に会して開く会談。", "w": "米中ロ3者会談が19日と取り沙汰されているが、中国側の確認はない。"},
+    "憲法改正諮問委員会":{"f": "制度", "d": "憲法改正の方向について助言を受けるため、国会議長が設けた機関。", "w": "チョ・ジョンシク議長が16日に発足させた。"},
+    "総議員の3分の2":{"f": "法・制度", "d": "国会の全議員数の3分の2。改憲案の議決に必要な賛成数で、300人なら200人だ。", "w": "改憲案の議決の最初の関門だ。"},
+    "国民投票":{"f": "法・制度", "d": "国民が直接、賛否を示して決める手続き。憲法改正案の確定に必要だ。", "w": "国会の議決後に経なければならない手続きだ。"},
+    "改憲特別委員会":{"f": "制度", "d": "憲法改正案を議論するために、国会に置く特別委員会。", "w": "諮問委の案が移される先だ。"},
+    "連任":{"f": "制度", "d": "任期が終わったあと、続けてもう一度同じ職に就くこと。", "w": "現職大統領の連任は、論議から除外するという原則だ。"},
+    "受験資格の停止":{"f": "法・制度", "d": "一定期間、試験を受けられなくする制裁。", "w": "不正行為者に5年間適用される見通しだと伝えられた。"},
+    "全数調査":{"f": "行政", "d": "一部の標本ではなく、対象のすべてを漏れなく調べること。", "w": "青瓦台が国家資格試験全体を対象に指示した。"},
+    "TF":{"f": "行政", "d": "特定の課題を解くために、臨時に設ける専担組織。", "w": "財政経済部が再発防止策を協議するTFを作った。"},
+    "フーシ派":{"f": "安保", "d": "イエメン北部を拠点とする親イラン武装勢力。", "w": "サウジが率いる連合軍と戦っている。"},
+    "勅令":{"f": "制度", "d": "君主が下す公式の命令。", "w": "サウジ連合軍の司令官の交代が、勅令で発表された。"},
+    "H200":{"f": "技術", "d": "エヌビディアの高性能AI半導体の製品名。", "w": "中国への輸出承認が、論争の背景として取り沙汰される。"},
+    "財産申告書":{"f": "制度", "d": "公職者が保有資産を区間の金額で記して提出する公開文書。", "w": "大統領のエヌビディア株の規模を推定した根拠だ。"},
+    "最高財務責任者":{"f": "経済", "d": "企業の資金と会計を統括する役員(CFO)。", "w": "コレット・クレスが暫定CEOを務める。"},
+    "H5型":{"f": "保健", "d": "鳥インフルエンザウイルスを分ける型のひとつで、高病原性になりうる。", "w": "金浦のウズラ農場で、この型の抗原が確認された。"},
+    "抗原":{"f": "保健", "d": "体が免疫反応を起こすきっかけになるウイルスなどの物質。検出がそのまま高病原性の確定ではない。", "w": "精密検査で高病原性かどうかを見極める。"},
+    "高病原性":{"f": "保健", "d": "家きん類に感染すると死ぬ割合が高い、強い病原性。", "w": "金浦の農場の抗原がこれに当たるのか、検査中だ。"},
+    "防空網":{"f": "安保", "d": "敵の航空機・ミサイル・ドローンを探知し、撃墜する防御体制。", "w": "バーレーン軍がイランのドローンを迎撃したと明らかにした。"},
+    "革命防衛隊":{"f": "安保", "d": "イランの正規軍とは別に、最高指導者直属のイランの精鋭軍事組織。", "w": "バーレーンの基地への攻撃を主張した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

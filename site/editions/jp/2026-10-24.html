@@ -1,0 +1,359 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>62,693.16</b>日経平均株価 · 10/23終値 · 前日比-0.34%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>TOPIX · 10/23 · 終値のデータが取得できず</div>
+    </div>
+    <div class="dateline"><span>No. 20 · 朝刊</span><b>2026年10月24日（土）</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会 · サイバーセキュリティー<span>✓ 5媒体 · 実際の悪用被害の有無は未確認</span></div>
+      <h2 class="hl">佐川急便、個人情報最大5323万件が流出か 荷物問い合わせサービスへの不正アクセス</h2>
+      <p class="deck">佐川急便は23日、不正アクセスで外部に流出した可能性のある個人情報が最大約5323万件に上ると明らかにした。</p>
+      <div class="body">
+        <p>NHKは、宅配大手の佐川急便が不正アクセスを受けて外部に流出したおそれがあると発表していた個人情報について、氏名、住所、電話番号などが最大で5323万件に上る可能性があると明らかにした、と伝えた。ITmedia NEWSによると、佐川急便は9月30日に公表した「お荷物問い合わせサービス」への不正アクセスについて23日に第5報を出し、この報告で対象件数が判明した。あわせて、停止していた荷物追跡サービスも同日に再開したという。TBS NEWS DIGは、流出の可能性がある情報は送り状に記載された依頼主・届け先の氏名や住所などだと報じた。</p>
+        <p>朝日新聞は、流出した可能性のある個人情報を「最大のべ5323万件」と表現して伝えた。ITmedia NEWSは、佐川急便が10月1日に個人情報流出の可能性を発表していたと記している。ScanNetSecurityによれば、10月9日の第4報の時点では、対象となる件数と範囲は調査中と説明されていた。今回の第5報で初めて件数が示されたことになる。情報が実際に悪用された被害が出ているかどうかは、報じられた範囲では確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">文化 · 文化勲章<span>✓ 4媒体 · 受章者8人の一部は氏名・分野を未確認</span></div>
+      <h3 class="hl">任天堂の宮本茂氏に文化勲章 ゲーム分野で初、受章者は8人</h3>
+      <div class="one">
+        <p>NHKは、政府が発表した今年度の文化勲章の受章者に、「スーパーマリオブラザーズ」を手がけたゲームプロデューサーの宮本茂さんと、今年のノーベル化学賞に選ばれた硤合憲三さんなど8人が選ばれたと伝えた。読売新聞は、宮本さんがメディア芸術（ゲーム）の分野で、ゲーム分野からの文化勲章受章は初めてだと報じ、デザイン（照明）の石井幹子さん（88）、大衆音楽・音楽著作権の都倉俊一さん（78）も受章者に含まれると伝えた。 時事通信は「マリオ」の生みの親でゲーム界初の受章だと報じ、文化功労者にはサックス奏者の渡辺貞夫さんらが選ばれたとした。ファミ通.comは、記者会見で語られた宮本さんの歩みと哲学を伝える記事の見出しに、「“作る”とは何なのか。AIの発展でみんなが考える」という言葉を掲げた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>作家の村上龍さん死去 『限りなく透明に近いブルー』で芥川賞、74歳</b><em>NHKは、村上龍さんが今月17日に亡くなったと伝えた。74歳で、『限りなく透明に近いブルー』『コインロッカー・ベイビーズ』などの作品で知られる。</em><span>文化 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>巨人の新監督に松井秀喜氏が就任 24年ぶりの球団復帰、背番号は90</b><em>NHKは関係者への取材で就任を伝え、毎日新聞は24年ぶりの巨人復帰で、背番号は長嶋さんがつけた90だと報じた。</em><span>スポーツ · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>米ホワイトハウス、ウクライナ南部の都市で停戦を発表 メラニア夫人が仲介</b><em>時事通信は前線都市へ人道支援を搬入する局地停戦だと伝え、朝日新聞と毎日新聞は米側がトランプ氏の妻メラニア氏の仲介と発表したと報じた。</em><span>国際 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>フランスで初のヒト感染 家畜に多いシャモンダウイルス、患者は死亡</b><em>NHKは、フランス当局が牛などの家畜が感染するシャモンダウイルスのヒトへの感染を初めて確認したと伝えた。一般市民の健康リスクは確認されていないという。</em><span>国際 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>長生炭鉱で見つかった骨、日韓のDNA鑑定でも身元特定に至らず 183人が犠牲</b><em>NHKは、戦時中に朝鮮半島出身者を含む183人が犠牲になった山口県の海底炭鉱で見つかった骨について、日韓両政府のDNA鑑定でも身元は特定できなかったと伝えた。</em><span>社会 · ✓ 4媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">経済 · エネルギー政策<span>✓ 4媒体 · 見直しの水準と時期は未定</span></div>
+      <h3 class="hl">ガソリン補助の見直し検討 高市首相が経産相に指示へ、170円水準も対象</h3>
+      <div class="body">
+        <p>時事通信によると、高市首相は23日、記者団に対し、ガソリンなど燃料油の補助について検討するよう経済産業相に指示する考えを示した。見出しは「出口戦略含め柔軟に」と伝えている。NHKは、中東情勢を受けて実施しているガソリン価格などの激変緩和措置について、1リットルあたり170円程度に抑えている水準を見直すことも含め、今後の支援のあり方を検討する考えだと報じた。</p>
+        <p>毎日新聞は「ガソリン補助金の段階的な縮小を検討」と伝え、朝日新聞は首相が経産相に指示する考えを表明したと報じた。NHKは、価格を抑制している補助金を縮小する場合、水準や時期などが今後の焦点になると伝えている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">政治 · 皇室制度<span>✓ 4媒体 · 養子縁組の具体的な動きは未確認</span></div>
+      <h3 class="hl">改正皇室典範が24日施行 旧宮家の男系男子の養子縁組が可能に</h3>
+      <div class="body">
+        <p>NHKは、皇族数の確保に向けて、女性皇族が結婚後も皇室に残ることや旧皇族の男系男子の養子縁組を盛り込んだ改正皇室典範が24日に施行されると伝えた。時事通信は「旧宮家の男系養子可能に、女性皇族は結婚後も身分保持」と報じ、朝日新聞は、女性・女系天皇については棚上げになったと伝えている。</p>
+        <p>産経ニュースによると、木原官房長官は旧宮家との養子縁組について、男性皇族の確保に向けて有意義だとの見方を示した。朝日新聞は、識者が「家優先で時代錯誤」だと危惧を示したことや、養子に前向きな皇族がいる一方で、前例のない対応に宮内庁が苦慮していることを伝えている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">市場 · 米国株とAI<span>✓ 2媒体 · 米国株の終値は未確認</span></div>
+      <h3 class="hl">NY株が一時800ドル安 AI先行き不安でハイテク株が急落</h3>
+      <div class="body">
+        <p>時事通信は、ニューヨーク株式市場で23日、株価が一時800ドル安となったと伝えた。理由として、AIの先行きへの不安を挙げている。同社は別の記事で、ハイテク株が急落し、背景にAIへの懸念があると報じた。</p>
+        <p>Bloomberg Televisionは22日の番組で、AI関連の支出が信用不安を招いているとしてMetaの株価が7%下落したと伝えた。23日には、AI関連株の売りが深まるなかでアジアの投資家が避難先を探していると報じ、ヘッジファンドが新型コロナ期以来で最大の1日の損失を出したとも伝えている。東京市場では、市場データによると日経平均株価が23日に62,693.16円で取引を終え、前日比で0.34%下落した。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>800ドル</b><span>NY株の一時的な下げ幅（時事通信、23日）</span></div>
+        <div><b>7%</b><span>Metaの株価下落率（Bloomberg Television、22日）</span></div>
+        <div><b>62,693円</b><span>日経平均の23日終値、前日比0.34%安（市場データ）</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>佐川急便から流出したのは5323万人分の個人情報だ。</b> <span>朝日新聞は「最大のべ5323万件」と報じており、件数は延べ数で人数ではない。NHKも「最大で5323万件に上る可能性」と伝え、確定した流出ではない（10/23）。</span></div>
+        <div><b>改正皇室典範で女性・女系天皇が認められた。</b> <span>朝日新聞は女性・女系天皇は棚上げになったと報じた。NHKは改正の内容を、女性皇族が結婚後も皇室に残ることと旧皇族の男系男子の養子縁組と伝えている（10/23〜24）。</span></div>
+        <div><b>ガソリン補助の打ち切りが決まった。</b> <span>NHKは170円程度の水準の見直しも含めて検討を始める方針と伝え、毎日新聞は段階的な縮小を検討と報じた。決定したとの報道は見当たらない（10/23〜24）。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 10月24日（土）</b><span>改正皇室典範が施行される（NHK）。24日午前には台風31号が日本のはるか南東の海上で発生しており、NHKは今後の情報に注意するよう伝えている。</span><b>来週</b><span>ドイツのメルツ首相が来週訪日し、高市首相と首脳会談を行う予定で、経済安全保障分野の協力強化などが話し合われる見通し（NHK）。政府は人口戦略を検討する新たな会議を来週にも始める方向で調整している（NHK）。</span><b>その先</b><span>食料品の消費税減税関連法案は衆議院の委員会で実質的な審議に入り、与党は衆議院の通過を目指す方針（NHK）。ガソリン補助の見直しは、水準や時期が焦点になる（NHK）。</span><b>読者へ</b><span>佐川急便の荷物追跡サービスは23日に再開された（ITmedia NEWS）。個人情報の流出に関する続報は、佐川急便の公式発表で確認できる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会 · サイバーセキュリティー · ✓ 5媒体 · 実際の悪用被害の有無は未確認", "title": "佐川急便、個人情報最大5323万件が流出か 荷物問い合わせサービスへの不正アクセス", "what": "NHKは、佐川急便が不正アクセスで外部に流出したおそれのある個人情報について、氏名、住所、電話番号などが最大で5323万件に上る可能性があると明らかにしたと伝えた。ITmedia NEWSによると、これは9月30日に公表された「お荷物問い合わせサービス」への不正アクセスの第5報で、同日に荷物追跡サービスも再開された。TBS NEWS DIGは、対象は送り状に記載された依頼主・届け先の氏名や住所などだと報じた。朝日新聞は「最大のべ5323万件」と表現した。ScanNetSecurityによれば、10月9日の第4報では件数は調査中とされていた。ITmedia NEWSは、10月1日に個人情報流出の可能性が発表されていたと記している。", "why": "送り状には依頼主と届け先の双方の氏名・住所・電話番号が載るため、1件の荷物が二人分の連絡先情報にあたる。朝日新聞の「のべ」という表現が示すとおり、件数は延べ数で、影響を受けた実人数とは一致しない。件数が確定したことで、委託元の事業者や自治体が自社の利用者への影響を公表する流れが続くとみられる。", "me": "対象期間に荷物を送った人、受け取った人は、自分の氏名・住所・電話番号が含まれる可能性がある。差出人や配送業者を名乗る不審なメールやSMSが届いても、リンクを開く前に公式の案内で確認する余地がある。", "a": "規模の大きさを重く見る視点。NHKは氏名、住所、電話番号が最大5323万件に上る可能性を伝え、朝日新聞は「のべ」件数として報じた。連絡先がそろう情報が大量に外部へ出た可能性があることを、各紙の見出しは前面に出している。", "b": "流出の「可能性」の段階であることを重視する視点。ITmedia NEWSは、今回の第5報で件数が判明したと伝えるにとどまり、悪用の被害には触れていない。第4報まで件数が調査中だったことからも、全体像はなお調査の途中という整理になる。", "say": "確認できているのは、最大約5323万件という件数が23日に示されたことと、追跡サービスが再開されたこと。確認できていないのは、情報が実際に悪用された事例の有無と、侵入の経路の詳細。今日は、佐川急便からの続報や対象者への案内、委託元からの公表が続くかを見たい。", "src": "NHK(最大5323万件、10/23) · ITmedia NEWS(第5報・追跡再開、10/23) · TBS NEWS DIG(送り状の氏名・住所、10/23) · 朝日新聞(のべ5323万件、10/23) · ScanNetSecurity(第4報の時点、10/19)"},
+    "s2":{"kick": "文化 · 文化勲章 · ✓ 4媒体 · 受章者8人の一部は氏名・分野を未確認", "title": "任天堂の宮本茂氏に文化勲章 ゲーム分野で初、受章者は8人", "what": "NHKは、今年度の文化勲章の受章者8人に、「スーパーマリオブラザーズ」を手がけた宮本茂さんと、今年のノーベル化学賞に選ばれた硤合憲三さんが含まれると伝えた。読売新聞は、宮本さんがメディア芸術（ゲーム）の分野で受章し、ゲーム分野からは初めてだと報じた。同紙は、デザイン（照明）の石井幹子さん（88）と、大衆音楽・音楽著作権の都倉俊一さん（78）も受章者だと伝えている。時事通信は文化功労者にサックス奏者の渡辺貞夫さんらが選ばれたと報じた。ファミ通.comは宮本さんの記者会見を詳しく伝えた。", "why": "文化勲章は学術や芸術で顕著な功績のあった人に贈られる国の栄典で、同じ年に基礎科学、照明デザイン、大衆音楽が並ぶ。ゲームが「メディア芸術」の分野で初めて対象になったことは、ゲームが文化として公式に位置づけられた節目として受け止められている。", "me": "ゲームで育った世代にとって、遊びの対象だったものが国の文化の担い手として評価された出来事になる。自分が長く触れてきた作品の作り手が、どのような言葉で仕事を語るのかを会見記事で読むことができる。", "a": "ゲームが文化として認められたと受け止める視点。読売新聞と時事通信は、ゲーム分野で初の受章であることを見出しの中心に置いた。記者会見の記事でも、ゲームが文化になった歩みが語られたと紹介されている。", "b": "受章者の顔ぶれの幅に注目する視点。NHKはノーベル化学賞の硤合さんと宮本さんを並べて伝え、読売新聞は照明デザインや大衆音楽の受章者も挙げた。ゲームだけでなく、科学、デザイン、音楽が同時に評価された発表として読むこともできる。", "say": "確認できているのは、宮本さんがゲーム分野で初めて文化勲章を受けること、受章者が8人であること。確認できていないのは、8人全員の氏名と分野。今日は、各紙の人物記事や宮本さんの会見の続報で、受章の経緯や本人の言葉がさらに出るかを見たい。", "src": "NHK(受章者8人、10/23) · 読売新聞(ゲーム分野初の受章、10/23) · 時事通信(文化功労者、10/23) · ファミ通.com(宮本氏の記者会見、10/23)"},
+    "s3":{"kick": "経済 · エネルギー政策 · ✓ 4媒体 · 見直しの水準と時期は未定", "title": "ガソリン補助の見直し検討 高市首相が経産相に指示へ、170円水準も対象", "what": "時事通信によると、高市首相は23日、記者団にガソリンなど燃料油の補助を検討するよう経済産業相に指示する考えを示した。同通信の見出しは「出口戦略含め柔軟に」とした。NHKは、中東情勢を受けた激変緩和措置について、1リットルあたり170円程度に抑えている水準の見直しも含めて今後の支援のあり方を検討する考えだと報じた。毎日新聞は補助金の段階的な縮小を検討すると伝え、朝日新聞は首相が経産相に指示する考えを表明したと報じた。NHKは、縮小する場合は水準や時期が焦点になるとしている。", "why": "補助金は小売価格を人為的に抑える仕組みで、縮小すれば店頭価格に直接響く。170円程度という水準は支援の事実上の基準になっているため、見直しの方向と時期が家計と事業者の負担に結びつく。「出口戦略」という言葉が見出しに出たことは、補助を続ける局面から終わらせ方を考える局面に入ったことを示している。", "me": "車で通勤する人や配送、農業などで燃料を多く使う事業者は、補助が縮小されれば給油の支払いが増える可能性がある。ただし縮小の水準も時期も示されておらず、すぐに店頭価格が変わると報じられたわけではない。", "a": "補助の縮小を現実的な課題とみる視点。NHKと毎日新聞は、水準の見直しや段階的な縮小を検討すると伝え、補助が長く続くことへの対応を探る動きとして報じた。", "b": "急な縮小に慎重な視点。時事通信の見出しは「柔軟に」と首相の言葉を伝え、NHKも水準や時期が焦点になるとしており、中東情勢をにらみながら調整する余地を残している。", "say": "確認できているのは、首相が経産相への指示の考えを示したことと、170円水準の見直しも含めて検討するという点。確認できていないのは、縮小の幅、開始の時期、財源の扱い。今日は、経産相の対応や与党からの発言が続くかを見たい。", "src": "時事通信(出口戦略含め柔軟に、10/23) · NHK(170円水準の見直し含め検討、10/23) · 毎日新聞(段階的な縮小を検討、10/23) · 朝日新聞(経産相に指示する考え、10/23)"},
+    "s4":{"kick": "政治 · 皇室制度 · ✓ 4媒体 · 養子縁組の具体的な動きは未確認", "title": "改正皇室典範が24日施行 旧宮家の男系男子の養子縁組が可能に", "what": "NHKは、女性皇族が結婚後も皇室に残ることや旧皇族の男系男子の養子縁組を盛り込んだ改正皇室典範が24日に施行されると伝えた。時事通信は「旧宮家の男系養子可能に、女性皇族は結婚後も身分保持」と報じた。朝日新聞は、女性・女系天皇については棚上げになったと伝えている。産経ニュースによると、木原官房長官は旧宮家との養子縁組を、男性皇族の確保に向けて有意義だと述べた。朝日新聞は識者が「家優先で時代錯誤」と危惧を示したことや、宮内庁が前例のない対応に苦慮していることも報じている。", "why": "皇族の人数が減るなかで、結婚による皇籍離脱を止める策と、男系男子の皇族を増やす策が同時に制度に入った。養子縁組は当人の意思と受け入れ側の対応が絡むため、実際に何人が対象になるかは制度の施行だけでは決まらない。女性・女系天皇という大きな論点が棚上げされた点も、議論の続き方に関わる。", "me": "制度は直接の生活には関わらないが、象徴天皇制のあり方や男女の扱いについて、自分がどう考えるかを問われる出来事になる。今後の皇族の人数や公務の担い手がどうなるかは、納税者としても関心を持てる点になる。", "a": "皇族数の確保を急ぐべきだとする視点。木原官房長官は産経ニュースの報道で、旧宮家との養子縁組を男性皇族の確保に有意義だと述べた。NHKは、改正が皇族数の確保に向けたものだと伝えている。", "b": "制度の考え方に疑問を示す視点。朝日新聞は、識者が「家優先で時代錯誤」だと危惧を示し、女性・女系天皇が棚上げになったと伝えた。養子に前向きな皇族がいる一方、宮内庁は前例のない対応に苦慮しているとも報じている。", "say": "確認できているのは、24日の施行と、女性皇族の身分保持、旧皇族の男系男子の養子縁組が制度に入ったこと。確認できていないのは、実際に養子縁組が成立する時期と人数。今日は、施行を受けた宮内庁や政府の説明、各党の発言が出るかを見たい。", "src": "NHK(24日施行、10/23) · 時事通信(男系養子・身分保持、10/23) · 朝日新聞(女系天皇は棚上げ・識者の危惧、10/24) · 産経ニュース(木原官房長官、10/23)"},
+    "s5":{"kick": "市場 · 米国株とAI · ✓ 2媒体 · 米国株の終値は未確認", "title": "NY株が一時800ドル安 AI先行き不安でハイテク株が急落", "what": "時事通信は、23日のニューヨーク株式市場で株価が一時800ドル安となり、理由としてAIの先行きへの不安を挙げたと伝えた。同社は別の記事で、ハイテク株が急落し、背景にAIへの懸念があると報じた。Bloomberg Televisionは22日の番組で、AI関連の支出が信用不安を招いているとしてMetaの株価が7%下落したと伝えた。23日には、AI関連株の売りが深まるなかでアジアの投資家が避難先を探していると報じ、ヘッジファンドが新型コロナ期以来で最大の1日の損失を出したとも伝えている。市場データでは日経平均株価が23日に62,693.16円で終え、前日比0.34%下落した。", "why": "AI関連の大型投資は、株価が将来の収益への期待で支えられている面が大きく、支出の負担や資金調達への不安が出ると売りが広がりやすい。ハイテク株は指数への影響が大きいため、数銘柄の下落が指数全体の下げ幅を押し広げる構造がある。", "me": "投資信託や年金を通じて米国株やハイテク株を持っている人は、評価額が動く局面にあたる。ただし下げ幅は一時的な数字であり、終値は確認されていない。短期の値動きで結論を出さず、自分の保有の中身を確かめる機会になる。", "a": "AI投資への不安が広がっているとみる視点。時事通信は先行き不安を理由に挙げ、Bloomberg TelevisionはMetaの7%下落や、アジアの投資家が避難先を探していることを伝えた。", "b": "売り一色ではないとみる視点。Bloomberg Televisionは、ブラックストーンのジョン・グレイ氏が22日にAI需要は急拡大していると述べたと伝え、別の番組ではジーン・マンスター氏が、利用が増えればAI取引への疑念は和らぐ可能性があると述べたと伝えた。", "say": "確認できているのは、23日のNY株が一時800ドル安となったこと、22日の番組でMetaの7%下落が伝えられたこと、日経平均が23日に前日比0.34%安で終えたこと。確認できていないのは、NY株の最終的な終値と下落の持続性。今日は週明けの東京市場の寄り付きと、AI関連企業の決算や発言を見たい。", "src": "時事通信(NY株一時800ドル安・ハイテク急落、10/23) · Bloomberg Television(Metaの7%下落ほか、10/22)"},
+    "i1":{"kick": "文化 · ✓ 4媒体", "title": "作家の村上龍さん死去 『限りなく透明に近いブルー』で芥川賞、74歳", "what": "NHKは、作家の村上龍さんが今月17日に亡くなったと伝えた。74歳だった。NHKは「限りなく透明に近いブルー」や「コインロッカー・ベイビーズ」など、現代社会が抱えるひずみなどをテーマにした数多くのベストセラーを生み出した作家だと紹介している。時事通信は74歳での死去と、「限りなく透明に近いブルー」を速報の見出しに掲げた。毎日新聞は「政治腐敗や家族の変容描く」と伝え、日本経済新聞は同作を見出しに挙げた。", "why": "デビュー作で芥川賞を受けた作家の死去は、作品が同時代の社会をどう描いたかを振り返る機会になる。各紙が代表作を並べたのは、1970年代から続く作品群が世代をまたいで読まれてきたことの表れでもある。", "me": "代表作を読んだことのある人には、当時の自分の読書や時代の記憶を思い出す出来事になる。読んだことがない人は、各紙の振り返り記事から入口を選べる。", "a": "文学の面から評価する視点。日本経済新聞と時事通信は、デビュー作「限りなく透明に近いブルー」を見出しに据え、芥川賞作家としての出発点を中心に伝えた。", "b": "社会批評の面から評価する視点。毎日新聞は「政治腐敗や家族の変容描く」と見出しにし、NHKも現代社会のひずみをテーマにした作品群だと紹介した。", "say": "確認できているのは、17日に亡くなったこと、74歳であること、代表作の題名。確認できていないのは、死因や葬儀の予定。今日は、遺族や出版社からの発表、各紙の追悼記事を見たい。", "src": "NHK(死去、10/23) · 時事通信(74歳での死去、10/23) · 毎日新聞(政治腐敗や家族の変容を描く、10/23) · 日本経済新聞(芥川賞のデビュー作、10/23)"},
+    "i2":{"kick": "スポーツ · ✓ 4媒体", "title": "巨人の新監督に松井秀喜氏が就任 24年ぶりの球団復帰、背番号は90", "what": "NHKは、プロ野球・巨人の新しい監督に、大リーグのヤンキースや巨人でプレーした松井秀喜氏が就任することが関係者への取材でわかったと伝えた。朝日新聞は選手時代以来、24年ぶりの古巣復帰だと報じた。毎日新聞は、会見で背番号が恩師の長嶋茂雄さんがつけた90に決まったと伝え、読売新聞は背番号が長嶋茂雄さんと同じ90だと報じた。読売新聞は、長嶋さんとの約束に関する発言を自主撤回したことも伝えている。", "why": "球団の新体制が固まり、来季の戦い方と首脳陣人事が動き出す。背番号の継承は、球団の歴史を意識した人事であることを示す。", "me": "巨人のファンでなくても、元メジャーリーガーの監督就任は来季のプロ野球全体の話題になる。会見の発言や今後のコーチ人事の報道が出る。", "a": "期待を寄せる視点。朝日新聞と読売新聞は、24年ぶりの復帰と背番号90の継承を軸に伝え、球団が新しい時代を期待する姿を描いた。", "b": "手腕を見極める視点。朝日新聞は「松井秀喜さんに求められるもの」と題して、盟主の存在感を取り戻すという課題を取り上げた。", "say": "確認できているのは、松井氏の就任と会見が開かれたこと、背番号が90であること。確認できていないのは、コーチ陣などの具体的な人事。今日は、首脳陣の発表や球団の続報を見たい。", "src": "NHK(就任へ、10/23) · 朝日新聞(24年ぶり復帰、10/23) · 毎日新聞(背番号90、10/23) · 読売新聞(会見・背番号、10/23)"},
+    "i3":{"kick": "国際 · ✓ 4媒体", "title": "米ホワイトハウス、ウクライナ南部の都市で停戦を発表 メラニア夫人が仲介", "what": "時事通信は、米ホワイトハウスがウクライナ南部の都市での停戦を発表し、前線都市へ人道支援を搬入する局地停戦だと伝えた。朝日新聞は、米側がトランプ氏の妻メラニア氏の仲介による限定的な停戦だと発表したと報じた。毎日新聞は、人道支援を目的とした部分停戦だと伝えた。日本経済新聞は、プーチン氏が3カ国協議について「停戦目的ではない」と述べ、ウクライナに降伏を迫ったと報じている。", "why": "全面停戦ではなく、特定の都市と目的を絞った一時的な枠組みである点が特徴で、人道支援の搬入という実務が主眼にある。仲介の主体として大統領夫人が前面に出たことは、外交の経路が通常と異なることを示している。", "me": "日本からは遠い地域の動きだが、戦況や停戦をめぐる米露の姿勢は、エネルギーや食料の価格、国際秩序をめぐる議論に結びつく。", "a": "限定的でも停戦を歓迎する視点。時事通信と毎日新聞は、前線都市への人道支援の搬入という具体的な目的を中心に伝えた。", "b": "停戦の意味を慎重にみる視点。日本経済新聞は、プーチン氏が3カ国協議を「停戦目的ではない」と述べたと伝え、和平への道筋は見通せない形で報じた。", "say": "確認できているのは、米ホワイトハウスが停戦を発表したことと、人道支援の搬入が目的であること。確認できていないのは、対象の都市名と期間、ロシア側の受け止め。今日は、現地での搬入が実際に行われるか、ロシアとウクライナ双方の発表が出るかを見たい。", "src": "時事通信(局地停戦、10/23) · 朝日新聞(トランプ氏の妻が仲介と発表、10/24) · 毎日新聞(人道支援目的の部分停戦、10/24) · 日本経済新聞(プーチン氏の発言、10/23)"},
+    "i4":{"kick": "国際 · ✓ 4媒体", "title": "フランスで初のヒト感染 家畜に多いシャモンダウイルス、患者は死亡", "what": "NHKは、フランス当局が、主に牛などの家畜が感染するシャモンダウイルスにヒトが感染した例を初めて確認したと発表したと伝えた。現時点で一般市民の健康へのリスクは確認されていないとしている。TBS NEWS DIGは、フランス・リヨンで感染した男性が死亡し、ヒトへの感染確認は世界初だと報じた。日本経済新聞は、家畜に広がるウイルスで患者は死亡したと伝えた。47NEWSも速報で世界初の感染確認を伝えた。", "why": "家畜の病気とされてきたウイルスがヒトに感染した確認は、感染症の監視で動物からヒトへの経路を重視する理由を示す。ヒトからヒトへの感染が起きるかどうかは、今後の調査の対象になる。", "me": "日本の一般生活への影響は、報じられた範囲では示されていない。海外の感染症の続報は、渡航や食品の安全に関わる情報として確認しておく価値がある。", "a": "警戒を求める視点。TBS NEWS DIGと日本経済新聞は、患者の死亡と世界初の確認を前面に出して伝えた。", "b": "過度な心配は不要とする視点。NHKは、現時点で一般市民の健康リスクは確認されていないとするフランス当局の説明を伝えた。", "say": "確認できているのは、世界初のヒト感染の確認と、患者が死亡したこと。確認できていないのは、感染の経路と、ほかに感染者がいるかどうか。今日は、フランス当局や世界保健機関の追加の発表を見たい。", "src": "NHK(ヒトへの感染を初確認、10/23) · TBS NEWS DIG(リヨンで男性死亡、10/23) · 日本経済新聞(家畜に広がる、10/23) · 47NEWS(世界初の確認、10/23)"},
+    "i5":{"kick": "社会 · ✓ 4媒体", "title": "長生炭鉱で見つかった骨、日韓のDNA鑑定でも身元特定に至らず 183人が犠牲", "what": "NHKは、戦時中に朝鮮半島出身者を含む183人が犠牲になった山口県宇部市の海底炭鉱「長生炭鉱」で見つかった人の骨について、日韓両政府がそれぞれDNA鑑定を実施した結果、身元の特定には至らなかったことを政府が明らかにしたと伝えた。時事通信は外務省の発表として身元を特定できなかったと報じた。毎日新聞と朝日新聞は、日韓両政府がDNA型鑑定を行ったが身元特定に至らなかったと伝えている。", "why": "身元を特定できなければ、遺族への返還や追悼の形が決まりにくい。日韓両政府がそれぞれ鑑定した結果が同じ内容だったことは、技術的な限界を示す一方で、今後の調査の進め方が問われる。", "me": "歴史の事実の確認や遺骨の問題は、日韓関係の土台の一つとして続いている。ニュースの見出しだけでなく、発表の中身を読んで判断する機会になる。", "a": "遺族への対応を重視する視点。NHKは、犠牲になった183人に朝鮮半島出身者が含まれると伝え、身元特定が進まないことを遺族との関係から報じた。", "b": "調査の継続を求める視点。時事通信は外務省発表の結果を簡潔に伝え、毎日新聞と朝日新聞は日韓両政府が鑑定した点を強調し、共同の取り組みが続くことをうかがわせる。", "say": "確認できているのは、日韓両政府のDNA鑑定でも身元特定に至らなかったことと、犠牲者が183人であること。確認できていないのは、今後の調査の方針と時期。今日は、外務省や遺族団体のさらなる発表を見たい。", "src": "NHK(DNA鑑定結果の公表、10/23) · 時事通信(外務省発表、10/23) · 毎日新聞(日韓両政府の鑑定、10/23) · 朝日新聞(身元特定に至らず、10/23)"}
+  };
+  const G = {
+    "不正アクセス":{"f": "情報・セキュリティー", "d": "正規の権限なく、システムやサービスに侵入・接続すること。", "w": "佐川急便の問い合わせサービスが被害を受けた"},
+    "個人情報":{"f": "法律", "d": "氏名・住所・電話番号など、特定の個人を識別できる情報。", "w": "佐川急便から流出した可能性のある情報"},
+    "送り状":{"f": "物流", "d": "荷物に付ける伝票。依頼主と届け先の情報が書かれる。", "w": "流出の可能性がある情報の出どころ"},
+    "お荷物問い合わせサービス":{"f": "物流", "d": "荷物の配送状況を調べる佐川急便のサービス。", "w": "不正アクセスを受けたサービス"},
+    "荷物追跡サービス":{"f": "物流", "d": "荷物の現在位置や配達状況を確認できる機能。", "w": "23日に再開された"},
+    "第5報":{"f": "報道", "d": "同じ事案についての5回目の公式な続報。", "w": "件数が初めて示された発表"},
+    "のべ":{"f": "統計", "d": "同じ人や事象が重複しても数えた合計。", "w": "5323万件は実人数と異なる"},
+    "文化勲章":{"f": "制度", "d": "文化の発達に顕著な功績のあった人に贈られる国の勲章。", "w": "宮本茂氏ら8人が受章"},
+    "文化功労者":{"f": "制度", "d": "文化の向上に功績のあった人を国が顕彰する制度。", "w": "渡辺貞夫氏らが選ばれた"},
+    "メディア芸術":{"f": "文化", "d": "ゲームや漫画、アニメ、メディアアートなどの総称。", "w": "宮本氏の受章分野"},
+    "ノーベル化学賞":{"f": "科学", "d": "化学分野の優れた業績に贈られるノーベル賞の部門。", "w": "硤合憲三氏が今年選ばれた"},
+    "激変緩和措置":{"f": "経済", "d": "燃料価格の急騰を和らげるために補助金などで負担を抑える政策。", "w": "ガソリン価格を170円程度に抑えている"},
+    "経済産業相":{"f": "政治", "d": "経済産業省を担当する閣僚。", "w": "首相が補助の検討を指示する相手"},
+    "燃料油":{"f": "エネルギー", "d": "ガソリン、軽油、灯油などの石油製品の総称。", "w": "補助の対象となっている"},
+    "出口戦略":{"f": "経済", "d": "非常時の支援策をいつどう終えるかの方針。", "w": "補助の終わらせ方が見出しに出た"},
+    "皇室典範":{"f": "法律", "d": "皇位継承や皇族の身分などを定めた法律。", "w": "24日に改正法が施行される"},
+    "旧宮家":{"f": "皇室", "d": "戦後に皇籍を離れた旧皇族の家。", "w": "男系男子の養子縁組の対象"},
+    "男系男子":{"f": "皇室", "d": "父方をたどると皇統につながる男子。", "w": "養子縁組の対象となる範囲"},
+    "養子縁組":{"f": "法律", "d": "法律上の親子関係を結ぶ手続き。", "w": "旧皇族の男系男子が皇族になる手段"},
+    "女系天皇":{"f": "皇室", "d": "母方を通じて皇統につながる天皇。", "w": "今回は棚上げとされた"},
+    "官房長官":{"f": "政治", "d": "内閣のスポークスパーソンを務める閣僚。", "w": "木原氏が養子縁組に言及"},
+    "宮内庁":{"f": "政府機関", "d": "皇室に関する事務を担う国の機関。", "w": "前例のない対応に苦慮していると報じられた"},
+    "ハイテク株":{"f": "市場", "d": "IT・半導体など先端技術企業の株式。", "w": "NY株の下落の中心"},
+    "ヘッジファンド":{"f": "金融", "d": "大口の資金を運用する投資ファンド。", "w": "1日の損失が新型コロナ期以来の大きさ"},
+    "日経平均株価":{"f": "市場", "d": "東証プライムの代表的な225銘柄の株価指数。", "w": "23日は62,693.16円で終えた"},
+    "信用不安":{"f": "金融", "d": "借り手が返済できなくなるとの懸念が広がること。", "w": "Metaの下落の理由として伝えられた"},
+    "芥川賞":{"f": "文学", "d": "新人の純文学作品に贈られる文学賞。", "w": "村上龍さんのデビュー作が受賞"},
+    "背番号":{"f": "スポーツ", "d": "選手や監督がユニフォームにつける番号。", "w": "松井氏は90"},
+    "局地停戦":{"f": "国際", "d": "特定の地域や都市に限った一時的な停戦。", "w": "ウクライナ南部の都市で発表された"},
+    "人道支援":{"f": "国際", "d": "戦争や災害で困窮する人々への食料・医薬品などの援助。", "w": "停戦の目的とされた"},
+    "ホワイトハウス":{"f": "政治", "d": "米大統領の官邸・執務の拠点。", "w": "停戦を発表した"},
+    "シャモンダウイルス":{"f": "医療", "d": "主に牛などの家畜が感染するウイルス。", "w": "フランスで初のヒト感染が確認された"},
+    "家畜":{"f": "農業", "d": "人が飼育する牛や豚などの動物。", "w": "ウイルスの主な宿主"},
+    "DNA鑑定":{"f": "科学", "d": "DNAの型を比べて個人や親族関係を調べる検査。", "w": "遺骨の身元特定に使われた"},
+    "海底炭鉱":{"f": "歴史", "d": "海の下に坑道を掘って石炭を採る炭鉱。", "w": "長生炭鉱のこと"},
+    "朝鮮半島":{"f": "地理", "d": "日本海をはさんだ隣接地域。", "w": "犠牲者に出身者が含まれる"},
+    "ゲームプロデューサー":{"f": "産業", "d": "ゲーム制作を統括する職。", "w": "宮本氏の肩書き"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

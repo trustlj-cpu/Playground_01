@@ -1,0 +1,368 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>64,621.24</b>日経平均 · 10/21終値 · 前日比+0.85%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ドル円 · 東京時間の確定値なし</div>
+    </div>
+    <div class="dateline"><span>No. 18 · 朝刊</span><b>2026年10月22日(木)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="akita">
+      <div class="kick">社会 · 災害<span>✓ 4媒体 · 住宅の浸水件数・避難者数は未確認</span></div>
+      <h2 class="hl">秋田・子吉川に氾濫特別警報、22日未明に注意報へ切り替え</h2>
+      <p class="deck">記録的大雨の秋田県で子吉川が氾濫、気象庁は午前2時20分に「レベル2」へ引き下げ</p>
+      <div class="body">
+        <p>急速に発達する低気圧と前線の影響で記録的な大雨となった秋田県で、気象庁は21日、子吉川で氾濫が確認されたとして「レベル5氾濫特別警報」を発表した。NHKは氾濫が確認されたと伝え、複数の報道は越水を確認したと報じた。氾濫特別警報は、河川の氾濫が発生した、あるいは切迫しているときに出される、5段階の警戒レベルで最も高い水準の情報だ。NHKが公開した映像は、21日午後6時ごろ、秋田県由利本荘市の子吉川沿いの道路を南へ向かう車内から撮影されたもので、道路まで水があふれる様子が映っている。ドライバーの親族が助手席から撮影したという。毎日新聞は、この氾濫でけがをした人の情報は入っていないと速報した。</p>
+        <p>日付が変わった22日未明、状況は切り替わった。NHKによると、気象庁は午前2時20分、子吉川の「レベル5氾濫特別警報」を「レベル2氾濫注意報」に切り替えた。時事通信も、気象庁が特別警報を注意報に切り替えたと伝えた。切り替え後の浸水の範囲や住宅被害の件数は、報じられた範囲では確認されていない。一方、埼玉新聞はYahoo!ニュースで、大型の台風30号が猛烈な勢力で北上中で、現在の中心気圧は900ヘクトパスカル、最大瞬間風速は85メートルと速報した。同紙は、台風30号がカーブして日本列島に向かうか、との見方も伝えている。進路の確定した予報は、この報道の時点では示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>レベル5→2</b><span>子吉川の警戒レベル(22日午前2時20分に切り替え)</span></div>
+        <div><b>900hPa</b><span>台風30号の中心気圧(埼玉新聞)</span></div>
+        <div><b>85m</b><span>台風30号の最大瞬間風速(埼玉新聞)</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="php">
+      <div class="kick">テクノロジー · サイバー<span>✓ 4媒体 · 修正版公開後の被害の有無は未確認</span></div>
+      <h3 class="hl">PHPの重大な脆弱性、さくらのレンタルサーバなど緊急メンテ相次ぐ</h3>
+      <div class="one">
+        <p>世界のウェブサイトの約7割に使われているとされるプログラム言語「PHP」に重大な脆弱性があることが21日わかった、と日本経済新聞が報じた。専門家によると、サイトを乗っ取られたりデータを奪われたりする恐れがある。ITmedia NEWSによると、PHPの開発プロジェクトは、最大深刻度「Critical」の脆弱性2件を修正するアップデートを、日本時間21日午後11時に公開すると予告した。いずれもリモートコード実行の恐れがあり、旧バージョンを含む広範な環境が影響を受ける可能性があるという。 GMO Flatt Securityは、脆弱性を「メモリ破壊系バグ」と推定し、同社の独自調査と一致していればPHPのSession Upload Progress機能に関わるものだとみている。この脆弱性は「php2shell」と呼ばれている。公開を前に、さくらネットは「さくらのレンタルサーバ」の機能を一部止め、ITmediaは保育園向けSaaS「コドモン」、ゲーム「Shadowverse: Worlds Beyond」、BASEなどが緊急メンテナンスに入ったと伝えた。毎日新聞は、札幌市が公式ホームページを一時停止したと速報し、時事通信は高市首相がSNSで注意喚起したと報じた。修正版の公開後に被害が出たかどうかは確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="france"><b>フランス10年債利回りが一時5％に、約24年ぶりの高水準</b><em>NHKは、財政悪化への懸念からフランスの10年物国債の利回りが一時5％に達したと伝えた。約24年ぶりの高さだ。</em><span>国際経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="jsda"><b>日証協、2040年の社債調達残高が620兆円に拡大と見込む</b><em>日本証券業協会は、企業が投資を続ければ社債残高が現在の4倍超になるとし、市場整備を重点課題とした。</em><span>金融 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="tokyo"><b>東京都議補選・千代田区、自民が「不戦敗」へ 小池知事は前面に</b><em>朝日新聞は、自民が千代田区の都議補選で不戦敗となる見通しと速報した。小池知事は支援の前面に出る。</em><span>政治 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="nepal"><b>ネパールのヒマラヤで登山中の日本人男性2人が行方不明</b><em>NHKによると、日本人男性2人は10月15日以降行方が分からず、ネパール中部の現地で捜索が続いている。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="para"><b>アジアパラのテコンドー表彰式で台湾選手にイラン国歌を流す</b><em>名古屋アジアパラ組織委は、19日の表彰式で優勝した台湾選手にイラン国歌を最後まで流すミスがあったと明らかにした。</em><span>スポーツ · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="putin">
+      <div class="kick">国際 · 米ロ<span>✓ 4媒体 · 解放された人物の氏名と協議の日程は未確認</span></div>
+      <h3 class="hl">プーチン氏、米国人男性の解放を表明 3カ国協議は「11月再開の用意」</h3>
+      <div class="body">
+        <p>米国のトランプ大統領は21日、自身のSNSに、ロシアが4年前に拘束していた米国人が、米国の要請に応じて解放されたと投稿したと、NHKが伝えた。朝日新聞によると、ロシアのプーチン氏はロシアで有罪判決を受けた米国人男性の解放を表明し、特使と面会した。解放された人物の名前や、解放の具体的な条件は、報じられた範囲では確認されていない。</p>
+        <p>プーチン氏はウクライナ情勢をめぐる3カ国協議について「11月再開の用意」があると述べたと朝日新聞が報じた。時事通信は、プーチン氏が米国、ロシア、ウクライナの協議に意欲を示したと伝えた。ロイター通信によると、ウクライナのゼレンスキー大統領は、11月初めまでにロシア、米国との新たな協議が開かれることを望むと述べた。協議の日程や場所は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="leak">
+      <div class="kick">社会 · 個人情報<span>✓ 2媒体 · 情報の悪用の有無は未確認</span></div>
+      <h3 class="hl">KDDIのau PAY加盟店情報、最大約46万人分が同意なく掲載か</h3>
+      <div class="body">
+        <p>KDDIは20日、スマートフォン決済サービス「au PAY」が使える店舗を検索できるウェブサイトで、一部の加盟店の情報を同意なく掲載していた可能性があると発表したと、日本経済新聞が報じた。最大約46万人分の個人事業主の住所や電話番号が表示されていたという。同紙は、掲載の経緯の詳細までは伝えていない。</p>
+        <p>フジテレビは20日、番組宣伝システムが第三者による不正アクセスを受け、メディア関係者の個人情報が最大730件漏えいした可能性があると発表したと、ITmedia NEWSが伝えた。ITmediaは別の記事で、不正アクセスの急増が「SaaS離れ」を招くかを論じている。両社とも、漏えいした情報が悪用されたかどうかは、報じられた範囲では確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="kita">
+      <div class="kick">国際 · 北朝鮮<span>✓ 2媒体 · 拡声機の実際の稼働と韓国側の対応は未確認</span></div>
+      <h3 class="hl">金与正氏、拡声機を月内に稼働状態にと表明 要塞化工事の現場も視察</h3>
+      <div class="body">
+        <p>北朝鮮の金正恩総書記の妹、金与正氏は、北朝鮮が韓国との軍事境界線近くを要塞化するとして進める工事の現場を視察したと、NHKが伝えた。朝日新聞によると、与正氏は韓国に向けた心理戦の拡声機を月内に「稼働状態」にすると表明した。</p>
+        <p>拡声機を実際に鳴らすかどうかや、韓国側の対応は、報じられた範囲では確認されていない。視察した工事の場所や規模の詳細も、NHKの記事では示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>月内</b><span>拡声機を「稼働状態」にするとした時期</span></div>
+        <div><b>与正氏</b><span>金正恩総書記の妹</span></div>
+        <div><b>軍事境界線</b><span>要塞化工事の現場の近く</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>PHPの脆弱性で、日本中のサイトがすでに乗っ取られている</b> <span>日本経済新聞は、専門家の話として乗っ取りやデータ流出の恐れがあると伝えたが、実際に被害が出たとの報道は確認されていない。各社が報じたのは予防的な緊急メンテナンスや公式サイトの一時停止。</span></div>
+        <div><b>秋田・子吉川の氾濫で多数の死傷者が出た</b> <span>毎日新聞は、21日夜の速報時点でけが人の情報は入っていないと伝えた。その後の被害の確定情報は、報じられた範囲では確認されていない。</span></div>
+        <div><b>台風30号は確実に日本列島を直撃する</b> <span>埼玉新聞(Yahoo!ニュース)は、猛烈な勢力で北上中で、カーブして日本列島に向かうかと伝えた。進路は確定しておらず、直撃を断定した報道は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 木 10月22日</b><span>PHPの修正版が公開された後、各サービスの復旧状況と被害の有無を確認したい。秋田県は子吉川周辺の被害状況の発表、台風30号は気象庁の進路予報が焦点になる。</span><b>今週</b><span>プーチン氏が示した3カ国協議の11月再開について、日程や場所の具体化があるかを見たい。FinancialJuiceは関係者の話として、日銀が10月会合で金利を据え置き、早ければ12月の利上げに含みを残すと伝えているが、確認できているのは1社のみ。</span><b>その後</b><span>北朝鮮が表明した月内の拡声機の稼働状態、フランス国債利回りの5％台定着の有無、都議補選の千代田区の情勢が続報の対象になる。</span><b>読者の皆さまへ</b><span>PHPを使うサービスの管理者でなくても、利用中のサービスからのお知らせを確認し、パスワードの使い回しをしていないか見直すのがよい。台風が近づく前に避難先と経路を家族で確認してほしい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "akita":{"kick": "社会 · 災害 · ✓ 4媒体 · 住宅の浸水件数・避難者数は未確認", "title": "秋田・子吉川に氾濫特別警報、22日未明に注意報へ切り替え", "what": "気象庁は21日、秋田県の子吉川で氾濫が確認されたとして「レベル5氾濫特別警報」を発表した。NHKは、急速に発達する低気圧と前線の影響で秋田県が記録的な大雨になったと伝えた。NHKの映像は、21日午後6時ごろ由利本荘市の子吉川沿いの道路に水があふれる様子を捉えている。毎日新聞は、けが人の情報は入っていないと速報した。NHKによると、気象庁は22日午前2時20分、特別警報を「レベル2氾濫注意報」に切り替えた。時事通信も同じ切り替えを報じた。埼玉新聞はYahoo!ニュースで、台風30号の中心気圧が900ヘクトパスカル、最大瞬間風速が85メートルと伝えた。", "why": "氾濫特別警報は、すでに氾濫が起きた、または切迫した段階で出る最上位の情報で、命を守る行動を取るべき状況を示す。注意報への切り替えは水位が下がったことを意味するが、浸水した地域の実際の被害確認はこれからになる。", "me": "秋田県に家族や仕事先がある人は、自治体の避難情報と被害情報、道路や鉄道の運行情報を確認したい。ほかの地域でも、台風が近づく前にハザードマップと避難先を確かめておく価値がある。", "a": "水位が下がり、未明に特別警報が注意報へ切り替わった点に注目する見方がある。氾濫の確認から数時間で情報が更新され、最悪の状況は脱したと受け止められる。", "b": "被害の全容はこれからだとみる見方もある。けが人情報なしは21日夜の速報時点のもので、浸水した住宅や避難者の数はまだ報じられていない。台風30号が続くため警戒を緩められないとの受け止めもある。", "say": "確認されたのは、氾濫の確認、特別警報の発表、午前2時20分の注意報への切り替え、21日夜時点でけが人情報がないこと。住宅の浸水件数、避難者数、台風30号の進路は確認されていない。今日は被害状況の発表と、気象庁の台風進路予報を見る。", "src": "NHK(秋田 子吉川 氾濫特別警報を氾濫注意報に切り替え、10/22) · 時事通信(子吉川は注意報に特別警報から切り替え、10/22) · 毎日新聞(秋田・子吉川の氾濫、けが人の情報なし、10/21) · 埼玉新聞(台風30号が猛烈な勢力で北上中、Yahoo!ニュース経由、10/21)"},
+    "php":{"kick": "テクノロジー · サイバー · ✓ 4媒体 · 修正版公開後の被害の有無は未確認", "title": "PHPの重大な脆弱性、さくらのレンタルサーバなど緊急メンテ相次ぐ", "what": "日本経済新聞は、世界のウェブサイトの約7割に使われているとされるPHPに重大な脆弱性があることが21日わかったと報じた。ITmedia NEWSは、PHPの開発プロジェクトが最大深刻度「Critical」の脆弱性2件を修正するアップデートを、日本時間21日午後11時に公開すると予告したと伝えた。リモートコード実行の恐れがあり、旧バージョンを含む広範な環境が影響を受ける可能性があるという。GMO Flatt Securityは、メモリ破壊系バグと推定し、Session Upload Progress機能に関わるとみている。日経は、さくらネットが対応でさくらのレンタルサーバの機能を一部停止したと伝えた。毎日新聞は、札幌市が公式ホームページを一時停止したと速報し、時事通信は高市首相がSNSで注意喚起したと報じた。", "why": "PHPは多くのサイトやSaaSの土台になっているため、一つの欠陥が多数のサービスに同時に影響しうる。修正版の公開前後は、欠陥の詳細が知られて攻撃が増えやすい時期で、先に機能を止める予防措置が相次いだ。", "me": "PHPで自社サイトや通販サイトを運営している人は、修正版の適用時期と、利用中のレンタルサーバ会社のお知らせを確認したい。利用者側は、パスワードの使い回しを避け、サービスの復旧案内を確認するのがよい。", "a": "予防的なメンテナンスを評価する見方がある。修正版の公開前に機能を止め、自治体も公式サイトを一時停止したことで、被害の拡大を抑える動きだと受け止められる。", "b": "一斉停止の影響を指摘する見方もある。保育園向けSaaSやゲーム、通販が同時に止まり、ITmediaは不正アクセスの急増が「SaaS離れ」を招くかという議論も取り上げた。", "say": "確認されたのは、重大な脆弱性2件の存在、日本時間21日午後11時の修正版公開予定、複数サービスの緊急メンテナンスと札幌市サイトの一時停止。実際に乗っ取りやデータ流出が起きたかは確認されていない。今日は修正版の公開後に、各サービスの復旧状況と被害の報告を見る。", "src": "ITmedia NEWS(PHPに「緊急」レベルの脆弱性2件、10/21) · 日本経済新聞(プログラム言語「PHP」重大弱点、10/21) · 毎日新聞(札幌市が公式ホームページ一時停止、10/22) · 時事通信(高市首相、SNSで注意喚起、10/21)"},
+    "putin":{"kick": "国際 · 米ロ · ✓ 4媒体 · 解放された人物の氏名と協議の日程は未確認", "title": "プーチン氏、米国人男性の解放を表明 3カ国協議は「11月再開の用意」", "what": "NHKは、トランプ大統領が21日に自身のSNSで、ロシアが4年前に拘束していた米国人が米国の要請に応じて解放されたと投稿したと伝えた。朝日新聞は、プーチン氏がロシアで有罪判決を受けた米国人男性の解放を表明し、特使と面会したと報じた。朝日新聞は、プーチン氏がウクライナ情勢をめぐる3カ国協議を「11月再開の用意」があると述べたとも伝えた。時事通信は、プーチン氏が米国、ロシア、ウクライナの協議に意欲を示したと報じた。ロイター通信は、ウクライナのゼレンスキー大統領が11月初めまでにロシア、米国との新たな協議を望んでいると伝えた。解放された男性の名前は報じられた範囲では確認されていない。", "why": "拘束された米国人の解放は、米ロ間の信頼を測る材料として扱われやすい。ロシアが協議再開に前向きな姿勢を示し、ウクライナも同時期の協議を望むと述べたことで、日程が重なる可能性が出てきた。", "me": "日本にとっては、ウクライナ情勢の協議が動くかどうかが、エネルギー価格や制裁をめぐる国際環境に関わる。協議の日程が決まれば、原油や為替の市場にも影響しうるため、続報を確認したい。", "a": "プーチン氏の発言を、協議再開に向けた前向きな動きとみる見方がある。米国人の解放と協議への意欲が同じ日に示され、ゼレンスキー氏も11月初めの協議を望んでいる。", "b": "具体性がまだ乏しいとみる見方もある。日程も場所も決まっておらず、解放された人物の名前や条件も明らかではない。発言が実際の協議再開につながるかは、続報を待つ必要がある。", "say": "確認されたのは、トランプ氏の投稿、プーチン氏の解放表明と特使との面会、11月再開の用意という発言、ゼレンスキー氏の希望。解放された人物の氏名、協議の場所や日程は確認されていない。今日は米ロ双方の公式発表と協議日程の具体化を見る。", "src": "NHK(米トランプ大統領「ロシアが拘束していたアメリカ人を解放」、10/21) · 朝日新聞(プーチン氏、ウクライナ情勢めぐる3カ国協議「11月再開の用意」、10/22) · 時事通信(米ロ・ウクライナ協議に意欲 プーチン氏、10/21) · Reuters(Ukraine's Zelenskiy hopes for new talks with Russia, US by early November、10/21)"},
+    "leak":{"kick": "社会 · 個人情報 · ✓ 2媒体 · 情報の悪用の有無は未確認", "title": "KDDIのau PAY加盟店情報、最大約46万人分が同意なく掲載か", "what": "日本経済新聞は、KDDIが20日、スマートフォン決済サービス「au PAY」が使える店舗を検索できるウェブサイトで、一部の加盟店の情報を同意なく掲載していた可能性があると発表したと報じた。最大約46万人分の個人事業主の住所や電話番号が表示されていたという。ITmedia NEWSは、フジテレビが20日、番組宣伝システムが第三者による不正アクセスを受け、メディア関係者の個人情報が最大730件漏えいした可能性があると発表したと伝えた。ITmediaは別記事で、不正アクセスの急増が「SaaS離れ」を招くかを論じた。いずれの件でも、情報が悪用されたとの報道は確認されていない。", "why": "個人事業主の住所や電話番号は、事業者の自宅と重なることがあり、同意のない掲載はプライバシー上の問題になりうる。番組宣伝システムの不正アクセスは、取引先やメディア関係者の連絡先という、外部との接点の情報が狙われた形だ。", "me": "au PAYの加盟店を営む個人事業主は、KDDIからの案内で自分の情報が掲載されていたかを確認したい。メディア関係者はフジテレビからの連絡を確認し、不審なメールや電話に注意するのがよい。", "a": "企業の公表を、早期の対応と受け止める見方がある。KDDIもフジテレビも、可能性の段階で発表し、対象人数の上限を示した点は、被害把握の手がかりになる。", "b": "人数が上限での公表であり、実態はまだ不明だとする見方もある。掲載の経緯や不正アクセスの手口が示されておらず、再発防止の説明が課題だという受け止めだ。", "say": "確認されたのは、KDDIの最大約46万人分の可能性とフジテレビの最大730件の可能性。実際の被害の有無、掲載や侵入の経緯は確認されていない。今日は両社の続報と、対象者への通知の状況を見る。", "src": "日本経済新聞(KDDI、au PAY加盟店情報を同意なく掲載か、10/21) · ITmedia NEWS(フジテレビに不正アクセス、メディア関係者の個人情報最大730件漏えいか、10/21)"},
+    "kita":{"kick": "国際 · 北朝鮮 · ✓ 2媒体 · 拡声機の実際の稼働と韓国側の対応は未確認", "title": "金与正氏、拡声機を月内に稼働状態にと表明 要塞化工事の現場も視察", "what": "NHKは、北朝鮮の金正恩総書記の妹、金与正氏が、北朝鮮が韓国との軍事境界線近くを要塞化するとして進める工事の現場を視察したと伝えた。朝日新聞は、与正氏が韓国に向けた心理戦の拡声機を月内に「稼働状態」にすると表明したと速報した。NHKの記事は21日夜に、朝日新聞の速報は22日朝に配信された。拡声機を実際に鳴らす日時や、設置場所は報じられた範囲では示されていない。韓国政府の反応も、確認されていない。", "why": "拡声機による心理戦は、軍事境界線をはさんだ緊張を高める手段として知られ、過去にも双方が使い、停止してきた経緯がある。要塞化工事の視察と同じ時期に出た表明は、北朝鮮が国境付近の態勢を整えようとする動きと並べて報じられた。", "me": "日本から直接の影響は限られるが、朝鮮半島の緊張は日本の安全保障や、航空・海運の運航情報にも関わりうる。続報で、実際の稼働と韓国側の対応を確認したい。", "a": "北朝鮮が韓国への圧力を強める動きだとみる見方がある。要塞化工事の視察と拡声機の表明が重なり、緊張を高めるメッセージだと受け止められる。", "b": "表明にとどまっている点に注目する見方もある。月内に実際に稼働するか、また韓国が対抗措置を取るかは未確認で、具体的な行動を確認するまで評価は定まらないという受け止めだ。", "say": "確認されたのは、与正氏の工事現場の視察と、拡声機を月内に稼働状態にするという表明。実際の稼働、韓国側の対応、工事の規模は確認されていない。今日は韓国政府の発表と、月内の北朝鮮側の動きを見る。", "src": "NHK(北朝鮮キム・ヨジョン氏 軍事境界線付近の「要塞化工事」視察、10/21) · 朝日新聞(北朝鮮、対韓国心理戦の拡声機を月内に「稼働状態」に 与正氏が表明、10/22)"},
+    "france":{"kick": "国際経済 · ✓ 1媒体", "title": "フランス10年債利回りが一時5％に、約24年ぶりの高水準", "what": "NHKは、債券市場でフランスの10年物国債の利回りが一時5％に達したと伝えた。NHKによると、およそ24年ぶりの高い水準となった。背景としてNHKは、フランスの財政悪化への懸念を挙げた。記事は22日午前0時台に配信された経済ニュースだ。5％に達したのは一時的な水準で、その後の水準や終値は、報じられた範囲では確認されていない。フランス政府や中央銀行の発言も、この記事では伝えられていない。", "why": "国債は利回りが上がると価格が下がる関係にあり、利回りの上昇は、投資家がより高い見返りを求めている状態を示す。フランスは欧州の主要国で、財政への懸念が国債市場に表れると、ほかの欧州諸国やユーロの市場にも波及しうる。", "me": "日本の個人投資家にとっては、欧州債を組み込んだ投資信託や外貨建ての商品の価格に影響しうる。為替では、ユーロ円の動きを確認する価値がある。", "a": "財政悪化への市場の警戒が強まった表れだとみる見方がある。約24年ぶりという水準は、財政運営への不安が数字に出たという受け止めだ。", "b": "一時的な水準であり、継続するかは不明だとする見方もある。その後の利回りが下がれば、市場の反応は一過性だった可能性もあり、水準の定着を見極める必要があるという受け止めだ。", "say": "確認されたのは、一時5％に達したことと約24年ぶりという水準、財政悪化への懸念が背景だという点。その後の利回りの推移と、政府の対応は確認されていない。今日は欧州市場での利回りの動きと、フランス政府の財政をめぐる発言を見る。", "src": "NHK(フランス10年もの国債利回り5％に 24年ぶりの高水準、10/22)"},
+    "jsda":{"kick": "金融 · ✓ 1媒体", "title": "日証協、2040年の社債調達残高が620兆円に拡大と見込む", "what": "NHKは、日本証券業協会が今後の社債市場について報告を公表したと伝えた。日本証券業協会は、企業が積極的な投資を続ければ、2040年の社債の調達残高が、現在の4倍以上にあたる620兆円に拡大する見込みだとした。報告は、証券業界として社債市場の環境整備を重点的に進めることなどを盛り込んでいる。NHKの記事は22日午前0時台に配信された。環境整備の具体的な内容や、各社の対応は、報じられた範囲では確認されていない。", "why": "社債は企業が市場から資金を集める手段で、銀行借り入れに頼る割合が下がると、市場の整備が経済全体の資金の流れに影響する。2040年に残高が4倍超になるという見込みは、企業の投資意欲が続くことを前提にした試算だ。", "me": "個人投資家にとっては、社債を購入しやすい環境が整うかどうかが関わる。投資を考える人は、社債の償還時期や発行企業の信用度、換金のしやすさを確認したい。", "a": "市場の拡大を前向きに受け止める見方がある。企業の資金調達の選択肢が増え、投資家にも運用先が広がるという受け止めだ。", "b": "試算が前提次第であることを指摘する見方もある。企業が投資を続けるという前提が外れれば、拡大の見通しは変わりうる。環境整備の具体策が示されるまで、評価は難しいという受け止めだ。", "say": "確認されたのは、日本証券業協会が2040年に社債残高が620兆円、現在の4倍以上になる見込みとしたことと、環境整備を重点に進める方針。具体的な整備内容と、実際の拡大は確認されていない。今日は協会の追加発表と、各証券会社の対応を見る。", "src": "NHK(日証協 2040年に向け社債市場の整備進める方針発表、10/22)"},
+    "tokyo":{"kick": "政治 · ✓ 1媒体", "title": "東京都議補選・千代田区、自民が「不戦敗」へ 小池知事は前面に", "what": "朝日新聞は、東京都議補選の千代田区で、自民党が「不戦敗」となる見通しだと速報した。朝日新聞によると、小池知事は支援の前面に出るという。記事は22日午前5時に配信された。自民党が候補を立てない理由や、ほかの党の候補の顔ぶれは、報じられた範囲では確認されていない。補選の投開票日や、小池知事が支援する候補の名前も、この速報の見出しでは示されていない。", "why": "都議補選は1議席を争う選挙で、結果が国政や都政の勢力図の見方に影響しうる。自民党が候補を立てない場合、有力な候補者の支援構図が変わり、小池知事が前面に出ることで、都政をめぐる政治的な駆け引きにもつながる。", "me": "千代田区の有権者は、各候補の政策と、投開票日を確認したい。区外の人にとっても、都議会の勢力が都の施策や予算に関わるため、結果の確認には意味がある。", "a": "自民党の判断を、勢力維持のための戦略とみる見方がある。千代田区での戦いを避けることで、ほかの選挙に力を集中させるという受け止めだ。", "b": "有権者の選択肢が狭まるとの見方もある。主要政党が候補を立てなければ、選挙の争点が見えにくくなり、投票への関心が下がるおそれがあるという受け止めだ。", "say": "確認されたのは、自民党が不戦敗となる見通しであることと、小池知事が支援の前面に出ること。候補者名、投開票日、自民党の判断の理由は確認されていない。今日は各党の公式発表と、候補者の顔ぶれを見る。", "src": "朝日新聞(東京都議補選・千代田区、自民「不戦敗」へ 小池知事は支援の前面に、10/22)"},
+    "nepal":{"kick": "国際 · ✓ 1媒体", "title": "ネパールのヒマラヤで登山中の日本人男性2人が行方不明", "what": "NHKは、ネパール中部のヒマラヤ山脈で登山をしていた日本人男性2人の行方が10月15日以降分からなくなっていると伝えた。現地で捜索活動が行われている。2人の名前、年齢、登った山の名前、入山の経緯は、報じられた範囲では確認されていない。NHKの国際ニュースとして22日午前4時台に配信された。捜索の体制や天候の状況も、伝えられていない。", "why": "高所登山では、天候の急変や雪崩、滑落などで連絡が途絶えるリスクがあり、行方不明から日数がたつほど状況は厳しくなる。捜索は現地の当局や登山関係者が中心となり、日本の在外公館が情報収集に関わるのが通例だ。", "me": "ヒマラヤへの渡航や登山の予定がある人は、入山許可と保険、現地での連絡手段、悪天候時の撤退基準を出発前に確認したい。家族や知人に行程を共有しておくことも、緊急時の対応を早める。", "a": "捜索の早期進展に期待する見方がある。現地で捜索活動が続いており、日本側の情報提供と現地の協力が進めば、手がかりが得られる可能性があるという受け止めだ。", "b": "情報が限られている点を指摘する見方もある。2人の行程や装備、天候などが明らかではなく、行方不明から1週間がたつ状況を踏まえ、慎重に続報を見る必要があるという受け止めだ。", "say": "確認されたのは、日本人男性2人が10月15日以降行方不明で、現地で捜索が行われていること。身元、登山の経路、捜索の体制と結果は確認されていない。今日は外務省や現地当局の発表と、捜索の進展を見る。", "src": "NHK(ネパールのヒマラヤで登山中だった日本人2人が行方不明、10/22)"},
+    "para":{"kick": "スポーツ · ✓ 1媒体", "title": "アジアパラのテコンドー表彰式で台湾選手にイラン国歌を流す", "what": "読売新聞は、名古屋アジアパラ競技大会の組織委員会が21日、19日に行われたテコンドーの表彰式で、優勝した台湾選手に対し、イラン国歌を最後まで流すミスがあったと明らかにしたと伝えた。台湾側から抗議を受け、組織委は謝罪した。大会は愛知・名古屋アジアパラ競技大会。表彰式で優勝した選手の名前や階級は、報じられた範囲では確認されていない。再発防止策や、国歌を流す手順の詳細も、示されていない。", "why": "国歌は選手や国・地域の象徴として扱われるため、表彰式の誤りは、選手や関係者にとって大きな問題になりうる。国際大会では運営の正確さが問われ、誤りの経緯と再発防止の説明が、大会への信頼に関わる。", "me": "大会を観戦する人や関係者は、今後の表彰式の運営が改善されるかを確認したい。国際大会では、出場する国や地域の表記や国歌の扱いに、一層の注意が求められることが分かる。", "a": "組織委の謝罪を、誠実な対応とみる見方がある。抗議を受けて誤りを認めて謝罪したことで、問題の拡大を防ぐ動きだと受け止められる。", "b": "誤りの原因の説明が必要だとする見方もある。なぜ誤りが起きたのか、再発防止をどう図るのかが示されておらず、運営体制への疑問が残るという受け止めだ。", "say": "確認されたのは、19日の表彰式で台湾選手にイラン国歌を最後まで流すミスがあったこと、台湾側の抗議と組織委の謝罪。選手名、誤りの原因、再発防止策は確認されていない。今日は組織委の追加説明と、台湾側の反応を見る。", "src": "読売新聞(優勝した台湾選手に「イラン国歌」最後まで流すミス、テコンドー表彰式、10/21)"}
+  };
+  const G = {
+    "気象庁":{"f": "防災", "d": "気象・地震・火山の観測と警報を担う国の機関。", "w": "子吉川の氾濫特別警報を発表し、注意報に切り替えた。"},
+    "氾濫特別警報":{"f": "防災", "d": "河川の氾濫が発生した、または切迫しているときに出す最上位の情報。", "w": "子吉川で21日に発表された。"},
+    "レベル5":{"f": "防災", "d": "5段階の警戒レベルで最も高い段階。命を守る行動をとるべき状況。", "w": "子吉川の氾濫特別警報に相当する。"},
+    "越水":{"f": "防災", "d": "川の水が堤防を越えてあふれること。", "w": "子吉川で複数の報道が確認と伝えた。"},
+    "氾濫注意報":{"f": "防災", "d": "河川の水位が上がり、氾濫のおそれがあるときに出す情報。", "w": "22日午前2時20分に切り替えられた。"},
+    "子吉川":{"f": "地理", "d": "秋田県を流れる川。", "w": "記録的大雨で氾濫が確認された川。"},
+    "由利本荘市":{"f": "地理", "d": "秋田県南西部の市。", "w": "子吉川沿いの道路に水があふれた映像の撮影場所。"},
+    "台風30号":{"f": "気象", "d": "今年30番目に発生した台風。", "w": "猛烈な勢力で北上中と伝えられた。"},
+    "中心気圧":{"f": "気象", "d": "台風の中心の気圧。低いほど勢力が強い。", "w": "台風30号は900ヘクトパスカルと伝えられた。"},
+    "最大瞬間風速":{"f": "気象", "d": "ごく短い時間に観測された最も強い風速。", "w": "台風30号は85メートルと伝えられた。"},
+    "前線":{"f": "気象", "d": "性質の異なる空気の境目で、雨をもたらすことが多い。", "w": "低気圧と前線が秋田の大雨をもたらした。"},
+    "PHP":{"f": "IT", "d": "ウェブサイトの構築に広く使われるプログラム言語。", "w": "重大な脆弱性が見つかった言語。"},
+    "脆弱性":{"f": "IT", "d": "ソフトウェアの欠陥で、攻撃に悪用されうるもの。", "w": "PHPの重大な脆弱性2件が修正予定。"},
+    "Critical":{"f": "IT", "d": "脆弱性の深刻度で最も高い区分。", "w": "PHPの2件が最大深刻度とされた。"},
+    "リモートコード実行":{"f": "IT", "d": "外部から遠隔でプログラムを実行される攻撃。", "w": "PHPの脆弱性で恐れがあるとされた。"},
+    "GMO Flatt Security":{"f": "IT", "d": "GMO系のセキュリティ企業。", "w": "脆弱性をメモリ破壊系バグと推定した。"},
+    "Session Upload Progress":{"f": "IT", "d": "PHPのファイルアップロード時の進捗管理機能。", "w": "今回の脆弱性が関わるとみられている機能。"},
+    "php2shell":{"f": "IT", "d": "今回のPHP脆弱性に付けられた通称。", "w": "ITmediaが緊急脆弱性として伝えた。"},
+    "SaaS":{"f": "IT", "d": "ネット経由で使うソフトウェアのサービス形態。", "w": "コドモンなどが緊急メンテナンスに入った。"},
+    "緊急メンテナンス":{"f": "IT", "d": "予定外にサービスを止めて行う保守作業。", "w": "複数のサービスが入った。"},
+    "特使":{"f": "外交", "d": "特定の任務のために派遣される使者。", "w": "プーチン氏が面会した。"},
+    "3カ国協議":{"f": "外交", "d": "三つの国による協議。", "w": "ウクライナ情勢をめぐる米ロ・ウクライナの協議。"},
+    "プーチン氏":{"f": "外交", "d": "ロシアの大統領。", "w": "米国人男性の解放を表明した。"},
+    "ゼレンスキー大統領":{"f": "外交", "d": "ウクライナの大統領。", "w": "11月初めまでの新たな協議を望むと述べた。"},
+    "au PAY":{"f": "金融", "d": "KDDIのスマホ決済サービス。", "w": "加盟店情報が同意なく掲載された可能性。"},
+    "個人事業主":{"f": "経済", "d": "会社を設立せずに事業を営む人。", "w": "最大約46万人分の住所などが表示された。"},
+    "不正アクセス":{"f": "IT", "d": "権限なく他人のシステムに侵入すること。", "w": "フジテレビの番組宣伝システムが被害。"},
+    "番組宣伝システム":{"f": "IT", "d": "番組の宣伝のために使う社内システム。", "w": "個人情報が最大730件漏えいした可能性。"},
+    "軍事境界線":{"f": "安全保障", "d": "朝鮮半島を南北に分ける境界線。", "w": "その近くで要塞化工事が進む。"},
+    "要塞化":{"f": "安全保障", "d": "防御施設を築いて守りを固めること。", "w": "北朝鮮が軍事境界線付近で進める工事。"},
+    "心理戦":{"f": "安全保障", "d": "相手の心理に働きかける戦い。", "w": "拡声機を使った対韓国の手段。"},
+    "金与正":{"f": "人物", "d": "北朝鮮の金正恩総書記の妹。", "w": "要塞化工事を視察し、拡声機を表明した。"},
+    "国債":{"f": "金融", "d": "国が資金を借りるために発行する債券。", "w": "フランスの10年物国債の利回りが上昇した。"},
+    "利回り":{"f": "金融", "d": "投資額に対する収益の割合。", "w": "フランス国債で一時5％に達した。"},
+    "社債":{"f": "金融", "d": "企業が資金調達のために発行する債券。", "w": "2040年に620兆円の見込み。"},
+    "日本証券業協会":{"f": "金融", "d": "証券会社などの自主規制団体。", "w": "社債市場の報告を公表した。"},
+    "都議補選":{"f": "政治", "d": "東京都議会の欠員を補う選挙。", "w": "千代田区で自民が不戦敗となる見通し。"},
+    "不戦敗":{"f": "政治", "d": "候補を立てず、戦わずに敗れること。", "w": "千代田区の都議補選で自民が見通し。"},
+    "コドモン":{"f": "IT", "d": "保育園向けのSaaS。", "w": "緊急メンテナンスに入った。"},
+    "さくらのレンタルサーバ":{"f": "IT", "d": "さくらネットが提供するレンタルサーバ。", "w": "機能の一部が止まった。"},
+    "KDDI":{"f": "企業", "d": "通信大手。", "w": "au PAYの加盟店情報の掲載を発表した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

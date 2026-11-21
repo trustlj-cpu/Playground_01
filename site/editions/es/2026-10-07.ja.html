@@ -1,0 +1,384 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリック → 展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:" →"}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet" lang="ja">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>19,118.0</b>IBEX 35 · 10/7 終値 · −1.68%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · スペイン版 · 毎朝、一面を一枚</div></div>
+      <div class="ear r"><b>1.1177ドル</b>ユーロ/ドル · 10/7 · −0.82%</div>
+    </div>
+    <div class="dateline"><span>第3号 · 朝刊</span><b>2026年10月7日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="maricarmen">
+      <div class="kick">社会 · 住宅<span>報道照合 ✓ 4社 · 死因は公表されず</span></div>
+      <h2 class="hl">マリカルメン・アバスカルさん死去、強制退去が選挙戦を変えた女性</h2>
+      <p class="deck">87歳だった。9月23日に、1956年から暮らしたレティーロ地区の家を追い出され、戻る直前だった。彼女の件は住宅政令、下院での否決、解散総選挙につながった。</p>
+      <div class="body">
+        <p>マリア・デル・カルメン・アバスカルさんは水曜、87歳で亡くなった。El País、La Vanguardia、Europa Pressが伝えた。遺族は、本紙の締め切り時点で死因を公表していない。El Paísによれば、8年間の新しい賃貸契約に署名する数時間前に亡くなった。契約を結べば、自宅に戻れるはずだった。国際メディアもこの死去を報じた。</p>
+        <p>始まりは地域の一件だった。9月23日、企業のUrbagestión（ウルバヘスティオン）が、マドリードのレティーロ地区にある住まいの強制退去を4度目の試みで執行した。彼女は1956年から、旧賃貸契約（renta antigua）でそこに住んでいた。足が不自由で、年金は1,350ユーロだった。借家人組合（Sindicato de Inquilinas）が反対し、国連が停止を求めていたが、執行は行われた。追い出しの映像は全国で抗議を呼び、プエルタ・デル・ソルでは野営デモが始まって、水曜で12日目になった。</p>
+        <p>9月28日、弁護士は、家主側と住まいに戻れるよう合意したと発表した。だが彼女の件は、すでに地域を越えていた。政府はこれを受けて住宅政令を二つ決めた。下院は10月2日、PP、Vox、Junts（ジュンツ）の票でこれを否決した。10月5日、ペドロ・サンチェス首相は11月29日の総選挙を宣言した。火曜、閣議は政令をあらためて決めた。報道はすでに「マリカルメン政令」と呼んでいた。</p>
+        <p>ソルの野営では、訃報は悲しみとともに受け止められた。「私たちは止まらない、続ける」。野営の参加者はEuropa Pressにそう語った。左派の指導者たちは、彼女が最後の年月を自宅で過ごせなかったことを嘆いた。El Mundoは、左派の一部が彼女の死を選挙の象徴に仕立てており、「これは死ではない、殺人だ」といった言葉まで出ていると伝えた。</p>
+        <p>火曜に決まり、水曜に明らかになった文書は、彼女の件にとどまらない。El PaísとEuropa Pressによれば、立場の弱い借家人の滞納分を自治体などの行政が引き受けて、強制退去を避けさせる。投機目的の購入には規制が強まり、La Vanguardiaによれば、10戸を超える物件を持つ企業も対象になる。政令の一つは木曜に施行される。家賃契約の延長に関するものは、ABCによれば11月15日に施行される見通しだ。</p>
+        <p>4日前、彼女の死去を告げるデマがSNSに出回り、検証機関がそのときに否定した。今回は複数の報道機関が確認している。彼女の名は選挙戦に残り続ける。住宅ゼネストの日取りはすでに11月11日と決まり、政府は11月14日までに、常設委員会（Diputación Permanente）に政令を承認させなければならない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>87</b><span>マリカルメン・アバスカルさんの享年</span></div>
+        <div><b>1956</b><span>レティーロ地区の自宅に住み始めた年</span></div>
+        <div><b>8年</b><span>署名するはずだった契約の期間（El País）</span></div>
+      </div></div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="huelga">
+      <div class="kick">労働<span>報道照合 ✓ 5社 · CCOOとUGTが正式に呼びかけ</span></div>
+      <h3 class="hl">住宅ゼネスト、11月11日に決定</h3>
+      <div class="one">
+        <p>CCOOとUGTは、住宅をめぐるゼネストを11月11日に行うと決めた。La VanguardiaとEl Mundoが伝えた。「投機をやめさせる」こと、価格の上昇に歯止めをかけることを求めている。ELAは、ストはバスク州（Euskadi）とナバラ州でも行うと発表した。Europa Pressが伝えた。カタルーニャでは、労組や市民団体が「歴史的な」ストになると語っている。ABCによる。</p>
+        <p>この日は、選挙戦の始まる2日前にあたる。全員が参加するわけではない。USO、Fetico、公務員の労組は「政治的な色合い」があるとして距離を置く。El Mundoの試算では、呼びかけに反対する組織の組合員は合わせて50万人を超える。一方、医師の労組は、解散総選挙を受けて無期限ストの呼びかけを取り下げた。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>旧賃貸契約<i>住宅</i></b><p>1985年より前の賃貸契約で、家賃が低く、借り手が手厚く守られる。次第になくなりつつある。マリカルメンさんの契約がこれだった。</p></div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="decreto"><b>政令、立場の弱い借家人の滞納を行政が負担へ</b><em>強制退去を防ぐため。投機目的の購入にも規制を強める。政令の一つは木曜に施行。承認の期限は11月14日。</em><span>住宅 · ✓ 4社</span></div>
+      <div class="it story" tabindex="0" data-id="correo"><b>フェイホー氏、郵便投票に追加の保証を選管に求める</b><em>PPのボルハ・センペル氏は、制度は「保証が十分」だと主張する。</em><span>選挙 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="aireuropa"><b>判事、エア・ヨーロッパ事件でアーヘセン氏を11月に証人喚問</b><em>選挙の6日前に証言する。</em><span>司法 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="rey"><b>フェリペ6世、ヘルシンキで「南の側面は北の側面でもある」</b><em>国王はフィンランド国賓訪問の締めくくりに、脅威への警告を発した。</em><span>王室 · ✓ 2社</span></div>
+      <div class="it story" tabindex="0" data-id="rosalia"><b>ロサリアに国民賞（現代音楽部門）、『LUX』で</b><em>審査員は、このアルバムの芸術的な意義を評価した。</em><span>文化 · ✓ 2社</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="temporal">
+      <div class="kick">天気 · カタルーニャ<span>報道照合 ✓ 4社 · 捜索続く</span></div>
+      <h3 class="hl">冠水したトンネルで遺体発見、グラノリェルスでは男児の捜索続く</h3>
+      <div class="body">
+        <p>水曜、消防は、レス・フランケセス・デル・バリェスの冠水したトンネルで、車内から43歳の男性の遺体を見つけた。El Mundoによる。消防とカタルーニャ州警察（Mossos）は、悪天候のなかグラノリェルスで行方不明になった12歳の男児、ラミちゃんの捜索範囲を広げた。</p>
+        <p>ロダリエス（Rodalies）は朝から大混乱だった。雨の後の安全が確保されていないとして、運転士が運行を拒んだ。La Vanguardia、El País、ABCが伝えた。Rodaliesは安全上の問題があったことを否定し、サルバドール・イリャ（Salvador Illa）州首相は調査を発表した。El Mundoによる。運行は一部しか戻らなかった。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="peste">
+      <div class="kick">保健 · 世界<span>報道照合 ✓ 3社 · ロシア側の説明は未検証</span></div>
+      <h3 class="hl">ロシア、2例目のペストを否定。WHOは支援を申し出、モンゴルは国境を警戒</h3>
+      <div class="body">
+        <p>モスクワは、2例目のペストが疑われているとの見方を「偽情報」と断じた。一方、米国は自国民にロシアへ渡航しないよう求めた。El Mundoによる。世界保健機関（WHO）はロシアに技術支援を申し出て、より多くの情報を求めた。El Paísが伝えた。</p>
+        <p>モンゴルは、肺ペストの流行の可能性を受け、ロシアとの国境で保健上の監視措置を命じた。Europa Pressによる。この件は月曜、シベリアにある高度安全研究所の研究者の死亡で始まった。ロシア国外で確認された症例はない。</p>
+      </div>
+      <div class="more">開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="frente">
+      <div class="kick">選挙<span>報道照合 ✓ 3社 · 候補者はまだ固まらず</span></div>
+      <h3 class="hl">マス・マドリード、広域戦線の候補にアダ・コラウ氏を提案</h3>
+      <div class="body">
+        <p>マス・マドリード（Más Madrid）は、アダ・コラウ氏を、首相の座を目指す広域戦線（Frente Amplio）の候補とし、バルセロナの名簿の筆頭にも据えるよう提案した。El Paísによる。El Mundoによれば、この道筋でポデモスに近づくが、マドリードの名簿は各党の間でなお争いが続く。Europa Pressは、ポデモスに「歴史的な局面」を理解して、「一枚の投票用紙」で広域戦線に加わるよう呼びかける声を伝えた。</p>
+        <p>PPでは、La Vanguardiaによれば、フェイホー氏が、グザビエ・ガルシア・アルビオル氏をバルセロナの候補にすることを検討している。株式市場は冴えない一日だった。IBEX 35は1.68%下げて19,118ポイントとなり、フランクフルトやパリの下げと歩調を合わせた。</p>
+      </div>
+      <div class="more">開く</div>
+      <div class="fill"><h5>短く、もう少し</h5><ul class="briefs">
+        <li>検察、陪審裁判を前にベゴーニャ・ゴメス氏の無罪を求める<span>El País</span></li>
+        <li>プチデモン氏、元州首相の事務所をバルセロナの高台に移す<span>La Vanguardia</span></li>
+        <li>カタルーニャ高等裁判所（TSJ）、バルセロナ市のイスラエルとの関係断絶を無効に<span>El Mundo</span></li>
+        <li>BBVA Research、成長率予想を2.6%に上方修正。ただしエネルギーショックに警戒<span>El Mundo</span></li>
+        <li>米国の司法、再生可能エネルギー削減をめぐるスペインへの有罪判断を13件に<span>ABC</span></li>
+        <li>労働省、選挙の前に最低賃金を引き上げる手続きを開始<span>La Vanguardia</span></li>
+        <li>カタール沖で船舶に攻撃、死傷者<span>Europa Press</span></li>
+      </ul><div class="house">毎朝7分、一面を一枚</div></div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「マリカルメンさんは10月3日に亡くなった。」</b> <span>当時は誤り。その日に出回ったのはデマで、検証機関が否定した。死去が知られたのは10月7日。</span></div>
+        <div><b>「すべての労組が11月11日のストに参加する。」</b> <span>違う。USO、Fetico、公務員の労組は距離を置く。</span></div>
+        <div><b>「ロシアで2例目のペストが出た。」</b> <span>未確認。モスクワは否定し、WHOはより多くの情報を求めている。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>これから見るもの</h4>
+        <div><b>10/8 木</b><span>住宅政令の一つが施行 · ノーベル文学賞 · グラノリェルスでラミちゃんの捜索続く</span><b>今週</b><span>ノーベル平和賞（金曜） · 広域戦線の名簿 · 常設委員会の日取り · 10月12日</span><b>読者へ</b><span>家賃の滞納があり、立場の弱い借家人なら、市区町村や自治州に相談を。新しい政令は、行政に介入を義務づけている。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip" lang="ja"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle" lang="ja">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "maricarmen":{"kick": "社会 · 報道照合 ✓ 4社", "title": "マリカルメン・アバスカルさん死去、強制退去が選挙戦を変えた女性", "what": "マリア・デル・カルメン・アバスカルさんは10月7日、87歳で亡くなった。El País、La Vanguardia、Europa Pressが伝えた。9月23日に、1956年から暮らしたレティーロ地区の家から強制退去させられた。契約は旧賃貸契約（renta antigua）だった。9月28日、弁護士は、住まいに戻れるよう合意したと発表した。El Paísによれば、8年間の賃貸契約に署名する数時間前に亡くなった。彼女の件は住宅政令を生み、下院が否決し、それが解散総選挙につながった。", "why": "マリカルメンさんは、住宅危機の象徴になった。死去は選挙の5週間前に、そして住宅ゼネストの1か月前に当たる。", "me": "報道で彼女の名がつく政令には、借家人への支援と保護が含まれる。採決される前に内容を知っておくとよい。", "a": "左派や住宅の市民団体にとって、彼女の死は強制退去の人的な代償を物語る。", "b": "別の側にとっては、死を選挙の象徴に仕立てるのは党派的な利用だ。El Mundoはそう批判している。", "say": "敬意とは、個人と論争を分けることだ。役に立つのは、政令を、その効果で測ることだ。旧賃貸契約で暮らす高齢者の強制退去を止められるなら、彼女の件には意味があったことになる。", "src": "El País、La Vanguardia、Europa Press、El Mundo。強制退去についてはEuronewsとAFP · 2026年9月23日〜10月7日"},
+    "huelga":{"kick": "労働 · 報道照合 ✓ 5社", "title": "住宅ゼネスト、11月11日に決定", "what": "CCOOとUGTは、住宅をめぐるゼネストを11月11日に行うと決めた。ELAはバスク州とナバラ州にも広げる。USO、Fetico、公務員の労組は加わらない。医師の労組は無期限ストの呼びかけを取り下げた。", "why": "選挙戦の始まる2日前に当たり、選挙の文脈で読まれることになる。", "me": "11月11日に働くなら、ストに参加する権利がある。最低限のサービスは維持される。", "a": "呼びかける側は、住宅は賃金と暮らしの問題だと言う。", "b": "距離を置く側は、政治的な色合いがあると言う。", "say": "最低限のサービスの扱いと、経営者団体CEOEがこの呼びかけを裁判所に持ち込むかどうかを見ておきたい。", "src": "La Vanguardia、El Mundo、Europa Press、ABC · 2026年10月7日"},
+    "decreto":{"kick": "住宅 · 報道照合 ✓ 4社", "title": "政令、立場の弱い借家人の滞納を行政が負担へ", "what": "新しい政令は、強制退去を避けるため、立場の弱い借家人の滞納分を行政が引き受けるよう義務づける（El País、Europa Press）。投機目的の購入への規制を強め、10戸を超える物件を持つ企業も対象にする（La Vanguardia）。政令の一つは木曜に施行され、延長に関するものは11月15日の施行となる見通しだ（ABC）。承認の期限は11月14日（El Mundo）。", "why": "強制退去を避けるための負担を、公的部門に移す。", "me": "家賃の滞納があって立場が弱いなら、市区町村に問い合わせるとよい。", "a": "", "b": "不動産業界の団体は、「立法の乱発」だと批判している。", "say": "滞納分を払うための予算はついていない。誰が負担するのか、見ていく必要がある。", "src": "El País、Europa Press、La Vanguardia、ABC、El Mundo · 2026年10月7日"},
+    "correo":{"kick": "選挙 · 報道照合 ✓ 2社", "title": "フェイホー氏、郵便投票に追加の保証を選管に求める", "what": "フェイホー氏は郵便投票に「追加の」保証を求め、郵便公社（Correos）の幹部を信頼していないと述べた（El Mundo）。ボルハ・センペル氏は、制度は保証が十分だと主張した。El Paísは、マドリードのPPがInstagramで展開する「郵便投票をするな」というキャンペーンを紹介した。", "why": "郵便投票に疑いの種をまけば、投票率が下がりかねない。", "me": "11月29日に不在なら、郵便投票は合法で、管理もされている。", "a": "", "b": "", "say": "不正の証拠はない。どんなメッセージを出すか、PPは決めるべきだ。", "src": "El Mundo、El País · 2026年10月7日"},
+    "aireuropa":{"kick": "司法 · 報道照合 ✓ 2社", "title": "判事、エア・ヨーロッパ事件でアーヘセン氏を証人喚問", "what": "エア・ヨーロッパへの融資をめぐる事件の判事は、サラ・アーヘセン副首相、イニゴ・エレホン（Íñigo Errejón）氏らを、選挙の6日前にあたる11月に証人として召喚した。Europa PressとEl Mundoによる。", "why": "召喚は選挙戦と重なる。", "me": "", "a": "", "b": "", "say": "証人は被疑者ではない。混同しないほうがいい。", "src": "Europa Press、El Mundo · 2026年10月7日"},
+    "rey":{"kick": "王室 · 報道照合 ✓ 2社", "title": "フェリペ6世、ヘルシンキで「南の側面は北の側面でもある」", "what": "国王はヘルシンキで、脅威を「近視眼的に」見ることへの警戒を呼びかけ、欧州南部の安全は北部と同じく重要だと訴えた。El Mundoによる。フィンランドはすでにその点でスペインと連帯を示していた。El Paísが伝えた。", "why": "スペインは、NATOとEUに、地中海とサヘルへの目配りを求めている。", "me": "", "a": "", "b": "", "say": "国会の解散のさなかに出た、抑えた国家のメッセージだ。", "src": "El Mundo、El País、ABC · 2026年10月6〜7日"},
+    "rosalia":{"kick": "文化 · 報道照合 ✓ 2社", "title": "ロサリアに国民現代音楽賞", "what": "文化省は、アルバム『LUX』の「芸術的な意義」により、ロサリアに2026年の国民現代音楽賞（Premio Nacional de las Músicas Actuales）を贈った。", "why": "国際的に最も影響力のあるスペインのアーティストの一人を称えるものだ。", "me": "", "a": "", "b": "", "say": "このアルバムが、すでに同世代の古典になったころに届いた賞だ。", "src": "Europa Press、El Mundo · 2026年10月7日"},
+    "temporal":{"kick": "天気 · 報道照合 ✓ 4社", "title": "冠水したトンネルで遺体発見、グラノリェルスでは男児の捜索続く", "what": "レス・フランケセスの冠水したトンネルで、車内から43歳の男性の遺体が見つかった。グラノリェルスでは、12歳のラミちゃんの捜索が続く。ロダリエスの運転士は安全を理由に運行を拒み、イリャ州首相は調査を発表した。", "why": "悪天候はすでに犠牲者を出し、緊急対応の態勢が試されている。", "me": "バリェス地方に住んでいるなら、出かける前にロダリエスの運行状況を確かめたい。", "a": "", "b": "", "say": "2024年の孤立低気圧（dana）のあと、悪天候への対応は一度ごとに政治の試験になる。", "src": "El Mundo、La Vanguardia、El País、ABC · 2026年10月7日"},
+    "peste":{"kick": "保健 · 報道照合 ✓ 3社", "title": "ロシア、2例目のペストを否定", "what": "ロシアは、2例目の疑いを偽りだと断じた。米国は自国民にロシアへの渡航を控えるよう求めた。WHOは技術支援を申し出て、モンゴルは国境の監視を強めた。", "why": "肺ペストは人から人へうつる。", "me": "スペインにリスクはない。", "a": "", "b": "", "say": "独立したデータがない以上、モスクワの否定よりも、モンゴルの慎重さのほうが多くを語る。", "src": "El Mundo、El País、Europa Press · 2026年10月7日"},
+    "frente":{"kick": "選挙 · 報道照合 ✓ 3社", "title": "マス・マドリード、広域戦線の候補にアダ・コラウ氏を提案", "what": "マス・マドリードは、広域戦線の首相候補で、バルセロナの名簿の筆頭として、アダ・コラウ氏を提案した。この案でポデモスに近づくが、マドリードの名簿はなお争いが続く。IBEX 35は1.68%下げた。", "why": "PSOEより左の勢力は、議席を失わないために、まとまる必要がある。", "me": "", "a": "", "b": "", "say": "試金石はマドリードの名簿だ。そこで合意できなければ、一枚の投票用紙はない。", "src": "El País、El Mundo、Europa Press、La Vanguardia · 2026年10月7日"}
+  };
+
+  // ───── 用語集：本文とポップアップ内の語に点線の下線。クリックで意味を表示
+  const G = {
+    "強制退去":{"f": "住宅", "d": "裁判所の命令で、住まいから立ち退かせること。", "w": "9月23日のマリカルメンさんの件が、すべての発端になった。"},
+    "旧賃貸契約":{"f": "住宅", "d": "1985年より前の賃貸契約。家賃が低く、借り手が強く守られる。", "w": "マリカルメンさんの契約がこれだった。"},
+    "借家人組合":{"f": "住宅", "d": "住居への権利を守る、借家人の組織。", "w": "強制退去に反対した。"},
+    "野営デモ":{"f": "抗議", "d": "公共の場所を、平和的に、継続して占める行動。", "w": "ソルの野営デモは12日目になった。"},
+    "常設委員会":{"f": "議会", "d": "議会が解散されている間、議会の機能を保つ小規模な機関。", "w": "11月14日までに政令を承認する。"},
+    "ゼネスト":{"f": "労働", "d": "すべての業種で同時に行う、一斉の停止。", "w": "11月11日に行われる。"},
+    "ELA":{"f": "労働", "d": "バスク民族主義の労組で、バスク州で最大。", "w": "ストをバスク州とナバラ州に広げる。"},
+    "投機目的の購入":{"f": "住宅", "d": "転売や、高い収益を狙った賃貸のために、住宅を取得すること。", "w": "政令は、10戸を超える物件を持つ企業も対象にする。"},
+    "選管":{"f": "選挙", "d": "選挙の公正を守る機関。", "w": "フェイホー氏は追加の保証を求めた。"},
+    "郵便投票":{"f": "選挙", "d": "投票所に行かず、郵便公社を通じて申請して投票する方法。", "w": "PPをめぐる論争の的。"},
+    "広域戦線":{"f": "政党", "d": "PSOEより左の勢力による連合。", "w": "マス・マドリードはコラウ氏を提案した。"},
+    "ロダリエス":{"f": "交通", "d": "カタルーニャの近郊電車網。", "w": "運転士が安全を理由に運行を止めた。"},
+    "肺ペスト":{"f": "保健", "d": "肺を侵すペストの型で、人から人へうつる。", "w": "モンゴルは国境を監視している。"},
+    "証人":{"f": "司法", "d": "知っていることを述べるために召喚される人。被告ではない。", "w": "アーヘセン氏はエア・ヨーロッパ事件でそうなる。"},
+    "IBEX 35":{"f": "市場", "d": "スペインの取引所で、最も売買の多い35社の指数。", "w": "水曜に1.68%下げた。"},
+    "国民賞":{"f": "文化", "d": "文化省が毎年授ける国の賞。", "w": "ロサリアが『LUX』で受けた。"},
+    "Urbagestión":{"f": "住宅", "d": "マリカルメン・アバスカルさんの強制退去を執行した、不動産管理会社。", "w": "9月23日、4度目の試みで執行した。"},
+    "レティーロ":{"f": "地理", "d": "マドリードの地区で、同名の公園に隣接する。", "w": "マリカルメンさんは1956年からそこに住んでいた。"},
+    "デマ":{"f": "検証", "d": "人をだましたり、偽情報を広めたりするために流された偽のニュース。", "w": "4日前、彼女の死去を告げるものが出回った。"},
+    "検証機関":{"f": "検証", "d": "情報やデータが事実かどうかを確かめる、報道のチーム。", "w": "彼女の死去をめぐるデマを否定した。"},
+    "USO":{"f": "労働", "d": "労働者連合組合（Unión Sindical Obrera）。全国規模の労組。", "w": "「政治的な色合い」を理由に、ゼネストから距離を置く。"},
+    "Fetico":{"f": "労働", "d": "独立商業労働者連盟（Federación de Trabajadores Independientes de Comercio）。商業部門の労組。", "w": "この呼びかけにも加わらない。"},
+    "公務員の労組":{"f": "労働", "d": "公務員を代表する組織。", "w": "同じくストから距離を置く。"},
+    "アーヘセン":{"f": "政治", "d": "サラ・アーヘセン。副首相兼エコロジー移行相。", "w": "判事は、エア・ヨーロッパ事件の証人として喚問する。"},
+    "エア・ヨーロッパ事件":{"f": "司法", "d": "航空会社エア・ヨーロッパをめぐる裁判で、複数の証人に証言が求められている。", "w": "アーヘセン氏は11月に証言する。"},
+    "ボルハ・センペル":{"f": "政党", "d": "PPの幹部。", "w": "郵便投票は「保証が十分」だと主張する。"},
+    "保証が十分":{"f": "法", "d": "手続きにおいて、人々の保障と権利を優先する（garantista）。", "w": "センペル氏は、郵便投票の制度をそう表現する。"},
+    "南の側面":{"f": "安全保障", "d": "軍事用語で、同盟の南の境界。NATOでは、地中海と北アフリカを指す。", "w": "国王は、これを北の側面と結びつける。"},
+    "現代音楽部門":{"f": "文化", "d": "文化省が授ける国民現代音楽賞（Premio Nacional de las Músicas Actuales）の部門。", "w": "ロサリアが『LUX』で受けた。"},
+    "レス・フランケセス・デル・バリェス":{"f": "地理", "d": "バルセロナ県バリェス・オリエンタル郡の自治体。", "w": "そこの冠水したトンネルで遺体が見つかった。"},
+    "Mossos":{"f": "安全保障", "d": "モッソス・デスカドラ（Mossos d’Esquadra）。カタルーニャの自治州警察。", "w": "消防とともに、行方不明の男児を捜している。"},
+    "高度安全研究所":{"f": "保健", "d": "危険な病原体を扱うために、厳重な隔離措置を備えた施設。", "w": "研究者は、シベリアのそれで死亡した。"},
+    "マス・マドリード":{"f": "政党", "d": "マドリードで生まれた左派政党で、全国にも広がる。", "w": "アダ・コラウ氏を広域戦線の候補に提案している。"},
+    "アダ・コラウ":{"f": "政治", "d": "バルセロナの元市長で、オルタナティブ左派の顔。", "w": "マス・マドリードが候補に提案している。"},
+    "グザビエ・ガルシア・アルビオル":{"f": "政治", "d": "カタルーニャPPの幹部で、バダロナの元市長。", "w": "フェイホー氏が、バルセロナの候補にすることを検討している。"},
+    "検察":{"f": "司法", "d": "法の遵守を守り、刑事手続で公訴を行う機関。", "w": "ベゴーニャ・ゴメス氏の無罪を求める。"},
+    "陪審裁判":{"f": "司法", "d": "一般市民が、被告人の有罪かどうかを判断する刑事手続。", "w": "ベゴーニャ・ゴメス氏の事件で開かれる。"},
+    "カタルーニャ高等裁判所":{"f": "司法", "d": "カタルーニャ高等裁判所（TSJ）。同自治州の最上位の司法機関。", "w": "バルセロナ市のイスラエルとの関係断絶を無効にした。"},
+    "BBVA Research":{"f": "経済", "d": "銀行BBVAの調査部門で、経済予測を発表している。", "w": "成長率の予想を2.6%に上方修正した。"},
+    "エネルギーショック":{"f": "経済", "d": "エネルギー価格の急な上昇で、生産費を押し上げ、成長を鈍らせる。", "w": "BBVA Researchは、これをリスクとして挙げる。"},
+    "再生可能エネルギー削減":{"f": "経済", "d": "再生可能エネルギーへの助成の削減で、スペインに対する国際仲裁につながった。", "w": "米国で、スペインに不利な判断がさらに増えた。"},
+    "承認の期限":{"f": "議会", "d": "政府が決めた政令を、下院が承認する手続き（convalidación）。", "w": "その期限は11月14日に切れる。"},
+    "承認":{"f": "議会", "d": "政府が決めた政令を、下院が承認すること（convalidar）。", "w": "常設委員会が政令を承認すると見込まれる。"},
+    "立場の弱い借家人":{"f": "住宅", "d": "家賃を払うのに、経済的・社会的な困難を抱える借り手。", "w": "政令は、その滞納分を行政が引き受けるよう義務づける。"},
+    "家賃契約の延長":{"f": "住宅", "d": "賃貸契約の期間を自動的に延ばすこと。", "w": "政令の一つが定め、11月15日に施行される見通しだ。"},
+    "マリカルメン政令":{"f": "住宅", "d": "マリカルメン・アバスカルさんの強制退去の後に生まれた住宅政令を、報道がそう呼ぶ名前。", "w": "閣議は火曜、これを2度目に承認した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // inside the modal, the tip must float above it
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // close only the term card and swallow the click; the story popup stays
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる ↑</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

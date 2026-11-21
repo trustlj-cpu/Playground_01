@@ -1,0 +1,358 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,550.30</b>KOSPI · 10/23 終値 · 前日比0.3%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>751.69</b>KOSDAQ · 10/23 終値 · 前日比1.62%下落</div>
+    </div>
+    <div class="dateline"><span>第20号 · 夕刊</span><b>2026年10月24日 土曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="kim">
+      <div class="kick">政治 · 北朝鮮・中国<span>✓ 4社 · 訪中の目的と中国側の公式発表は未確認</span></div>
+      <h2 class="hl">キム・ジョンウン委員長、1年余りぶりに電撃訪中…新鴨緑江大橋を渡り丹東に到着、日帰りで帰国の見通し</h2>
+      <p class="deck">統一部は24日、北朝鮮のキム・ジョンウン国務委員長が新鴨緑江大橋を通って中国の丹東に到着すると明らかにし、与党関係者は同日中に訪中日程を終えて帰国するとみられると聯合ニュースに伝えた。</p>
+      <div class="body">
+        <p>統一部は24日、北朝鮮のキム・ジョンウン国務委員長が訪中し、新鴨緑江大橋を通って中国の丹東に到着すると明らかにしたと、京郷新聞と東亜日報が速報で伝えた。聯合ニュースは、キム委員長が1年余りぶりに電撃訪中したことが確認されたと報じ、京郷新聞は、昨年の9月に中国の戦勝節80周年の軍事パレードに出席するため北京を訪れて以来、1年1カ月ぶりだと報じた。聯合ニュースは日本の共同通信を引用し、同日午前、丹東の一部地域で交通が厳しく規制され、ホテルも規制されており、北朝鮮の高官が訪れた可能性があると報じた。東亜日報は、丹東と新義州を結ぶ新鴨緑江大橋が今月15日、完成から12年を経て正式に開通したと伝えた。</p>
+        <p>聯合ニュースは、与党関係者がキム委員長は同日中に訪中日程を終えて帰国するとみられると語ったと伝え、韓国経済も同じ内容を速報で報じた。京郷新聞は、キム委員長が22~23日に平壌で朝鮮人民軍第3回中隊長大会を主宰して演説したと北朝鮮メディアが24日に報じたと伝え、死亡説が流れていたキム委員長が公の場に再び姿を現したと書いた。東亜日報は、この大会が労働党第9回大会以来初の全軍規模の会合だと報じた。東亜日報は、25日が中国の朝鮮戦争参戦から76周年に当たる日であり、関連した動きかもしれないとの見方が出ていると伝え、韓国経済は、深圳APECを前に北朝鮮・中国の接近を誇示したものだという見出しの分析記事を載せた。訪中の目的と中国側の公式発表は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="laz">
+      <div class="kick">社会 · サイバーセキュリティ<span>✓ 4社 · ラザルスと名指しした根拠と実際の侵害の有無は未確認</span></div>
+      <h3 class="hl">北朝鮮のハッカー組織ラザルス、PHPの脆弱性を悪用した攻撃を準備か…サイファーマが「韓国語を使う攻撃者」を捕捉</h3>
+      <div class="one">
+        <p>グローバルなサイバーセキュリティ企業のサイファーマ(CYFIRMA)は22日(現地時間)、非公開のソースデータ収集の中で、韓国語を使う攻撃者が非公開の匿名ネットワーク(I2P)のチャンネルで、PHPトゥシェルの脆弱性があるウェブ上でアクセス可能な資産を偵察し、公開された攻撃コードを検証する活動が目撃されたと明らかにしたと、東亜日報が報じた。聯合ニュースとSBSはこれを「北朝鮮のハッカー組織ラザルスがPHPの脆弱性を悪用して攻撃を準備している状況」という見出しで伝え、韓国経済は「北朝鮮との関連が疑われる」組織と表現した。東亜日報は、韓国を含む世界の政府機関や金融機関を偵察している状況だとの主張が出ていると伝えつつ、実際の侵害事例が確認されたわけではないと付け加えた。韓国インターネット振興院(KISA)は24日未明に追加のセキュリティ告知を出し、PHPで新たに確認されたリモートコード実行の脆弱性に注意を促したと東亜日報が伝えた。東亜日報によると、この欠陥はログイン情報であるセッションを処理し、ファイルアップロードの進行状況を記録する過程で生じ、正式なセキュリティパッチがまだ出ておらず、緊急の暫定措置が勧告されている。聯合ニュースは同日、「PHPセキュリティ事態の顛末」を扱った記事で、ログインなしでサーバーを掌握される恐れを指摘した。朝刊で扱った政府のサイバー危機警報「注意」への引き上げに続く、新たな展開だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="sam"><b>サムスンの抑えキム・ジェユン、前鋸筋の損傷でプレーオフのエントリーから外れる…約2週間休養</b><em>サムスン球団は、MRIで右の前鋸筋の筋肉・筋膜の損傷が確認されたと明らかにした。セーブ数1位のキム・ジェユンは約2週間の休養が必要だ。</em><span>スポーツ · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="fire"><b>殉職消防士の追悼行事、予算1億ウォン全額カットで大幅縮小…チュ・ミエ知事が待遇改善を約束</b><em>京畿道が119メモリアルデーの予算1億ウォンを全額カットし、24日の行事は縮小して開かれた。チュ・ミエ京畿道知事が出席し、待遇改善を約束した。</em><span>社会 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="hwa"><b>横城の嶺東高速道路で車3台が追突…2人死亡・3人けが</b><em>24日午前2時20分ごろ、江陵方面141.5㎞地点で車3台が追突した。オーランドに乗っていた70代の男性と60代の女性が死亡した。</em><span>社会 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="isr"><b>イスラエル総選挙の4日前、ヨルダン川西岸で銃撃…兵士2人死亡、軍がヘブロンで捜索に着手</b><em>イスラエル軍は23日、ヨルダン川西岸で兵士2人が死亡し、銃撃犯2人を射殺したと明らかにした。27日の総選挙を前に、ネタニヤフ首相が西岸の封鎖令を出した。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="fork"><b>亀尾・麗水でフォークリフト事故が相次ぐ…亀尾では心停止で搬送、麗水では50代の作業員が死亡</b><em>亀尾で23日、フォークリフト事故により作業員が下敷きになり心停止状態で搬送され、24日には麗水の工場で50代の作業員が転倒したフォークリフトの下敷きになって死亡した。</em><span>社会 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="ohx">
+      <div class="kick">政治 · 司法<span>✓ 4社 · 弾劾案の発議・採決の日程は未確認</span></div>
+      <h3 class="hl">オ・セフン無罪に、与党側は「チョ・ヒデ弾劾論」、国民の力は「司法府への威圧をやめよ」と応酬…李大統領の支持率は40%台</h3>
+      <div class="body">
+        <p>京郷新聞は、オ・セフンソウル市長が「ミョン・テギュン世論調査代払い疑惑」の控訴審で無罪を言い渡されると、共に民主党の指導部や与党側の人物らがSNSでいっせいに司法府を標的にしたと報じた。京郷新聞は、一部が裁判部を「無罪自販機」にたとえたと伝えつつ、「チョ・ヒデを弾劾せよ」と「低俗な圧力」という相反する主張が飛び交ったことを見出しに盛り込んだ。ニューシスは、与党側から「チョ・ヒデ弾劾論」が出ると国民の力が「司法府への威圧をやめよ」と求めたと伝え、朝鮮日報は、与党の「着実に進める」という立場と、野党の「何でもチョ・ヒデ説」という反論を並べて報じた。</p>
+        <p>SBSは、イ・ジェミョン大統領の支持率が7週間ぶりに40%台に上がったという世論調査の結果を伝え、チョ・ヒデ大法院長の弾劾への賛否が拮抗していると報じた。弾劾案の発議や採決の日程は、報道では確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="seoul">
+      <div class="kick">スポーツ · サッカー<span>✓ 4社 · 優勝の表彰式の日程は未確認</span></div>
+      <h3 class="hl">FCソウル、カンウォンと1-1で引き分けKリーグ1優勝が確定…2016年以来10年ぶり、通算7度目</h3>
+      <div class="body">
+        <p>聯合ニュースと東亜日報は、FCソウルが24日、ソウルワールドカップ競技場で行われたハナ銀行Kリーグ1 2026の第33節ホームゲームでカンウォンFCと1-1で引き分け、2016年以来10年ぶりに優勝を決めたと報じた。東亜日報によると、ソウルは20勝7分け6敗(勝ち点67)となり、同じ時間に浦項スティーラーズと2-2で引き分けた2位の蔚山HD(勝ち点51)との勝ち点差16を保ち、残るファイナルラウンド5試合の結果にかかわらず、早期優勝を決めた。聯合ニュースは通算7度目の優勝だと伝え、韓国経済も速報で同じ内容を報じた。</p>
+        <p>朝鮮日報(OSEN)は、ムン・ソンミンの先制ゴールから5分でカンウォンのカン・ジュンヒョクが同点ゴールを決め、試合はそのまま1-1で終わったと伝えた。聯合ニュースは、シーズン序盤に「キム・ギドン出ていけ」のコールが響いていた競技場が、「ギドン・マジック」への賛辞で埋まったと伝えた。東亜日報は、ソウルの優勝が特定の選手1人の「ワンマンショー」ではなく、多くの選手がともに作った「ハーモニー」だったと報じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="wsbrew">
+      <div class="kick">スポーツ · 野球<span>✓ 3社 · 9回のピンチの詳細は未確認</span></div>
+      <h3 class="hl">ミルウォーキー、ワールドシリーズ第1戦でタンパベイを3-2で下す…44年ぶりのWSで先発の初球は166.6㎞</h3>
+      <div class="body">
+        <p>東亜日報は、44年ぶりにメジャーリーグのワールドシリーズ(7戦4勝制)に進んだミルウォーキー・ブルワーズが、24日(韓国時間)、米ウィスコンシン州ミルウォーキーで行われた第1戦でタンパベイ・レイズを3-2で破り、先手を取ったと報じた。東亜日報は、アメリカンリーグ所属だった1982年以来44年ぶりにワールドシリーズに進んだミルウォーキーと、2020年以来6年ぶりに進んだタンパベイが、ともに球団創設後初の優勝に挑むと伝えた。ミルウォーキーの先発投手ジェイコブ・ミジオロウスキーが5イニングを投げたと東亜日報は伝えた。</p>
+        <p>朝鮮日報は、ミジオロウスキーが初球から166.6㎞を投げたと見出しで伝え、同じ試合の記事で先制打と9回1死満塁のピンチ脱出を紹介した。聯合ニュースも、ミルウォーキーがタンパベイを3-2で下し、ワールドシリーズで先手を取ったと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>3-2</b><span>ミルウォーキーの第1戦のスコア(東亜日報)</span></div>
+        <div><b>44年</b><span>1982年以来のミルウォーキーのワールドシリーズ復帰(東亜日報)</span></div>
+        <div><b>166.6㎞</b><span>ミルウォーキー先発の初球の球速(朝鮮日報の見出し)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>キム・ジョンウン委員長が死亡した、または影武者が登場したという主張</b> <span>SBSは、死亡説に続いて「影武者説」が出たと、疑問符を付けて伝えた。同じ日に統一部は、キム委員長が訪中して丹東に到着すると明らかにし(京郷新聞・東亜日報)、聯合ニュースは訪中が確認されたと報じた。影武者説の根拠を示した報道は確認されていない。</span></div>
+        <div><b>与党側がチョ・ヒデ大法院長の弾劾案をまもなく採決にかけるという主張</b> <span>朝鮮日報は、与党が「着実に進める」と言ったのに対し、野党は「何でもチョ・ヒデ説」と反論したと伝えた。京郷新聞はSNSで弾劾を求める声が出たと伝えたが、弾劾案の発議・採決の日程は報道では確認されていない。</span></div>
+        <div><b>FCソウルがカンウォンに勝って優勝を決めたという主張</b> <span>聯合ニュースと東亜日報によると、ソウルはカンウォンと1-1で引き分けた。同じ時間に2位の蔚山が浦項と2-2で引き分けて勝ち点差16が保たれ、残り5試合にかかわらず優勝が決まったと東亜日報が伝えた。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 土 10月24日</b><span>キム・ジョンウン委員長が訪中日程を終えて帰国するのか、中国側が訪問を公式に確認するのかが注目される。与党関係者は同日中に帰国するとみられると明らかにした(聯合ニュース)。</span><b>あす · 日 10月25日</b><span>サムスン・ライオンズがキム・ジェユン抜きでプレーオフを戦う(朝鮮日報)。25日は中国の朝鮮戦争参戦から76周年に当たる日だ(東亜日報)。</span><b>今週</b><span>27日にイスラエルの総選挙が行われる(聯合ニュース・東亜日報)。29日から済州のストーカー報復殺人の容疑者の身元が公開される(聯合ニュース)。</span><b>読者へ</b><span>PHPを使うウェブサイトやサーバーを運用しているなら、KISAが24日未明に勧告した緊急の暫定措置とセキュリティパッチの適用の有無を確認せよ、というのが報道の核心だ(東亜日報)。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "kim":{"kick": "政治 · 北朝鮮・中国 · ✓ 4社 · 訪中の目的と中国側の公式発表は未確認", "title": "キム・ジョンウン委員長、1年余りぶりに電撃訪中…新鴨緑江大橋を渡り丹東に到着、日帰りで帰国の見通し", "what": "統一部は24日、北朝鮮のキム・ジョンウン国務委員長が訪中し、新鴨緑江大橋を通って中国の丹東に到着すると明らかにしたと、京郷新聞と東亜日報が速報で伝えた。聯合ニュースは、キム委員長が1年余りぶりに電撃訪中したことが確認されたと報じた。京郷新聞は、昨年9月に中国の戦勝節80周年の軍事パレードに出席するため北京を訪れて以来、1年1カ月ぶりだと伝えた。聯合ニュースは日本の共同通信を引用し、同日午前、丹東の一部地域で交通が厳しく規制され、ホテルも規制されたと報じた。東亜日報は、新鴨緑江大橋が今月15日、完成から12年を経て正式に開通したと伝えた。聯合ニュースは、与党関係者がキム委員長は同日中に訪中日程を終えて帰国するとみられると語ったと伝えた。北朝鮮メディアは、キム委員長が22~23日に平壌で第3回中隊長大会を主宰したと24日に報じた(京郷新聞)。", "why": "聯合ニュースと京郷新聞が「電撃」と表現したように、訪中は事前の予告なく、統一部の発表と外電の速報で先に伝わった。京郷新聞は、死亡説が流れていたキム委員長が軍の行事で公の場に再び姿を現した直後の訪中だと伝えた。東亜日報は、新鴨緑江大橋の開通などで北朝鮮と中国が最近急速に接近していると報じた。", "me": "韓国の読者にとっては、北朝鮮と中国の接触が朝鮮半島情勢にどんなシグナルとなるのかが関心事だ。朝刊で扱った国防部の南北軍事会談の提案(23日)に北朝鮮が応じるかどうかとともに、見守るべき点だ。", "a": "東亜日報は、25日が中国の朝鮮戦争参戦から76周年に当たる日であるため、これに関連した動きかもしれないとの見方が出ていると伝えた。この見方は、訪中を記念日にあわせた儀礼的な動きと読む。ただしこれは速報記事に盛り込まれた見方であり、当局の説明ではない。", "b": "韓国経済は、新鴨緑江大橋を渡っての電撃訪中を、深圳APECを前にした北朝鮮・中国の接近の誇示と位置づける分析記事を載せた。東亜日報は別の記事で、過去にトランプ大統領との会談の前に習近平主席に会って調整した前例を見出しに掲げ、外交日程との関連を指摘した。", "say": "確認されたのは、統一部が明らかにした訪中と新鴨緑江大橋を通っての丹東到着、与党関係者が伝えた日帰りでの帰国の見通しだ。確認されていないのは、訪中の目的、会う相手、中国側の公式発表だ。きょう夜の帰国の有無と、中国側の発表が出るかどうかを見ればよい。", "src": "聯合ニュース(訪中確認、帰国の見通し、10/24) · 京郷新聞(統一部の発表、1年1カ月、10/24) · 東亜日報(新鴨緑江大橋、参戦76周年、10/24) · 韓国経済(北朝鮮・中国の接近の分析、10/24)"},
+    "laz":{"kick": "社会 · サイバーセキュリティ · ✓ 4社 · ラザルスと名指しした根拠と実際の侵害の有無は未確認", "title": "北朝鮮のハッカー組織ラザルス、PHPの脆弱性を悪用した攻撃を準備か…サイファーマが「韓国語を使う攻撃者」を捕捉", "what": "グローバルなサイバーセキュリティ企業のサイファーマは22日(現地時間)、韓国語を使う攻撃者が非公開の匿名ネットワーク(I2P)のチャンネルで、PHPトゥシェルの脆弱性があるウェブ上でアクセス可能な資産を偵察し、公開された攻撃コードを検証する活動が目撃されたと明らかにしたと、東亜日報が報じた。聯合ニュースとSBSは、これを北朝鮮のハッカー組織ラザルスがPHPの脆弱性を悪用して攻撃を準備している状況だと伝えた。韓国経済は、北朝鮮との関連が疑われる組織と表現した。東亜日報は、韓国を含む世界の政府機関や金融機関を偵察している状況だとの主張が出ていると伝えた。東亜日報は、実際の侵害事例が確認されたわけではないと付け加えた。韓国インターネット振興院(KISA)は24日未明、PHPの新たな脆弱性についての追加のセキュリティ告知を出し、正式なパッチが出ていないため緊急の暫定措置が勧告されると東亜日報は伝えた。", "why": "正式なパッチが出ていない脆弱性はまず暫定措置で塞ぐ必要があり、その間に偵察や攻撃コードの検証の動きが捕捉されたという点が、報道の核心だ。東亜日報は、今回の欠陥はセッションの処理とファイルアップロードの進行状況の記録の過程で生じるリモートコード実行の脆弱性だと説明した。朝刊の警報引き上げの後、攻撃の主体に関する状況が初めて提起された。", "me": "ウェブサイトやサーバーでPHPを使う個人・企業は、KISAの告知に沿った暫定措置を適用したかどうかを確認する必要がある。公共機関・金融機関の利用者は、サービスの告知に変更がないか確認できる。", "a": "聯合ニュースとSBSは、見出しで、ラザルスがPHPの脆弱性を悪用して攻撃を準備している状況だと伝えた。この見方は、セキュリティ企業が捕捉した活動を北朝鮮の組織による準備行為と読む。韓国経済も、北朝鮮との関連が疑われる組織が政府・金融を狙ったと報じた。", "b": "東亜日報は同じ案件を伝えつつ、サイファーマは韓国語を使う攻撃者と説明しただけで、実際の侵害事例が確認されたわけではないと一線を引いた。また、政府・金融の偵察という内容を「主張が出ている」と表現し、確定した事実としては扱わなかった。", "say": "確認されたのは、サイファーマが捕捉した偵察・攻撃コード検証の活動と、KISAの追加告知だ。確認されていないのは、攻撃の主体がラザルスなのか、実際の侵害があったのかだ。きょうは暫定措置の勧告と、正式パッチの公開の有無を見ればよい。", "src": "東亜日報(サイファーマの警報、KISAの告知、10/24) · 聯合ニュース(ラザルスの状況、10/24) · 韓国経済(北朝鮮との関連の疑い、10/24) · SBS(ラザルスの状況、10/24)"},
+    "ohx":{"kick": "政治 · 司法 · ✓ 4社 · 弾劾案の発議・採決の日程は未確認", "title": "オ・セフン無罪に、与党側は「チョ・ヒデ弾劾論」、国民の力は「司法府への威圧をやめよ」と応酬…李大統領の支持率は40%台", "what": "京郷新聞は、オ・セフンソウル市長が「ミョン・テギュン世論調査代払い疑惑」の控訴審で無罪を言い渡されると、共に民主党の指導部や与党側の人物らがSNSでいっせいに司法府を標的にしたと報じた。京郷新聞は、裁判部を「無罪自販機」にたとえた表現が出たと伝えた。京郷新聞は見出しで、「チョ・ヒデを弾劾せよ」と「低俗な圧力」という相反する主張が飛び交ったとまとめた。ニューシスは、与党側から「チョ・ヒデ弾劾論」が出ると国民の力が司法府への威圧をやめるよう求めたと報じた。朝鮮日報は見出しで、与党の「着実に進める」と野党の「何でもチョ・ヒデ説」を並べて伝えた。SBSは、イ・ジェミョン大統領の支持率が7週間ぶりに40%台に上がり、チョ・ヒデ大法院長の弾劾への賛否が拮抗しているという世論調査を伝えた。", "why": "控訴審の無罪判決の直後、政界の応酬が司法府全体に広がった。京郷新聞は、与党指導部の人物らがSNSで司法府を直接標的にしたと伝え、ニューシスは、野党がこれを威圧と規定したと報じた。", "me": "市民にとっては、大法院長の弾劾の議論が実際の立法手続きにつながるのかどうかが、司法の運営に影響しうる点だ。朝刊で扱った特別検察官の上告手続きと大法院の判決日程も、あわせて見るべき部分だ。", "a": "与党側の人物らはSNSで、裁判部を「無罪自販機」にたとえ、チョ・ヒデ大法院長の弾劾に言及したと京郷新聞とニューシスが伝えた。朝鮮日報は、与党が弾劾の議論を「着実に進める」という立場を示したと見出しで伝えた。", "b": "国民の力が司法府への威圧をやめるよう求めたとニューシスが伝え、朝鮮日報は、野党が「何でもチョ・ヒデ説」と反論したと報じた。京郷新聞の見出しは、こうした圧力を「低俗」と呼ぶ側の主張も盛り込んだ。", "say": "確認されたのは、控訴審の無罪の後に与野党がSNSや発言で対立した事実と、SBSが伝えた賛否が拮抗した世論だ。確認されていないのは、弾劾案の発議・採決の日程だ。きょうは、与党が弾劾の手続きを具体的に明らかにするかどうかを見ればよい。", "src": "京郷新聞(与野党のSNS応酬、10/24) · ニューシス(チョ・ヒデ弾劾論、司法府への威圧、10/24) · 朝鮮日報(着実に進める、何でもチョ・ヒデ説、10/24) · SBS(支持率、弾劾への賛否、10/24)"},
+    "seoul":{"kick": "スポーツ · サッカー · ✓ 4社 · 優勝の表彰式の日程は未確認", "title": "FCソウル、カンウォンと1-1で引き分けKリーグ1優勝が確定…2016年以来10年ぶり、通算7度目", "what": "聯合ニュースと東亜日報は、FCソウルが24日、ソウルワールドカップ競技場で行われたハナ銀行Kリーグ1 2026の第33節ホームゲームでカンウォンFCと1-1で引き分けたと報じた。東亜日報によると、ソウルは20勝7分け6敗(勝ち点67)となった。同じ時間に浦項スティーラーズと2-2で引き分けた2位の蔚山HDは勝ち点51だ。ソウルは勝ち点差16を保ち、残るファイナルラウンド5試合の結果にかかわらず早期優勝を決めたと東亜日報は伝えた。聯合ニュースは、2016年以来10年ぶりの頂点奪還であり、通算7度目の優勝だと報じた。朝鮮日報は、ムン・ソンミンが先制ゴールを決め、5分後にカンウォンのカン・ジュンヒョクが同点ゴールを決めたと伝えた。", "why": "レギュラーラウンド33試合を終えた後、Kリーグ1は上位6チームと下位6チームに分かれてファイナルラウンドを戦うと東亜日報が説明した。残り5試合で勝って得られる勝ち点は最大15で、16点差は追いつけない差だ。ソウルの引き分けと蔚山の引き分けが重なり、優勝が決まったと東亜日報は伝えた。", "me": "サッカーファンにとっては、2016年以来10年ぶりに新しい優勝チームが決まった日だ。ソウルのファンにとっては、本拠地のソウルワールドカップ競技場で優勝が決まった点が関心事だ。", "a": "聯合ニュースは、シーズン序盤に「キム・ギドン出ていけ」のコールが響いていた競技場が、「ギドン・マジック」への賛辞で埋まったと伝えた。この見方は、優勝を「ギドン・マジック」と呼ばれた指導力が生んだ逆転と読む。朝鮮日報は、降格の危機にまで落ち込んだソウルが7つ目の星をつけたと見出しで伝えた。", "b": "東亜日報は、ソウルの優勝が際立った1人の「ワンマンショー」ではなく、攻撃と中盤、守備にわたる多くの選手の「ハーモニー」だったと評価した。この見方は、監督個人よりチーム全体の貢献を強調する。聯合ニュースも、優勝の立役者たちを選手ごとに別々に取り上げた。", "say": "確認されたのは、1-1の引き分け、勝ち点67、蔚山との16点差、早期優勝の確定だ。確認されていないのは、優勝の表彰式の日程だ。きょうは、球団が表彰式・行事の日程を告知するかどうかを見ればよい。", "src": "聯合ニュース(優勝確定、ギドン・マジック、10/24) · 東亜日報(勝ち点、ファイナルラウンド、10/24) · 朝鮮日報(ムン・ソンミンの先制ゴール、カン・ジュンヒョクの同点ゴール、10/24) · 韓国経済(優勝速報、10/24)"},
+    "wsbrew":{"kick": "スポーツ · 野球 · ✓ 3社 · 9回のピンチの詳細は未確認", "title": "ミルウォーキー、ワールドシリーズ第1戦でタンパベイを3-2で下す…44年ぶりのWSで先発の初球は166.6㎞", "what": "東亜日報は、ミルウォーキー・ブルワーズが24日(韓国時間)、米ウィスコンシン州ミルウォーキーで行われた2026年ポストシーズンのワールドシリーズ第1戦で、タンパベイ・レイズを3-2で下したと報じた。ワールドシリーズは7戦4勝制だ。ミルウォーキーはアメリカンリーグ所属だった1982年以来44年ぶりにワールドシリーズに進み、球団創設後初の優勝に挑むと東亜日報は伝えた。タンパベイも2020年以来6年ぶりに進み、球団創設後初の優勝を狙う。東亜日報は、ミルウォーキーの先発ジェイコブ・ミジオロウスキーが5イニングを投げたと伝えた。朝鮮日報は見出しで、ミジオロウスキーが初球から166.6㎞を投げ、先制打が出て、9回1死満塁のピンチをしのいだと伝えた。", "why": "7戦4勝制で第1戦を取った側は、シリーズを1勝リードで始める。聯合ニュースは、ミルウォーキーが初優勝の指輪に向けて力強く出発したと伝えた。両チームとも球団創設後初の優勝を狙っており、どちらが勝っても新しい優勝チームが出る。", "me": "国内の野球ファンにとっては、第1戦の結果が24日の韓国時間基準で報じられた。第2戦以降の日程は、今回の報道では確認されていない。", "a": "ミルウォーキー側では、先発の5イニングの好投と先制打、9回のピンチ脱出が勝因として紹介されたと朝鮮日報が伝えた。この見方は、先発と守備の締めくくりでの集中力を勝負どころと見る。", "b": "タンパベイは3-2の1点差で敗れてシリーズを不利に始めたが、2020年以来6年ぶりのワールドシリーズで球団創設後初の優勝を狙うと東亜日報が伝えた。朝鮮日報の見出しは、28年待ったレイズの挑戦を別に取り上げた。この見方は、接戦だった点でシリーズは終わっていないと見る。", "say": "確認されたのは、3-2の勝利と、7戦4勝制での1勝、先発の初球166.6㎞という報道だ。確認されていないのは、第2戦の先発と次の試合の詳細な日程だ。きょうは、第2戦の先発発表と、球速記録の公式集計を見ればよい。", "src": "東亜日報(第1戦、44年ぶりのWS、10/24) · 朝鮮日報(9回のピンチ、166.6㎞、10/24) · 聯合ニュース(先手を取る、10/24)"},
+    "sam":{"kick": "スポーツ · ✓ 報道3件", "title": "サムスンの抑えキム・ジェユン、前鋸筋の損傷でプレーオフのエントリーから外れる…約2週間休養", "what": "サムスン・ライオンズ球団関係者は24日、キム・ジェユンがMRIの読影の結果、右の前鋸筋の筋肉および筋膜の損傷が確認されたと明らかにしたと、朝鮮日報(OSEN)が伝えた。筋膜に沿って出血があり、グレード1の損傷に当たり、約2週間の休養が必要という所見だと球団は説明した。聯合ニュースは、プレーオフの開幕を翌日に控え、サムスンに大きな痛手が出たと報じた。キム・ジェユンは今季セーブ数1位の抑え投手だ。ニュースピムは、先に負傷した選手たちに続く痛手だと見出しで伝えた。朝鮮日報(OSEN)は、状況に応じて勝ちパターンの投手を起用するという球団の方針を伝えた。", "why": "プレーオフで抑え投手が抜ければ、接戦の9回を任せる投手を決め直さなければならない。朝鮮日報は、球団が状況に応じて勝ちパターンの投手を起用すると明らかにしたと伝えた。ニュースピムは、先に負傷した選手たちに続いて負傷が相次いだと指摘した。", "me": "サムスンのファンにとっては、キム・ジェユン抜きで戦うプレーオフのブルペン運用が見どころだ。球団は約2週間の休養が必要だと説明した。", "a": "朝鮮日報は見出しと本文で、キム・ジェユンがプレーオフはもちろん韓国シリーズへの出場も事実上難しくなったと伝え、サムスンの守りの最後の砦が崩れたと評価した。この見方は、戦力の穴を大きく見る。", "b": "球団は、グレード1の損傷であり約2週間の休養が必要という医療陣の所見を説明し、状況に応じて勝ちパターンの投手を起用すると明らかにしたと、朝鮮日報(OSEN)が伝えた。この見方は、代わりの戦力で対応できると見る。", "say": "確認されたのは、前鋸筋の損傷、グレード1、約2週間の休養、プレーオフのエントリーからの除外だ。確認されていないのは、復帰の時期と抑えの代役だ。きょうは、球団が発表する抑えの代替運用を見ればよい。", "src": "聯合ニュース(PO前にキム・ジェユンが脱落、10/24) · 朝鮮日報(MRIの結果、勝ちパターンの起用、10/24) · ニュースピム(2週間の離脱、10/24)"},
+    "fire":{"kick": "社会 · ✓ 報道2件", "title": "殉職消防士の追悼行事、予算1億ウォン全額カットで大幅縮小…チュ・ミエ知事が待遇改善を約束", "what": "京畿道は、殉職消防士をしのぶ「京畿消防119メモリアルデー」の予算1億ウォンを全額カットし、これにより今年の行事は大幅に縮小して行われたと京郷新聞が報じた。京郷新聞によると、昨年は道民5500人余りが参加した追悼・体験行事は、遺族中心に縮まった。行事は24日、「第2回京畿消防119メモリアルデー」の名で、京畿道消防災難本部内のヘテ公園で開かれた。チュ・ミエ京畿道知事は殉職消防士の遺族を慰めたと京郷新聞が伝えた。聯合ニュースは、チュ知事が消防公務員の安全対策の強化と待遇改善などを約束したと伝えた。京郷新聞の見出しは、「消防ストロー」発言を謝罪したチュ知事が待遇改善を約束したとまとめた。", "why": "追悼行事の予算が全額カットされた状態で開かれた行事に道知事が出席し、待遇改善を約束した点が対照をなす。京郷新聞は、予算カットにより行事の規模が昨年と大きく変わったと伝えた。", "me": "京畿道民にとっては、消防関連の予算がどう編成されるのかと、追悼行事の規模が来年どう変わるのかが関心事だ。殉職消防士の遺族にとっては、道知事が明らかにした待遇改善の具体的な内容が重要だ。", "a": "京郷新聞は、予算カットで縮んだ追悼式という見出しで、カットが行事の縮小につながった点を際立たせた。この見方は、道の予算決定が殉職消防士への礼遇に影響したと見る。", "b": "聯合ニュースは、チュ知事が行事に出席して消防公務員の安全対策の強化と待遇改善を約束したと伝えた。京郷新聞は、知事が「消防ストロー」発言を謝罪したと伝えた。この見方は、知事が謝罪と約束で対応した点に重きを置く。", "say": "確認されたのは、予算1億ウォンの全額カット、行事の縮小、知事の出席と待遇改善の約束だ。確認されていないのは、待遇改善の具体策と時期だ。きょうは、道が打ち出す後続の対策があるかどうかを見ればよい。", "src": "京郷新聞(カット、行事の縮小、10/24) · 聯合ニュース(追悼行事の大幅縮小、10/24)"},
+    "hwa":{"kick": "社会 · ✓ 報道3件", "title": "横城の嶺東高速道路で車3台が追突…2人死亡・3人けが", "what": "24日午前2時20分ごろ、江原道横城郡雨川面法住里の嶺東高速道路江陵方面141.5㎞地点で車3台が追突したと、聯合ニュースとSBSが報じた。この事故で2人が死亡し、3人がけがをした。東亜日報は、消防や警察などを引用し、オーランドに乗っていた70代の男性と60代の女性が死亡したと伝えた。同じ車の70代の女性と10代の中学生は軽傷を負い、病院に搬送された。パリセードの運転者もけがをして病院に運ばれた。東亜日報は、SM3とオーランドがまず衝突した後、後続のパリセードがさらに追突して事故になったと伝えた。", "why": "未明の高速道路で、先行の衝突の後に後続の車が続けて追突した構図の事故だと東亜日報が伝えた。事故の原因は、報道では確認されていない。", "me": "高速道路の利用者にとっては、夜間・未明の走行中に前の車の事故に備えた車間距離の確保が核心だ。遺族や負傷者の消息は、続報で確認する必要がある。", "a": "東亜日報は見出しで「老夫婦」が死亡したと伝え、犠牲者の関係に焦点を当てた。この見方は、高齢の同乗者の被害を際立たせる。", "b": "聯合ニュースとSBSは、死者2人、負傷者3人という被害規模と事故地点を中心に、淡々と伝えた。この見方は、原因の究明前には事実中心に報じるべきだという立場に近い。", "say": "確認されたのは、時刻、地点、車3台、死者2人と負傷者3人だ。確認されていないのは、事故の原因と過失の有無だ。きょうは、警察が明らかにする事故の経緯を見ればよい。", "src": "聯合ニュース(3台追突、死傷者、10/24) · 東亜日報(オーランド、パリセード、10/24) · SBS(事故現場、10/24)"},
+    "isr":{"kick": "国際 · ✓ 報道3件", "title": "イスラエル総選挙の4日前、ヨルダン川西岸で銃撃…兵士2人死亡、軍がヘブロンで捜索に着手", "what": "イスラエル軍は23日(現地時刻)、兵士2人を銃撃して死亡させた銃撃犯2人を射殺し、民間人に対するテロ攻撃を防いだと明らかにしたと、東亜日報が伝えた。この事件は、ベンヤミン・ネタニヤフ首相の再選の行方を決める27日の選挙の数日前に起きた。イスラエル軍は、ヨルダン川西岸で兵士2人が死亡し、ほかにも負傷者が出た事件を受け、ヘブロン地域で的確で標的を絞った徹底的な捜索を始め、数日間続くと予想していると明らかにした。聯合ニュースは、総選挙の4日前にヨルダン川西岸の南部で銃乱射が起きたと伝え、ネタニヤフ首相が西岸の封鎖令を出したと報じた。東亜日報は見出しで、ヘブロンで脅威になりうるインフラを撤去すると伝えた。", "why": "総選挙の数日前に安全保障上の事件が起き、選挙日程や遊説の環境に影響しうる。聯合ニュースは見出しで、選挙戦に非常事態が生じたと伝えた。", "me": "韓国の読者にとっては、中東情勢が原油価格や安全保障のニュースにつながりうる案件だ。27日の総選挙の結果も、聯合ニュースと東亜日報が伝えた日程に沿って確認する必要がある。", "a": "イスラエル軍は、銃撃犯2人を射殺し、ヘブロンで捜索を始めて追加のテロを防ぐ立場を明らかにしたと東亜日報が伝えた。この見方は、軍事作戦と封鎖による対応を、正当な安全保障措置と見る。", "b": "東亜日報の見出しは、イスラエルが銃撃の起きたヘブロンで脅威になりうるインフラを撤去すると伝え、住民の暮らしに及ぶ影響という別の争点を示唆した。この見方は、安全保障措置が西岸の住民に与える負担もあわせて見る。", "say": "確認されたのは、兵士2人の死亡、銃撃犯2人の射殺、ヘブロンでの捜索、西岸の封鎖令だ。確認されていないのは、総選挙の日程に及ぼす影響だ。きょうは、捜索の拡大の有無と、27日の総選挙の日程が維持されるかどうかを見ればよい。", "src": "東亜日報(兵士2人死亡、ヘブロンでの捜索、10/24) · 聯合ニュース(西岸での銃撃、封鎖令、10/23) · SBS(総選挙D-4の銃乱射、10/23)"},
+    "fork":{"kick": "社会 · ✓ 報道3件", "title": "亀尾・麗水でフォークリフト事故が相次ぐ…亀尾では心停止で搬送、麗水では50代の作業員が死亡", "what": "東亜日報は、慶尚北道亀尾で23日午後12時16分ごろ、亀尾市道開面月林里で、フォークリフトで稲の袋を移動していた際に袋にぶつかって作業員が下敷きになったとの通報があったと伝えた。この事故で50代の女性A氏が心停止状態で119救急隊により病院に搬送されたと東亜日報は報じた。東亜日報は続けて、同じ日の午後1時14分ごろ、亀尾市高牙邑でも事故があり、50代の男女2人が心停止状態になったと見出しで伝えた。聯合ニュースは、亀尾の事故を警察が調べていると報じた。聯合ニュースとSBSは、24日午前10時48分ごろ、全南光州の麗水市のある製造業者で、50代のA氏が転倒したフォークリフトの下敷きになって死亡したと伝えた。", "why": "フォークリフトの作業では、積み荷が運転者の視界を遮り、歩行者にぶつかりうると、東亜日報が亀尾の事故の推定原因として伝えた。麗水の事故は転倒したフォークリフトの下敷きになったケースで、原因は報道では確認されていない。", "me": "フォークリフトを使う事業所の従事者にとっては、積み荷で視界が遮られる状況と、作業動線に人がいないかを確認することが核心だ。家族や同僚にとっては、事故後の119番通報と応急措置が重要だ。", "a": "東亜日報は、亀尾の事故はフォークリフトにつられた稲の袋が運転者の視界を遮り、歩行者にぶつかったものと推定されると伝え、視界の問題を原因として挙げた。この見方は、作業方式の安全規則を強調する。", "b": "聯合ニュースは、亀尾の事故について警察が調べに乗り出したと伝え、責任の所在を明らかにする捜査に焦点を当てた。この見方は、事故の原因と責任は捜査で明らかにすべきだと見る。", "say": "確認されたのは、亀尾での心停止状態での搬送と、麗水での50代の作業員の死亡だ。確認されていないのは、亀尾の被害者の容体と、麗水の事故の原因だ。きょうは、警察の調べの結果と、被害者の容体に関する報道を見ればよい。", "src": "聯合ニュース(亀尾と麗水の事故、10/24) · 東亜日報(亀尾の事故、10/24) · SBS(麗水の事故、10/24)"}
+  };
+  const G = {
+    "統一部":{"f": "政治", "d": "対北朝鮮政策と南北関係を担う政府の省庁", "w": "24日、キム・ジョンウン委員長の訪中を明らかにした"},
+    "新鴨緑江大橋":{"f": "地理", "d": "中国の丹東と北朝鮮の新義州を結ぶ新しい橋", "w": "今月15日に正式開通し、キム委員長が渡った"},
+    "丹東":{"f": "地理", "d": "中国・遼寧省にある北朝鮮との国境の都市", "w": "キム委員長が到着した場所で、交通・ホテルが規制された"},
+    "共同通信":{"f": "報道", "d": "日本の通信社", "w": "丹東の規制を報じ、聯合ニュースが引用した"},
+    "戦勝節":{"f": "歴史", "d": "中国が抗日戦争の勝利を記念する日", "w": "昨年の80周年の軍事パレードにキム委員長が出席した"},
+    "中隊長大会":{"f": "軍事", "d": "北朝鮮軍の中隊長たちが集まる軍の行事", "w": "22~23日に平壌で第3回大会が開かれた"},
+    "労働党第9回大会":{"f": "政治", "d": "北朝鮮の労働党の最高議決会議", "w": "以来初の全軍規模の会合として紹介された"},
+    "サイファーマ":{"f": "セキュリティ", "d": "CYFIRMA、脅威インテリジェンスのセキュリティ企業", "w": "攻撃の状況を警報として公開した"},
+    "PHPトゥシェル":{"f": "セキュリティ", "d": "PHPのセキュリティ上の欠陥を指す名称", "w": "偵察と攻撃コードの検証の活動が目撃された"},
+    "I2P":{"f": "セキュリティ", "d": "匿名の通信ネットワーク", "w": "攻撃者がこのチャンネルで活動したと伝えられた"},
+    "ラザルス":{"f": "セキュリティ", "d": "北朝鮮と関連があるとされるハッカー組織", "w": "聯合ニュースとSBSが見出しに掲げた"},
+    "韓国インターネット振興院":{"f": "機関", "d": "KISA、インターネット・情報保護政策の執行機関", "w": "24日未明に追加の告知を出した"},
+    "リモートコード実行":{"f": "セキュリティ", "d": "攻撃者が遠隔でプログラムを実行できてしまう脆弱性", "w": "PHPの新たな欠陥のタイプだ"},
+    "セッション":{"f": "IT", "d": "ログイン状態を保つための情報", "w": "新たな欠陥はセッションの処理の過程で生じる"},
+    "偵察":{"f": "セキュリティ", "d": "攻撃の前に弱い対象を探す活動", "w": "政府・金融機関を偵察している状況だとの主張が出た"},
+    "控訴審":{"f": "法律", "d": "1審に不服で再び受ける2審の裁判", "w": "オ・セフン市長が無罪を言い渡された"},
+    "ミョン・テギュン世論調査代払い疑惑":{"f": "法律", "d": "世論調査の費用の代払いをめぐる疑惑の事件", "w": "控訴審で無罪が言い渡された"},
+    "弾劾":{"f": "法律", "d": "公職者を国会が罷免の手続きにかける制度", "w": "与党側からチョ・ヒデ弾劾論が出た"},
+    "大法院長":{"f": "法律", "d": "大法院のトップ", "w": "弾劾への賛否が拮抗しているとSBSが伝えた"},
+    "司法府":{"f": "法律", "d": "裁判を担う国家機関", "w": "与野党がSNSで司法府をめぐって対立した"},
+    "Kリーグ1":{"f": "スポーツ", "d": "韓国プロサッカーの1部リーグ", "w": "FCソウルが優勝した"},
+    "ファイナルラウンド":{"f": "スポーツ", "d": "レギュラーラウンドの後、上位・下位グループに分かれて戦うラウンド", "w": "残り5試合にかかわらず優勝が決まった"},
+    "勝ち点":{"f": "スポーツ", "d": "勝ち3点、分け1点で積み上げる順位の点数", "w": "ソウルが67点、蔚山が51点だ"},
+    "ワールドシリーズ":{"f": "スポーツ", "d": "MLBの王者決定戦", "w": "ミルウォーキーが第1戦に勝った"},
+    "7戦4勝制":{"f": "スポーツ", "d": "7試合のうち先に4勝したチームが優勝する方式", "w": "ワールドシリーズの方式だ"},
+    "セーブ":{"f": "スポーツ", "d": "リードを守って試合を締めくくった記録", "w": "キム・ジェユンが今季1位だ"},
+    "プレーオフ":{"f": "スポーツ", "d": "韓国シリーズへの進出を争う段階", "w": "開幕を翌日に控え、キム・ジェユンが外れた"},
+    "前鋸筋":{"f": "医学", "d": "肩甲骨の脇腹側に付いている筋肉", "w": "右の前鋸筋の損傷が確認された"},
+    "119メモリアルデー":{"f": "社会", "d": "殉職した消防士をしのぶ追悼行事", "w": "京畿道の予算カットで縮小された"},
+    "殉職消防士":{"f": "社会", "d": "職務中に亡くなった消防士", "w": "追悼行事の対象だ"},
+    "ヨルダン川西岸":{"f": "国際", "d": "ヨルダン川の西岸、パレスチナの地域", "w": "銃撃事件が起きた場所だ"},
+    "ヘブロン":{"f": "国際", "d": "ヨルダン川西岸の南部の都市", "w": "イスラエル軍が捜索に乗り出した"},
+    "封鎖令":{"f": "国際", "d": "地域への出入りを制限する措置", "w": "ネタニヤフ首相が西岸に出した"},
+    "総選挙":{"f": "政治", "d": "議会の構成員を選ぶ選挙", "w": "イスラエルは27日に総選挙を行う"},
+    "嶺東高速道路":{"f": "交通", "d": "首都圏と江陵を結ぶ高速道路", "w": "横城区間で追突した"},
+    "追突":{"f": "交通", "d": "前の車に後ろの車がぶつかる事故", "w": "車3台が相次いでぶつかった"},
+    "フォークリフト":{"f": "産業", "d": "荷物を持ち上げて運ぶ作業用の車両", "w": "亀尾・麗水で事故が起きた"},
+    "心停止":{"f": "医学", "d": "心臓が止まった状態", "w": "亀尾の事故の作業員が搬送された"},
+    "転倒":{"f": "産業", "d": "車両が横に倒れること", "w": "麗水のフォークリフトが転倒した"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

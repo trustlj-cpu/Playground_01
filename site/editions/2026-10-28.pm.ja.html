@@ -1,0 +1,340 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>6,012.44</b>KOSPI · 10/28 終値 · 前営業日比+6.63%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>771.28</b>KOSDAQ · 10/28 終値 · 相場表基準</div>
+    </div>
+    <div class="dateline"><span>第24号 · 夕刊</span><b>2026年10月28日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="hynix">
+      <div class="kick">経済 · 産業<span>✓ 4社 · 60兆ウォンの還元の細目の合算内訳と営業利益の末尾の桁は記事ごとに異なり未確認</span></div>
+      <h2 class="hl">SKハイニックス、第3四半期の営業利益83兆3338億ウォン…60兆ウォンの追加株主還元を発表</h2>
+      <p class="deck">営業利益率80%、2029年までDRAMとHBMの物量は事実上完売だと会社が明らかにしたと聯合ニュースが伝えた。</p>
+      <div class="body">
+        <p>SKハイニックスは28日、第3四半期の決算を発表し、営業利益が83兆3338億ウォンで前年同期より632%増えたと明らかにしたと聯合ニュースと京郷新聞が伝えた。聯合ニュースは、売上高が104兆6000億ウォンで四半期ベースで初めて100兆ウォンを超えたと報じ、朝鮮日報は6四半期連続で過去最大の実績を更新したと書いた。朝鮮日報のある速報は営業利益を83兆3334億ウォンと記しており、記事ごとに末尾の桁が異なる。韓国経済は、営業利益率が80%に達すると伝えた。京郷新聞と東亜日報は、会社が同日、60兆ウォン規模の追加株主還元を発表したと報じた。聯合ニュースによると、自社株20兆ウォン分を買い入れて10兆ウォンは消却し、10兆ウォンは役職員への報酬に充てるほか、普通株1株当たり2万ウォン、総額14兆ウォン規模の四半期配当も行う。韓国経済は、これらを合わせて今年の株主還元は総額100兆ウォンだと伝えた。</p>
+        <p>会社はこの日のカンファレンスコールで、2029年まで今後3年間のDRAMとHBMの物量が事実上すべて売れたと明らかにしたと聯合ニュースと韓国経済が報じた。聯合ニュースは、すでに確保した長期供給契約の物量と、顧客企業と協議中の需要を合わせた判断だと伝え、今後2年間の生産能力の半分は契約が済んだと報じた。別の聯合ニュースの記事によると、会社は需要を見極める際、顧客の財務の健全性と資金調達の余力、主要サプライチェーンの準備状況も点検し、投資リスクを綿密に管理すると明らかにした。韓国経済は、会社が2030年まで需要優位が続くと見通したと報じた。京郷新聞は、このニュースがこの日のKOSPI買いサイドカーにつながったと伝えた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="hack">
+      <div class="kick">経済 · 金融セキュリティ<span>✓ 4社 · 大信証券の流出規模は媒体ごとに異なり、ビッサムの会員情報が含まれるかは未確認</span></div>
+      <h3 class="hl">大信証券、3万8490人の個人情報流出…ビッサム・ミレアセット運用まで、金融界にハッキング拡大</h3>
+      <div class="one">
+        <p>イ・チャンジン金融監督院長は28日、「前日、主要な金融投資会社の側で全般的なハッキング事故が発生したと承知している」と述べ、IT保安を呼びかけたと聯合ニュースと京郷新聞が伝えた。朝鮮日報は、大信証券が顧客3万8490人の個人・信用情報が流出したと明らかにしたと報じ、東亜日報は3万8000件余り、京郷新聞は見出しで3万件と記しており、流出規模の表記は記事ごとに異なる。韓国経済は、ミレアセット資産運用でもハッキング被害が確認され、金融投資業界では初めてだと伝えた。ビッサムは、社内のモバイルシステムがハッキングされて個人情報が流出し、会員情報が含まれるかを分析中だと明らかにしたと聯合ニュースが報じた。韓国経済は、ビッサムが顧客資産にアクセスした形跡はないと明らかにしたと伝えた。聯合ニュースは、青瓦台が安保3次長の主宰で緊急対応会議を開き、政府が通信・IDCなど重要施設170か所余りの保安点検に入ると報じた。韓国経済と朝鮮日報は、金融界を狙ったハッキングの試みで、北朝鮮のIPからのアクセス440万件が捕捉されたと伝えた。東亜日報によると、金融保安院は21日、北朝鮮のIPと推定される帯域の大規模なスキャニングを探知して金融会社に注意事項を案内し、金融当局は、IPの国籍だけで実際のハッカーの国籍を特定するのは難しいとの立場を示した。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="park"><b>パク・ジョンジュン前警護処長、逮捕状執行妨害の控訴審で懲役4年から3年に減刑</b><em>ソウル高裁刑事1部は28日、特殊公務執行妨害などの容疑の控訴審で、1審の懲役4年を破棄して懲役3年を言い渡したと東亜日報が伝えた。聯合ニュースは、高位公職者犯罪捜査処の逮捕状執行を妨害した容疑だと報じた。</em><span>政治 · ✓ 報道4件</span></div>
+      <div class="it story" tabindex="0" data-id="birth"><b>8月の出生児2万4000人、同月として7年ぶりの多さ…増加は26か月連続</b><em>今年8月に生まれた赤ちゃんが同月として7年ぶりの多さとなる2万4000人で、年間の累計は20万人に迫ると聯合ニュースが伝えた。朝鮮日報は、増加が26か月続いたと報じた。</em><span>社会 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="pension"><b>政府、2028年に従業員100人以上の事業所から退職給付の社外積立を段階的に義務化</b><em>イ・ヒョンイル副首相は28日、2028年から従業員100人以上の事業所を皮切りに退職給付の社外積立を義務化すると明らかにしたと京郷新聞が伝えた。聯合ニュースは、退職金の未払い予防が目的だと報じた。</em><span>経済 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="event"><b>来年から証券会社の取引金額連動イベントを禁止…高リスク金融投資商品が対象のイベントも制限</b><em>金融監督院は28日、金融投資協会の規定を改めて財産上の利益の提供基準を強化すると明らかにしたと朝鮮日報が伝えた。聯合ニュースは、取引金額に連動するか高リスク商品を対象にした誘引イベントが来年から禁止されると報じた。</em><span>経済 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="cod"><b>「コール オブ デューティ」新作に梨泰院惨事の映像使用の論争…遺族が反発、謝罪を要求</b><em>北朝鮮による韓国侵攻を題材にしたゲーム「コール オブ デューティ: モダン・ウォーフェア4」に梨泰院惨事の資料映像が入っていたと聯合ニュースが伝えた。韓国経済は、遺族と市民団体が謝罪を求めたと報じた。</em><span>社会 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="elliott">
+      <div class="kick">経済 · 国際通商<span>✓ 4社 · 賠償額に遅延利息が含まれるかは記事ごとに確認できず</span></div>
+      <h3 class="hl">政府、エリオットとの国際投資紛争の最終敗訴を受け入れ…賠償額は約1530億ウォンで確定</h3>
+      <div class="body">
+        <p>政府は28日、米国系プライベートエクイティファンドのエリオットとの国際投資紛争(ISDS)の差し戻し仲裁判断について、英国の裁判所に取消訴訟などを起こさないことにしたと京郷新聞と韓国経済が伝えた。京郷新聞によると、法務部などが関係省庁合同の報道資料でこれを明らかにし、政府はエリオットに約1530億ウォンを賠償することになった。聯合ニュースは、政府が敗訴判断を受け入れることにしたと報じ、朝鮮日報は「差し戻し仲裁、最終敗訴」と見出しを付けた。</p>
+        <p>東亜日報は、判断が先月30日に言い渡され、政府が関係省庁、政府代理法律事務所、外部の専門家らと何度も協議した末にこう決めたと報じた。東亜日報は、2015年のサムスン物産と第一毛織の合併をめぐって2018年に始まった紛争が、8年でけりがつく段階に入ったと伝えた。SBS Bizは、判断の直後に法務部の発表を引用し、約4849万ドル(約658億ウォン)と遅延利息を支払えという内容だと報じた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="kospi6">
+      <div class="kick">経済 · 株式<span>✓ 4社 · 終値の相場は相場表が唯一の出典</span></div>
+      <h3 class="hl">KOSPI、6.63%急騰して6,012.44で引け…2日連続のサイドカー、10営業日ぶりに6,000台を回復</h3>
+      <div class="body">
+        <p>KOSPIは28日、SKハイニックスの決算と追加株主還元の発表を受けて急騰した。聯合ニュースは、午前9時57分ごろにKOSPIが4%台の急騰となると、有価証券市場で買いサイドカーが発動されたと伝え、東亜日報とSBSは前日に続き2日連続の発動だと報じた。京郷新聞は、この急騰を「SKハイニックス発の好材料」と表現した。聯合ニュースは、場中に上げ幅が6%台に広がり、午前11時2分ごろに6,000台を10営業日ぶりに取り戻したと速報した。この日のKOSPIの終値は6,012.44で、前営業日より6.63%上がった。KOSDAQの終値は771.28である。</p>
+        <p>聯合ニュースとSBSは、KOSPIの反発で証券市場の待機資金にあたる投資家預託金が90兆ウォン台を回復し、借金投資の規模は30兆ウォンを下回ったと伝えた。聯合ニュースのマーケットビューは、この日朝、ハイニックスの株主還元策への期待でKOSPIの上昇が続くかを探った。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="vote">
+      <div class="kick">政治 · 選挙<span>✓ 4社 · 遅れた時間は3時間と2時間50分で媒体ごとに異なり、検証の結果は未確認</span></div>
+      <h3 class="hl">選管特検の投票用紙検証、国民の力の抗議で開始が遅れる…録画放送形式での撮影で合意</h3>
+      <div class="body">
+        <p>イ・テハン特検チームは28日、6・3地方選挙の投票用紙不足問題に関連して、オリンピック公園のハンドボール競技場に入り、投票用紙の現場検証に着手したと聯合ニュースと京郷新聞が伝えた。韓国経済は、特検と警察、立会団の競技場への進入がデモ隊との衝突なく行われたと報じた。聯合ニュースは、国民の力の抗議で検証の手続きが遅れ、予定より3時間遅れて始まったと伝え、東亜日報は予定より2時間50分遅れたと書いた。</p>
+        <p>聯合ニュースは、特検と国民の力の立会団が検証の現場を録画放送の形式で撮影することで合意したと速報し、総合記事では放送局の撮影が許可されたと伝えた。聯合ニュースは、イ・テハン特検が「選挙制度に対する国民の不信をよく承知している」と述べ、責任感を持って捜査すると語ったと報じた。聯合ニュースによると、与党は、投票用紙の公開検証が論争の解消と占拠事態の収束のきっかけになるべきだと明らかにした。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>約3時間</b><span>検証が予定より遅れた時間(聯合ニュース、東亜日報は2時間50分)</span></div>
+        <div><b>録画放送</b><span>特検と立会団が合意した検証の撮影形式(聯合ニュース)</span></div>
+        <div><b>衝突なし</b><span>競技場への進入の際のデモ隊との衝突の有無(韓国経済、京郷新聞)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>SKハイニックスの60兆ウォンの追加還元は、すべて自社株の消却だ。</b> <span>聯合ニュースは、自社株20兆ウォンのうち消却は10兆ウォンのみで、10兆ウォンは役職員への報酬に充てると伝え、普通株1株当たり2万ウォン(総額14兆ウォン)の四半期配当も併せて発表された。60兆ウォン全体が消却だという報道は確認されていない。</span></div>
+        <div><b>ビッサムで顧客の資産が盗まれた。</b> <span>韓国経済は、ビッサムが社内システムのハッキングに関連して顧客資産にアクセスした形跡はないと明らかにしたと伝えた。聯合ニュースは、ビッサムが流出した個人情報に会員情報が含まれるかを分析中だと報じた。</span></div>
+        <div><b>今回の金融界のハッキングは北朝鮮の仕業だ。</b> <span>韓国経済と朝鮮日報は、金融界を対象にした北朝鮮のIPからのアクセスが大量に探知されたと伝えた。東亜日報によると、金融当局はIPの国籍だけで実際のハッカーの国籍を特定するのは難しいとの立場で、今回の事故の攻撃主体は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>あす · 木 10月29日</b><span>ビッサムが流出した個人情報に会員情報が含まれるかを分析中だと聯合ニュースが伝えただけに、分析結果の告知が出るかは注目に値する。特検の投票用紙検証が続くかと、結果の公開範囲も確認されていない。</span><b>今週</b><span>金融当局がビッサム、ミレアセット資産運用、大信証券に対して現場点検に着手したと聯合ニュースが報じ、政府は重要施設170か所余りの保安点検を進める。</span><b>その先</b><span>サムスンバイオロジクスの労使が11月3日に交渉を再開し、労組は決裂した場合ストライキを行う方針だと聯合ニュースが伝えた。2028年の退職給付の社外積立の義務化は段階的に施行される。</span><b>読者へ</b><span>大信証券、ミレアセット資産運用、ビッサムの利用者は、各社の個人情報流出の告知を確認し、パスワードを点検しよう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "hynix":{"kick": "経済 · 産業 · ✓ 4社 · 60兆ウォンの還元の細目の合算内訳と営業利益の末尾の桁は記事ごとに異なり未確認", "title": "SKハイニックス、第3四半期の営業利益83兆3338億ウォン…60兆ウォンの追加株主還元を発表", "what": "SKハイニックスは28日、第3四半期の営業利益が83兆3338億ウォンで前年同期より632%増えたと明らかにしたと聯合ニュースと京郷新聞が伝えた。聯合ニュースは、売上高が104兆6000億ウォンで四半期ベースで初めて100兆ウォンを超えたと報じ、朝鮮日報は6四半期連続で過去最大の実績だと伝えた。韓国経済は、営業利益率が80%に達すると報じた。京郷新聞と東亜日報は、会社が60兆ウォン規模の追加株主還元を発表したと伝えた。聯合ニュースによると、自社株20兆ウォンの買い入れのうち10兆ウォンは消却し、10兆ウォンは役職員への報酬に充てるほか、普通株1株当たり2万ウォン、総額14兆ウォン規模の四半期配当も行う。韓国経済は、今年の株主還元の総額が100兆ウォンだと報じた。聯合ニュースは、会社が2029年まで3年間のDRAMとHBMの物量は事実上完売だと明らかにしたと伝えた。", "why": "株主還元の規模と供給契約の見通しが一度に出たことで、AI投資のピーク論に対する会社の答えが、実績の数字と契約物量で示された。この会社はKOSPIの時価総額に占める比重が大きく、一社の発表が指数とデリバティブ市場の変動性にそのままつながる。", "me": "年金やファンドで半導体の大型株を間接的に保有している人は、この日の急騰が評価額に反映された。直接投資する人なら、配当の基準日や自社株買いの日程が開示で出るかを確認してこそ、正確な還元時期が分かる。", "a": "聯合ニュースは、今後2年間の生産能力の半分は契約が済んだという会社の説明を伝えた。この見方では、長期供給契約が需要鈍化への懸念を打ち消し、大規模な還元が実績の持続性を裏付けている。", "b": "聯合ニュースは、会社が需要を判断する際、顧客の財務の健全性と資金調達の余力、主要サプライチェーンの準備状況まで点検すると明らかにしたと伝えた。この見方では、AI顧客企業の投資余力が需要の前提条件であり、リスク管理が引き続き必要だ。", "say": "確認できたのは、第3四半期の営業利益83兆3338億ウォン、追加株主還元60兆ウォン、自社株20兆ウォンと四半期配当14兆ウォンである。営業利益の末尾の桁は朝鮮日報の一つの記事が83兆3334億ウォンと記しており、正確な数値は開示で合わせる必要がある。60兆ウォンの細目の合算内訳と顧客企業ごとの契約内容は、今回の報道では確認されていない。きょう以降は、配当の基準日と自社株取得の開始時点が開示されるかを見る必要がある。", "src": "聯合ニュース(実績と還元の内訳、10/28) · 京郷新聞(営業利益と60兆還元、10/28) · 朝鮮日報(6四半期連続で過去最大、10/28) · 韓国経済(営業利益率と今年100兆、10/28)"},
+    "hack":{"kick": "経済 · 金融セキュリティ · ✓ 4社 · 大信証券の流出規模は媒体ごとに異なり、ビッサムの会員情報が含まれるかは未確認", "title": "大信証券、3万8490人の個人情報流出…ビッサム・ミレアセット運用まで、金融界にハッキング拡大", "what": "イ・チャンジン金融監督院長は28日、前日に主要な金融投資会社で全般的なハッキング事故が発生したと承知していると述べ、IT保安を呼びかけたと聯合ニュースが伝えた。朝鮮日報は、大信証券が顧客3万8490人の個人・信用情報が流出したと明らかにしたと報じ、東亜日報は3万8000件余りと書いた。韓国経済は、ミレアセット資産運用でもハッキング被害が確認され、金融投資業界では初めてだと伝えた。聯合ニュースは、ビッサムが社内のモバイルシステムのハッキングで個人情報が流出し、会員情報が含まれるかを分析中だと報じた。韓国経済は、ビッサムが顧客資産にアクセスした形跡はないと明らかにしたと伝えた。聯合ニュースは、青瓦台が安保3次長の主宰で緊急対応会議を開いたと報じた。韓国経済と朝鮮日報は、金融界を対象にした北朝鮮のIPからのアクセス440万件が捕捉されたと伝えた。", "why": "金融会社一社の侵害ではなく、証券会社、運用会社、暗号資産取引所が同じ日に相次いで確認されたことで、業界全体の保安点検が争点になった。流出した個人・信用情報は二次被害につながりうるため、被害範囲が確定するまで不安が残る。", "me": "該当する会社の顧客なら、会社が送る流出の告知と案内を確認し、パスワードを変えるのがよい。出所の不明な文面や電話を受けたら、会社の公式番号で改めて確認しなければならない。", "a": "金融当局は北朝鮮のIPの大量アクセスを公式に確認し、金融会社に注意事項を案内したと朝鮮日報と韓国経済が伝えた。この見方では、国家レベルのサイバー脅威に備えた先制的な点検が必要だ。", "b": "東亜日報によると、金融当局は、IPの国籍だけで実際のハッカーの国籍を特定するのは難しいと明らかにした。朝鮮日報の記事の見出しも、迂回の可能性があるため特定が難しいと伝えた。この見方では、攻撃主体を断定するより、各社の侵害経路と流出範囲から確認すべきだ。", "say": "確認できたのは、大信証券、ミレアセット資産運用、ビッサムで侵害が確認されたという点と、金融監督院長の発言、青瓦台の緊急対応会議である。大信証券の流出規模は3万8490人、3万8000件余り、3万件と表記が異なり、ビッサムの会員情報が含まれるかと攻撃主体は確認されていない。きょうは、流出範囲の告知と金融当局の現場点検の結果が出るかを見る必要がある。", "src": "聯合ニュース(ビッサム・ミレアセット運用・大信証券の侵害と青瓦台の会議、10/28) · 朝鮮日報(大信証券3万8490人と北朝鮮IP、10/28) · 韓国経済(運用会社で初のハッキングとビッサムの顧客資産、10/28) · 東亜日報(北朝鮮IPのアクセスと国籍特定の限界、10/28)"},
+    "elliott":{"kick": "経済 · 国際通商 · ✓ 4社 · 賠償額に遅延利息が含まれるかは記事ごとに確認できず", "title": "政府、エリオットとの国際投資紛争の最終敗訴を受け入れ…賠償額は約1530億ウォンで確定", "what": "政府は28日、米国系プライベートエクイティファンドのエリオットとの国際投資紛争の差し戻し仲裁判断について、英国の裁判所に取消訴訟などを起こさないことにしたと京郷新聞と韓国経済が伝えた。京郷新聞によると、法務部などが関係省庁合同の報道資料でこれを明らかにし、政府はエリオットに約1530億ウォンを賠償することになった。聯合ニュースは、政府が敗訴判断を受け入れることにしたと報じた。東亜日報は、判断が先月30日に言い渡され、政府が関係省庁、政府代理法律事務所、外部の専門家らと何度も協議した末に決めたと伝えた。東亜日報は、2015年のサムスン物産と第一毛織の合併をめぐって2018年に始まった紛争が、8年でけりがつく段階に入ったと報じた。朝鮮日報は「差し戻し仲裁、最終敗訴」と見出しを付けた。", "why": "取消訴訟を起こさなければ、仲裁判断がそのまま確定し、賠償義務が固まる。この事件は、国民年金の合併に関する議決権行使が政府の行為と認められるかをめぐる争点であり、国家機関の投資家に関する決定が国際投資紛争の対象になりうるという先例として残る。", "me": "賠償金は政府予算から支払われるため、国民の税金とつながる問題だ。年金や公的機関が企業の合併のような案件で議決権をどう行使するかが、海外の投資家との紛争につながりうる点は、知っておく価値がある。", "a": "政府は関係省庁と外部の専門家の協議を経て、追加の訴訟を行わないことにしたと東亜日報が伝えた。この見方では、不確実な追加の争いより、紛争に区切りをつけるほうが実益がある。", "b": "SBS Bizは、差し戻し判断の直後、政府が英国の裁判所への上告や判断の取り消し要求など追加の対応を検討するという趣旨を法務部が明らかにしたと報じた。この見方では、一度は勝訴した事件であるだけに、最後まで争う余地があった。", "say": "確認できたのは、取消訴訟を起こさないことにした決定と約1530億ウォンの賠償という、聯合ニュース、京郷新聞、朝鮮日報、韓国経済の報道である。SBS Bizは判断の内容を約4849万ドルと遅延利息と伝えており、1530億ウォンが遅延利息を含む金額かは今回の報道では確認されていない。きょうは、法務部の詳しい説明と賠償金の支払い時期が公開されるかを見る必要がある。", "src": "聯合ニュース(敗訴の受け入れと賠償額、10/28) · 京郷新聞(関係省庁合同の報道資料、10/28) · 朝鮮日報(差し戻し仲裁、最終敗訴、10/28) · 韓国経済(取消訴訟を起こさず、10/28)"},
+    "kospi6":{"kick": "経済 · 株式 · ✓ 4社 · 終値の相場は相場表が唯一の出典", "title": "KOSPI、6.63%急騰して6,012.44で引け…2日連続のサイドカー、10営業日ぶりに6,000台を回復", "what": "聯合ニュースは、28日午前9時57分ごろにKOSPIが4%台の急騰となると、有価証券市場で買いサイドカーが発動されたと伝えた。東亜日報とSBSは、前日に続き2日連続の発動だと報じた。京郷新聞は、この急騰を「SKハイニックス発の好材料」と表現した。聯合ニュースは、場中に上げ幅が6%台に広がり、午前11時2分ごろに6,000台を10営業日ぶりに取り戻したと伝えた。この日のKOSPIの終値は6,012.44で、前営業日より6.63%上がり、KOSDAQは771.28で引けた。聯合ニュースとSBSは、投資家預託金が90兆ウォン台を回復し、借金投資が30兆ウォンを下回ったと報じた。", "why": "サイドカーは、先物価格が急変したときに、プログラムの買い注文の効力をしばらく止める仕組みだ。2日連続の発動は、1日で指数の上げ下げの幅が大きかったという意味であり、時価総額に占める比重の大きい半導体銘柄の決算発表が指数をそのまま動かす構造を示している。", "me": "年金やファンドを通じて半導体の大型株に間接投資した人は、1日で6%台の変動が評価額に反映される。借金をして投資している場合は急落時の損失が大きくなるため、信用融資の残高と返済日程を点検しなければならない。", "a": "京郷新聞は、SKハイニックス発の好材料がKOSPIを押し上げたと伝え、聯合ニュースは、預託金が90兆ウォン台に戻った点を指摘した。この見方では、実績と株主還元が、証券市場の待機資金を再び市場に呼び込んでいる。", "b": "聯合ニュースは、借金投資の規模が30兆ウォンを下回ったと伝えており、サイドカーが2日連続で発動された点は、変動性が大きいというシグナルだ。この見方では、1日で6%台の急騰がトレンド転換なのか短期の反発なのか、まだ見極められない。", "say": "確認できたのは、買いサイドカーの2日連続の発動、6,000台の回復、KOSPIの終値6,012.44と上昇率6.63%である。この終値は相場表が唯一の出典であり、KOSDAQの上昇率は、相場表の値が前営業日の終値と合わないため載せなかった。きょうは、外国人と機関の売買動向、半導体以外の業種への広がりを見る必要がある。", "src": "聯合ニュース(サイドカー発動と6,000台回復、10/28) · 東亜日報(2日連続の発動、10/28) · 京郷新聞(ハイニックス発の好材料と急騰、10/28) · SBS(2日連続のサイドカー、10/28)"},
+    "vote":{"kick": "政治 · 選挙 · ✓ 4社 · 遅れた時間は3時間と2時間50分で媒体ごとに異なり、検証の結果は未確認", "title": "選管特検の投票用紙検証、国民の力の抗議で開始が遅れる…録画放送形式での撮影で合意", "what": "イ・テハン特検チームは28日、6・3地方選挙の投票用紙不足問題に関連して、オリンピック公園のハンドボール競技場で投票用紙の現場検証に着手したと聯合ニュースが伝えた。京郷新聞は、特検がデモ隊との衝突なく競技場に進入したと報じた。聯合ニュースは、国民の力の抗議で検証が予定より3時間遅れて始まったと伝え、東亜日報は2時間50分遅れたと書いた。聯合ニュースは、特検と国民の力の立会団が検証の現場を録画放送の形式で撮影することで合意したと報じた。同じ媒体は、放送局の撮影が許可されたと伝えた。聯合ニュースは、イ・テハン特検が、選挙制度に対する国民の不信をよく承知していると述べ、責任感を持って捜査すると語ったと報じた。", "why": "投票用紙の不足は選挙管理への信頼に直結する問題であり、検証の方法と公開の範囲がそれ自体で政治的な争点になる。立会団の立ち会いと撮影の合意は、結果を誰がどのように確認したかをめぐる争いを減らすための手続きだ。", "me": "選挙管理機関への信頼は、すべての有権者の投票経験とつながっている。検証結果がどのような方法で公開されるかによって、論争が収まるか長引くかが分かれる。", "a": "聯合ニュースによると、与党は、公開検証が論争の解消と占拠事態の収束のきっかけになるべきだと明らかにした。この見方では、検証は証拠に基づいて疑惑を整理する手続きだ。", "b": "聯合ニュースは、国民の力の抗議で検証が3時間近く遅れ、立会団との合意の末に録画放送形式での撮影が行われたと伝えた。この見方では、過程が透明に公開されてこそ、結果を受け入れられる。", "say": "確認できたのは、検証の着手と遅れ、録画放送での撮影の合意である。遅れた時間は聯合ニュースが3時間、東亜日報が2時間50分と異なり、正確な開始時刻は確認されておらず、投票用紙不足の原因と検証の結果も確認されていない。きょう以降は、検証がいつ終わるかと、結果がどのような形式で公開されるかを見る必要がある。", "src": "聯合ニュース(検証の着手と遅れ・撮影の合意、10/28) · 東亜日報(2時間50分の遅れ、10/28) · 京郷新聞(競技場への進入、10/28) · 韓国経済(検証手続きの開始、10/28)"},
+    "park":{"kick": "政治 · ✓ 報道4件", "title": "パク・ジョンジュン前警護処長、逮捕状執行妨害の控訴審で懲役4年から3年に減刑", "what": "ソウル高裁刑事1部(裁判長ユン・ソンシク)は28日午後、パク・ジョンジュン前大統領警護処長の特殊公務執行妨害などの容疑の控訴審で、懲役4年を言い渡した1審を破棄し、懲役3年を言い渡したと東亜日報が伝えた。聯合ニュースは、高位公職者犯罪捜査処によるユン・ソンニョル前大統領の逮捕状執行を妨害した容疑だと報じた。朝鮮日報と韓国経済も、控訴審で懲役3年に減刑されたと伝えた。東亜日報は、ともに起訴されたキム・ソンフン前警護処次長には1審と同じ懲役5年が、キム・シン前家族警護部長には懲役1年、執行猶予2年が言い渡されたと報じた。イ・グァンウ前警護本部長は、1審の懲役2年6か月より小幅に減刑されたと東亜日報が伝えた。", "why": "控訴審は1審の量刑をもう一度吟味する段階であり、同じ事件の被告ごとに量刑が異なって調整された点は、責任の重さをどう分けたかを示している。この事件は、逮捕状執行の妨害に対する司法の判断の基準となる。", "me": "公職者が上官の指示を理由に法の執行を妨げた場合、刑事責任がどこまで及ぶかについての判例が積み上がる。一般の市民も、裁判の結果が事件ごとにどのような事由で異なるのかを、判決文で確認できる。", "a": "聯合ニュースと朝鮮日報は、見出しで減刑の事実を先に伝えた。この見方では、1審より量刑が軽くなり、裁判所が一部の事情を異なって評価したと捉える。", "b": "東亜日報は、キム・ソンフン前次長の懲役5年が1審と同じだと伝えた。この見方では、減刑されても実刑が維持され、中心的な被告の刑がそのままなので、有罪判断の枠組みは変わらなかったと捉える。", "say": "確認できたのは、パク・ジョンジュン前処長の懲役3年への減刑と、共犯者の量刑である。減刑の理由と上告の有無は、今回の報道では確認されていない。きょう以降は、検察と被告側が上告するかを見る必要がある。", "src": "聯合ニュース(パク・ジョンジュン懲役3年に減刑、10/28) · 東亜日報(裁判部と共犯者の量刑、10/28) · 朝鮮日報(控訴審で減刑、10/28) · 韓国経済(2審の速報、10/28)"},
+    "birth":{"kick": "社会 · ✓ 報道2件", "title": "8月の出生児2万4000人、同月として7年ぶりの多さ…増加は26か月連続", "what": "今年8月に生まれた赤ちゃんが、同月として7年ぶりの最多となる2万4000人だと聯合ニュースが伝えた。聯合ニュースは、今年の年間累計の出生児が20万人に迫ると報じた。朝鮮日報は、8月の出生児が19年ぶりに最も大きく増えたと見出しで伝え、増加が26か月連続で続いて新記録だと報じた。聯合ニュースは同じ日、9月の国内移動者数が秋夕の連休の影響などで53年ぶりに最も少なかったという別のニュースも伝えた。", "why": "出生児の数は、婚姻件数と出産時期の選択が積み重なった結果であり、連続増加は長期の下落傾向が変わりつつあるかを推し量る指標だ。ただし月ごとの数値は変動が大きいため、増加が何か月続いたかが重要である。", "me": "産婦人科、保育園、小学校の入学人数は、数年後の需要に影響を与える。育児政策や地域の保育の供給を見ている人なら、連続増加の傾向が地域ごとにも表れているかを確認する必要がある。", "a": "朝鮮日報は、増加幅が19年ぶりに最も大きい点と、26か月連続の増加を強調した。この見方では、出生児の増加は一時的な反発ではなく、傾向として定着した。", "b": "聯合ニュースは、7年ぶりの最多で、年間累計が20万人に迫るという水準を指摘した。この見方では、増加しても絶対的な水準は過去に比べて低く、人口構造の変化を覆したとみるのは早い。", "say": "確認できたのは、8月の出生児2万4000人、同月として7年ぶりの最多、26か月連続の増加である。朝鮮日報の19年ぶりの最大の増加は増加幅を、聯合ニュースの7年ぶりの最多は水準を指す表現なので、二つを同じ基準で比べてはならない。きょう以降は、9月以降の統計でも増加が続くかを見る必要がある。", "src": "聯合ニュース(8月の出生児が7年ぶりに最多、10/28) · 朝鮮日報(26か月連続の増加、10/28)"},
+    "pension":{"kick": "経済 · ✓ 報道3件", "title": "政府、2028年に従業員100人以上の事業所から退職給付の社外積立を段階的に義務化", "what": "イ・ヒョンイル副首相兼財政経済部長官は28日、政府ソウル庁舎で開かれた経済関係閣僚会議と科学技術関係閣僚会議の合同会議を主宰したと京郷新聞が伝えた。京郷新聞によると、政府は退職金の未払いを防ぐため、2028年から従業員100人以上の事業所を皮切りに、退職給付の社外積立を段階的に義務化する。聯合ニュースと韓国経済は、速報で2028年の従業員100人以上の事業所での退職給付の社外積立の義務化と、未払い予防という目的を伝えた。京郷新聞は、退職年金の運用利回りを高める方策も併せて扱われたと報じた。聯合ニュースは同じ日、イ・ヒョンイル副首相が、成長目標は国民の暮らしの改善であり、二極化の緩和に力を集中すると語ったと伝えた。", "why": "退職給付を会社の中に積み立てておく方式では、事業所が苦しくなると労働者が退職金を受け取れないことがある。社外積立は、この資金を金融機関に別途預けさせることで、未払いのリスクを減らす仕組みだ。", "me": "従業員100人以上の事業所に勤める人は、今後、退職金が会社の外に積み立てられているかを確認できる。より小さな事業所は、今回の発表で施行時期が言及されていないため、適用範囲を別途確認しなければならない。", "a": "政府は退職金の未払い予防を目的として示したと聯合ニュースと韓国経済が伝えた。この見方では、労働者の退職給付を事業主の資金繰りと切り離さなければならない。", "b": "今回の報道は、対象が従業員100人以上の事業所からであり、段階的な導入だという点を伝えた。この見方では、事業主の積み立ての負担と、中小事業所への適用時期が今後の争点になりうる。", "say": "確認できたのは、2028年から従業員100人以上の事業所で始め、段階的に義務化するという政府の発表である。中小事業所への適用時期と具体的な積立比率は、今回の報道では確認されていない。きょう以降は、関連法の改正案がいつ国会に提出されるかを見る必要がある。", "src": "京郷新聞(副首相の発表と社外積立の段階的義務化、10/28) · 聯合ニュース(従業員100人以上の事業所、未払い予防、10/28) · 韓国経済(義務化の速報、10/28)"},
+    "event":{"kick": "経済 · ✓ 報道3件", "title": "来年から証券会社の取引金額連動イベントを禁止…高リスク金融投資商品が対象のイベントも制限", "what": "金融監督院は28日、金融投資協会の規定の改正を通じて、財産上の利益の提供基準を強化すると明らかにしたと朝鮮日報が伝えた。聯合ニュースとSBSは、来年から証券会社が、取引金額に連動するか高リスク金融投資商品を対象にして投資家を誘引するイベントを行えなくなると報じた。朝鮮日報によると、金融投資業の規定上、証券会社は一般の人が通常理解する水準に反する財産上の利益を提供できず、具体的な限度や内部統制は自律に委ねられていた。朝鮮日報は、賞金3億ウォンを受け取るため上場投資信託3兆ウォンが取引された事例を、見出しで紹介した。", "why": "取引金額が大きいほど景品を出すイベントは、投資家が危険な商品をより多く売買するよう煽りうる。規定が自律から明示的な禁止に変われば、証券会社がイベントを設計する方式が変わる。", "me": "証券会社のアプリの取引イベントに参加して景品を狙う投資家は、来年からこうした催しが減る。景品があるという理由で高リスク商品を取引することは、損失のリスクを高めうる。", "a": "朝鮮日報は、N億ウォンを取引すれば景品を出していた慣行が昔話になると伝えた。この見方では、投資家保護のために過熱した競争を防ぐべきだ。", "b": "今回の報道は、金融投資協会の規定の改正で基準を強化するという点を伝え、証券会社の反応は載せなかった。この見方では、イベントの禁止が証券会社の新規顧客の獲得方式に影響しうるため、施行の過程で業界の意見が出る可能性がある。", "say": "確認できたのは、来年から取引金額連動イベントと高リスク商品対象のイベントが禁止されるという金融監督院の発表である。改正規定の正確な施行日と違反時の制裁は、今回の報道では確認されていない。きょう以降は、金融投資協会の規定改正の日程と証券会社の対応が出るかを見る必要がある。", "src": "朝鮮日報(金融監督院の基準強化とETFの事例、10/28) · 聯合ニュース(取引金額連動イベントの禁止、10/28) · SBS(高リスク商品も規制、10/28)"},
+    "cod":{"kick": "社会 · ✓ 報道3件", "title": "「コール オブ デューティ」新作に梨泰院惨事の映像使用の論争…遺族が反発、謝罪を要求", "what": "北朝鮮による韓国侵攻を題材にした一人称シューティングゲーム「コール オブ デューティ: モダン・ウォーフェア4」に、梨泰院惨事の映像が使われたと聯合ニュースが28日に伝えた。SBSは、梨泰院惨事の資料映像が含まれたゲームのシネマティックを紹介した。聯合ニュースは総合記事で、遺族が「非常識」だとして削除を求めたと報じた。韓国経済は、遺族と市民団体が謝罪を求めたと伝えた。同じ日、ZDNetコリアは、このシリーズの累計売上高が400億ドルを超えたと別に報じた。", "why": "実際の惨事の映像が娯楽作品に使われれば、犠牲者と遺族の人格と追悼の問題になる。グローバルなゲームで韓国に関連する題材が使われる際、事実確認と使用の許諾がどのように行われるかが争点だ。", "me": "ゲームの利用者なら、該当の場面がゲームに含まれているか、制作会社が修正するかの告知を確認できる。惨事に関連する映像や画像をSNSで共有する際にも、遺族の立場を考慮しなければならない。", "a": "遺族と市民団体は、聯合ニュースと韓国経済の報道で、削除と謝罪を求めた。この見方では、惨事を題材にした映像の使用自体が二次加害だ。", "b": "今回の報道には、制作会社の公式の立場がまだ含まれていない。この見方では、使用の経緯と制作会社の説明が出てから、責任を問うべきだ。", "say": "確認できたのは、ゲームに梨泰院惨事の映像が使われたという報道と、遺族、市民団体の謝罪要求である。制作会社の立場と映像の修正の有無は、今回の報道では確認されていない。きょう以降は、制作会社の公式な回答と映像の削除の有無を見る必要がある。", "src": "聯合ニュース(梨泰院惨事の映像使用と遺族の反発、10/28) · SBS(ゲームのシネマティックの紹介、10/28) · 韓国経済(遺族・市民団体の謝罪要求、10/28)"}
+  };
+  const G = {
+    "営業利益率":{"f": "経済・会計", "d": "売上高に占める営業利益の割合で、本業の収益性を示す。", "w": "韓国経済は、SKハイニックスの営業利益率が80%に達すると伝えた。"},
+    "自社株":{"f": "金融・株式", "d": "会社が自社の株式を買い入れて保有したもの。消却すれば株式数が減り、1株当たりの価値が上がる。", "w": "SKハイニックスは、自社株20兆ウォン分を買い入れることにした。"},
+    "四半期配当":{"f": "金融・株式", "d": "決算期の途中で、四半期ごとに株主へ利益を分ける配当。", "w": "会社は、普通株1株当たり2万ウォンの四半期配当を行うことにした。"},
+    "株主還元":{"f": "金融・株式", "d": "企業が配当や自社株の買い入れ・消却で、利益を株主に還元すること。", "w": "SKハイニックスが、60兆ウォン規模の追加株主還元を発表した。"},
+    "HBM":{"f": "技術・半導体", "d": "DRAMを何層にも積み重ねてデータ転送速度を高めた、広帯域メモリー。", "w": "会社は、2029年までDRAMとHBMの物量は事実上完売だと明らかにした。"},
+    "長期供給契約":{"f": "経済・産業", "d": "複数年にわたって一定の物量を供給するよう、顧客企業と結ぶ契約(LTA)。", "w": "聯合ニュースは、確保した長期供給契約の物量が完売判断の根拠だと伝えた。"},
+    "サイドカー":{"f": "金融・株式", "d": "先物価格が急変したとき、現物市場のプログラム売買の注文の効力を5分間止める制度。", "w": "KOSPIが2日連続で買いサイドカーを発動させた。"},
+    "投資家預託金":{"f": "金融・株式", "d": "投資家が株を買おうと、証券会社の口座に預けておく待機資金。", "w": "KOSPIの反発で、投資家預託金が90兆ウォン台を回復した。"},
+    "借金投資":{"f": "金融・株式", "d": "借金をして行う投資。証券会社の信用融資の残高が代表的な指標だ。", "w": "借金投資の規模は30兆ウォンを下回ったと聯合ニュースが伝えた。"},
+    "国際投資紛争":{"f": "法律・国際", "d": "外国の投資家が、投資受け入れ国の措置で損害を被ったとして、国際仲裁に提起する紛争(ISDS)。", "w": "エリオットとの国際投資紛争で、政府が最終敗訴を受け入れた。"},
+    "差し戻し仲裁":{"f": "法律・国際", "d": "裁判所が仲裁判断の一部を取り消した後、事件を仲裁廷に戻して改めて判断させる手続き。", "w": "政府は、差し戻し仲裁の判断に取消訴訟を起こさないことにした。"},
+    "取消訴訟":{"f": "法律・国際", "d": "仲裁判断や処分が違法だとして、裁判所に効力をなくすよう求める訴訟。", "w": "政府は、英国の裁判所に取消訴訟などを起こさないことにした。"},
+    "遅延利息":{"f": "法律・国際", "d": "金を返すべき日を過ぎた後、遅れて支払う期間に加わる利息。", "w": "SBS Bizは、判断が元本と遅延利息の支払いを命じたと伝えた。"},
+    "スキャニング":{"f": "技術・セキュリティ", "d": "サイバー攻撃に先立ち、システムの脆弱性や開いているネットワークを探そうと接続を試みる行為。", "w": "金融保安院が、北朝鮮のIPと推定される帯域の大規模なスキャニングを探知した。"},
+    "立会団":{"f": "法律・選挙", "d": "選挙や検証の手続きを現場で見守り、公正さを確認する立会いの人員。", "w": "特検と国民の力の立会団が、録画放送形式での撮影で合意した。"},
+    "特検":{"f": "法律・捜査", "d": "特別検事。特定の事件を独立して捜査するよう任命される検事。", "w": "イ・テハン特検チームが、投票用紙の現場検証に着手した。"},
+    "社外積立":{"f": "労働・年金", "d": "退職給付の財源を、会社の外の金融機関に別途積み立てておく方式。", "w": "政府は、2028年から退職給付の社外積立を段階的に義務化する。"},
+    "退職給付":{"f": "労働・年金", "d": "労働者が退職するとき、使用者が支払わなければならない法定の給付(退職金・退職年金)。", "w": "従業員100人以上の事業所から、退職給付の社外積立が義務化される。"},
+    "財産上の利益":{"f": "金融・規制", "d": "金融会社が投資家に提供する景品や手数料の割引などの経済的な恩恵。", "w": "金融監督院が、財産上の利益の提供基準を強化すると明らかにした。"},
+    "特殊公務執行妨害":{"f": "法律・司法", "d": "暴行や威力で公務員の職務の執行を妨げる犯罪を、加重して処罰する罪。", "w": "パク・ジョンジュン前警護処長は、この容疑の控訴審で懲役3年を言い渡された。"},
+    "控訴審":{"f": "法律・司法", "d": "1審判決に不服で、上級裁判所で改めて審理を受ける2審の裁判。", "w": "パク・ジョンジュン前警護処長は、控訴審で1年減刑された。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

@@ -1,0 +1,337 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>63,081.86</b>日経平均 · 11/2終値 · 前日比 -0.33%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,580.07</b>S&amp;P 500 · 10/30終値 · 前日比 -1.82%</div>
+    </div>
+    <div class="dateline"><span>No. 29 · 夕刊</span><b>2026年11月2日(月)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="gmo">
+      <div class="kick">社会 · サイバー攻撃<span>✓ 4媒体 · 攻撃者の特定と補償の全体像は未確認</span></div>
+      <h2 class="hl">GMO熊谷社長が初会見で謝罪 2024年4月の社内指摘を生かせず、役員4人の報酬を最大30%減額</h2>
+      <p class="deck">朝刊で予告した会見が2日午後に開かれた。社長は「セキュリティー上の問題があった」と認めた。</p>
+      <div class="body">
+        <p>GMOインターネットグループの熊谷正寿会長兼社長が2日午後、東京都内で記者会見を開き、FX自動売買用のVPS（仮想専用サーバー）「お名前.com デスクトップクラウド」への不正アクセスについて謝罪した。熊谷氏は「心よりおわび申し上げる」と述べ、セキュリティー上の問題があったことを認めた。攻撃の発覚後に同社のトップが公の場で説明するのは、これが初めてだ。</p>
+        <p>会見で熊谷氏は、グループ内から2024年4月にセキュリティー上の改善点を指摘されていたが、サービスの運営に生かせなかったと説明した。脆弱性、つまりシステムの弱点を把握しながら、攻撃を防げなかったことになる。同社は熊谷氏を含む役員4人の報酬を3カ月間、最大30%減額すると発表した。熊谷氏は自身のSNS投稿についても「配慮が欠けていた」と述べた。誰が攻撃したのか、利用者への補償の全体像は確認できていない。朝刊で伝えた4万5030人分の流出は、別のサービスで起きた別件だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="suntory">
+      <div class="kick">社会 · 情報漏えい<span>✓ 4媒体 · 侵入経路と持ち出された範囲は未確認</span></div>
+      <h3 class="hl">サントリーHDで個人情報約10万人分が漏えい 不正アクセスで従業員約9万人分と採用応募者の情報</h3>
+      <div class="one">
+        <p>サントリーホールディングスは2日、業務で利用しているマイクロソフトのクラウドサービスが不正アクセスを受け、個人情報およそ10万人分が漏えいしたと発表した。同社は10月28日に、第三者による不正なアクセスを検知したとしている。漏れたのは、グループ会社などの従業員約9万人分に加え、2026年の新卒採用に応募した約7200人の氏名、企業の体験プログラムに登録されていた約7300人のメールアドレスなどだ。 氏名やメールアドレス、電話番号が含まれる一方、クレジットカード番号などの決済情報は含まれていないという。同社は現時点で、漏れた情報が悪用された事実は確認していないとしている。クラウドサービスは、データを自社の機器ではなく事業者の設備に預けて使う仕組みで、IDとパスワードを破られると預けた情報にまとめて届いてしまう。侵入の経路や、情報が外部に持ち出された範囲の詳しい説明は出ていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="okinawa"><b>沖縄政策協議会が6日に13年ぶり開催 基地負担の軽減と振興策を政府と県が協議</b><em>木原官房長官が2日に発表した。基地負担の軽減と沖縄振興について政府と県が話し合う。</em><span>政治 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="trump"><b>トランプ氏が米中間選挙を前に地方遊説を終える 3日の投開票へ支持者に投票を訴え</b><em>支持者の多い地盤で演説し、MAGA派の結束を呼びかけた。投開票は3日に行われる。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="tokai"><b>愛知県東海市で刃物を持った男が男性を人質に立てこもり 監禁の疑いで60歳の男を逮捕</b><em>2日午前6時すぎに警察が現場に駆けつけ、60歳の男を逮捕した。人質の男性にけがはなかった。</em><span>社会 · ✓ 4媒体</span></div>
+      <div class="it story" tabindex="0" data-id="ekiden"><b>ニューイヤー駅伝の予選会を2027年から統一 平均の基準タイムを設けて出場を絞る</b><em>統一予選会は2027年に始まると決まった。各チームの平均の基準タイムが設定される。</em><span>スポーツ · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kyudai"><b>九州大が40代男性の准教授をセクハラなどで処分 学生から被害の相談があった</b><em>九州大が2日に処分を明らかにした。処分の理由は、学生に対するセクハラなどの行為だった。</em><span>教育 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="trial">
+      <div class="kick">社会 · 裁判<span>✓ 4媒体 · 今後の公判日程は未確認</span></div>
+      <h3 class="hl">自民党本部への火炎瓶事件で初公判 被告は認否を示さず、弁護側は公訴棄却を求め全面的に争う</h3>
+      <div class="body">
+        <p>おととし、東京・永田町の自民党本部前で機動隊員に火炎瓶を投げ込み、首相官邸前の柵に車で突っ込んだなどとして、殺人未遂などの罪に問われている被告の初公判が2日、東京地裁で開かれた。被告は起訴された内容について認否を示さず、法廷で日の丸が描かれた紙を破り捨てた。</p>
+        <p>弁護側は起訴内容を全面的に争う方針を示し、公訴棄却を求めた。公訴棄却は、検察の起訴そのものに手続き上の問題があるとして、中身の審理に入らずに裁判を打ち切る判断だ。認否とは、起訴された事実を認めるか否かの答えを指す。この事件は政党本部と首相官邸という国の中枢が相次いで狙われた点で社会に衝撃を与えた。裁判では、事実関係とあわせて、手続きの是非も判断される。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="spain">
+      <div class="kick">国際 · 事故<span>✓ 4媒体 · 事故原因は未確定</span></div>
+      <h3 class="hl">スペイン列車事故で日本人1人の死亡を確認 もう1人の邦人も身元の特定を急ぐ</h3>
+      <div class="body">
+        <p>スペイン中部で10月28日に起きた高速鉄道の追突事故で、地元当局は1日、日本人1人の死亡を確認したと発表した。高速列車が別の列車に後ろからぶつかった事故で、死者は60人を超えている。</p>
+        <p>身元が分かっていない死者はなお3人残る。もう1人の邦人についても、スペイン当局が身元の特定を急いでいる。事故の原因は確定していない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="posting">
+      <div class="kick">スポーツ · 野球<span>✓ 4媒体 · 移籍先と契約条件は未確認</span></div>
+      <h3 class="hl">ポスティング申請を受理 佐藤輝明・平良海馬・伊藤大海の3人が大リーグ球団と交渉へ</h3>
+      <div class="body">
+        <p>大リーグ機構は、プロ野球の阪神・佐藤輝明選手、西武・平良海馬投手、日本ハム・伊藤大海投手の3人について、ポスティングシステムの申請を受理し、全30球団に通知した。現地時間の2日から交渉が解禁され、大リーグ球団は3人と契約の話し合いができる。伊藤投手は、朝刊で伝えたとおり日本ハムが1日に移籍を容認していた。</p>
+        <p>ポスティングは、日本の球団が選手の移籍を認めたうえで、選手が大リーグ球団と交渉できる制度だ。交渉には期限があり、早く決着する場合もある。3人がどの球団と、いくらで契約するのかはまだ明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>3人</b><span>ポスティング申請が受理された選手の数</span></div>
+        <div><b>30球団</b><span>通知を受けた大リーグ球団の数</span></div>
+        <div><b>11月2日</b><span>大リーグ球団との交渉が解禁された日(現地時間)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>サントリーから漏れた情報には、クレジットカード番号も含まれている</b> <span>サントリーホールディングスの発表では、氏名やメールアドレス、電話番号が対象で、クレジットカード番号などの決済情報は含まれていない。同社は不正に使われた事実を現時点で確認していないとしている。</span></div>
+        <div><b>スペインの列車事故で、日本人2人とも亡くなった</b> <span>死亡が確認されたのは1人で、地元当局が1日に発表した。もう1人の邦人は、スペイン当局が身元の特定を急いでいる段階で、安否は確定していない。</span></div>
+        <div><b>佐藤輝明ら3人の移籍先がもう決まった</b> <span>決まっていない。大リーグ機構が申請を受理して全球団に通知し、2日から交渉が解禁されたばかりで、移籍先や契約条件は明らかになっていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>あす · 火 11月3日</b><span>米国で中間選挙の投開票がある。日本は文化の日で祝日になる。スペインの事故で、もう1人の邦人の特定が進むかを見たい。</span><b>今週</b><span>6日に沖縄政策協議会が13年ぶりに開かれる。与党は消費税減税法案の6日の衆院通過を目指す。</span><b>今後</b><span>佐藤輝明・平良海馬・伊藤大海の3人の移籍先、GMOの原因調査と補償、サントリーの漏えい経路の調査が続く。</span><b>読者へ</b><span>勤務先や応募先から情報漏えいの連絡が来たら、送り主が本物かを公式サイトで確かめ、メールのリンクは開かずにパスワードを変えたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "gmo":{"kick": "社会 · サイバー攻撃 · ✓ 4媒体 · 攻撃者の特定と補償の全体像は未確認", "title": "GMO熊谷社長が初会見で謝罪 2024年4月の社内指摘を生かせず、役員4人の報酬を最大30%減額", "what": "GMOインターネットグループの熊谷正寿会長兼社長は11月2日午後、東京都内で記者会見を開いた。FX自動売買用のVPS「お名前.com デスクトップクラウド」への不正アクセスについて、「心よりおわび申し上げる」と謝罪し、セキュリティー上の問題があったことを認めた。グループ内から2024年4月に改善点を指摘されていたが、サービスの運営に生かせなかったと説明した。同社は、熊谷氏を含む役員4人の報酬を3カ月間、最大30%減らすと発表した。熊谷氏は自身のSNS投稿について「配慮が欠けていた」と述べた。", "why": "防げたはずの弱点が放置されていた、と本人が認めた点が大きい。攻撃の手口や犯人探しよりも先に、会社の管理体制が問われる段階に入った。利用者は、補償の範囲と再発防止の中身で、サービスを続けるかを判断することになる。", "me": "GMOのFX関連サービスを使っている人は、身に覚えのない取引がないか履歴を確認し、パスワードを変えたい。会社の案内を装ったメールやSMSのリンクは開かず、公式サイトから入り直す。", "a": "報酬減額や謝罪は責任の取り方として一歩前進だとする立場がある。指摘を生かせなかったと自ら認めた点は評価でき、次は利用者への補償を早く具体的に示すべきだと考える。", "b": "減額は3カ月で最大30%にとどまり、被害の大きさに見合わないとする立場がある。利用者の損失がどこまで補償されるか、第三者の検証が入るかを示さなければ、信頼は戻らないと見る。", "say": "確認できたのは、社長が問題を認めたこと、2024年4月の指摘を生かせなかったこと、役員の報酬減額の3点だ。攻撃者が誰か、補償の全体像、被害の総額は確認できていない。補償の範囲と、再発防止策の期限が示されるかを見たい。", "src": "毎日新聞(GMO熊谷社長、情報流出を謝罪、11月2日) · ITmedia(GMO熊谷代表、会見で改めて謝罪、11月2日) · NHK(GMO 熊谷社長ら2日午後記者会見、11月2日) · 時事通信(セキュリティー上の問題あった、11月2日)"},
+    "suntory":{"kick": "社会 · 情報漏えい · ✓ 4媒体 · 侵入経路と持ち出された範囲は未確認", "title": "サントリーHDで個人情報約10万人分が漏えい 不正アクセスで従業員約9万人分と採用応募者の情報", "what": "サントリーホールディングスは11月2日、業務で利用しているマイクロソフトのクラウドサービスが不正アクセスを受け、個人情報およそ10万人分が漏えいしたと発表した。10月28日に第三者による不正なアクセスを検知したという。グループ会社などの従業員約9万人分のほか、2026年の新卒採用に応募した約7200人の氏名、企業の体験プログラムに登録していた約7300人のメールアドレスなどが含まれる。氏名、メールアドレス、電話番号が対象で、クレジットカード番号などの決済情報は含まれていない。同社は、現時点で不正に使われた事実は確認していないとしている。", "why": "社員や応募者の名前とメールアドレスは、なりすましメールの宛先として使いやすい。採用に応募した学生は、企業からの連絡に敏感なため、本物そっくりの案内に引っかかる危険がある。外部のクラウドに置いた情報は、自社の守りだけでは守り切れない点を示している。", "me": "サントリーに応募した人や関係者は、同社からの連絡を待ち、メールのリンクは開かずに公式サイトで確認したい。ほかのサービスと同じパスワードを使い回している人は、この機会に変えておくと安心だ。", "a": "早く発表したことは評価できるとする立場がある。10月28日の検知から数日で公表し、決済情報が含まれないことも明示した点で、対象者が備えやすくなると考える。", "b": "10万人という規模は大きく、検知から公表までの間に情報が出回った可能性は否定できないとする立場がある。侵入の経路と、持ち出された範囲を早く示さなければ、不安は消えないと見る。", "say": "確認できたのは、約10万人分の漏えい、10月28日の検知、決済情報が含まれないことの3点だ。侵入の経路と、実際に外部へ持ち出された範囲は確認できていない。対象者への個別の連絡が始まるかを見たい。", "src": "NHK(サントリーHD 不正アクセスで個人情報約10万人分が漏えい、11月2日) · 47NEWS(サントリー、個人情報約10万人分漏えい、11月2日) · 日テレNEWS NNN(サントリー 不正アクセスで従業員約9万人分の個人情報が漏えい、11月2日) · TBS NEWS DIG(サントリーのクラウドに不正アクセス、11月2日)"},
+    "trial":{"kick": "社会 · 裁判 · ✓ 4媒体 · 今後の公判日程は未確認", "title": "自民党本部への火炎瓶事件で初公判 被告は認否を示さず、弁護側は公訴棄却を求め全面的に争う", "what": "2024年10月、東京の自民党本部前で機動隊員に火炎瓶を投げ込み、首相官邸前の柵に車で突っ込んだなどとして、殺人未遂などの罪に問われている被告の初公判が11月2日、東京地裁で開かれた。被告は起訴された内容について認否を示さなかった。法廷では、日の丸が描かれた紙を破り捨てた。弁護側は起訴内容を全面的に争う方針を示し、公訴棄却を求めた。公訴棄却は、起訴そのものに手続き上の問題があるとして、審理を打ち切るよう求める申し立てだ。", "why": "公訴棄却が認められることはまれで、まず裁判所が手続きの問題の有無を判断し、その後に事実の審理へ進む流れになる。認否を示さない対応は、検察が一つずつ立証する負担を重くする。政党本部と官邸という国の中枢が狙われた事件であり、裁判が長引けば、警備の議論も再び注目される。", "me": "この裁判は、街頭や公共の場の警備がどう見直されたかを考える機会になる。傍聴できる公判もあるため、関心のある人は裁判所の日程を確認できる。", "a": "全面的に争うのは被告の正当な権利だとする立場がある。起訴の手続きに問題があるなら、それを裁判所が先に確かめることが、公正な裁判の前提になると考える。", "b": "社会に大きな衝撃を与えた事件だけに、早く事実を明らかにしてほしいとする立場がある。認否を示さない姿勢や、法廷での振る舞いは、審理を遅らせる狙いに見えると受け止める。", "say": "確認できたのは、初公判の開廷、被告が認否を示さなかったこと、弁護側が公訴棄却を求めたことだ。公判が何回開かれるか、判決がいつ出るかは確認できていない。裁判所が公訴棄却の申し立てをどう扱うかを見たい。", "src": "NHK(自民党本部・官邸襲撃事件 初公判で被告は認否示さず、11月2日) · 朝日新聞(自民党本部に火炎瓶、被告が法廷で「日の丸」破る、11月2日) · 時事通信(官邸突入、争う方針、11月2日) · 毎日新聞(自民党本部襲撃事件で初公判、11月2日)"},
+    "spain":{"kick": "国際 · 事故 · ✓ 4媒体 · 事故原因は未確定", "title": "スペイン列車事故で日本人1人の死亡を確認 もう1人の邦人も身元の特定を急ぐ", "what": "スペイン中部で10月28日に起きた高速鉄道の追突事故で、地元当局は11月1日、日本人1人の死亡を確認したと発表した。高速列車が別の列車に後ろからぶつかった事故で、死者は60人を超えている。身元が分かっていない死者は3人残る。もう1人の邦人についても、スペイン当局が特定を急いでいる。事故の原因は確定していない。", "why": "海外の事故では、遺体の身元確認や遺族への連絡を現地当局が主導する。高速鉄道の追突は、信号や運行指令の仕組みに不備がなかったかを問う事故でもある。", "me": "海外で鉄道に乗る人は、出発前に家族へ旅程を伝え、現地の日本大使館への在留届や、外務省の旅行登録サービスを利用しておくと、万一のとき連絡がつきやすい。", "a": "身元の確認を急ぐことが最優先だとする立場がある。遺族への連絡と帰国の支援を早く進めることが、いま政府に求められる役割だと考える。", "b": "原因の究明も同じく急ぐべきだとする立場がある。信号や運行管理に問題があったのなら、同じ路線の安全確認が先に必要だと考える。調査の結果が公表されるまで、判断は控えるべきだとする声もある。", "say": "確認できたのは、日本人1人の死亡と、身元不明の死者が3人残っていること、もう1人の邦人の特定が続いていることだ。事故の原因と、もう1人の邦人の安否は確認できていない。スペイン当局の次の発表を見たい。", "src": "NHK(スペイン高速鉄道事故 日本人1人の死亡確認、11月2日) · 朝日新聞(スペイン列車事故、日本人1人の死亡確認、11月2日) · 毎日新聞(スペイン列車事故、残る身元不明の死者3人、11月2日) · 時事通信(列車事故、邦人1人死亡確認、11月2日)"},
+    "posting":{"kick": "スポーツ · 野球 · ✓ 4媒体 · 移籍先と契約条件は未確認", "title": "ポスティング申請を受理 佐藤輝明・平良海馬・伊藤大海の3人が大リーグ球団と交渉へ", "what": "大リーグ機構は、阪神の佐藤輝明選手、西武の平良海馬投手、日本ハムの伊藤大海投手の3人について、ポスティングシステムの申請を受理し、全30球団に通知した。現地時間の11月2日から、大リーグ球団との交渉が解禁される。日本ハムは11月1日に伊藤投手の移籍を容認していた。ポスティングは、日本の球団が選手の移籍を認めたうえで、選手が大リーグ球団と交渉できる制度だ。移籍先と契約条件は決まっていない。", "why": "申請が受理されたことで、大リーグの30球団が同じ日から3人に声をかけられる段階に入った。交渉に期限があるため、人気の高い選手ほど短い期間で条件が出そろう。日本の球団にとっては、移籍金が入る一方で、主力を失う影響を来季までに埋める必要がある。", "me": "阪神、西武、日本ハムのファンは、来季の戦力が変わる前提で見ておきたい。移籍が決まれば、大リーグの試合を中継で見る機会が増える。", "a": "挑戦を歓迎する立場がある。世界最高峰の舞台に立てる機会は選手のキャリアで限られており、3人とも球団が認めた今がその時だと考える。", "b": "戦力への影響を心配する立場がある。打線と先発の柱が同時に抜ければ、3球団の来季の戦いに響く。移籍金で補えるのか、次の選手が育つのかが課題だと考える。", "say": "確認できたのは、3人の申請の受理、30球団への通知、交渉の解禁の3点だ。誰がどの球団と契約するのか、契約の金額と年数は確認できていない。最初に合意に至る選手が誰になるかを見たい。", "src": "NHK(佐藤 平良 伊藤のポスティング申請受理、11月2日) · 47NEWS(阪神佐藤らのポスティングを全球団に通知、11月2日) · 東スポWEB(佐藤輝明 ポスティングを30球団に通知、11月2日) · 時事通信(日本ハムの伊藤大海、メジャー挑戦を決意、11月1日)"},
+    "okinawa":{"kick": "政治 · ✓ 3媒体", "title": "沖縄政策協議会が6日に13年ぶり開催 基地負担の軽減と振興策を政府と県が協議", "what": "木原稔官房長官は11月2日、政府と沖縄県が話し合う沖縄政策協議会を11月6日に開くと発表した。開催は13年ぶりとなる。基地負担の軽減や沖縄振興について、政府と県が協議する。協議会は、関係閣僚と県の代表が出席する場として設けられてきた。具体的な出席者と議題の詳細は、発表の時点で確認できる範囲では示されていない。", "why": "13年間開かれなかった協議会が再開されることは、政府と県の対話の形が変わることを意味する。基地問題と振興策を同じテーブルで議論する場は、県側が長く求めてきたものだ。開催の中身によっては、今後の予算や基地の運用の議論に影響する。", "me": "沖縄の基地問題や振興策に関心のある人は、6日の協議で何が決まり、何が持ち越されるのかを見るとよい。沖縄に住む人や、旅行や仕事で関わる人は、振興策の内容が暮らしに及ぶ可能性がある。", "a": "対話の再開を歓迎する立場がある。13年ぶりに政府と県が正式に向き合う場ができたことは、意見の隔たりを埋める第一歩になると考える。", "b": "形だけの会合にならないか注意が必要だとする立場がある。基地の負担をどう減らすのか、具体的な結論が出なければ、県民の不信は残ると考える。", "say": "確認できたのは、6日の開催、13年ぶりであること、議題に基地負担の軽減と沖縄振興が含まれることだ。出席者と、具体的な合意が出るかは確認できていない。協議後に、政府と県が示す共同の方針の有無を見たい。", "src": "沖縄タイムス(沖縄政策協議会を11月6日開催、11月2日) · 琉球新報(沖縄政策協議会は6日開催 13年ぶり、11月2日) · 47NEWS(政府、沖縄政策協議会の6日開催を発表、11月2日)"},
+    "trump":{"kick": "国際 · ✓ 2媒体", "title": "トランプ氏が米中間選挙を前に地方遊説を終える 3日の投開票へ支持者に投票を訴え", "what": "トランプ米大統領は、11月3日に投開票を迎える米中間選挙を前に、地方での遊説を終えた。支持者の多い地域で演説し、MAGA派の結束を呼びかけた。中間選挙は、大統領の任期の中間に行われ、連邦議会の下院全議席と上院の一部が改選される選挙だ。", "why": "中間選挙の結果は、大統領が議会で法案や予算を通しやすいかを左右する。野党が議会の多数を握れば、政権の政策は調査や審議で止まりやすくなる。日本にとっては、関税、安全保障、為替に関する米国の判断が変わるかを占う材料になる。", "me": "円相場や株価は米国の政治日程に反応しやすい。結果が出る日本時間の4日以降は、為替や株の動きが大きくなる場合がある。", "a": "大統領が自ら前面に立つことは、支持層の投票を後押しするという立場がある。投票率が低くなりがちな中間選挙では、結集の呼びかけが効くと考える。", "b": "大統領本人を前面に出す戦い方は、反対する層の投票も促すという立場がある。選挙の争点が政権への評価になれば、与党に不利に働くと考える。", "say": "確認できたのは、遊説の終了と、3日が投開票日であることだ。各選挙区の情勢と、最終的な議席の数は確認できていない。上院と下院のどちらで多数が入れ替わるかを見たい。", "src": "朝日新聞(トランプ氏、米中間選挙前の地方遊説終える、11月2日) · 南日本新聞(トランプ氏、MAGA派を鼓舞、11月2日)"},
+    "tokai":{"kick": "社会 · ✓ 4媒体", "title": "愛知県東海市で刃物を持った男が男性を人質に立てこもり 監禁の疑いで60歳の男を逮捕", "what": "愛知県東海市の2階建て住宅で11月2日、刃物を持った男が別の男性を人質にとって立てこもった。警察によると、2日午前6時すぎに警察官が現場に駆けつけた。男は監禁の疑いで逮捕された。逮捕されたのは60歳の男で、人質の男性にけがはなかった。", "why": "立てこもり事件は、人質の安全を最優先に対応する。今回はけが人を出さずに終わった。動機や男と人質の関係は、警察の調べが続く。住宅街で起きた事件のため、周辺の住民の安全確保も警察に求められる。", "me": "近所で警察が出動して通行が制限されたら、指示に従い、現場に近づかない。情報は警察や自治体の発表で確認する。", "a": "人質が無事に保護されたことを評価する立場がある。けが人を出さずに解決した点が重要で、現場の判断が適切だったかは後の検証に委ねられると考える。", "b": "事件の背景を丁寧に調べるべきだとする立場がある。男と人質の関係や動機の解明が、同じような事件の再発防止には欠かせないと考える。", "say": "確認できたのは、男が人質をとって立てこもったこと、60歳の男が監禁の疑いで逮捕されたこと、人質にけががなかったことだ。男と人質の関係と、立てこもりの動機は確認できていない。警察の調べで関係が明らかになるかを見たい。", "src": "毎日新聞(住人男性を人質に立てこもり、11月2日) · 朝日新聞(刃物を持った男が立てこもりか、11月2日) · NHK(愛知 東海 男が刃物所持して住宅に立てこもりか、11月2日) · TBS NEWS DIG(刃物持ち男性を人質に立てこもり、11月2日)"},
+    "ekiden":{"kick": "スポーツ · ✓ 1媒体", "title": "ニューイヤー駅伝の予選会を2027年から統一 平均の基準タイムを設けて出場を絞る", "what": "新年の恒例行事のニューイヤー駅伝について、予選会を統一して行うことが決まった。統一予選会は2027年に始まる。各チームの平均の基準タイムが設定される。これまでは地区ごとの予選会を経て出場チームが決まっていた。基準タイムの具体的な数字と、出場枠の数は、発表の時点で確認できる範囲では示されていない。", "why": "地区ごとに予選会があると、強さの違うチームが同じ土俵で比べられにくい。統一することで、基準を共通にして公平に競わせる狙いがある。基準タイムを設けるため、出場には一定の力が求められる。", "me": "実業団のファンは、来年以降の予選会の日程と会場を確認したい。応援しているチームが基準に届くかが、出場の分かれ目になる。", "a": "統一を歓迎する立場がある。共通の基準で競えるため、各地区の強さの差が出場の可否に影響しにくくなると考える。", "b": "地方の予選会の伝統が薄れることを心配する立場がある。基準タイムが厳しければ、小さなチームが出場しにくくなり、大会の裾野が狭まると考える。", "say": "確認できたのは、統一予選会が2027年に始まることと、平均の基準タイムを設けることだ。基準の具体的な数字と、出場枠の数は確認できていない。日本実業団陸上競技連合が示す詳細を見たい。", "src": "毎日新聞(ニューイヤー駅伝、統一予選会27年開始決定、11月2日)"},
+    "kyudai":{"kick": "教育 · ✓ 1媒体", "title": "九州大が40代男性の准教授をセクハラなどで処分 学生から被害の相談があった", "what": "九州大は11月2日、40代の男性准教授をセクハラなどで処分したことを明らかにした。学生から被害の相談があり、大学が調べて処分を決めた。処分の種類や期間、具体的な行為の内容は、発表の時点で確認できる範囲では示されていない。", "why": "大学では、教える側と学ぶ側の力の差が大きく、被害を受けた学生が声を上げにくい。相談窓口が機能して処分に至ったことは、被害の掘り起こしにつながる。処分の公表のしかたは、再発の抑止力にも関わる。被害を受けた学生の保護も、大学に求められる。", "me": "大学や職場で嫌な思いをした人は、一人で抱えず、学内の相談窓口や外部の相談機関に連絡できる。記録を残しておくと、後の調査で役に立つ。", "a": "処分を公表した姿勢を評価する立場がある。相談が処分に結びつくと示すことで、被害者が声を上げやすくなると考える。", "b": "処分の中身や経緯をもっと説明すべきだとする立場がある。内容が分からなければ、再発防止の取り組みが適切かを外から確かめられないと考える。", "say": "確認できたのは、40代男性准教授への処分と、学生からの相談が発端だったことだ。処分の種類と、行為の具体的な内容は確認できていない。大学が再発防止策を示すかを見たい。", "src": "毎日新聞(九州大、40代男性准教授をセクハラなどで処分、11月2日)"}
+  };
+  const G = {
+    "VPS":{"f": "IT", "d": "一台のサーバーを仮想的に分け、利用者ごとに専用のように使えるようにした仕組み。", "w": "GMOの攻撃は、FX自動売買用のVPSで起きた。"},
+    "脆弱性":{"f": "IT", "d": "システムの設計や設定にある弱点。攻撃者に突かれると、不正アクセスの入口になる。", "w": "GMOは2024年4月に脆弱性の指摘を受けていた。"},
+    "クラウドサービス":{"f": "IT", "d": "データやソフトを自社の機器ではなく、事業者の設備に預けて使う仕組み。", "w": "サントリーが業務で使うクラウドサービスが狙われた。"},
+    "決済情報":{"f": "金融", "d": "クレジットカード番号や口座番号など、お金の支払いに使う情報。", "w": "サントリーの漏えいには含まれていないという。"},
+    "公訴棄却":{"f": "司法", "d": "起訴に手続き上の問題があるとして、中身の審理に入らず裁判を打ち切ること。", "w": "弁護側が初公判で求めた。"},
+    "認否":{"f": "司法", "d": "起訴された事実を認めるか、認めないかという答え。", "w": "被告は初公判で認否を示さなかった。"},
+    "殺人未遂":{"f": "司法", "d": "人を殺す意図で実行に着手したが、死亡させるに至らなかった罪。", "w": "自民党本部の事件で被告が問われている。"},
+    "追突":{"f": "交通", "d": "走行中の乗り物が、前の乗り物に後ろからぶつかること。", "w": "スペインの高速鉄道で列車が別の列車に追突した。"},
+    "ポスティング":{"f": "制度", "d": "日本の球団の許可を得た選手が、大リーグ球団と交渉できる制度。", "w": "3人の申請が受理された。"},
+    "沖縄政策協議会":{"f": "行政", "d": "沖縄の振興や基地の問題を、政府の関係閣僚と沖縄県が話し合う会議。", "w": "6日に13年ぶりに開かれる。"},
+    "基地負担":{"f": "安全保障", "d": "在日米軍の基地が集まる地域の住民が受ける、騒音や事故の危険などの負担。", "w": "沖縄政策協議会の議題の一つ。"},
+    "沖縄振興":{"f": "行政", "d": "沖縄の経済や生活基盤を整えるために、国が行う財政支援や計画。", "w": "協議会で基地負担とあわせて話し合われる。"},
+    "中間選挙":{"f": "政治", "d": "米国で大統領の任期の中間に行われる選挙。連邦議会の下院全議席と上院の一部が改選される。", "w": "3日に投開票を迎える。"},
+    "監禁":{"f": "司法", "d": "人を一定の場所から出られないようにして、行動の自由を奪うこと。", "w": "東海市の立てこもりで男が逮捕された容疑。"},
+    "統一予選会":{"f": "制度", "d": "地区ごとに行っていた予選を、全国で共通の方式にして行う大会。", "w": "ニューイヤー駅伝で2027年に始まる。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

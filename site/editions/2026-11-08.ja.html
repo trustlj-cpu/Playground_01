@@ -1,0 +1,336 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,059.69</b>KOSPI · 11/06(金) 終値 · 前日比-6.02%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>24,579.4</b>ナスダック · 11/06(金、米国) 終値 · 前日比+1.09%</div>
+    </div>
+    <div class="dateline"><span>第35号 · 朝刊</span><b>2026年11月8日 日曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="p1">
+      <div class="kick">国際 · 事件・事故<span>報道照合 ✓ 3社 · 容疑者の身元・動機・最終的な身柄は未確認</span></div>
+      <h2 class="hl">ポーランド・クラクフの市場広場で無差別銃撃…6人死亡・15人負傷、内相『極右思想に魅了された状況』</h2>
+      <p class="deck">7日午後3時ごろ、広場に車で乗り入れた軍服姿の男が銃を撃ち、6人が死亡、15人が負傷した。</p>
+      <div class="body">
+        <p>ポーランド第2の都市クラクフの中央市場広場で、7日(現地時間)午後3時ごろ、銃撃事件が起きた。広場に車で乗り入れた男が軍服姿で無差別に発砲し、これまでに女性4人と男性2人の計6人が死亡し、15人が負傷したと集計された。最初の速報では死者5人、負傷者12人と伝えられたが、その後集計が増えた。死者と負傷者を合わせると21人だ。市場広場は旧市街の真ん中にある代表的な観光地で、都市の中心の公共の場で起きた事件という点が衝撃を大きくした。ドナルド・トゥスク首相は知らせを聞いてクラクフへ向かった。</p>
+        <p>犯行の動機について、ポーランドの内相は、容疑者が極右思想に『魅了された』状況があると明らかにした。ただし、これは捜査初期の説明だ。容疑者の身元と具体的な動機、最終的な身柄の処理状況はまだ確認されておらず、負傷者15人のうち重傷者が何人かも公表されていない。ウォロディミル・ゼレンスキー・ウクライナ大統領は今回の銃撃を非難し、犠牲者の遺族に哀悼を伝え、トム・ローズ駐ポーランド米国大使はXで今回の事件をむごい銃乱射と書いた。捜査状況と死者・負傷者の集計のさらなる変動は、ポーランド当局が発表しだい続く見通しだ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="p2">
+      <div class="kick">政治 · 国会<span>報道照合 ✓ 3社 · 集会の参加規模は未確認</span></div>
+      <h3 class="hl">国民の力、ソウル都心の院外集会でイ大統領の弾劾を主張…民主党『政治検察の防弾』と反論</h3>
+      <div class="one">
+        <p>国民の力は7日、ソウル都心で院外集会を開き、前日に国会を通過した『捏造起訴特検法』を糾弾した。法案は6日の本会議で賛成167票、反対1票で可決され、国民の力は採決を欠席した。集会ではイ・ジェミョン大統領を弾劾すべきだという主張が出て、ハン・ドンフン議員はこの法を『イ・ジェミョン特権法』と呼んだ。院外集会とは、国会の外の路上で開く政治集会で、国会の中で採決によって阻めなかった野党が世論に訴える方式だ。共に民主党は同じ日、国民の力がいったい何のために街頭に出るのかと問い返し、今回の集会はユン・ソンニョル政権のときの政治検察を防弾しようとするものだと批判した。イ大統領は7日、政治家への称賛と批判は必要だが、宗教的な賛美や崇拝につながってはならないと語った。集会の参加規模は確認されておらず、国民の力が院外闘争をどれだけ続けるかも決まっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="q1"><b>ニュージーランド総選挙で国民党・労働党が大接戦…過半数の政党なく、連立協議に数週間かかる可能性</b><em>7日に行われた総選挙で、与党で中道右派の国民党と第1野党の労働党が、ほぼ互角の結果を出した。どちらも単独過半数が難しく、政府の樹立は連立政権をめぐる交渉に数週間かかる可能性がある。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q2"><b>トランプ、UFCのデイナ・ホワイト会長にホワイトハウス報道官職を提案…『どうか引き受けてほしい』</b><em>トランプ大統領は7日、公の場でUFCのデイナ・ホワイト会長にホワイトハウス報道官職を提案した。ホワイト会長が受諾したかは確認されていない。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q3"><b>トランプ、民主党が司法長官らの弾劾を脅していると主張し司法省に調査を指示</b><em>トランプ大統領は7日、民主党が司法長官や行政府の人物、共和党の後援者らを弾劾などで脅していると主張した。弾劾に値する行為はなかったとして、司法省に調査を指示した。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q4"><b>ファン・ユミン、LPGA TOTO ジャパンクラシック3ラウンドで3位タイ…首位と2打差</b><em>ファン・ユミンは7日の3ラウンドで、バーディー6個、ボギー2個の4アンダー68をマークし、通算13アンダー203になった。単独首位の岩井明愛と2打差で、最終ラウンドでの逆転優勝を狙う。</em><span>スポーツ · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="q5"><b>ソ・スンジェ、キム・ウォノ、コリアオープン男子ダブルス決勝進出…8日に優勝へ挑戦</b><em>世界1位のキム・ウォノ-ソ・スンジェは7日、麗水での準決勝でマレーシアのペアを2-0で下した。8日の決勝で、同じサムスン生命のカン・ミンヒョク-イ・ジョンミン、または日本のペアと対戦する。</em><span>スポーツ · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="p3">
+      <div class="kick">国際 · 中東<span>報道照合 ✓ 3社 · 死者数・空爆の主体は独立した確認なし</span></div>
+      <h3 class="hl">フーシ派『サウジの空爆でイエメン・サヌア近郊で27人死亡』と主張…サウジは見解を示さず</h3>
+      <div class="body">
+        <p>イエメンの反政府勢力フーシ派は7日、首都サヌア近郊のアル・シャリヤ村がサウジアラビアの空爆を受け、27人が死亡したと主張した。フーシ派保健省の報道官アニス・アル・アスバヒは、最初は22人が死亡したと明らかにし、その後集計が27人に増えた。サウジが率いる連合軍は、この主張に見解を示さなかった。死者数と空爆の主体は独立して確認されていない。</p>
+        <p>前日にイエメン南部の市場で起きた攻撃の責任をめぐり、フーシ派とサウジは互いに非難を応酬している。フーシ派は、サウジの国際空港とアラムコの石油貯蔵タンクを攻撃したと主張し、サウジ主導の連合軍は、イスラム教の聖地メッカ付近でドローン1機を迎撃したと明らかにした。サウジの民間防衛は、南部のジザンとナジュランの地域に危険警報を出したあと、危険が過ぎたと知らせた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="p4">
+      <div class="kick">スポーツ · プロ野球<span>報道照合 ✓ 3社 · 第5戦の結果はまだない</span></div>
+      <h3 class="hl">サムスン、韓国シリーズ第4戦でktに10-5で勝利…1敗のあと3連勝、12年ぶりの優勝へあと1勝</h3>
+      <div class="body">
+        <p>サムスン・ライオンズは7日、大邱サムスン・ライオンズ・パークで行われた韓国シリーズ(7戦4勝制)第4戦で、kt wizを10-5で破った。第1戦を7-8で落としたあと第2~4戦をすべて勝ち、シリーズ成績は3勝1敗になった。2014年の統合優勝から12年ぶり、通算9回目の優勝まであと1勝だけになった。サムスンは1回だけで6点を挙げて流れをつかみ、キム・ドファンが3打点の適時打を放った。</p>
+        <p>四死球が19個出た落ち着かない試合で、サムスンの投手イ・ジェヒは2⅔回を無失点、4奪三振で満塁のピンチをしのぎ、第4戦のデイリーMVPに選ばれた。第5戦は8日、同じ場所で行われる。サムスンは国内組のエースのウォン・テインが、ktは4日休んで登板する外国人投手のデービス・ダニエルが先発する。サムスンが勝てば優勝が決まる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="p5">
+      <div class="kick">経済 · 物価<span>報道照合 ✓ 3社 · 11月の指数の見通しは未確認</span></div>
+      <h3 class="hl">世界食料価格指数、10月は133.9で1.2%下落…4か月ぶりに下げ、砂糖は6.6%上昇</h3>
+      <div class="body">
+        <p>農林畜産食品部は7日、国連食糧農業機関(FAO)の10月の世界食料価格指数が133.9ポイントで、前月(135.6ポイント)より1.2%下がったと明らかにした。6月から続いていた上昇が、4か月でとまった形だ。小麦とトウモロコシの価格が下がって穀物が下がり、肉類と乳製品も下がった。反対に油脂類と砂糖は上がり、砂糖は6.6%上昇した。</p>
+        <p>この指数は、FAOが24品目の国際価格を調べ、穀物・肉類・乳製品・油脂類・砂糖の品目群別に毎月発表するもので、2014~2016年の平均価格を100として計算する。133.9という数字は、その時期より国際的な食料価格が34%近く高いという意味だ。下げ幅は1.2%と大きくなく、品目群ごとに方向が分かれている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>133.9</b><span>10月の世界食料価格指数、前月は135.6</span></div>
+        <div><b>-1.2%</b><span>前月比、4か月ぶりの下落</span></div>
+        <div><b>+6.6%</b><span>砂糖価格の上昇率</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>ホワイト会長がホワイトハウス報道官職をすでに受諾した。</b> <span>トランプ大統領が公の場で提案したと明らかにしたことが、確認された全部だ。ホワイト会長側の受諾の発表は確認されていない。</span></div>
+        <div><b>クラクフの銃撃犯は極右組織に所属している。</b> <span>ポーランドの内相は、容疑者が極右思想に魅了された状況があるとだけ明らかにした。特定の組織に属していたかは明らかになっていない。</span></div>
+        <div><b>世界の食料価格が下げに転じ、まもなく買い物かごの物価が下がる。</b> <span>農林畜産食品部が伝えたFAOの10月の指数は、1.2%下がって133.9だが、油脂類と砂糖はむしろ上がった。指数は依然として2014~2016年の平均より高い。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 日 11月8日</b><span>大邱で韓国シリーズ第5戦が行われ、サムスンが勝てば優勝が決まる。麗水ではコリアオープン・バドミントンの男子ダブルス決勝が行われ、クラクフ銃撃の捜査状況とニュージーランドの連立協議の知らせが続く。</span><b>今週</b><span>9日月曜日に、KOSPIが6日に6.02%下落してから初めて取引を始める。国民の力の院外闘争がどう続くか、ホワイトハウス報道官職の提案にホワイト会長が答えるかを確認すべきだ。</span><b>その後</b><span>韓国シリーズは7戦4勝制のため、第5戦で終わらなければ第6・7戦に持ち越される。11月のFAO食料価格指数は来月初めに発表される。</span><b>読者へ</b><span>ポーランドへの旅行を計画していたなら、外交部の海外安全旅行の告知を確認し、海外の事件の知らせは初期の集計が変わるため、当局の発表を待とう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "p1":{"kick": "国際 · 事件・事故 · ✓ 3社 · 容疑者の身元・動機・最終的な身柄は未確認", "title": "ポーランド・クラクフの市場広場で無差別銃撃…6人死亡・15人負傷、内相『極右思想に魅了された状況』", "what": "7日(現地時間)午後3時ごろ、ポーランドのクラクフの中央市場広場で銃撃が起きた。広場に車で乗り入れた男が、軍服姿で無差別に発砲を始めた。死者は女性4人と男性2人の計6人、負傷者は15人と集計された。最初の速報では死者5人、負傷者12人だったが、集計が増えた。ドナルド・トゥスク首相がクラクフへ向かった。ポーランドの内相は、容疑者が極右思想に魅了された状況があると語った。ウォロディミル・ゼレンスキー・ウクライナ大統領は事件を非難し、犠牲者の遺族に哀悼を伝えた。", "why": "市場広場は旧市街の真ん中にあって市民や観光客が行き交う開かれた空間なので、一人が無差別に撃てば被害が短い時間で大きくなる。内相が動機として極右思想に触れたため、事件が単なる凶悪犯罪なのか、政治的な動機による暴力なのかが焦点になった。捜査の結果しだいで、ポーランドの銃器管理や過激主義の監視政策の議論に広がる可能性がある。", "me": "クラクフやポーランドへの旅行を控えているなら、外交部の海外安全旅行の告知と現地当局の案内を確認しよう。海外の事件の知らせは初期の集計が変わるため、死者・負傷者の数を一度の速報で決めつけず、当局の発表を待つのがよい。", "a": "内相が極右思想に触れた以上、政治的な動機による暴力とみて、過激主義の監視体制を点検すべきだという見方がある。市民が集まる広場が標的になった点から、公共の場の安全対策も問うべきだとみる。", "b": "捜査の初期なので動機は容疑者の供述と証拠で確認されるべきで、状況だけで事件の性格を規定するのは早いという見方がある。死者・負傷者の数も速報の段階で変わり続けたことを根拠に挙げる。", "say": "確認されたのは、7日午後3時ごろの市場広場での銃撃、死者6人・負傷者15人、極右思想の状況についての内相の発言だ。確認されていないのは、容疑者の身元と最終的な身柄、具体的な動機だ。きょうは、ポーランド当局の捜査発表と、死者・負傷者の集計の変動を見るべきだ。", "src": "ガーディアン(クラクフ市場広場の銃撃速報、11/7) · BBC(クラクフ銃撃まとめ、11/7) · 聯合ニュース(クラクフ銃乱射・総合、11/8)"},
+    "p2":{"kick": "政治 · 国会 · ✓ 3社 · 集会の参加規模は未確認", "title": "国民の力、ソウル都心の院外集会でイ大統領の弾劾を主張…民主党『政治検察の防弾』と反論", "what": "国民の力は7日、ソウル都心で『捏造起訴特検法』を糾弾する院外集会を開いた。この法案は6日の国会本会議で賛成167票、反対1票で通過し、国民の力は採決を欠席した。集会ではイ・ジェミョン大統領を弾劾すべきだという主張が出た。ハン・ドンフン議員はこの法を『イ・ジェミョン特権法』と呼んだ。共に民主党は、この集会をユン・ソンニョル政権のときの政治検察を防弾しようとするものだと批判した。集会の参加規模は確認されていない。", "why": "特検法が国会を通過した以上、野党が議席で阻む方法は事実上なく、院外集会は世論に訴える残された手段だ。与党はこれを捜査対象になった側の防御と、野党は大統領を守る立法への抵抗と規定し、同じ法に正反対の名前をつける。その枠組みの争いが、今後の特検の構成や捜査範囲の議論に影響を与える可能性がある。", "me": "特検捜査の範囲と時期は、政界の攻防よりも法の条文と後続の手続きで決まる。関連の知らせを見るときは、誰の発言か、法案の原文にある内容かを区別して読もう。", "a": "捏造起訴と指摘された事件を正すには特検が必要だという見方がある。この見方は、野党の院外集会は政治検察を守ろうとするものだとみる。", "b": "法案が大統領に有利に働きうるうえ、野党の欠席のなかで通過して手続きが公正でなかったという見方がある。この見方は、院外集会を法案の強行への抗議とみる。", "say": "確認されたのは、7日の院外集会の開催、6日の本会議の採決結果、弾劾の主張と『イ・ジェミョン特権法』の発言、民主党の反論だ。確認されていないのは、集会の規模と国民の力の闘争の継続期間だ。きょうは、院外闘争が続くかと、特検の後続の手続きの日程を見るべきだ。", "src": "聯合ニュース(国民の力の院外集会と民主党の反論、11/7) · 朝鮮日報(糾弾の院外集会での発言、11/7) · ハンギョレ(院外闘争に乗り出した国民の力、11/7)"},
+    "p3":{"kick": "国際 · 中東 · ✓ 3社 · 死者数・空爆の主体は独立した確認なし", "title": "フーシ派『サウジの空爆でイエメン・サヌア近郊で27人死亡』と主張…サウジは見解を示さず", "what": "フーシ派は7日、首都サヌア近郊のアル・シャリヤ村がサウジアラビアの空爆を受け、27人が死亡したと主張した。フーシ派保健省の報道官アニス・アル・アスバヒは、最初は22人が死亡したと明らかにし、その後集計が27人に増えた。サウジが率いる連合軍は、この主張に見解を示さなかった。フーシ派は、サウジの国際空港とアラムコの石油貯蔵タンクを攻撃したと主張した。サウジ主導の連合軍は、メッカ付近でドローン1機を迎撃したと明らかにした。サウジの民間防衛は、ジザンとナジュランに危険警報を出したあと、危険が過ぎたと知らせた。前日のイエメン南部の市場への攻撃の責任をめぐり、双方が攻防の最中だ。", "why": "死者数と空爆の主体はフーシ派側の主張しかなく独立した確認がないため、数字が段階ごとに変わる状況だ。双方が互いに相手の攻撃だと主張し合うかぎり、民間人の被害の責任の究明は遅れ、緊張は簡単には解けない。サウジの領土内でも警報が鳴り、衝突が国境の外へ広がるかが焦点だ。", "me": "サウジと紅海一帯は原油の輸送路なので、衝突が大きくなれば国際原油価格と海上運賃に影響を与えうる。この知らせがすぐに燃料価格を上げるとみるのは早いが、月曜日の国際原油価格の動きもあわせて見よう。", "a": "民間人の被害が繰り返されている以上、双方に独立した調査を求めるべきだという見方がある。数字がフーシ派側からしか出ていない点を挙げ、確認までは慎重であるべきだとみる。", "b": "フーシ派が先にサウジの施設を狙って衝突を拡大したという見方がある。フーシ派が出す被害の主張は、相手に圧力をかけるための宣伝かもしれないとみる。", "say": "確認されたのは、フーシ派保健省の報道官がサヌア近郊の空爆の死者を最初は22人、その後27人と明らかにしたことと、サウジ側の無反応だ。確認されていないのは、実際の死者数、空爆の主体、フーシ派のサウジ施設への攻撃の主張だ。きょうは、サウジ連合軍の公式な見解と、国際機関の被害調査を見るべきだ。", "src": "BBC(フーシ派、サウジ空爆で25人以上死亡と主張、11/7) · 聯合ニュース(サヌア近郊の空爆で27人死亡と主張・総合、11/8) · 朝鮮日報(イエメンで相次ぐ人的被害、11/7)"},
+    "p4":{"kick": "スポーツ · プロ野球 · ✓ 3社 · 第5戦の結果はまだない", "title": "サムスン、韓国シリーズ第4戦でktに10-5で勝利…1敗のあと3連勝、12年ぶりの優勝へあと1勝", "what": "サムスン・ライオンズは7日、大邱サムスン・ライオンズ・パークで行われた韓国シリーズ第4戦で、kt wizを10-5で破った。サムスンは第1戦を7-8で落としたあと第2~4戦をすべて勝ち、3勝1敗になった。1回だけで6点を挙げ、キム・ドファンが3打点の適時打を放った。この試合で四死球が19個出た。サムスンの投手イ・ジェヒは2⅔回を無失点、4奪三振を記録し、デイリーMVPに選ばれた。第5戦は8日に同じ場所で行われ、サムスンはウォン・テイン、ktはデービス・ダニエルが先発だ。サムスンは2014年以来12年ぶり、通算9回目の優勝にあと1勝を残した。", "why": "韓国シリーズは、先に4勝すれば終わる7戦4勝制だ。3勝1敗のチームが次の試合に勝てばシリーズが終わるため、第5戦はサムスンには優勝を決めるチャンス、ktには敗退を避けなければならない試合だ。先発投手のコンディションが勝負を左右する短期決戦の構造で、休養日数の違う二人の投手の対決が変数だ。", "me": "きょうの試合を見るなら、大邱の現地の試合時間と中継の編成をあらかじめ確認しよう。予約や応援の予定があるなら、優勝が決まる試合では混雑が大きくなりうる。", "a": "1回の6得点で先手をとった打線と、ピンチをしのいだブルペンを根拠に、サムスンがシリーズを終わらせる雰囲気をつくったとみる見方がある。", "b": "四死球が19個も出るほど試合が揺れ、ktが5点を追い上げた点を挙げ、マウンドが不安なら第5戦も簡単ではないとみる見方がある。", "say": "確認されたのは、第4戦の10-5という結果、サムスンの3勝1敗、第5戦の先発投手だ。確認されていないのは、第5戦の結果と優勝チームだ。きょうは、8日の大邱での第5戦で、サムスンがシリーズを終わらせるか、ktが第6戦に持ち込むかを見るべきだ。", "src": "聯合ニュース(サムスン、1回に6得点で3連勝・総合、11/7) · 東亜日報(1敗のあと3連勝、12年ぶりの優勝が目前、11/7) · 朝鮮日報(サムスンの第4戦勝利、写真記事、11/7)"},
+    "p5":{"kick": "経済 · 物価 · ✓ 3社 · 11月の指数の見通しは未確認", "title": "世界食料価格指数、10月は133.9で1.2%下落…4か月ぶりに下げ、砂糖は6.6%上昇", "what": "農林畜産食品部は7日、FAOの10月の世界食料価格指数が133.9ポイントで、前月の135.6ポイントより1.2%下落したと明らかにした。6月から続いていた上昇が、4か月で下落に転じた。穀物、肉類、乳製品の価格は下がり、油脂類と砂糖の価格は上がった。砂糖は6.6%上昇した。指数は、FAOが24品目の国際価格を調べて品目群別に毎月発表する。2014~2016年の平均価格を100として計算する。", "why": "この指数は、国際市場で取引される穀物と食用油の値の流れを一つの数字で示し、輸入依存の大きい国の食料物価を見通す参考になる。穀物・肉類・乳製品が下がり、油脂類・砂糖が上がって、品目ごとに方向が違った点が今月の特徴だ。国際価格が国内の消費者価格に届くまでには、為替と輸入の時間差が入りこむ。", "me": "食用油と砂糖をよく使う家庭なら、今回の指数の油脂類・砂糖の上昇が続くかを、来月の発表で確認しよう。穀物価格の下落が買い物かごに反映されるには時間がかかる。", "a": "小麦とトウモロコシの価格が下がって上昇が止まったので、食料物価の負担が和らぐきっかけだとみる見方がある。", "b": "下げ幅が1.2%にとどまり、133.9は基準の時期よりまだ高く、油脂類と砂糖が上がっていて、安心するのは早いとみる見方がある。", "say": "確認されたのは、10月の指数133.9、前月比1.2%の下落、砂糖の6.6%の上昇だ。確認されていないのは、11月の指数の方向と、国内価格に届く時期だ。きょうは、次のFAOの発表日程と為替を見るべきだ。", "src": "東亜日報(世界の食料価格、4か月ぶりに下落、11/7) · SBS(世界食料価格指数、下落に転換、11/7) · 聯合ニュース(穀物・肉類・乳製品が下落、11/7)"},
+    "q1":{"kick": "国際 · ✓ 報道3件", "title": "ニュージーランド総選挙で国民党・労働党が大接戦…過半数の政党なく、連立協議に数週間かかる可能性", "what": "ニュージーランドで7日に総選挙が行われた。与党の中道右派の国民党と、第1野党で中道左派の労働党が、ほぼ互角の結果を出した。国民党が議会の第1党になる見通しと伝えられた。両陣営とも単独過半数が難しく、中道寄りの政党の支持が必要な状況だ。開票の序盤は国民党の連合が先行する流れだったが、労働党が追いついた。政府の樹立には数週間かかる可能性がある。", "why": "議席が一つの政党や一つの陣営に偏らないと、連立政権の交渉の結果によって首相が決まる。そのため、選挙結果よりも少数政党がどちらと手を組むかが政権を左右する。交渉が長引けば政策決定が遅れる。", "me": "ニュージーランドと貿易をしている、あるいは留学や旅行の計画があるなら、新政権の移民・貿易政策が決まる時期を見守ろう。今すぐ生活に直接届く変化はない。", "a": "国民党が第1党の位置を守ったので、連立の構成で主導権をもつとみる見方がある。", "b": "得票で労働党がほぼ追いついており、中道の政党がどちらを選ぶかによって結果がひっくり返りうるとみる見方がある。", "say": "確認されたのは、7日の総選挙で国民党と労働党が接戦を演じ、どちらも単独過半数が難しいという点だ。確認されていないのは、最終的な議席数と連立の構成の方向だ。きょうは、残りの開票と、少数政党の連立交渉への立場を見るべきだ。", "src": "BBC(ニュージーランド総選挙が接戦、11/7) · ガーディアン(ニュージーランド総選挙が大接戦、11/7) · 聯合ニュース(ニュージーランド総選挙が大接戦・総合、11/7)"},
+    "q2":{"kick": "国際 · ✓ 報道3件", "title": "トランプ、UFCのデイナ・ホワイト会長にホワイトハウス報道官職を提案…『どうか引き受けてほしい』", "what": "トランプ大統領は7日、公の場でUFCのデイナ・ホワイト会長にホワイトハウス報道官職を提案した。ホワイト会長に『どうかこの役目を引き受けてほしい』という趣旨で語った。左派から私たちを守らなければならないという趣旨の言葉も付け加えた。ホワイト会長がこの提案を受け入れたかは伝えられていない。これに先立つ6日、トランプ大統領はワイルズ・ホワイトハウス首席補佐官の後任にスティーブン・ミラーを指名した。", "why": "ホワイトハウスの報道官は大統領のメッセージを毎日伝える役職なので、誰が務めるかが行政府の発信の仕方を示す。格闘技団体のトップを直接名指ししたのは、伝統的な政務の経歴とは違う人事だ。提案が公の場でなされたため、ホワイト会長の返答がそのまま新たな知らせになる。", "me": "米国政治の知らせが韓国の輸出や外交に届く経路は、報道官の一言よりも政策決定にある。人事の知らせ一つに一喜一憂せず、後続の人事と政策発表をあわせて見よう。", "a": "発信力のある大衆的な人物を前面に出し、中間選挙後の政局で政府のメッセージを強めようとする試みだとみる見方がある。", "b": "公の提案という方式と格闘技団体のトップという経歴のために、実際の任命につながるかは不透明だとみる見方がある。", "say": "確認されたのは、トランプ大統領が7日にホワイト会長へ報道官職を公に提案したという点だ。確認されていないのは、ホワイト会長の受諾の可否と、現在の報道官の去就だ。きょうは、ホワイト会長の返答と、ホワイトハウスの公式な人事発表を見るべきだ。", "src": "聯合ニュース(トランプ、UFC会長のホワイトに報道官職を提案、11/8) · CNBC(UFCトップに報道官職を提案、11/7) · The Hill(ホワイトに報道官職を提案、11/7)"},
+    "q3":{"kick": "国際 · ✓ 報道3件", "title": "トランプ、民主党が司法長官らの弾劾を脅していると主張し司法省に調査を指示", "what": "トランプ大統領は7日、民主党が司法長官をはじめとする行政府の人物と共和党の後援者らを、弾劾などで脅して回っていると主張した。民主党が理由がないことを自ら認めながらも脅していると語った。また、弾劾に値する行為はなく、考えられたことさえないと明らかにした。続いて司法省にこの件を調査するよう指示した。これは、先の3日の中間選挙で共和党が敗れたあとに出た発言だ。", "why": "大統領が野党の政治的な発言を捜査の対象にして司法省に指示することは、権力分立と捜査の独立をめぐって論争になりうる。民主党が下院の多数党になれば弾劾は現実的な政治手段なので、双方の攻防は次の議会の構図を前に激しくなっている。実際の調査が始まるかは、司法省の後続の発表しだいだ。", "me": "米国の政局の混乱は、ドルの価値と金利の見通しを経て、為替と株式市場に届きうる。政治の攻防一つよりも、実際の法的手続きが始まるかを基準に見よう。", "a": "弾劾に言及すること自体が政治的な脅しで、司法省の調査で対応すべきだというトランプ大統領側の見方がある。", "b": "野党の議政活動を捜査で迎え撃つのは政治報復で、司法省の独立性を損なうという民主党側の見方がある。", "say": "確認されたのは、トランプ大統領の7日の投稿の内容と、司法省に調査を指示したという主張だ。確認されていないのは、司法省が実際に調査に着手したかと、民主党の具体的な弾劾推進の有無だ。きょうは、司法省の見解と民主党の反応を見るべきだ。", "src": "聯合ニュース(トランプ、民主党の弾劾の脅しで司法省に調査を指示、11/8) · Newsweek(トランプ、司法省に調査を指示、11/7) · トランプのTruth Social(投稿の原文、11/7)"},
+    "q4":{"kick": "スポーツ · ✓ 報道2件", "title": "ファン・ユミン、LPGA TOTO ジャパンクラシック3ラウンドで3位タイ…首位と2打差", "what": "ファン・ユミンは7日、日本の茨城県の太平洋クラブ美野里コース(パー72)で行われたLPGA TOTO ジャパンクラシックの3ラウンドで、バーディー6個、ボギー2個の4アンダー68をマークした。通算13アンダー203で3位タイだ。単独首位は15アンダー201の岩井明愛、単独2位は14アンダー202だ。首位と2打差だ。大会の総賞金は210万ドルだ。最終ラウンドは8日に行われる。", "why": "3ラウンドを終えて首位と2打差なら、最終日の猛チャージで順位がひっくり返りうる。首位15アンダー、2位14アンダー、3位タイ13アンダーと上位が密集しており、最終ラウンドはミス一つで順位が大きく分かれる。ゴルフ中継では、バーディーの数とともにボギーをどれだけ減らすかが勝負どころとされる。", "me": "韓国選手の優勝争いを見るなら、韓国時間の8日の最終ラウンドの中継時間を確認しよう。", "a": "ファン・ユミンが3ラウンドで順位を引き上げた流れが、最終ラウンドの逆転につながりうるとみる見方がある。", "b": "地元選手である首位が2打リードしており、上位が密集していて逆転は簡単ではないとみる見方がある。", "say": "確認されたのは、ファン・ユミンの3ラウンドの4アンダーと3位タイ、首位との2打差だ。確認されていないのは、最終ラウンドの結果だ。きょうは、8日の最終ラウンドでのファン・ユミンの序盤のホールの成績を見るべきだ。", "src": "東亜日報(ファン・ユミン、TOTOジャパンクラシック3R3位タイ、11/7) · 朝鮮日報(ファン・ユミン、3位タイに浮上、11/7)"},
+    "q5":{"kick": "スポーツ · ✓ 報道2件", "title": "ソ・スンジェ、キム・ウォノ、コリアオープン男子ダブルス決勝進出…8日に優勝へ挑戦", "what": "世界ランキング1位のキム・ウォノ-ソ・スンジェは7日、全羅南道麗水の鎮南体育館で行われたコリアオープン(BWFワールドツアー スーパー500)男子ダブルス準決勝で、マレーシアのマン・ウェイチョン-ティー・カイウン組を2-0(21-17、21-17)で下した。二人は8日の決勝で、同じサムスン生命のカン・ミンヒョク-イ・ジョンミン組と、日本の保木卓朗-小林優吾組の準決勝の勝者と対戦する。二人は7か月ぶりの優勝に挑む。ソ・スンジェは、遠い麗水まで来てくれたファンの応援に力が出たと語った。", "why": "世界1位のペアが地元で決勝に進み、しばらく優勝がなかった流れを断つチャンスをつかんだ。同じチームの選手と決勝で当たる可能性もあり、どちらが勝っても韓国選手が優勝候補だ。", "me": "決勝の時間と中継チャンネルを確認すれば、一日のうちに結果を見られる。現地での観戦は、麗水の鎮南体育館の案内を確認しよう。", "a": "ランキング1位の二人が準決勝を2-0で勝ち、コンディションが上がってきたとみる見方がある。", "b": "決勝の相手が同じサムスン生命所属か日本のペアでありうるため、もう一段むずかしい勝負になりうるとみる見方がある。", "say": "確認されたのは、7日の準決勝の2-0勝利と、8日の決勝進出だ。確認されていないのは、決勝の相手と結果だ。きょうは、決勝の相手が決まったあとの組み合わせと試合結果を見るべきだ。", "src": "東亜日報(キム・ウォノ-ソ・スンジェ、コリアオープン決勝へ、11/7) · 聯合ニュース(ソ・スンジェ、キム・ウォノ、コリアオープン決勝へ、11/7)"}
+  };
+  const G = {
+    "院外集会":{"f": "政治・制度", "d": "国会の外の路上で開く政治集会。", "w": "国民の力がソウル都心でこの方式で法案に抗議した。"},
+    "特検法":{"f": "法・制度", "d": "特別検察官が特定の事件を捜査するよう定める法。", "w": "『捏造起訴特検法』が6日に国会を通過した。"},
+    "本会議":{"f": "政治・制度", "d": "国会議員の全員が集まって法案を最終的に採決する会議。", "w": "特検法は6日の本会議で可決された。"},
+    "弾劾":{"f": "法・制度", "d": "高位公職者を国会が罷免するよう求める手続き。", "w": "集会で大統領の弾劾の主張が出て、米国では司法長官の弾劾の脅しが取り沙汰された。"},
+    "極右":{"f": "政治・社会", "d": "政治的スペクトルの最も右にある極端な思想。", "w": "ポーランドの内相が、容疑者の極右思想の状況に触れた。"},
+    "空爆":{"f": "安保", "d": "航空機やミサイルなどで空から行う攻撃。", "w": "フーシ派は、サウジの空爆で27人が死亡したと主張した。"},
+    "迎撃":{"f": "安保", "d": "飛んでくるミサイルやドローンを空中で撃ち落とすこと。", "w": "サウジ主導の連合軍は、メッカ付近でドローン1機を迎撃したと明らかにした。"},
+    "民間防衛":{"f": "安保", "d": "戦争や災害のとき、民間人を守る行政組織。", "w": "サウジの民間防衛が南部の地域に警報を出した。"},
+    "反政府勢力":{"f": "安保", "d": "政府に対抗して武力で戦う武装勢力。", "w": "フーシ派はイエメンの反政府勢力だ。"},
+    "連立政権":{"f": "政治・制度", "d": "複数の政党が手を組んで共につくる政府。", "w": "ニュージーランドは、連立政権をめぐる交渉で政府が決まる。"},
+    "単独過半数":{"f": "政治・制度", "d": "一つの政党が議席の半分を超えること。", "w": "ニュージーランド総選挙で、どちらも単独過半数が難しい。"},
+    "中道右派":{"f": "政治・制度", "d": "保守と中道の間に近い政治的な傾向。", "w": "国民党は中道右派の政党だ。"},
+    "第1野党":{"f": "政治・制度", "d": "野党のうち議席が最も多い政党。", "w": "労働党がニュージーランドの第1野党だ。"},
+    "世界食料価格指数":{"f": "経済・統計", "d": "FAOが国際的な食料価格の流れを、基準の時期を100として比べて毎月出す指数。", "w": "10月の指数は133.9に下がった。"},
+    "油脂類":{"f": "経済・農業", "d": "食用油をつくる植物性の油の種類。", "w": "10月の油脂類の価格は上がった。"},
+    "食糧農業機関":{"f": "国際機関", "d": "国連のもとで食料・農業の問題を扱う機関(FAO)。", "w": "世界食料価格指数を毎月発表する。"},
+    "政治検察":{"f": "政治・法", "d": "政治的な目的で捜査していると批判される検察を指す表現。", "w": "民主党が、国民の力の集会を政治検察の防弾だと批判した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
