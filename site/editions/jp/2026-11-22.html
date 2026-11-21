@@ -1,0 +1,336 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>日経平均 · 11/20 · 終値は集計対象の時間外のため掲載せず</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>6,910.39</b>S&amp;P500種 · 11/20終値 · 前日比3.7%安</div>
+    </div>
+    <div class="dateline"><span>No. 49 · 朝刊</span><b>2026年11月22日(日)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="n1">
+      <div class="kick">社会 · 事件<span>✓ 2媒体 · 犯人と侵入の方法は未確認</span></div>
+      <h2 class="hl">兵庫・西宮の住宅から金塊約20キロと現金約2500万円が盗まれる、警察は窃盗事件として捜査</h2>
+      <p class="deck">21日未明に住宅へ何者かが侵入したと伝えられる。犯人と侵入の方法は確認できていない。</p>
+      <div class="body">
+        <p>兵庫県西宮市の住宅で、金塊およそ20キロと現金およそ2500万円などが盗まれる被害が確認され、警察が窃盗事件として捜査している。被害に遭ったのは会社の経営に携わる人の自宅で、21日未明に何者かが侵入したと伝えられる。金塊は現在の金の価格で4億円相当とも伝えられるが、この金額は1か所の報道にとどまり、確認できていない。住人の肩書は報道によって「経営者」「役員」と分かれ、会社名や住人の名前は確認できていない。「など」とあるように、現金と金塊のほかにも盗まれた物があるとされるが、その中身は明らかになっていない。</p>
+        <p>窃盗は、他人の物を本人の意思に反して持ち去る罪を指す。今回は、どこから入ったのか、盗まれたのが何時ごろなのか、家にいた人がいたのか、防犯カメラに映像が残っているのかといった、捜査の土台になる情報が確認できていない。金塊の重さを「約20個」とする報道もあり、キロと個数で表現が食い違っているため、ここでは重さの「20キロ」を使っている。今後は、警察が侵入経路や盗まれた物の全体を発表するか、容疑者に関する情報が出るかが、次の焦点になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="n2">
+      <div class="kick">スポーツ · フィギュアスケート<span>✓ 3媒体 · ファイナルの日程と開催地は未確認</span></div>
+      <h3 class="hl">島田麻央がGPシリーズ第5戦のフィンランド大会で優勝、2戦2勝でグランプリファイナル進出が決まる</h3>
+      <div class="one">
+        <p>フィギュアスケートのグランプリシリーズ第5戦、フィンランド大会は21日、女子シングルのフリースケーティングが行われ、18歳の島田麻央選手が優勝した。前半のショートプログラムでも首位に立っており、首位から優勝につなげた。島田選手はシニアデビューのシーズンで、カナダ大会に続く2戦2勝となり、シリーズの上位6人で争うグランプリファイナルへの進出が決まった。 グランプリデビューのシーズンで2連勝するのは、紀平梨花選手以来と伝えられる。今季のグランプリシリーズでは日本女子が開幕から5戦連続で優勝したとも伝えられるが、この数字は1か所の報道にとどまる。ファイナルの日程と開催地、島田選手が次に出る大会は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="m1"><b>福間香奈・倉敷藤花が防衛して12連覇、第2子の妊娠を公表したと伝えられる</b><em>福間香奈さんが倉敷藤花のタイトルを防衛して12連覇を決めたと伝えられる。第2子の妊娠も公表したとされるが、今後の対局予定は確認できていない。</em><span>文化 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m2"><b>北海道・美唄市で不適切会計が10年間で5億円を超えたと伝えられる</b><em>美唄市で10年間に5億円を超える不適切会計があったと伝えられる。「うみ出し切った」との発言も伝えられるが、発言者と調査の範囲は確認できていない。</em><span>地方行政 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m3"><b>エステ事業で資金繰りが悪化した放課後等デイサービスの運営会社が8事業所を廃止したと伝えられる</b><em>運営会社がエステ事業での資金繰りの悪化を受け、放課後等デイサービスの8事業所を廃止したと伝えられる。利用していた子どもの数と受け入れ先は確認できていない。</em><span>福祉 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m4"><b>福井県勝山市の国道で除雪車にはねられた71歳の女性が死亡したと伝えられる</b><em>21日午前、国道を横断していた71歳の女性が、後ろに進んでいた大型の除雪車にはねられて死亡したと伝えられる。事故の原因と運転していた人の状況は確認できていない。</em><span>事故 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m5"><b>トランプ米大統領、海外でデータセンターを建てる企業にペナルティーを科す考えを示したと伝えられる</b><em>海外でデータセンターを建設する企業に不利益を科す考えを、トランプ氏が20日に示したと伝えられる。対象となる企業と措置の内容、開始の時期は確認できていない。</em><span>国際経済 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="n3">
+      <div class="kick">国際 · 気候変動<span>✓ 2媒体 · 合意の中身と延長の期限は未確認</span></div>
+      <h3 class="hl">COP31が会期延長、化石燃料からの脱却をめぐる対立で協議が続く</h3>
+      <div class="body">
+        <p>気候変動対策を話し合う国連の会議「COP31」(第31回国連気候変動枠組条約締約国会議)は、予定の最終日だった20日に合意に至らず、会期延長で協議が続いている。成果文書の案に化石燃料からの脱却への言及がないことなどをめぐって各国の意見が対立しているためと伝えられ、200近い国が参加する交渉が行き詰まっていると報じられている。</p>
+        <p>化石燃料からの脱却とは、石油・石炭・天然ガスの利用を減らしていくことを指す。COPの決定は全会一致が原則とされ、一か国でも強く反対すると文書がまとまりにくい。会期がいつまで延びるのか、成果文書に化石燃料の文言が入るのかは、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="n4">
+      <div class="kick">国際 · 安全保障<span>✓ 2媒体 · 証拠の内容と計画の詳細は未確認</span></div>
+      <h3 class="hl">デンマーク、ロシアの国防駐在官を国外退去に ラッパー暗殺計画への関与を主張、ロシア側は否定</h3>
+      <div class="body">
+        <p>デンマークの外相は20日、首都コペンハーゲンにいるロシアの国防駐在官を国外退去にすると表明したと伝えられる。ウクライナ系のラッパーがデンマークでの公演の前に殺害される計画があり、モスクワがその背後にいたとデンマーク側が疑っているためと伝えられる。計画は実行前に防がれたとされる。一方、ロシア大使館はこの主張を否定したと伝えられる。</p>
+        <p>国防駐在官は、大使館に所属し、駐在国の軍事に関する情報の収集や連絡を担う軍人の外交官である。デンマーク側が示した証拠の内容、計画に関わった人物、ロシアが対抗措置をとるかどうかは、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="n5">
+      <div class="kick">国際 · ウクライナ<span>✓ 1媒体 · 演習の場所と規模は未確認</span></div>
+      <h3 class="hl">ウクライナを支援する有志連合が初の大規模な軍事演習を報道陣に公開、各国部隊が連携を確認と伝えられる</h3>
+      <div class="body">
+        <p>ウクライナを支援する有志連合による初めての大規模な軍事演習が20日、報道陣に公開されたと伝えられる。参加した各国の部隊は、ウクライナの安全の保証に向けて現地で活動することを想定し、連携を確認していたという。有志連合は、条約に基づく同盟ではなく、賛同した国が集まって共同で行動する枠組みを指す。</p>
+        <p>安全の保証は、戦闘が止まった後にロシアが再び攻め込まないよう、ウクライナを守る仕組みを指す。演習がどこで行われたのか、参加国の数と兵力の規模、実際に部隊をウクライナに送る時期や条件は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>有志連合<i>安全保障</i></b><p>条約に基づく同盟とは異なり、賛同した国が集まって共同で行動する枠組み。ウクライナ支援では、安全の保証のために現地で活動する部隊の派遣を想定した連携を指す。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>西宮の住宅から盗まれた金塊は、4億円分にのぼった。</b> <span>金塊の重さが約20キロで、現金が約2500万円という点は複数の報道で一致している。4億円相当という換算は1か所の報道にとどまり、警察からの確認は得られていない。金塊を「約20個」とする報道もあり、単位が食い違っている。</span></div>
+        <div><b>COP31は合意できず、決裂した。</b> <span>20日の最終日に合意に至らず、会期を延長して協議が続いていると伝えられる。決裂したとの発表は確認できておらず、成果文書が採択されるかは、延長された協議の結果を待つ段階だ。</span></div>
+        <div><b>デンマークで暗殺されそうになったラッパーの件は、ロシアが関与を認めた。</b> <span>ロシア大使館はデンマーク側の主張を否定したと伝えられる。デンマーク側が示した証拠の内容は確認できておらず、関与を認めた事実はない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 11月22日(日)</b><span>延長されたCOP31の協議で、成果文書が採択されるか、化石燃料からの脱却の文言が入るかが焦点になる。西宮の窃盗事件では、警察が侵入経路や盗まれた物の全体を発表するかを見たい。</span><b>来週</b><span>23日(月)は勤労感謝の日で東京市場が休場となり、24日(火)に取引が再開する。野党が関文科相に対する問責決議案の提出を検討しているとされ、与党は消費税の減税関連法案などの成立を優先する考えと伝えられる。</span><b>後で</b><span>島田麻央選手が出るグランプリファイナルの日程、デンマークがロシアの国防駐在官を退去させた後のロシアの対応、米政府が海外のデータセンター建設に科す措置の中身は、確認できていない。</span><b>読者へ</b><span>自宅に現金や貴金属を置いている人は、保管の場所と量を家族以外に話さないようにし、玄関や窓の施錠を見直しておきたい。雪の日は、道路を渡る前に除雪車の動きを確認する。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "n1":{"kick": "社会 · 事件 · ✓ 2媒体 · 犯人と侵入の方法は未確認", "title": "兵庫・西宮の住宅から金塊約20キロと現金約2500万円が盗まれる、警察は窃盗事件として捜査", "what": "21日未明、兵庫県西宮市の住宅に何者かが侵入し、金塊およそ20キロと現金およそ2500万円などが盗まれる被害が確認されたと伝えられる。警察は窃盗事件として捜査している。金塊は現在の金の価格で4億円相当と伝えられるが、この金額は1か所の報道にとどまる。住人の肩書は報道によって「経営者」「役員」と分かれ、金塊の数を「約20個」とする報道もあり、重さの「20キロ」とは表現が合っていない。侵入の方法、盗まれた正確な時刻、容疑者の有無は、確認できていない。", "why": "金塊は小さく持ち運びやすく、価値が高いため、盗まれると被害額が大きくなりやすい。取り戻せるかどうかは、金塊に刻印や購入記録といった特定の手がかりがあるかにも左右される。住人の肩書や被害額の呼び方が報道で分かれているのは、警察の正式な発表がまだ限られているためと考えられる。", "me": "自宅に現金や貴金属を置いている人は、保管の場所と量を家族以外に話さないようにしたい。金庫は固定し、玄関や窓の施錠と防犯カメラの作動を確認しておくと被害を減らしやすい。不審な人物や車を見かけたら、すぐ警察に連絡する。", "a": "被害額の大きさを重く見る立場は、これだけの資産が自宅にあったことは特殊で、計画的な犯行の可能性を考え、警察は侵入経路と防犯設備を急いで調べるべきだと考える。", "b": "慎重に見る立場は、4億円という金額や住人の肩書が1か所の報道に頼っており、侵入方法や犯人像も分かっていないため、計画的な犯行と決めつけるのは早いと考える。", "say": "確認できているのは、21日未明の西宮市の住宅で、金塊約20キロと現金約2500万円などが盗まれ、警察が窃盗事件として捜査していることだ。4億円相当という金額は1か所の報道にとどまり、確認できていない。今日は、警察が侵入経路や盗まれた物の全体を発表するか、容疑者の情報が出るかを見たい。", "src": "NHK(金塊4億円相当や現金約2500万円など盗まれる、11月22日) · 朝日新聞(住宅から現金2500万円と金塊20キロを窃盗か、11月22日)"},
+    "n2":{"kick": "スポーツ · フィギュアスケート · ✓ 3媒体 · ファイナルの日程と開催地は未確認", "title": "島田麻央がGPシリーズ第5戦のフィンランド大会で優勝、2戦2勝でグランプリファイナル進出が決まる", "what": "フィギュアスケートのグランプリシリーズ第5戦、フィンランド大会は21日、女子シングルのフリースケーティングがあり、18歳の島田麻央選手が優勝した。ショートプログラムでも首位に立っていた。島田選手はシニアデビューのシーズンで、カナダ大会に続く2戦2勝となり、シリーズ上位6人で争うグランプリファイナルへの進出が決まった。グランプリデビューのシーズンで2連勝するのは、紀平梨花選手以来と伝えられる。今季のシリーズで日本女子が開幕5連勝との数字も伝えられるが、1か所の報道にとどまる。ファイナルの日程と開催地は、確認できていない。", "why": "シニアデビューの年に2戦で優勝を重ねたことは、成績上位者だけが出られるファイナルの出場枠を早い段階で確保したことを意味する。出場枠の確保は、残りの大会の日程を組む上での余裕につながる。日本女子が今季のシリーズで勝ち続けているとの報道もあり、層の厚さを映す結果といえる。", "me": "テレビやネットで観戦する人は、ファイナルの放送予定が出たら確認したい。ショートプログラムとフリースケーティングの違いを知っておくと、順位の動き方が分かりやすい。", "a": "好調を重く見る立場は、デビューの年に2連勝してファイナルを決めたことは、今後の国際大会でも主役になる力を示すと考える。", "b": "慎重な立場は、ファイナルでは相手の顔ぶれが変わり、得点の出方も違うため、2連勝だけで先を決めつけるのは早いと考える。", "say": "確認できているのは、島田選手が21日のフィンランド大会で優勝し、グランプリファイナルへの進出が決まったことだ。日本女子の開幕5連勝という数字は、1か所の報道にとどまる。次は、ファイナルの日程と、島田選手が出る次の大会を見たい。", "src": "NHK(フィギュアGP第5戦 島田麻央 2連勝でファイナル進出決定、11月22日) · 毎日新聞(島田麻央Vでファイナル進出、紀平以来のGPデビュー2連勝、11月21日) · 時事通信(島田麻央が2戦2勝 ファイナル進出、11月21日)"},
+    "n3":{"kick": "国際 · 気候変動 · ✓ 2媒体 · 合意の中身と延長の期限は未確認", "title": "COP31が会期延長、化石燃料からの脱却をめぐる対立で協議が続く", "what": "気候変動対策を話し合う国連の会議「COP31」は、予定の最終日だった20日に合意に至らず、会期を延長して協議が続いている。成果文書の案に化石燃料からの脱却への言及がないことなどをめぐって、各国の意見が対立していると伝えられる。参加するのは200近い国で、交渉は行き詰まっていると報じられている。化石燃料は、石油・石炭・天然ガスのことだ。会期がいつまで延びるのか、成果文書にどのような文言が入るのかは、確認できていない。", "why": "COPの成果文書は、各国が温室効果ガスの削減を進める際の約束や方向性を示す。化石燃料の扱いが入るかどうかで、各国の石油・ガス・石炭の政策や投資の見通しが変わるため、文言ひとつが大きな意味を持つ。決定は全会一致が原則とされ、一か国でも強く反対すると文書がまとまりにくい。", "me": "今回の合意の行方は、将来の電気料金や燃料の価格、企業の脱炭素の投資に間接的に影響する。ただ、合意の有無で明日の暮らしがすぐ変わるわけではないため、続報を見て中身が固まってから判断したい。", "a": "脱却の明記を求める立場は、気候変動が進む中で化石燃料の削減に触れない文書は不十分で、期限を延ばしてでも明記すべきだと考える。", "b": "慎重な立場は、化石燃料に経済を頼る国や産業があり、急な脱却を文書に書けば合意そのものが成り立たなくなるため、表現の調整に時間が必要だと考える。", "say": "確認できているのは、COP31が20日の最終日に合意できず、化石燃料からの脱却の扱いをめぐる対立で会期を延長したことだ。合意の中身と延長の期限は確認できていない。今日は、延長された協議で成果文書が採択されるか、化石燃料の文言が入るかを見たい。", "src": "NHK(COP31会期を延長 化石燃料からの脱却めぐり対立、11月21日) · BBC(化石燃料をめぐる対立でCOP31の交渉が膠着、11月21日)"},
+    "n4":{"kick": "国際 · 安全保障 · ✓ 2媒体 · 証拠の内容と計画の詳細は未確認", "title": "デンマーク、ロシアの国防駐在官を国外退去に ラッパー暗殺計画への関与を主張、ロシア側は否定", "what": "デンマークの外相は20日、首都コペンハーゲンにいるロシアの国防駐在官を国外退去にすると表明したと伝えられる。ウクライナ系のラッパーがデンマークでの公演の前に殺害される計画があり、モスクワがその背後にいたとデンマーク側が疑っているためと説明されている。計画は実行前に防がれたと伝えられる。一方、ロシア大使館はこの主張を否定したと伝えられる。デンマーク側が示した証拠の内容、計画に関わった人物、ロシアが対抗措置をとるかどうかは、確認できていない。", "why": "駐在国が外交官に国外退去を命じるのは、相手国に強い不満を示す外交上の措置で、通常は理由を細かく示さなくても行える。相手国が同じ措置で対抗することも少なくなく、両国の関係がさらに冷え込む場合がある。今回は、疑いの根拠がまだ示されておらず、受け止めは分かれる。", "me": "海外の公演や旅行の予定がある人は、渡航先の治安情報を外務省の海外安全情報で確認したい。国際情勢の緊張が物価やニュースに及ぶ場合もあるため、続報には落ち着いて向き合いたい。", "a": "デンマークの主張を重く見る立場は、公演を狙った殺害計画が事実なら主権の侵害であり、国外退去は妥当で、他国も同調すべきだと考える。", "b": "慎重な立場は、ロシア大使館が否定しており、証拠の内容も示されていないため、事実関係が確認されるまで断定は避けるべきだと考える。", "say": "確認できているのは、デンマークがロシアの国防駐在官を国外退去とする方針を示し、ロシア大使館が計画への関与を否定していることだ。証拠の内容と計画の詳細は確認できていない。次は、ロシアが対抗措置をとるか、デンマーク側が追加の説明をするかを見たい。", "src": "The Guardian(デンマークがロシア外交官を国外退去へ、11月20日) · BBC(デンマークがロシアによる暗殺計画を主張、11月20日)"},
+    "n5":{"kick": "国際 · ウクライナ · ✓ 1媒体 · 演習の場所と規模は未確認", "title": "ウクライナを支援する有志連合が初の大規模な軍事演習を報道陣に公開、各国部隊が連携を確認と伝えられる", "what": "ウクライナを支援する有志連合による初めての大規模な軍事演習が20日、メディアに公開されたと伝えられる。参加した各国の部隊は、ウクライナの安全の保証に向けて現地で活動することを想定し、連携を確認していたという。有志連合は、条約に基づく同盟ではなく、賛同した国が集まって共同で行動する枠組みを指す。演習の場所、参加国の数、兵力の規模は、確認できていない。報道は1媒体にとどまる。", "why": "安全の保証とは、戦闘が止まった後に再び攻められないよう、ウクライナを守る仕組みを指す。各国の部隊がそろって動けるかどうかは、その仕組みが実際に機能するかを左右する。演習を公開したことは、準備が進んでいることを内外に示す意味を持つ。", "me": "直接の影響はすぐには見えないが、ウクライナ情勢はエネルギー価格や食料の価格を通じて家計にも及ぶ。日本も支援や制裁に関わっており、停戦や安全の保証をめぐる動きは、ニュースとして追っておきたい。", "a": "支援を重く見る立場は、安全の保証が実際に動くと示すことが、ロシアに再び攻撃させない抑止力になると考える。", "b": "慎重な立場は、実際に部隊を送るには停戦の合意や各国の議会の了承が必要で、演習の公開だけでは派遣の可否は決まらないと考える。", "say": "確認できているのは、有志連合が初の大規模演習を20日に公開し、各国部隊が現地での活動に向けた連携を確認したことだ。場所や規模は確認できていない。次は、参加国と派遣の条件が公式に示されるかを見たい。", "src": "NHK(ウクライナ支援の有志連合 初の軍事演習をメディアに公開、11月21日)"},
+    "m1":{"kick": "文化 · ✓ 1媒体", "title": "福間香奈・倉敷藤花が防衛して12連覇、第2子の妊娠を公表したと伝えられる", "what": "福間香奈さんが、倉敷藤花のタイトルを防衛して12連覇を決め、あわせて第2子の妊娠を公表したと伝えられる。伝えられたのは21日夜で、対局の日付と結果の詳細は確認できていない。連覇は、同じタイトルを続けて守った回数を指す。妊娠の時期と、今後の対局予定は明らかになっていない。報道は1媒体にとどまる。", "why": "タイトルを12年続けて守ることは、同じ競技の中で長く第一線にいることを示す。妊娠の公表は、出産や育児と仕事をどう両立するかという、働く人にも共通する話題にもつながる。ただ、本人の今後の予定が示されていないため、影響の大きさはまだ分からない。", "me": "仕事や学びを続けながら出産や育児を迎える人の事例は、職場の制度を見直すきっかけになる。自分の職場の休業制度や相談窓口を、今のうちに確認しておくと安心だ。", "a": "祝福を重く見る立場は、長年の連覇に加えて新しい家族を迎える知らせは喜ばしく、競技との両立を温かく見守りたいと考える。", "b": "慎重な立場は、妊娠は私的な事柄で、今後の出場や休養は本人の判断に任せるべきだとし、憶測を広げないよう求める。", "say": "確認できているのは、福間さんが倉敷藤花を防衛して12連覇となり、第2子の妊娠を公表したと伝えられていることだ。今後の対局予定は確認できていない。本人や主催側の続報を見たい。", "src": "毎日新聞(福間香奈・倉敷藤花が防衛し12連覇 第2子の妊娠を公表、11月21日)"},
+    "m2":{"kick": "地方行政 · ✓ 1媒体", "title": "北海道・美唄市で不適切会計が10年間で5億円を超えたと伝えられる", "what": "北海道美唄市で、不適切会計が10年間で5億円を超えていたと伝えられる。「うみ出し切った」との発言が伝えられているが、誰の発言かは確認できていない。不適切会計とは、決められたルールに反した経理の処理をいう。具体的な手口、誰が関わったか、お金の使い道、調査の範囲は、確認できていない。報道は1媒体にとどまる。", "why": "自治体の会計は税金を扱うため、10年間で5億円を超えるずれは、チェックの仕組みが長く働いていなかった可能性を示す。ただ、不適切会計は私的流用とは限らず、手続きの誤りも含まれる。原因が分かるまで、金額の大きさだけで中身を判断するのは難しい。", "me": "住んでいる自治体の決算や監査の結果は、公開されている場合が多い。気になる人は、市のホームページで報告書を見てみたい。", "a": "厳しく見る立場は、長期間にわたる不備は管理の失敗で、責任の所在と再発防止策を具体的に公表すべきだと考える。", "b": "慎重な立場は、不適切会計と不正は別物で、調査が終わるまで金額の大きさだけで責任を決めつけるべきでないとする。", "say": "確認できているのは、美唄市で10年間に5億円を超える不適切会計があったと伝えられていることだ。内容と責任の所在は確認できていない。次は、調査報告の公表と再発防止策を見たい。", "src": "毎日新聞(不適切会計、10年で5億円超 「うみ出し切った」 北海道・美唄、11月21日)"},
+    "m3":{"kick": "福祉 · ✓ 1媒体", "title": "エステ事業で資金繰りが悪化した放課後等デイサービスの運営会社が8事業所を廃止したと伝えられる", "what": "放課後等デイサービスを運営する会社が、エステ事業で資金繰りが悪化したため、8事業所を廃止したと伝えられる。放課後等デイサービスは、障害のある子どもが放課後や休日に通い、生活や学びの支援を受ける福祉の仕組みだ。廃止の時期、利用していた子どもの数、通っていた子どもの受け入れ先は、確認できていない。資金繰りの悪化の理由は、報道ではエステ事業とされている。報道は1媒体にとどまる。", "why": "福祉サービスの事業所が急に閉まると、通っている子どもと保護者の生活に直接影響する。別の事業の資金不足が福祉の運営に及んだとすれば、事業の分け方や監督の仕組みも問われる。", "me": "子どもを通わせている家庭は、事業所からの案内を確認し、廃止の場合の受け入れ先を自治体の窓口に早めに相談したい。", "a": "利用者の保護を重く見る立場は、子どもの居場所を確保することが最優先で、自治体が早急に受け入れ先を調整すべきだと考える。", "b": "慎重な立場は、経営の悪化は事業者側の問題で、他の事業所の質まで一律に疑うのは適切でなく、廃止の経緯の説明を待つべきだとする。", "say": "確認できているのは、運営会社がエステ事業での資金繰りの悪化を受けて8事業所を廃止したと伝えられていることだ。利用していた子どもの数と受け入れ先は確認できていない。自治体の対応を見たい。", "src": "毎日新聞(エステ事業で資金繰り悪化 放課後等デイ運営会社が8事業所廃止、11月21日)"},
+    "m4":{"kick": "事故 · ✓ 1媒体", "title": "福井県勝山市の国道で除雪車にはねられた71歳の女性が死亡したと伝えられる", "what": "21日午前、福井県勝山市の国道で、道路を横断していた71歳の女性が、後ろに進んでいた大型の除雪車にはねられて死亡したと伝えられる。事故の詳しい時刻と場所、除雪車を運転していた人の状況は、確認できていない。事故の原因を警察がどう調べているかも、明らかになっていない。報道は1媒体にとどまる。", "why": "除雪車は大型で、後退するときは死角が大きいとされる。雪の日は歩行者の足元が悪く、車からも見えにくい。雪の多い地域で冬の事故が増える時期に入っており、一件の事故が注意喚起につながる。", "me": "雪の日に道路を渡るときは、除雪車の動きを確認し、後ろ側を通らないようにしたい。運転する人は、除雪車の近くでは車間を十分に取る。", "a": "安全対策を重く見る立場は、除雪作業中の後退には誘導員や後方確認の装置を徹底すべきだと考える。", "b": "慎重な立場は、原因が確認されていない段階で運転していた人や作業の方法に責任を決めつけるべきでなく、警察の調べを待つべきだとする。", "say": "確認できているのは、21日午前に福井県勝山市で71歳の女性が除雪車にはねられて死亡したと伝えられていることだ。原因と状況は確認できていない。警察の調べの結果を見たい。", "src": "NHK(除雪車にはねられ 国道横断中の女性死亡 福井 勝山、11月21日)"},
+    "m5":{"kick": "国際経済 · ✓ 1媒体", "title": "トランプ米大統領、海外でデータセンターを建てる企業にペナルティーを科す考えを示したと伝えられる", "what": "トランプ米大統領が、海外でデータセンターを建設する企業に不利益を科す考えを示したと伝えられる。データセンターは、インターネットのデータやAIの計算を担う大量のコンピューターを置く施設だ。伝えられたのは20日で、対象となる企業、不利益の具体的な内容、開始の時期は、確認できていない。報道は1媒体にとどまる。", "why": "AIの普及で、データセンターをどこに作るかは、電力や土地、人材の確保と並んで企業の重要な投資判断になっている。米政府が海外での建設に不利益を科せば、企業の投資先が変わり、半導体や電力など関連分野にも影響が及ぶ可能性がある。ただ、内容が分からないため、影響の大きさは見通せない。", "me": "AI関連の株や投資信託を持つ人は、米政策の発表が価格に影響する場合があるため、発表の中身が出るまで売買を急がないほうがよい。", "a": "米国内への投資を重く見る立場は、国内に施設を作ることで雇用と電力投資が増え、安全保障の面でも国内にデータを置くほうが望ましいと考える。", "b": "慎重な立場は、企業が海外に拠点を置くのは電力や規制、コストの事情によるもので、罰則的な措置は企業の競争力を弱め、同盟国との関係にも響く恐れがあるとする。", "say": "確認できているのは、トランプ氏が海外でデータセンターを建てる企業にペナルティーを科す考えを述べたと伝えられていることだ。対象と内容は確認できていない。次は、具体的な措置が文書や発表で示されるかを見たい。", "src": "ロイター(トランプ氏、海外でデータセンターを建設する企業を罰する考え、11月20日)"}
+  };
+  const G = {
+    "窃盗":{"f": "法律", "d": "他人の物を本人の意思に反して持ち去る罪。", "w": "西宮市の住宅で金塊と現金が盗まれ、窃盗事件として捜査されている。"},
+    "グランプリファイナル":{"f": "競技制度", "d": "グランプリシリーズの成績上位6人だけが出られる、シーズンの最終決戦。", "w": "島田選手はフィンランド大会の優勝で進出を決めた。"},
+    "ショートプログラム":{"f": "競技制度", "d": "決められた要素を入れて滑る短い演技。得点はフリーと合算される。", "w": "島田選手はこの前半の演技でも首位だった。"},
+    "フリースケーティング":{"f": "競技制度", "d": "自由に構成して滑る長い演技。ショートの得点と合算して順位が決まる。", "w": "島田選手はこの演技を終えて優勝した。"},
+    "シニアデビュー":{"f": "競技制度", "d": "ジュニアの年齢区分を終え、シニアの大会に初めて出る年。", "w": "島田選手は今季がシニアデビューのシーズン。"},
+    "締約国会議":{"f": "環境", "d": "国連の条約に加わる国が集まり、実施の方法を決める会議。", "w": "COP31は第31回の会議にあたる。"},
+    "気候変動枠組条約":{"f": "環境", "d": "地球温暖化を防ぐための国際的な枠組みを定めた条約。", "w": "COP31はこの条約の締約国会議として開かれている。"},
+    "化石燃料からの脱却":{"f": "エネルギー", "d": "石油・石炭・天然ガスの利用を減らしていくこと。", "w": "成果文書の案にこの文言がないことで各国が対立している。"},
+    "全会一致":{"f": "制度", "d": "参加者全員が反対せずに決めること。1か国の強い反対でも成立しにくい。", "w": "COPの決定の原則とされる。"},
+    "会期延長":{"f": "国際会議", "d": "予定の期間で終えられず、会議の日程を延ばすこと。", "w": "COP31は20日の最終日に合意できず会期延長となった。"},
+    "国防駐在官":{"f": "外交", "d": "大使館に所属し、駐在国の軍事に関する情報の収集や連絡を担う軍人の外交官。", "w": "デンマークがロシアの国防駐在官の退去を決めた。"},
+    "国外退去":{"f": "外交", "d": "滞在する国から出ていくよう命じること。外交官の場合は相手国への強い不満を示す措置になる。", "w": "デンマークがロシアの国防駐在官に命じた。"},
+    "有志連合":{"f": "安全保障", "d": "賛同した国が集まって共同で行動する枠組み。条約に基づく同盟とは異なる。", "w": "ウクライナ支援の有志連合が初の大規模演習を公開した。"},
+    "安全の保証":{"f": "安全保障", "d": "戦闘が止まった後に再び攻め込まれないよう、国を守る仕組み。", "w": "ウクライナの安全の保証に向けて連携を確認した。"},
+    "データセンター":{"f": "技術", "d": "インターネットのデータやAIの計算を担う大量のコンピューターを置く施設。", "w": "米大統領が海外での建設に不利益を科す考えを示したと伝えられる。"},
+    "不適切会計":{"f": "会計", "d": "決められたルールに反した経理の処理。不正とは限らない。", "w": "美唄市で10年間に5億円超が確認されたと伝えられる。"},
+    "放課後等デイサービス":{"f": "福祉", "d": "障害のある子どもが放課後や休日に通い、支援を受ける福祉サービス。", "w": "運営会社が8事業所を廃止したと伝えられる。"},
+    "資金繰り":{"f": "金融", "d": "会社が支払いに必要な現金をやりくりすること。", "w": "エステ事業で悪化したと伝えられる。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
