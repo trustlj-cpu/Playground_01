@@ -1,0 +1,339 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,006.03</b>KOSPI · 11月24日 · 終値 · 前営業日比6.32%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>24,089.56</b>ナスダック総合 · 11月23日(現地) · 終値 · 前営業日比6.51%上昇</div>
+    </div>
+    <div class="dateline"><span>第51号 · 夕刊</span><b>2026年11月24日 火曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s0">
+      <div class="kick">市場 · 株式市場<span>✓ 4社 · 辞任理由・取締役会の決定の背景は未確認</span></div>
+      <h2 class="hl">ジェンスン・フアンの復帰発表でエヌビディア約31%急騰・ナスダック6.51%高…KOSPI 6.32%上げ、5,006.03で引け</h2>
+      <p class="deck">エヌビディアが辞任の11日後にフアンCEOの復帰を発表すると、ニューヨーク株式市場が急騰し、KOSPIは5,000台を取り戻した</p>
+      <div class="body">
+        <p>エヌビディアが23日(現地時間)、11月12日に辞任したジェンスン・フアンを社長兼最高経営責任者(CEO)・取締役に直ちに復帰させると発表すると、ニューヨーク株式市場が急騰した。エヌビディアの株価は約31%上がり(集計によって31.5%、32%とも出ている)、ハイテク株中心のナスダック総合指数は1,471.82ポイント(6.51%)跳ね上がって2万4,089.56、S&amp;P 500指数は4.73%上げて7,237.17で引けた。ナスダックの上げ幅は1年7か月ぶりの大きさだ。取締役会は全会一致で決め、米政府の高官の意見を聞いたうえで、復帰が国家安全保障上のリスクにならないと確信していると説明した。辞任の背景として取り沙汰された私生活の疑惑と中国関連の疑惑は、公式には確認されていない。</p>
+        <p>取締役会は数日前まで復帰の要請を受け入れなかったと伝えられた。トランプ大統領は22日、取締役会を説得したと明らかにした。ある外国メディアが副大統領の接触を伝えたという内容は、ほかでは確認されていない。取締役会が声明のほかに、立場を変えた具体的な経緯は公式には明らかにされていない。韓国の株式市場もこの流れを受け継いだ。前日に3.31%急落して4,708.54で引けたKOSPIは24日に6.32%上げて5,006.03で取引を終え、5,000台を取り戻した。取引時間中は外国人と機関がともに買い、半導体から成長株まで上がったという放送報道が出た。米政界の一部では安全保障の問題を挙げて復帰を批判し、対中国半導体の輸出規制が新たな変数だという指摘もある。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · 人事聴聞<span>✓ 4社 · 聴聞結果・報告書の採択可否は未確認</span></div>
+      <h3 class="hl">イ・ヨンチョル法務部長官候補者の人事聴聞会…公訴取り消しの指揮を問われ「無理な指揮権の行使はしない」</h3>
+      <div class="one">
+        <p>イ・ヨンチョル法務部長官候補者の人事聴聞会が24日、国会の法制司法委員会で開かれた。最大の質問は、イ・ジェミョン大統領の事件の公訴取り消しを指揮するかどうかだった。公訴取り消しは、検察がすでに裁判所に出した起訴を自ら取り下げることだ。候補者は「国民が納得しにくい無理な指揮権の行使はしない」と答えた。ただ、国民の力のチュ・ジヌ議員が、「捏造起訴」疑惑を捜査する特別検察が一部の関係者を起訴すれば公訴取り消しを指揮できるかと尋ねると、仮定の質問だとして明言を避けた。聴聞会前日までに出した書面答弁では、真相究明が必要で法と原則に従うという言葉を繰り返した。配偶者の株の白紙信託をする際に一部を漏らしたという指摘には「私の過失だ、申し訳ない」と答えた。白紙信託は、公職者が職務に関わりうる株を処分するか、受託機関に預けて運用に関与できなくする制度だ。城南産業振興財団の代表理事だったときの職員採用と「追い出し」疑惑も争点に挙がったが、これに対する候補者の答弁の詳細は確認されていない。候補者は6日に指名されたと伝えられ、聴聞経過報告書の採択の可否と任命時期は決まっていない。国会が報告書を採択しなくても、大統領は長官を任命できる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>ソウル市教育庁、内申試験のAI不正を防ぐため金属探知機の追加配備を推進</b><em>中・高校の内申試験で人工知能を使った不正行為を防ぐためだ。教室1つに1台を備えることが目標だと市教育庁が明らかにした。</em><span>教育 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>金融委、国民成長ファンドの今年の承認目標30兆ウォン達成を見通す…来年は40兆ウォンに拡大</b><em>金融委員会は、国民成長ファンドが今年の承認目標である30兆ウォンを満たせると24日に明らかにした。来年は規模を40兆ウォンに増やす計画だという。</em><span>経済 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>サムスン遵法監視委員長、株主還元の決定時期をめぐる利益相反論争に「慎重に扱ってみる」</b><em>イ・チャンヒ サムスン遵法監視委員会委員長が、サムスン電子の株主還元の決定時期をめぐる利益相反の論争に言及した。論争を慎重に扱うという趣旨の発言だ。</em><span>経済 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>オ・セフンソウル市長、国務会議で発言の機会を得られず「特別検察の任命を中断すべきだ」と主張</b><em>オ・セフンソウル市長が24日、イ・ジェミョン大統領が主宰した国務会議に出席したが、発言の機会を得られなかったと明らかにした。遺憾を示し、特別検察の任命を中断すべきだと述べた。</em><span>政治 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>米司法省、北朝鮮がバイナンスから奪ったハッキング資金 約11億ドルの没収手続きに着手</b><em>米国司法省が、北朝鮮が暗号資産取引所バイナンスから奪ったハッキング資金の没収手続きに入ったと報じられた。規模は約11億ドルと伝えられ、ウォン換算額は報道ごとに少しずつ異なる。</em><span>国際 · ✓ 報道3件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s2">
+      <div class="kick">金融 · 暗号資産の立法<span>✓ 3社 · 例外要件・国会提出日程は未確認</span></div>
+      <h3 class="hl">金融委、デジタル資産基本法の政府案を公開…取引所の大株主の持ち分を20%に制限、ウォン建てステーブルコインは銀行が主導</h3>
+      <div class="body">
+        <p>金融委員会が24日、デジタル資産基本法の政府案を公開した。暗号資産取引所の大株主の持ち分を原則として20%までしか持てなくしつつ、金融委の承認による例外を設けると伝えられる。ウォン建てステーブルコインは銀行が主導して発行するとし、国内の暗号資産の新規公開(ICO)は9年ぶりに再び認める方向で進められる。ステーブルコインは、ウォンのような法定通貨に価値を固定し、値が大きく揺れないようにした暗号資産だ。ICOは、企業が新しいコインを発行して投資金を集める方式だ。</p>
+        <p>利用者保護も強化される。デジタル資産事業者は金融会社に準じる内部統制の義務を負い、ハッキングやシステム障害が起きれば、事業者に過失がなくても被害を賠償しなければならない。業界では、ステーブルコインとICOの道が開かれるという期待とともに、取引所の大株主の持ち分制限と銀行中心の発行への反発が予想されるという声が出ている。政府案がいつ国会に提出され、どんな審議日程をたどるかは確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s3">
+      <div class="kick">政治 · 司法<span>✓ 2社 · 訴追案の発議・採決日程は未確認</span></div>
+      <h3 class="hl">民主党、チョ・ヒデ大法院長の弾劾を急ぐ…青瓦台は「国会で議論すべき事項」と距離</h3>
+      <div class="body">
+        <p>青瓦台が23日、共に民主党のチョ・ヒデ大法院長弾劾の推進について「国会で議論すべき事項」だと一線を画した。キム・ソンワン報道官はブリーフィングで、立場を問う質問に「青瓦台がそれ以上の言及をするのは、ちょっと難しい」と答えた。弾劾訴追は、国会が高位公職者の罷免を憲法裁判所に求める手続きで、訴追案が国会で議決されれば、当該公職者の職務が停止される。一方、民主党は党内の懸念や司法府の反発にもかかわらず、来月初めの訴追案処理を目指して速度を上げていると伝えられる。</p>
+        <p>争点は、弾劾の事由が罷免の要件に合うかどうかだ。民主党が提起した疑惑が罷免事由になるのか疑問だという指摘が出ており、訴追案が通って大法院長の職務が止まれば、ユン・ソギョル前大統領ら主要な内乱裁判が相次いで止まりかねないという懸念も出た。訴追案はまだ国会を通っておらず、採決の日付も確定していない。実際の罷免は、憲法裁判所の審判を経て決まる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s4">
+      <div class="kick">経済 · 見通し<span>✓ 3社 · 基準金利見通しの詳しい根拠は未確認</span></div>
+      <h3 class="hl">ゴールドマン・サックス、来年の韓国成長率を3.2%に上方修正…ウォン・ドル1280ウォン、基準金利の上限3.5%を予想</h3>
+      <div class="body">
+        <p>ゴールドマン・サックスが来年の韓国の経済成長率の見通しを2.8%から3.2%に引き上げた。アジア担当のクォン・グフン上級エコノミストが24日、ソウルで開かれた「2027年韓国マクロ経済見通し」の懇談会で明らかにした。人工知能(AI)投資の拡大で、半導体の輸出が好調を続けるという判断だ。輸出好調で経常収支の黒字が大きく増え、ウォン・ドルの為替レートは来年末に1,280ウォンまで下がるとみており、世界的なドル安とウォン需要の拡大が重なれば、1,250ウォンを下回ることもありうるとした。</p>
+        <p>韓国銀行の基準金利は、来年の上限が3.5%だと見通した。成長率が3%を超えても内需は笑えないという診断も一緒に出た。半導体輸出の好況が、家計消費と投資全般に広がらないという意味だ。この数値は投資銀行1社の予測であり、韓国銀行と政府の見通しとは別だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>3.2%</b><span>ゴールドマン・サックスの来年の韓国成長率見通し(従来2.8%)</span></div>
+        <div><b>1,280ウォン</b><span>来年末のウォン・ドル為替レート見通し</span></div>
+        <div><b>3.5%</b><span>来年の韓国銀行基準金利の上限見通し</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>ジェンスン・フアンがトランプ大統領の圧力で復帰したことが確認された</b> <span>トランプ大統領は22日、自分が取締役会を説得したと述べ、エヌビディアの取締役会は米政府の高官の意見を聞いたと明らかにした。だが、圧力で決めたという主張は、取締役会が確認したことがない。副大統領の接触説は1社の報道にとどまり、確認されていない。</span></div>
+        <div><b>イ・ヨンチョル候補者がイ大統領の事件の公訴取り消しを指揮すると明らかにした</b> <span>そうではない。候補者は無理な指揮権の行使はしないと答え、特別検察が起訴する場合についての質問は、仮定の質問だとして明言しなかった。</span></div>
+        <div><b>チョ・ヒデ大法院長がすでに弾劾され、職務が停止された</b> <span>そうではない。訴追案はまだ国会を通っていない。民主党が来月初めの処理を目指すという報道はあるが、採決の日付は確定していない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 火 11月24日</b><span>イ・ヨンチョル候補者の聴聞経過報告書が採択されるか、チョ・ヒデ大法院長の弾劾訴追案が発議されるかが注目される。米国株が前日の急騰を続けるかも、夜の間に確認される。</span><b>今週</b><span>25日にソウルの貞洞1928アートセンターで、原発公論化委員会の初の公開討論会が開かれる予定だ。</span><b>のちに</b><span>民主党がチョ・ヒデ大法院長の弾劾訴追案を来月初めに処理しようとしているという報道がある。デジタル資産基本法の政府案は国会の審議を経なければならず、施行時期は決まっていない。</span><b>読者へ</b><span>1日で6%上げたKOSPIは、前日に3%超下げた分を取り戻して余りあったが、1日の値がそのまま流れではない。数日の終値をつなげて見よう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "s0":{"kick": "市場 · 株式市場 · ✓ 4社 · 辞任理由・取締役会の決定の背景は未確認", "title": "ジェンスン・フアンの復帰発表でエヌビディア約31%急騰・ナスダック6.51%高…KOSPI 6.32%上げ、5,006.03で引け", "what": "エヌビディアは23日(現地時間)、11月12日に辞任したジェンスン・フアンを社長兼CEO・取締役に直ちに復帰させると発表した。取締役会は全会一致で決め、米政府の高官の意見を聞いたうえで、復帰が国家安全保障上のリスクにならないと確信していると明らかにした。同日のニューヨーク株式市場でエヌビディアの株価は約31%上がり、集計によって31.5%、32%とも出ている。ナスダック総合指数は1,471.82ポイント(6.51%)上げて2万4,089.56、S&P 500指数は4.73%上げて7,237.17で引けた。ナスダックの上げ幅は1年7か月ぶりの大きさだ。トランプ大統領は22日、取締役会を説得したと明らかにした。韓国のKOSPIは24日に6.32%上げて5,006.03で引け、前日は3.31%下げた4,708.54だった。", "why": "エヌビディアは人工知能(AI)半導体の中心であり、経営陣の空白はAI投資全体の不安と受け止められた。リーダーが戻るとその不安が一度に晴れ、AI関連株全般が上がった。韓国の株式市場はサムスン電子・SKハイニックスのような半導体株の比重が大きく、米国のAI株の方向に大きく連動する。時価総額の大きい銘柄が1日に30%超動いたのは異例だ。", "me": "年金やファンドで国内外の株式に投資しているなら、1日の急落と急騰が続けて出たため、評価額の変動が大きかったかもしれない。短期の上げ下げで投資比率を急いで変えるより、口座の損益の変化をまず確認する程度が現実的だ。", "a": "復帰を歓迎する側は、AI産業のリーダーシップの不確実性が消え、米国のハイテク競争力に役立つとみる。シリコンバレーの人物たちが歓迎の意を示したという報道も続いた。", "b": "批判する側は、辞任の背景として取り沙汰された疑惑が解消されていないのに、政治的圧力の中で復帰が行われたと指摘する。米政界の一部では、安全保障を売り渡したという批判も出た。", "say": "確認されたのは、復帰の発表と取締役会が明らかにした決定内容、指数の終値の数値だ。辞任の理由として取り沙汰された疑惑と、取締役会が声明の外で立場を変えた経緯は、公式には確認されていない。上昇が1日だけの反発か続くかは、次の取引日の上げ下げと米国の半導体輸出規制の方向を見て判断しよう。", "src": "京郷新聞(ナスダック6.51%急騰で引け、11/24) · 朝鮮日報(エヌビディア31.5%急騰、11/24) · 東亜日報(エヌビディアとナスダックが急騰、11/24) · 電子新聞(復帰後の国内外株式市場、11/24)"},
+    "s1":{"kick": "政治 · 人事聴聞 · ✓ 4社 · 聴聞結果・報告書の採択可否は未確認", "title": "イ・ヨンチョル法務部長官候補者の人事聴聞会…公訴取り消しの指揮を問われ「無理な指揮権の行使はしない」", "what": "イ・ヨンチョル法務部長官候補者の人事聴聞会が24日、国会の法制司法委員会で開かれた。候補者は、イ・ジェミョン大統領の事件の公訴取り消しを指揮する意向を問われ、「国民が納得しにくい無理な指揮権の行使はしない」と答えた。国民の力のチュ・ジヌ議員が、特別検察の捜査で一部の関係者が起訴されれば指揮できるかと尋ねると、仮定の質問だとして明言しなかった。聴聞会前日までに出した書面答弁では、真相究明が必要で法と原則に従うという言葉を繰り返した。配偶者の株の白紙信託の漏れを指摘されると「私の過失」だとして、申し訳ないと述べた。城南産業振興財団の代表理事在任中の職員採用と「追い出し」疑惑も争点に挙がった。", "why": "法務部長官は、検察の人事と捜査・起訴の指揮をめぐる権限を握る職だ。現職大統領の事件の公訴取り消しの是非は、権力と司法の距離を分ける問題であり、候補者の答えがそのまま今後の検察運用のシグナルになる。特別検察の捜査結果によっては、同じ質問が実際の決定として返ってくることがある。", "me": "法務行政は検察改革や捜査の方式、裁判の日程に影響するが、生活費のようにすぐには感じられない。ただ、長官の起訴指揮の原則は、この事件だけでなく一般の刑事事件の処理基準にも影響しうるので、聴聞会の答弁を読んでおく価値がある。", "a": "候補者側は、真相究明の結果と法と原則に従って判断するという立場だ。無理な指揮はしないという約束で、政治的中立を守る趣旨を明らかにした。", "b": "国民の力は、特別検察が起訴しても公訴取り消しを指揮しないと言い切らなかった点を問題にする。大統領との縁に株・採用疑惑まで重なり、長官の適格性が疑われるという主張だ。", "say": "確認されたのは、候補者の答弁の内容だ。公訴取り消しの指揮の可否は、仮定の質問だとして開けたままだ。聴聞会後に経過報告書が採択されるか、任命時期がいつかは確認されていない。今夜、報告書の採択の可否を見よう。", "src": "韓国経済(公訴取り消し指揮の質疑への答弁、11/24) · 電子新聞(無理な指揮権の行使はしない、11/24) · 朝鮮日報(配偶者の株の白紙信託の漏れ、11/24) · 京郷新聞(聴聞会前の書面答弁、11/24)"},
+    "s2":{"kick": "金融 · 暗号資産の立法 · ✓ 3社 · 例外要件・国会提出日程は未確認", "title": "金融委、デジタル資産基本法の政府案を公開…取引所の大株主の持ち分を20%に制限、ウォン建てステーブルコインは銀行が主導", "what": "金融委員会は24日、デジタル資産基本法の政府案を公開した。暗号資産取引所の大株主の持ち分の所有を原則として20%に制限しつつ、金融委の承認による例外を設ける内容が含まれた。ウォン建てステーブルコインは、銀行が主導して発行する構造だ。国内の暗号資産の新規公開(ICO)は、9年ぶりに認める方向で進められる。デジタル資産事業者には、金融会社に準じる内部統制の義務が適用される。ハッキングやシステム障害が起きれば、事業者に過失がなくても利用者の被害を賠償するようにした。政府案は国会の審議を経て効力を持つ。", "why": "大株主の持ち分制限は取引所のガバナンスを揺るがす措置であり、持ち分が20%を超える大株主がいる取引所には、保有持ち分を調整する負担が生じる。銀行中心の発行は、通貨の安定と利用者保護を前面に出した選択だ。ICOの容認は、全面禁止以来初めて、コインの公募が制度圏に入るという意味だ。", "me": "暗号資産取引所を使う投資家なら、ハッキングのときの補償基準が明確になる点が直接の影響だ。ウォン建てステーブルコインが銀行アプリの中で使われるようになれば、決済や送金の手段が増えうるが、施行時期は決まっていない。", "a": "業界の一部は、ステーブルコインとICOの道が開かれ、市場が制度圏に入るという期待を示した。利用者の賠償責任と内部統制の強化は、市場の信頼に役立つという見方だ。", "b": "取引所の大株主とフィンテック業界は、持ち分20%の制限が財産権と投資誘致を阻み、銀行中心の発行は独自発行の制約になるとして反発すると伝えられる。政府が従来の立場をそのまま維持した点も不満に挙がる。", "say": "確認されたのは、政府案が公開されたという事実と大きな筋だ。例外要件の詳細、施行時期、国会提出日程は確認されていない。大株主の持ち分制限と銀行の持ち分基準が国会で変わるかどうかが最大の変数だ。", "src": "聯合ニュース(デジタル資産法政府案を公開、11/24) · 朝鮮日報(コイン発行を9年ぶりに容認へ、11/24) · 電子新聞(原案固守に業界の反発を予想、11/24)"},
+    "s3":{"kick": "政治 · 司法 · ✓ 2社 · 訴追案の発議・採決日程は未確認", "title": "民主党、チョ・ヒデ大法院長の弾劾を急ぐ…青瓦台は「国会で議論すべき事項」と距離", "what": "青瓦台は23日、共に民主党のチョ・ヒデ大法院長弾劾の推進について「国会で議論すべき事項」だと明らかにした。キム・ソンワン報道官はブリーフィングで「青瓦台がそれ以上の言及をするのは、ちょっと難しい」と述べた。民主党は来月初めの弾劾訴追案の処理を目指して日程を続けていると伝えられる。弾劾訴追案が国会で議決されれば大法院長の職務が停止し、憲法裁判所が罷免の可否を審判する。民主党が提起した疑惑が罷免の要件に合うのか疑問だという指摘が出ている。訴追案が通れば、ユン・ソギョル前大統領らの内乱裁判が止まりかねないという懸念も出た。", "why": "司法府トップの弾劾は前例がなく、政治的な負担が大きい。青瓦台が一線を画したのは、大統領が三権分立論争の真ん中に立たないようにする合図と読める。大法院長が職務から退けば、大法院の裁判運営と主要な裁判の日程に直接影響が及ぶ。", "me": "一般市民の裁判がすぐ止まるわけではない。ただ、大法院長の職務停止が現実になれば、上告審の処理と主要事件の日程が変わりうるので、進行中の訴訟があるなら日程の告知を確認してみる価値がある。", "a": "民主党側は、司法府の判決に責任を問う憲法上の手続きであり、急ぐべきだという立場だ。ソ・ヨンギョ議員は、チョ大法院長を戻れなくすると述べたと伝えられる。", "b": "党内の一部と司法府は、懸念と反発を示した。弾劾事由が罷免の要件に合うか、内乱裁判が遅れる負担を引き受けられるかが、反対の論拠に挙がる。", "say": "確認されたのは、青瓦台の距離を置く発言と、民主党が推進中という事実だ。来月初めの処理目標は1社の報道に頼った内容で、日程は確定していない。訴追案の発議と採決の日付が公開されるかを見よう。", "src": "東亜日報(青瓦台が距離、11/24) · 京郷新聞(弾劾訴追の実効性論争、11/23)"},
+    "s4":{"kick": "経済 · 見通し · ✓ 3社 · 基準金利見通しの詳しい根拠は未確認", "title": "ゴールドマン・サックス、来年の韓国成長率を3.2%に上方修正…ウォン・ドル1280ウォン、基準金利の上限3.5%を予想", "what": "ゴールドマン・サックスは24日、来年の韓国の経済成長率の見通しを2.8%から3.2%に引き上げた。アジア担当のクォン・グフン上級エコノミストが、ソウルで開かれた「2027年韓国マクロ経済見通し」の懇談会で明らかにした。AI投資の拡大に伴う半導体輸出の好調が根拠だ。経常収支の黒字が大きく増え、ウォン・ドルの為替レートは来年末に1,280ウォンまで下がると見通した。世界的なドル安とウォン需要の拡大が重なれば、1,250ウォンを下回ることもありうるとした。韓国銀行の基準金利は、来年の上限を3.5%と示した。成長率が3%台でも内需は笑えないという診断も示した。", "why": "輸出好調が成長率を押し上げても、家計消費と投資に広がらなければ、体感景気は違う。為替レートの下落見通しは輸入物価と海外旅行・留学の費用に、基準金利の見通しは貸出の利子につながる。", "me": "貸出があるなら、金利の上限が3.5%という見通しは、利子負担を見積もる参考になる。海外通販や旅行を計画しているなら、為替が下がりうるという見通しが出たという点だけ知っておけばいい。", "a": "楽観する側は、AI半導体の好況が輸出と経常収支を押し上げ、為替の安定と3%台の成長を支えるとみる。", "b": "慎重な側は、輸出が良くても内需が笑えなければ、成長の温もりが均等に広がらないと指摘する。半導体依存度が高いだけに、AI投資の流れが鈍れば見通しがずれうる点もリスク要因だ。", "say": "確認されたのは、ゴールドマン・サックスが出した見通しの数値だ。これは投資銀行1社の予測であり、韓国銀行と政府の見通しとは別だ。ほかの投資銀行が見通しを調整するかを見よう。", "src": "聯合ニュース(韓国の来年3.2%成長を予想、11/24) · 東亜日報(成長率3.2%、為替レート1280ウォン、11/24) · 韓国経済(内需に警告、11/24)"},
+    "i1":{"kick": "教育 · ✓ 報道2件", "title": "ソウル市教育庁、内申試験のAI不正を防ぐため金属探知機の追加配備を推進", "what": "ソウル市教育庁は、中・高校の内申試験で人工知能(AI)を使った不正行為を防ぐため、金属探知機を追加で配備する方策を進める。教室1つに1台ずつ備えることが目標だと明らかにした。同じ日の内申試験でスマート機器が見つかれば、当日の全科目を0点とし、最大で退学まで可能だという方針も報じられた。チョン・グンシク ソウル市教育監は「金属探知機まで動員しなければならないのか」という趣旨で述べたと伝えられる。配備の規模と予算は公開されていない。", "why": "スマートウォッチやイヤホンのような小さな機器でAIに答えを尋ねることが可能になり、監督だけでは防ぎにくいという認識が広がった。大学修学能力試験に続き内申まで監視の道具が広がれば、学校現場の負担と生徒の人権問題が一緒についてくる。", "me": "中・高校生の子どもがいるなら、試験場に持ち込めない機器が何か、見つかったときの処分がどこまでか、学校の案内文で確認するべきだ。所持だけでも処分を受けうるかが、点検する部分だ。", "a": "導入を支持する側は、内申の公正さを守るには、技術には技術的な防御が必要だとみる。1回の不正が入試の結果を変えうるので、予防が先だという見方だ。", "b": "慎重論は、金属探知機が生徒を潜在的な不正行為者として扱う方式だと指摘する。教育監も、こうした手段まで動員する必要があるのか疑問を示したと伝えられる。", "say": "確認されたのは、ソウル市教育庁が進める方策と教育監の懸念の発言だ。0点・退学の方針は1社の報道に頼った内容で、適用範囲と時期は確認されていない。配備予算と施行時点が公開されるかを見よう。", "src": "聯合ニュース(内申試験の金属探知機を追加配備、11/24) · 朝鮮日報(教育監の発言、11/24)"},
+    "i2":{"kick": "経済 · ✓ 報道1件", "title": "金融委、国民成長ファンドの今年の承認目標30兆ウォン達成を見通す…来年は40兆ウォンに拡大", "what": "金融委員会は24日、国民成長ファンドが今年の承認目標である30兆ウォンを達成できると明らかにした。来年は規模を40兆ウォンに拡大する計画だ。国民成長ファンドは、先端の戦略産業への投資を支援するファンドとして知られている。承認は、個別の投資事業を審査して資金投入を確定する段階だ。承認額と実際の執行額は異なる。業種別の配分と来年の財源調達の方式は確認されていない。", "why": "承認目標の達成は政策金融が速度を出したというシグナルだが、承認されたお金が実際の投資につながる速さが成果を分ける。来年の40兆ウォン拡大計画は、財政と政策金融の負担を大きくしうる。", "me": "企業の貸出や先端産業の雇用に間接的に影響する政策なので、個人が直接体感するのは難しい。関連産業の従事者や投資家なら、どの業種に資金が承認されたかを見る価値がある。", "a": "政府は、目標の達成と来年の拡大で、先端産業の投資基盤を広げるという立場だ。", "b": "一部では、承認額が執行につながるかと政策金融への偏りの負担を点検すべきだという見方がある。今回の報道では、具体的な反論は確認されていない。財源規模への評価もまだ出ていない。", "say": "確認されたのは金融委の発表内容であり、1社の報道に頼った内容だ。目標の達成は見通しであって、確定した実績ではない。年末までに最終承認額が出るかを見よう。", "src": "聯合ニュース(国民成長ファンド30兆ウォン達成を予想、11/24)"},
+    "i3":{"kick": "経済 · ✓ 報道1件", "title": "サムスン遵法監視委員長、株主還元の決定時期をめぐる利益相反論争に「慎重に扱ってみる」", "what": "イ・チャンヒ サムスン遵法監視委員会委員長は24日、サムスン電子の株主還元の決定時期をめぐる利益相反の論争に関して、「慎重に扱ってみる」と述べた。株主還元は、企業が配当と自社株の買い入れ・消却で利益を株主に返すことだ。遵法監視委は、サムスン系列会社の遵法経営を監視する独立機構だ。論争の具体的な内容は確認されていない。委員会が論争を公式の議案として扱うかも確認されていない。", "why": "株主還元の決定時期は株価に影響しうる情報なので、決定に関わった人がその情報で利益を得うるという疑いが生じれば、市場の信頼が揺らぐ。遵法監視委の判断は、サムスンが内部統制をどう運用しているかを示す基準になる。", "me": "サムスン電子の株を持つ個人なら、配当と自社株政策の発表が株価に及ぼす影響を知っておこう。決定時期と開示時期を確認することが防御手段だ。", "a": "遵法監視委は、論争が提起された以上、独立して調べるという立場だ。", "b": "会社側の見方は、今回の報道では確認されなかった。論争が拡大解釈だという反論が出うるが、公式の立場は出ていない。", "say": "確認されたのは委員長の発言だけで、1社の報道に頼った内容だ。利益相反が実際にあったかは確認されていない。遵法監視委が公式の立場や調査結果を出すかを見よう。", "src": "聯合ニュース(サムスン遵法監視委員長の発言、11/24)"},
+    "i4":{"kick": "政治 · ✓ 報道2件", "title": "オ・セフンソウル市長、国務会議で発言の機会を得られず「特別検察の任命を中断すべきだ」と主張", "what": "オ・セフンソウル市長は24日、イ・ジェミョン大統領が主宰した国務会議に出席したが、発言の機会を得られなかったと明らかにした。遺憾だという趣旨で述べ、特別検察の任命を中断すべきだと主張した。同じ日に報じられた内容によると、オ市長は会議で、捏造起訴の特別検察と司法府の問題を話そうとしたが、大統領が議事棒を叩いて退場したと主張した。大統領室の反応は確認されていない。国務会議の出席者の構成と会議の議題も、今回の報道では確認されていない。", "why": "国務会議に出席した地方自治体の長が発言の機会を得られなかったという主張は、中央政府とソウル市の関係、与野党の対立に広がりうる。特別検察の任命は、与野党が最も強くぶつかる懸案であり、政治的な意味が大きい。", "me": "一般市民の日常に直接及ぶ影響は小さい。ただ、特別検察の任命時期とソウル市と中央政府の対立は、政策協議に影響しうるので、見守る価値がある。", "a": "オ市長側は、重要な懸案を話そうとしたのに阻まれたとし、特別検察の任命を止めるべきだとみる。", "b": "大統領室の公式な説明は、今回の報道では確認されていない。国務会議の進行と発言の順番は会議の主宰者が決めるという点が、反対側の論拠に挙がりうる。", "say": "確認されたのは、オ市長が明らかにした主張だ。会議の進行の経緯と大統領室の立場は確認されていない。きょう、大統領室や与党側が反応を出すかを見よう。", "src": "聯合ニュース(オ・セフンの国務会議での発言、11/24) · 毎日新聞(オ・セフンの発言の報道、11/24)"},
+    "i5":{"kick": "国際 · ✓ 報道3件", "title": "米司法省、北朝鮮がバイナンスから奪ったハッキング資金 約11億ドルの没収手続きに着手", "what": "米国司法省が、北朝鮮が暗号資産取引所バイナンスから奪ったハッキング資金を没収する手続きに入ったと報じられた。規模は約11億ドルと伝えられ、ウォン換算額は報道ごとに1兆4000億〜1兆5000億ウォン台と少しずつ異なる。盗まれた資金のうちステーブルコインはすぐ凍結されたが、ビットコインは凍結されず、資金洗浄に利用されたという指摘が出た。没収訴訟の管轄裁判所と提起時期は確認されていない。", "why": "北朝鮮の暗号資産の奪取は、制裁回避と兵器開発の資金源という疑いを受けてきた。没収手続きは、盗まれた資金を取り戻し、被害を受けた取引所や政府に回す法的な通路だ。ステーブルコインは発行会社が凍結できるが、ビットコインはそうではなく、追跡と遮断の違いが表れた。", "me": "暗号資産を取引するなら、取引所のセキュリティーと被害補償の体系が重要だという事例だ。国内でも、デジタル資産事業者のハッキング賠償責任を強化する法案が公開されたので、利用中の取引所の約款を確認してみる価値がある。", "a": "米国側は、不法に奪われた資金を没収し、北朝鮮の資金源を断つという立場だ。", "b": "業界では、凍結が速いステーブルコインとそうでないビットコインの違いを挙げ、追跡と協力体制の補完が必要だとみる。北朝鮮側の反応は確認されていない。", "say": "確認されたのは、没収手続きが始まったという報道だ。金額の換算が報道ごとに異なり、訴訟の詳細は確認されていない。裁判所の文書や司法省の公式資料が公開されるかを見よう。", "src": "KBSニュース(北朝鮮のバイナンスハッキング資金の没収訴訟、11/24) · ハンギョレ(ステーブルコインは凍結、ビットコインは不可、11月) · ニューシス(米司法省の没収訴訟、11月)"}
+  };
+  const G = {
+    "公訴取り消し":{"f": "法律・制度", "d": "検察がすでに裁判所に出した起訴を、自ら取り下げること。", "w": "イ・ヨンチョル候補者に、大統領の事件の公訴取り消しの指揮の可否が集中的に質問された。"},
+    "白紙信託":{"f": "法律・制度", "d": "公職者が、職務に関わりうる株を処分するか受託機関に預け、運用に関与できなくする制度。", "w": "候補者の配偶者の株の白紙信託の漏れが指摘された。"},
+    "人事聴聞会":{"f": "法律・制度", "d": "国会が高位公職の候補者の資質を検証する手続き。", "w": "イ・ヨンチョル法務部長官候補者が24日に受けた。"},
+    "指揮権":{"f": "法律・制度", "d": "法務部長官が検察の捜査・起訴について出す、指揮・監督の権限。", "w": "公訴取り消しを指揮するかが争点になった。"},
+    "弾劾訴追":{"f": "法律・憲法", "d": "国会が高位公職者の罷免を憲法裁判所に求める手続き。議決されれば職務が停止する。", "w": "民主党がチョ・ヒデ大法院長に対して推進中だ。"},
+    "ステーブルコイン":{"f": "金融・暗号資産", "d": "法定通貨などに価値を固定し、価格の変動を減らした暗号資産。", "w": "政府案は、ウォン建てステーブルコインの発行を銀行が主導するとした。"},
+    "ICO":{"f": "金融・暗号資産", "d": "暗号資産の新規公開。新しいコインを発行して投資金を集める方式。", "w": "国内で9年ぶりの容認が進められる。"},
+    "内部統制":{"f": "金融・制度", "d": "会社が違法行為や事故を防ぐために、自ら整える点検体制。", "w": "デジタル資産事業者に、金融会社並みの水準が求められる。"},
+    "大株主":{"f": "金融", "d": "会社の持ち分を多く持つ株主。", "w": "取引所の大株主の持ち分が20%に制限される。"},
+    "デジタル資産基本法":{"f": "法律・金融", "d": "暗号資産市場全般を規律しようとする法案の名前。", "w": "金融委が24日に政府案を公開した。"},
+    "経常収支":{"f": "経済", "d": "商品・サービスの輸出入と海外所得の取引を合わせた、国外との取引の収支。", "w": "半導体の輸出で、黒字が増えると見通された。"},
+    "基準金利":{"f": "金融", "d": "韓国銀行が定める政策金利で、市中金利の基準になる。", "w": "ゴールドマン・サックスは、来年の上限を3.5%とみた。"},
+    "輸出規制":{"f": "貿易・安保", "d": "国が安全保障を理由に、特定の技術・製品の輸出を制限する措置。", "w": "米国の対中国半導体の輸出規制が、新たな変数に挙がる。"},
+    "利益相反":{"f": "法律・制度", "d": "一人の利益が、担う責任と衝突する状況。", "w": "サムスンの株主還元の決定時期をめぐって論争が起きている。"},
+    "遵法監視委員会":{"f": "制度", "d": "サムスン系列会社の遵法経営を監視する独立機構。", "w": "イ・チャンヒ委員長が、論争を慎重に扱うと述べた。"},
+    "株主還元":{"f": "金融", "d": "配当と自社株の買い入れ・消却などで、利益を株主に返すこと。", "w": "サムスン電子の決定時期が論争になった。"},
+    "国民成長ファンド":{"f": "金融・政策", "d": "先端の戦略産業への投資を支援する政策ファンド。", "w": "今年の承認目標30兆ウォンの達成が見通された。"},
+    "没収":{"f": "法律", "d": "犯罪に使われた、または犯罪で得た財産を、国が奪う処分。", "w": "米国が北朝鮮のハッキング資金に適用しようとしている。"},
+    "ナスダック総合指数":{"f": "金融", "d": "米国のナスダック市場に上場した全銘柄の株価を総合した指数。", "w": "エヌビディアの急騰で6.51%上がった。"},
+    "為替レート":{"f": "金融", "d": "異なる2つの国のお金の交換比率。", "w": "ゴールドマン・サックスは、ウォン・ドルの為替レートが来年末に1,280ウォンまで下がるとみた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
