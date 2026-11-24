@@ -1,0 +1,336 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>5,006.03</b>KOSPI · 11/24終値 · 前営業日比6.32%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>665.88</b>KOSDAQ · 11/24終値 · 前営業日比3.13%上昇</div>
+    </div>
+    <div class="dateline"><span>第52号 · 朝刊</span><b>2026年11月25日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s0">
+      <div class="kick">安保 · 領空・防空識別圏<span>報道照合 ✓ 4社 · 進入機の数・機種、警報の経緯は未確認</span></div>
+      <h2 class="hl">ロシア軍用機数機が鬱陵島付近の防空識別圏に進入…合同参謀本部「領空侵犯はなかった」、政府はロシア駐在武官を呼び出して抗議する方針</h2>
+      <p class="deck">24日朝、鬱陵島の住民に避難案内が出され、ロシア国防省は戦略爆撃機の「計画された飛行」だったと明らかにした</p>
+      <div class="body">
+        <p>ロシア軍用機数機が24日朝、東海の韓国防空識別圏(KADIZ)に入り、鬱陵島の近くまで接近した。合同参謀本部は領空侵犯はなかったと明らかにし、空軍は戦闘機を投入して対応した。防空識別圏は、領土・領海の上空である領空と違い、防衛のためにあらかじめ定めた空域で、外国の軍用機が入れば識別と警告の措置の対象になるが、ただちに主権侵害になるわけではない。鬱陵島の住民には避難案内が出てサイレンが鳴った。災害メッセージに「北朝鮮機と推定」という表現が入り、混乱が生じたとの報道もある。</p>
+        <p>政府は、ロシアの駐在武官を呼び出して抗議する方針を明らかにした。ある報道によると、ロシア大使は防空識別圏への進入を規定した国際法はないという趣旨の発言をしたというが、ほかでは確認されていない。ロシア国防省は24日(現地)、Tu-160戦略爆撃機が東海の国際水域の上空で計画された飛行を行ったと明らかにした。この飛行が鬱陵島付近に入った航空機と同じ飛行なのか、進入した航空機の正確な数と機種は、まだ公式には確認されていない。警報と災害メッセージがどんな判断で出されたのかも、追加の説明が必要だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s1">
+      <div class="kick">国際 · 対北朝鮮制裁<span>報道照合 ✓ 3社 · スイス政府の立場の具体的な表現は1社</span></div>
+      <h3 class="hl">スイス政府、北朝鮮の「平壌外交事務所の撤収を検討」との警告にも松濤園野営所への制裁を維持</h3>
+      <div class="one">
+        <p>キム・ヨジョン北朝鮮労働党総務部長は24日、朝鮮中央通信を通じて出した談話で、スイスが欧州連合(EU)の対ロシア制裁案をそのまま踏襲して松濤園国際少年団野営所を制裁対象に含めたと反発し、平壌駐在のスイス外交事務所の撤収を検討するとの立場を示した。EUは、この野営所がウクライナ占領地の子どもたちを北朝鮮へ送るプログラムに参加したという理由で制裁リストに載せ、スイスもEU制裁に同調している。スイス政府はこの警告にも制裁を維持する立場を示したと25日に伝えられた。スイスは先月末、平壌に外交事務所を新たに開設し、開所式にはスイスの外相が出席した。北朝鮮が実際に撤収を通告したのか、スイスがどんな追加措置を出すのかは、まだ確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>米11月の消費者信頼感指数が2カ月連続で反発、1年10カ月ぶりの高水準</b><em>米国の11月の消費者信頼感指数が2カ月連続で上昇し、1年10カ月ぶりの高さになった。指数が上がった具体的な理由は、発表機関の説明を確認する必要がある。</em><span>経済 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>ゼレンスキー氏、ハンガリーのペーテル・マジャル首相と会談…政治・エネルギー・インフラで合意があると明らかに</b><em>ゼレンスキー・ウクライナ大統領が24日、ハンガリーの首相と会い、関係改善を話し合った。首相の就任後初のウクライナ訪問で、EU加盟が加速するかは伝えられていない。</em><span>国際 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>プーチン氏「ロシアの石油市場は厳しい」…ウクライナの石油施設への攻撃に報復を予告</b><em>プーチン・ロシア大統領が24日、ウクライナによる石油施設への集中攻撃で困難があると認め、報復を予告した。報復の具体的な方法は伝えられていない。</em><span>国際 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>中国次期指導部の候補とされた上海市党委書記が調査を受けるとの知らせ…政治局員で4人目</b><em>中国共産党の次期最高指導部の有力候補とされていた上海市党委書記が調査を受けるという知らせが出た。反腐敗の取り組みのなかで調査を受ける4人目の政治局員だとの報道だ。</em><span>国際 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>親イランのフーシ派、イエメン政府の暫定首都アデンの60km手前まで進撃したとの報道</b><em>国際社会が承認するイエメン政府軍の暫定首都アデンが、フーシ派の攻勢で脅かされている。フーシ派がアデンの約60km手前まで来たとの報道で、陥落したかは確認されていない。</em><span>国際 · ✓ 報道1件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s2">
+      <div class="kick">経済 · 半導体・政治<span>報道照合 ✓ 4社 · バンス副大統領の関与は匿名の情報筋の報道、下落幅は集計ごとに差</span></div>
+      <h3 class="hl">「ジェンスン・フアン復帰」翌日にエヌビディアは下落で寄り付き…米共和党の対中強硬派もトランプ大統領の介入を批判</h3>
+      <div class="body">
+        <p>ジェンスン・フアン・エヌビディア最高経営責任者(CEO)の復帰翌日の24日(現地)、ニューヨーク市場でエヌビディアの株価は3%台の下落で始まった。前日に30%超急騰した分の一部を戻した形で、寄り付きの下落幅を6%前後と集計したところもあり、数値は食い違う。エヌビディアの取締役会は23日、フアン氏の復帰を全会一致で議決したとし、その過程で米政権の高官らの意見を聞き、復帰が国家安全保障の脅威にならないと判断したと明らかにした。トランプ大統領は、自らが直接介入したと明らかにした。</p>
+        <p>復帰の過程をめぐる政治的な批判が強まっている。与党・共和党の対中強硬派の一部も、トランプ大統領が中国の利益を優先するのかと反発し、「国家資本主義」「毛沢東主義」という表現まで出た。複数の匿名の情報筋を引用した報道では、バンス副大統領も復帰の決定に関与したというが、公式の確認はない。米商務省が、フアン氏のスキャンダルに絡むと報じられたシンガポールの半導体企業メガスピードを制裁リストに載せたとの報道も出た。フアン氏が議会の公聴会に出るべきか、対中輸出規制がどう変わるかは、まだ決まっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s3">
+      <div class="kick">社会 · 交通<span>報道照合 ✓ 2社 · 事業費と優先交渉対象者取り消しの経緯は1社</span></div>
+      <h3 class="hl">ソウル市、ソブ線ライトレールの民間投資事業を再公告…事業費2兆3252億ウォン、再び入札不成立なら財政事業に転換</h3>
+      <div class="body">
+        <p>ソウル市は、ウンピョン区のセジョル駅とクァナク区のソウル大入口駅を結ぶライトレール、ソブ線を、民間投資事業として改めて進めると明らかにした。民間事業者を募る再公告でも応札者がなく入札不成立となれば、ソウル市の財政で建設する財政事業に転換し、その場合はソウル市の第3次都市鉄道網構築計画に沿って進める。ある報道によると、再公告は26日付で、変動分を反映した事業費は2兆3252億ウォンに増えた。</p>
+        <p>同じ報道は、先に優先交渉対象者だったドゥサン建設コンソーシアムの地位が取り消された後に今回の再公告が行われたと伝えた。取り消しの経緯と新たな事業者の選定日程、開通時期は、まだ分かっていない。民間投資事業は、民間が先に資金を出して施設を造り、一定期間運営して費用を回収する方式なので、応札がなければ事業そのものが止まることがある。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s4">
+      <div class="kick">貿易 · 関税<span>報道照合 ✓ 2社 · 対象国・税率は未公表</span></div>
+      <h3 class="hl">米通商代表部、早ければ今週「過剰生産関税」の調査結果を発表か…対象国・税率はまだ未公表</h3>
+      <div class="body">
+        <p>米通商代表部(USTR)が早ければ今週中に「過剰生産関税」の調査結果を発表するとの報道が出た。通商代表部は、関税政策と貿易交渉を担う米政府機関だ。米政府がこの関税を予告した状態だという報道とともに、韓国が対象に入るかを探る記事も出た。ある映像報道は、米国が中国やEUなどに対する関税引き上げの準備をしていると伝えたが、詳しい内容は確認されていない。</p>
+        <p>関税率、対象国、適用時期は、まだ公表されていない。韓国が含まれるかも確認されていない。発表が出れば、対象品目と国のリスト、施行日が焦点になる。「過剰生産」は、特定の国の生産と輸出が市場の需要より多いという問題を指すときに使う言葉だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>過剰生産関税<i>貿易</i></b><p>通商代表部が調べている「過剰生産」の問題と結びついた関税につけられた名前。対象国と税率はまだ分かっていない。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>ロシア軍用機が鬱陵島の領空を侵犯した</b> <span>合同参謀本部は、防空識別圏には入ったが領空侵犯はなかったと明らかにした。政府はロシアの駐在武官を呼び出して抗議する方針だ。</span></div>
+        <div><b>北朝鮮が平壌駐在のスイス外交事務所をすでに撤収させた</b> <span>キム・ヨジョン北朝鮮労働党総務部長の談話は、撤収を「検討する」という内容だ。スイス政府は制裁を維持すると明らかにし、実際の撤収通告は確認されていない。</span></div>
+        <div><b>エヌビディアの株価が復帰からわずか1日で急騰分をすべて失った</b> <span>24日(現地)、エヌビディアは3%台の下落で始まり、6%前後と集計したところもあるが、前日に30%超上がった分の一部を戻した程度だ。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 水 11月25日</b><span>合同参謀本部と国防部がロシア軍用機について追加の説明を出すか、鬱陵島の避難案内の根拠が明らかになるかを見ることになる。エヌビディアが24日の取引終了時に下落幅をどこまで縮めたかも確認される。</span><b>今週</b><span>米通商代表部の過剰生産関税の調査結果が、早ければ今週出る可能性がある。ある報道によると、ソウル市のソブ線の再公告は26日付だ。</span><b>その後</b><span>ソブ線の再公告で再び入札不成立となれば、財政事業への転換手続きに移る。北朝鮮がスイス外交事務所の撤収を実際に通告するかも、続く話だ。</span><b>読者へ</b><span>一つの報道にしか出ていない発言は、「〜したとの報道」というところまでで読もう。同じ発言が二つ以上の報道で確認されて初めて事実として固まる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "s0":{"kick": "安保 · 領空・防空識別圏 · 報道照合 ✓ 4社 · 進入機の数・機種、警報の経緯は未確認", "title": "ロシア軍用機数機が鬱陵島付近の防空識別圏に進入…合同参謀本部「領空侵犯はなかった」、政府はロシア駐在武官を呼び出して抗議する方針", "what": "ロシア軍用機数機が24日午前、東海の韓国防空識別圏に進入し、鬱陵島の近くまで接近した。合同参謀本部は領空侵犯はなかったと明らかにした。空軍は戦闘機を投入した。鬱陵島の住民には避難案内が出され、サイレンが鳴った。災害メッセージに「北朝鮮機と推定」という表現が入っていたとの報道がある。政府はロシアの駐在武官を呼び出して抗議することにした。ロシア国防省は24日(現地)、Tu-160戦略爆撃機が東海の国際水域の上空で計画された飛行を行ったと明らかにした。", "why": "防空識別圏は領空ではないが、軍用機が入れば空軍が識別と警告の措置に当たらなければならず、繰り返されれば軍の対応負担と偶発的な衝突のリスクが高まる。今回は島の住民に避難案内まで出されて、生活に直接影響した。ロシアは計画された飛行だと説明し、韓国は抗議で応じる構図だ。", "me": "鬱陵島・独島に住んでいたり家族がいたりするなら、災害メッセージと避難案内がどんな基準で出るのか確認しておく必要がある。東海航路の航空・海運の運航で変わった措置は、まだ確認されていない。", "a": "政府と軍は、領空侵犯がなくても事前通報のない防空識別圏への進入は緊張を高める行動だという立場で抗議に乗り出したと読める。繰り返しの進入を放置すれば先例になるという論理だ。", "b": "ロシア側は、国際水域の上空での計画された飛行であり、防空識別圏は国際法が定めた領域ではないという立場と伝えられる。ただ、大使の発言は一つの報道にしか出ていないので、割り引いて読む必要がある。", "say": "確認されたのは、防空識別圏への進入、領空侵犯なし、ロシア駐在武官への抗議方針、ロシア国防省の「計画された飛行」発表だ。航空機の数・機種と警報の経緯は確認されていない。きょうは軍当局の追加説明とロシア側の反応、避難案内の根拠を見よう。", "src": "聯合ニュース(ロシア国防省のTu-160飛行発表、11/25) · ガーディアン(鬱陵島住民の避難案内、11/24) · ハンギョレ(鬱陵島への接近と戦闘機投入、11/24) · KBS(ロシア駐在武官の呼び出しと抗議、11/24)"},
+    "s1":{"kick": "国際 · 対北朝鮮制裁 · 報道照合 ✓ 3社 · スイス政府の立場の具体的な表現は1社", "title": "スイス政府、北朝鮮の「平壌外交事務所の撤収を検討」との警告にも松濤園野営所への制裁を維持", "what": "キム・ヨジョン北朝鮮労働党総務部長は24日、朝鮮中央通信を通じて談話を発表した。談話は、スイス連邦当局がEUの対ロシア制裁案をそのまま複製して松濤園国際少年団野営所を制裁対象に含めたと主張した。北朝鮮は、平壌駐在のスイス外交事務所の撤収を検討すると明らかにした。EUは、この野営所がウクライナ占領地の子どもたちを北朝鮮へ送るプログラムに参加したという理由で制裁リストに載せた。スイスもEU制裁に同調している。スイス政府は、撤収の警告にも制裁を維持する立場を示したと25日に伝えられた。スイスは先月末、平壌に外交事務所を開設した。", "why": "制裁の対象が子どもの野営所であることが、争点の中心だ。北朝鮮は北朝鮮とロシアの協力を問題にするものだと反発し、欧州側は占領地の子どもの移送を問題にする。スイスの事務所は、欧州の国が平壌に置く外交窓口の一つなので、撤収するかどうかが対話の経路に影響しうる。", "me": "韓国の読者に直接の影響は大きくないが、北朝鮮とロシアの協力と欧州の制裁がかみ合う事例なので、北朝鮮外交ニュースの背景として知っておく価値がある。スイスが長く行ってきた対北朝鮮の人道支援活動が減るかも、間接的な変数だ。", "a": "スイスとEU側は、子どもの移送に関わった施設を制裁するのは原則の問題なので、警告に引き下がれないという立場と読める。", "b": "北朝鮮は、合法的な北朝鮮とロシアの協力に言いがかりをつける敵対行為だと主張し、世界の多くの国の子どもが訪れる野営所を制裁するのは荒唐無稽な口実だと批判した。", "say": "確認されたのは、キム・ヨジョン談話とEU・スイスの制裁の事実、スイスの維持の立場だ。実際の撤収通告の有無は確認されていない。きょうはスイス政府の追加説明と北朝鮮メディアの続報を見よう。", "src": "聯合ニュース(キム・ヨジョン談話とスイスの制裁維持、11/24ほか) · 東亜日報(キム・ヨジョン談話全文の引用、11/24) · 朝鮮日報(スイスの制裁維持の立場、11/25)"},
+    "s2":{"kick": "経済 · 半導体・政治 · 報道照合 ✓ 4社 · バンス副大統領の関与は匿名の情報筋の報道、下落幅は集計ごとに差", "title": "「ジェンスン・フアン復帰」翌日にエヌビディアは下落で寄り付き…米共和党の対中強硬派もトランプ大統領の介入を批判", "what": "エヌビディアの取締役会は23日(現地)、ジェンスン・フアンのCEO復帰を全会一致で議決したと明らかにした。取締役会は、決定の過程で米政権の高官らの意見を聞き、復帰が国家安全保障の脅威にならないと判断したと述べた。トランプ大統領は、自らが直接介入したと明らかにした。24日(現地)のエヌビディアの株価は、前日に30%超上がった後、3%台の下落で始まり、6%前後と集計したところもある。与党・共和党の対中強硬派の一部が、トランプ大統領が中国の利益を優先するのかと批判した。米商務省がシンガポール企業のメガスピードを制裁リストに載せたとの報道が出た。フアン氏は12日に辞任を発表したが、11日後に復帰した。", "why": "エヌビディアはAI半導体の供給の核心なので、CEOの座一つが株価と国内外の半導体業種全体を揺さぶる。今回は政府が人事に関与したという点が加わり、企業統治と対中輸出規制の判断が政治と絡み合うという批判が出ている。取締役会が「安保上の脅威なし」と自ら判断したと明らかにしたが、根拠が具体的に説明されていないという指摘が出うる。", "me": "国内の半導体株を持っているなら、エヌビディアの動きにつれて1日単位で大きく揺れうることを、今回の株価の流れが示している。政治の変数が加わった以上、急騰後の戻りが続く可能性も念頭に置く必要がある。", "a": "復帰を歓迎する側は、リーダーシップの空白が早く解消され、AI投資の不安が和らいだとみる。社員が拍手で迎えた点と株価の反応を根拠に挙げる。", "b": "批判する側は、スキャンダルで退いた経営者の復帰を大統領が押し進めたのは国家資本主義に近く、対中国の安保問題をぼかすとみる。取締役会が責任を負うべきだという主張も出た。", "say": "確認されたのは、取締役会の発表、トランプ大統領の介入発言、24日の下落での寄り付きと共和党一部の批判だ。バンス副大統領の関与は匿名の情報筋の報道なので、確認されていない。きょうは取引終了時に下落幅がどこで止まるか、議会日程が決まるかを見よう。", "src": "聯合ニュース(エヌビディアの下落での寄り付きと共和党対中強硬派の批判、11/25) · 東亜日報(取締役会の発表と政権介入の報道、11/24) · 韓国経済(エヌビディアの下落での寄り付き、11/24) · 電子新聞(輸出規制の変数、11/24)"},
+    "s3":{"kick": "社会 · 交通 · 報道照合 ✓ 2社 · 事業費と優先交渉対象者取り消しの経緯は1社", "title": "ソウル市、ソブ線ライトレールの民間投資事業を再公告…事業費2兆3252億ウォン、再び入札不成立なら財政事業に転換", "what": "ソウル市は、ウンピョン区のセジョル駅とクァナク区のソウル大入口駅を結ぶライトレール、ソブ線を、民間投資事業として改めて進めると明らかにした。再公告でも事業者が名乗り出ず入札不成立となれば、ソウル市の財政事業に転換する。財政事業に変われば、ソウル市の第3次都市鉄道網構築計画に沿って進める。ある報道によると、再公告は26日付だ。同じ報道は、変動分を反映した事業費が2兆3252億ウォンだと伝えた。また、優先交渉対象者だったドゥサン建設コンソーシアムの地位が取り消された後に再公告が行われたとした。", "why": "民間投資事業は、民間が建設費を先に出し、運営で回収する構造なので、事業費が増えると収益性の負担が大きくなり、応札が減りうる。ソブ線のように長く待たれてきた路線は、事業者の選定が繰り返し阻まれると、開通時期が先延ばしされ続ける。財政事業に変われば、市の予算負担が大きくなる代わりに、事業の速度は市が決められる。", "me": "ソブ線の予定路線の周辺に住んでいたり、住まいを探したりしている人は、開通日程が不確かな点を考慮しなければならない。交通の利便性を理由にした居住・投資の判断は、公告の結果が出てからのほうがよい。", "a": "ソウル市は、民間資金を先に探して財政負担を減らしつつ、だめなら財政事業に切り替えて事業を生かし続ける二重の経路を選んだ。", "b": "地域住民や一部の専門家は、事業者の選定が繰り返し流れている以上、最初から財政事業にするほうが開通を早めるとみうる。ただ、市の予算事情は別の問題だ。", "say": "確認されたのは、ソウル市の再公告の方針と、入札不成立時の財政事業への転換計画だ。事業費の金額と優先交渉対象者の取り消しの経緯は、一つの報道にしか出ていない内容だ。きょうは再公告の締め切り日と応札の有無を見よう。", "src": "聯合ニュース(ソブ線の民間事業の再推進、11/25) · 京郷新聞(ソブ線の再公告と事業費、11/25)"},
+    "s4":{"kick": "貿易 · 関税 · 報道照合 ✓ 2社 · 対象国・税率は未公表", "title": "米通商代表部、早ければ今週「過剰生産関税」の調査結果を発表か…対象国・税率はまだ未公表", "what": "米通商代表部が早ければ今週中に「過剰生産関税」の調査結果を発表するとの報道が24日に出た。米政府がこの関税を予告したとの報道があり、韓国が対象に入るかを探る記事も出た。ある映像報道は、米国が中国やEUなどに対する関税引き上げの準備をしていると伝えた。関税率、対象国、適用時期は公表されていない。韓国が対象かも確認されていない。", "why": "関税は、輸出入価格と企業利益、為替と株式市場に一度に影響する。調査結果の発表は、関税が実際にどの国のどの品目にどれだけ適用されるかを決める出発点だ。韓国は輸出の比重が大きく、対象に入るかどうかによって波紋が大きく変わる。", "me": "輸出企業に勤めていたり、輸出関連の株を持っていたりするなら、発表の内容のうち韓国が含まれるかどうかと品目を先に確認する必要がある。消費者は、輸入品の価格が時間差で動きうる点だけを知っておけばよい。", "a": "米政府は、過剰生産で自国の産業が被害を受けているという論理で関税を正当化しようとしているとみられる。", "b": "貿易相手国と輸出業界は、関税が物価とサプライチェーンに負担をかけ、報復を招きうると懸念する。韓国が含まれるかどうかは確認されていない。", "say": "確認されたのは、発表が早ければ今週だという報道だけだ。対象国、税率、施行日は確認されていない。きょうは発表日程が確定するかどうかと、韓国が含まれるかどうかを見よう。", "src": "聯合ニュース(過剰生産関税の調査結果発表の見通し、11/25) · 韓国経済(過剰生産関税の予告と韓国への影響、11/24)"},
+    "i1":{"kick": "経済 · ✓ 報道1件", "title": "米11月の消費者信頼感指数が2カ月連続で反発、1年10カ月ぶりの高水準", "what": "米国の11月の消費者信頼感指数が2カ月連続で反発した。1年10カ月ぶりの高い水準だ。消費者信頼感指数は、家計が景気と仕事、所得をどう感じているかを調査で点数化した指標だ。報道には、中間選挙後に不確実性が減り、ガソリン価格が下がった点が併せて言及された。具体的な指数の値と項目別の点数は、確認された資料がない。", "why": "消費は米国経済の大きな部分なので、家計の心理は消費支出と景気の方向を測る手がかりになる。次の金利決定を控えたFRBが見る指標の一つでもある。ただ、調査の指標と実際に財布のひもが緩む度合いには、差と時間差がある。", "me": "米国株やドルに関心があるなら、消費心理の改善が金利期待とドルの動きにどう反映されるか、見守る価値がある。海外通販や旅行の計画があるなら、ウォン・ドル相場も併せて確認しよう。", "a": "反発を前向きにみる側は、選挙後に政治の不確実性が減り、物価の負担が和らいで、消費が持ちこたえる条件が良くなったと解釈する。", "b": "慎重な側は、心理指標は一時的に動きうるし、1年10カ月ぶりの高水準という言葉は、その間は低かったという意味でもあるとみる。雇用・賃金のような実体の指標と併せて見なければならないという見方だ。", "say": "確認されたのは、2カ月連続の反発と、1年10カ月ぶりの高水準という点だ。指数の値と発表機関の説明は、今回の資料では確認されていない。きょうは次の米国指標の発表と為替の反応を見よう。", "src": "聯合ニュース(米国の11月の消費者信頼感指数、11/25)"},
+    "i2":{"kick": "国際 · ✓ 報道2件", "title": "ゼレンスキー氏、ハンガリーのペーテル・マジャル首相と会談…政治・エネルギー・インフラで合意があると明らかに", "what": "ウォロディミル・ゼレンスキー・ウクライナ大統領が24日、ハンガリーのペーテル・マジャル首相と会った。両首脳は、両国関係の改善を話し合った。ゼレンスキー大統領は自身のテレグラムで、今回の日程がマジャル首相の就任後初のウクライナ訪問だと明らかにした。日程は西部のウジホロドで、戦没者を追悼する行事から始まったとした。ゼレンスキー大統領は、訪問が前向きな結果をもたらすとし、政治・エネルギー・インフラの分野ですでに合意があると書いた。ウクライナのEU加盟が今回の会談で加速するかは確認されていない。", "why": "EU加盟には加盟国全員の同意が必要で、ハンガリーの立場が重要な変数とされてきた。両国関係がほぐれれば、ウクライナの加盟交渉とエネルギー・インフラの協力が動く余地が生まれる。", "me": "欧州のエネルギー供給とウクライナ戦争の外交地形を追っている読者なら、ハンガリーの態度の変化を測る手がかりだ。国内に及ぼす直接の影響は、さしあたり確認されない。", "a": "歓迎する側は、両国がエネルギー・インフラの合意に言及した点を挙げ、加盟交渉の障害が減りうるとみる。", "b": "慎重な側は、合意の具体的な内容とハンガリー政府の加盟賛否の立場がまだ公開されていない点を挙げ、「和解モード」という表現は早いとみる。", "say": "確認されたのは、24日の首脳会談と訪問日程、ゼレンスキー大統領が明らかにした分野別の合意への言及だ。合意の具体的な内容と、EU加盟に対するハンガリーの公式の立場は確認されていない。きょうは共同発表やハンガリー政府の立場が出るかを見よう。", "src": "聯合ニュース(ウクライナ・ハンガリー首脳会談、11/25) · ゼレンスキー大統領のテレグラム(マジャル首相の訪問日程、11/24)"},
+    "i3":{"kick": "国際 · ✓ 報道1件", "title": "プーチン氏「ロシアの石油市場は厳しい」…ウクライナの石油施設への攻撃に報復を予告", "what": "ウラジーミル・プーチン・ロシア大統領が24日(現地)、ウクライナによる石油施設への集中攻撃がもたらした困難を認め、報復を予告した。別の速報の見出しには、プーチン大統領がエネルギー輸出を妨げようとする試みは特に欧州に逆効果になると述べ、新たな供給経路を開発しなければならず、販売市場を広げると語ったと書かれている。報復の対象と方法、攻撃の被害規模は確認されていない。", "why": "ロシアにとって石油・ガスの輸出は財政の大きな柱なので、精製・輸出施設への打撃は、戦争遂行能力と国際原油価格につながる。大統領が直接困難に言及した点が目を引く。", "me": "今回の知らせは一つの報道に頼ったものなので、続報の確認が必要だ。国際原油価格が上がれば、国内のガソリン・暖房費と物価にも時間差で影響が来る。きょうの原油の動きと為替を一緒に見る必要がある。", "a": "ロシア側は、攻撃に報復し、新たな販売市場と供給経路を探すというメッセージを出したと読める。", "b": "ウクライナ側は、石油施設への攻撃がロシアの戦争資金を狙った手段だという立場かもしれない。ただ、今回の資料でウクライナ側の説明は確認されていない。", "say": "確認されたのは、プーチン大統領の発言の事実だ。速報の見出しだけで伝えられた発言の全体の文脈は確認されていない。報復の具体的な方法と、石油の生産・輸出の被害規模も確認されていない。きょうはロシアの実際の軍事対応と国際原油価格の反応を見よう。", "src": "聯合ニュース(プーチン大統領の石油市場発言、11/25)"},
+    "i4":{"kick": "国際 · ✓ 報道1件", "title": "中国次期指導部の候補とされた上海市党委書記が調査を受けるとの知らせ…政治局員で4人目", "what": "中国共産党の次期最高指導部の有力候補とされていた上海市党委書記が調査を受けるという知らせが、24日に出た。習近平国家主席が率いる大規模な反腐敗の取り組みが続くなかで調査を受ける政治局員としては、4人目だとの報道だ。調査の具体的な容疑と発表の正確な文言は確認されていない。", "why": "上海市党委書記は、政治局員が務める要職で、次期指導部の候補と取り沙汰され、人事の構図に及ぼす影響が大きい。反腐敗の取り組みが最上層に及ぶ信号と読む見方がある。", "me": "上海は中国の経済・金融の中心地だ。ここでの政治的な不確実性は、韓国の輸出企業と対中投資にとって間接的な変数だ。即座の市場への影響は確認されていない。", "a": "中国の内外には、反腐敗の強度を示す事例とみる見方がある。次期指導部の候補まで調査対象に上った以上、例外はないという信号と読むのだという。", "b": "別の側は、権力の構図や人事再編の一部と解釈するが、これを裏付ける根拠は公開されていないとみる。公式発表まで解釈が割れるほかないという点が変数だ。", "say": "確認されたのは、上海市党委書記が調査を受けるという知らせと、4人目の政治局員だという報道だ。一つの報道なので、名前と職位の公式な表記と調査主体は、別に確認しなければならない。容疑と後続の人事は確認されていない。きょうは中国当局の追加発表と後任人事を見よう。", "src": "聯合ニュース(上海市党委書記の調査、11/24)"},
+    "i5":{"kick": "国際 · ✓ 報道1件", "title": "親イランのフーシ派、イエメン政府の暫定首都アデンの60km手前まで進撃したとの報道", "what": "イエメン政府軍の暫定首都アデンが、親イランの反政府勢力フーシ派の攻勢で脅かされている。フーシ派がアデンから約60km離れた所まで進撃したとの報道だ。イエメン政府は国際社会の承認を受けている。アデンの陥落の有無と交戦の規模、人的被害は確認されていない。", "why": "アデンは政府軍が暫定首都として使う港湾都市なので、フーシ派の占領の試みはイエメン内戦の情勢を変えうる。周辺の海上交通にも影響しうるため、国際海運にとって変数だ。", "me": "中東情勢は、国際原油価格と海運運賃につながり、輸入物価に影響しうる。さしあたり確認された影響はなく、一つの報道に頼った知らせなので、交戦状況の続報の確認が必要だ。", "a": "政府軍側は、フーシ派が攻勢を強め、暫定首都まで脅かしていると警戒する見方だ。アデンを失えば政府の統治基盤が大きく揺らぐという懸念につながる。", "b": "フーシ派側は、親イランの勢力として影響圏を広げようとしているという解釈があるが、今回の資料でフーシ派の公式の立場は確認されていない。進撃距離そのものも報道によるもので、実際の前線は異なる可能性がある。", "say": "確認されたのは、フーシ派がアデンの約60km手前まで来たという報道だ。報道の見出しが投げかけた「陥落間近」という問いへの答えは、まだない。陥落の有無と被害は確認されていない。きょうは交戦状況と政府軍の対応発表を見よう。", "src": "聯合ニュース(フーシ派のアデン進撃、11/25)"}
+  };
+  const G = {
+    "防空識別圏":{"f": "安保", "d": "領空の外側に、防衛のためにあらかじめ定めた空域。外国の軍用機が入れば識別と警告の対象になるが、領空ではない。", "w": "ロシア軍用機が鬱陵島付近でここに進入した。"},
+    "領空":{"f": "法・安保", "d": "一国の領土と領海の上空。許可なく入れば主権侵害とみなす。", "w": "合同参謀本部は今回、領空侵犯はなかったと明らかにした。"},
+    "戦略爆撃機":{"f": "安保", "d": "長距離を飛び、核兵器を含む大型兵器を積める爆撃機。", "w": "ロシア国防省が東海上空の飛行を行ったと明らかにした機種だ。"},
+    "駐在武官":{"f": "外交", "d": "大使館に派遣され、駐在国との軍事業務を担う軍人の外交官。", "w": "政府がロシアの駐在武官を呼び出して抗議する方針を明らかにした。"},
+    "呼び出し":{"f": "外交", "d": "外交官や大使を外交当局が呼び出して、抗議したり説明を求めたりすること。", "w": "ロシアの駐在武官に対して行う。"},
+    "国際水域":{"f": "法・海洋", "d": "特定の国の領海の外側の海。船舶と航空機が比較的自由に通れる。", "w": "ロシア国防省は、ここの上空で飛行したと明らかにした。"},
+    "制裁リスト":{"f": "法・貿易", "d": "政府や機関が、資産凍結や取引禁止などの制裁を科す対象を記した一覧。", "w": "松濤園の野営所とメガスピードがそれぞれ載った。"},
+    "占領地":{"f": "安保", "d": "戦争中に、ある国が軍事的に占めた相手国の領土。", "w": "EUは、ウクライナ占領地の子どもの移送を制裁の理由に挙げた。"},
+    "取締役会":{"f": "経営", "d": "会社の重要な決定を下し、経営陣を監督する会議体。", "w": "エヌビディアの取締役会がフアン氏の復帰を議決した。"},
+    "輸出規制":{"f": "貿易・安保", "d": "安全保障を理由に、先端製品と技術の海外販売を政府が許可制で止めたり制限したりする制度。", "w": "エヌビディアの対中国販売と絡んで争点になっている。"},
+    "国家資本主義":{"f": "経済", "d": "政府が企業経営と市場に深く介入して導く経済運営の方式。", "w": "トランプ大統領の介入を批判する表現として使われた。"},
+    "民間投資事業":{"f": "金融・行政", "d": "民間が先に資金を出して公共施設を造り、一定期間運営して費用を回収する事業方式。", "w": "ソウル市がソブ線をこの方式で改めて進める。"},
+    "優先交渉対象者":{"f": "行政", "d": "複数の応札者のうち、先に契約交渉をするよう選ばれた事業者。", "w": "ソブ線の優先交渉対象者の地位が取り消されたとの報道がある。"},
+    "財政事業":{"f": "行政", "d": "民間資金なしに、政府や地方政府の予算で直接建設する事業。", "w": "ソブ線が再び入札不成立となれば転換される。"},
+    "入札不成立":{"f": "行政", "d": "入札に応札者がいない、または条件に合わず、契約者を決められないまま流れること。", "w": "ソブ線の再公告が入札不成立となれば、財政事業に変わる。"},
+    "ライトレール":{"f": "交通", "d": "地下鉄より小さな車両と低い輸送量で運行する都市鉄道。", "w": "ソブ線はライトレールの路線だ。"},
+    "通商代表部":{"f": "貿易", "d": "米国で関税政策と貿易交渉を担う政府機関。英語の略称はUSTR。", "w": "過剰生産関税の調査結果を発表する機関だ。"},
+    "過剰生産関税":{"f": "貿易", "d": "過剰生産の問題と結びついて課そうとする関税につけられた名前。対象国と税率はまだ分かっていない。", "w": "早ければ今週、調査結果が出る可能性がある。"},
+    "消費者信頼感指数":{"f": "経済", "d": "家計が景気と仕事、所得をどう感じているかを調査で点数化した心理指標。", "w": "米国の11月の指数が1年10カ月ぶりの高さだ。"},
+    "政治局":{"f": "政治", "d": "中国共産党の中核の意思決定機関。委員が事実上、国の運営を率いる。", "w": "上海市党委書記が4人目に調査を受ける委員だとの報道だ。"},
+    "暫定首都":{"f": "政治", "d": "首都が使えないとき、政府が臨時に所在地とした都市。", "w": "アデンはイエメン政府軍の暫定首都だ。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
