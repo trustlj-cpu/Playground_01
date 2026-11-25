@@ -1,0 +1,334 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>4,697.51</b>KOSPI · 11月25日 · 終値 · 前営業日比6.16%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>KOSDAQ · 終値相場の騰落の向きが食い違うため掲載せず</div>
+    </div>
+    <div class="dateline"><span>第52号 · 夕刊</span><b>2026年11月25日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s0">
+      <div class="kick">市場 · 株式市場<span>✓ 4社 · 外国人の純売り越し額と銘柄別の引け値の下げ幅は集計が食い違うため書かず</span></div>
+      <h2 class="hl">KOSPI 6.16%急落の4,697.51で引け…「ジェンスン・フアン相場」を1日で吐き出し、売りサイドカーまで発動</h2>
+      <p class="deck">前日に取り戻した5,000台を1日で明け渡し、ニューヨーク株式市場も24日にナスダックが1.48%、S&amp;P 500が0.5%下げた</p>
+      <div class="body">
+        <p>KOSPIは25日、前営業日より308.52ポイント(6.16%)安い4,697.51で取引を終えた。前日に6.32%急騰して取り戻した5,000台を、1日で明け渡した形だ。寄り付き直後に下げ幅が4~5%台に広がると、プログラム売り注文の効力を5分間止める売りサイドカーが発動され、サムスン電子とSKハイニックスも序盤に6~7%台の下げで始まった。同じ日、日本の日経225も2.78%安の57,011.62で引けた。外国人の純売り越し額と2銘柄の引け値の下げ幅は、集計ごとに数値が異なるため確定しない。5,006から4,697へ沈んだので、100万ウォン分を持っていたなら、1日で6万ウォンほどが消えた計算だ。</p>
+        <p>発端はニューヨークだ。24日(現地)のニューヨーク株式市場でナスダックは1.48%、S&amp;P 500は0.5%下げて引け、ジェンスン・フアンCEOの復帰で30%超上げていたエヌビディアは下落して始まった。下落の背景として利益確定売りと米国の追加関税準備の報道が挙げられるが、あくまで解釈であり、原因は確定していない。米国が中国・EU・日本・韓国など主要国の関税引き上げを準備中だという報道が出たが、公式発表はなく、品目と税率は未定だ。フアンCEOが復帰の翌日に従業員に過ちをわびたと伝えられるが、表現は報道ごとに異なる。米議会の聴聞会も予定されているが、日付の表記は食い違う。外国人の売りが続くか、米国の半導体株が25日夜の取引でさらに押されるかは、まだ分からない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s1">
+      <div class="kick">政治 · 司法<span>✓ 2社 · 発議・採決の日程は未確定、政党ごとの反応は一部の報道にのみ出た</span></div>
+      <h3 class="hl">キム・ミンソク民主党代表「チョ・ヒデ大法院長の弾劾の迅速な推進、5党連帯を正式に提案」…国民の力「司法破壊連帯」</h3>
+      <div class="one">
+        <p>キム・ミンソク共に民主党代表が25日、最高委員会議でチョ・ヒデ大法院長の弾劾を急いで進めるための5党連帯を正式に提案した。対象は祖国革新党・進歩党・基本所得党・社会民主党で、市民社会へ連帯を広げる意向も示したと伝えられる。民主党は、大法院の全員合議体がさる19日にハン・ドクス前国務総理の事件を無罪の趣旨で破棄差し戻した後、弾劾の推進を党の方針に決めたと伝えられる。国民の力が「内乱克服連帯」ではなく「司法破壊連帯」だと反発したという報道がある。ハン・ドンフン議員は、弾劾が認容されれば議員職を辞すると述べ、ソ・ヨンギョ・パク・ソヌォン議員にも同じ約束をするよう求めた。弾劾訴追案の発議と採決の日程はまだ確定しておらず、連帯の提案に各党が公式の立場を出すかが次の焦点だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>高速道路の走行補助装置関連事故の致死率62.5%…高速道路事故全体の6倍水準</b><em>韓国道路公社の分析で、最近3年間の走行補助装置(ACC)関連事故24件で15人が死亡した。事故の致死率は62.5%と集計された。</em><span>交通 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>最上位圏の受験生、半導体契約学科への志願が2倍に…医学部への集中はやや緩和</b><em>ジンハクサの分析で、自然系の内申1.0等級台の半導体契約学科への志願比率が7.3%から16.3%に増えたと伝えられる。医学部への志願比率はやや下がった。</em><span>教育 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>音楽ストリーミングのタイダル、AIだけで作った曲の削除・禁止の方針を表明</b><em>タイダルがAIだけで作った曲を削除・禁止すると表明したという報道が出た。削除の開始日と規模は報道ごとに異なるため、確定しない。</em><span>音楽・技術 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>チョン・チョンレ「口の軽い人」とソン・ヨンギルを名指し…青瓦台会合の発言めぐり応酬</b><em>ソン・ヨンギル議員が8月の青瓦台会合でチョン・チョンレ前代表の無念さを4時間聞いたという趣旨で話すと、チョン前代表が口を慎めと返した。</em><span>政治 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>米連邦陪審、ファーウェイの営業秘密窃取共謀・銀行詐欺で有罪評決…組織犯罪共謀は無罪</b><em>陪審は24日(現地)、営業秘密窃取共謀と銀行詐欺などを有罪に、組織犯罪共謀を無罪に評決した。有罪・無罪の件数と量刑言い渡しの時期は報道ごとに異なり、確定しない。</em><span>国際 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s2">
+      <div class="kick">社会 · 交通事故<span>✓ 1社 · 死者数は報道ごとに異なり確定できず</span></div>
+      <h3 class="hl">南海高速道路のチルレジャンクションでトレーラー横転後に6重衝突…死者数の報道が食い違う</h3>
+      <div class="body">
+        <p>25日午前4時56分ごろ、慶尚南道キメ市チルレ面の南海高速道路スンチョン方向チルレジャンクション、チルレ川橋付近の1車線でトレーラーが横転し、後続の乗用車5台が相次いで追突した。初期の速報は、トレーラーの運転手1人が死亡、乗用車の乗員2人が心肺停止、3人が重軽傷と伝えた。その後、死者がさらに増えたという報道もあり、死者数は報道ごとに食い違う。</p>
+        <p>トレーラーが横転した原因は調査中と伝えられる。事故処理のためスンチョン方向で車線規制と渋滞があったという報道が出たほか、未明の時間帯で後続車が避ける余裕が短かったはずだという説明も出ている。最終的な死者・負傷者の数と横転の原因は、まだ公式には確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s3">
+      <div class="kick">経済 · 見通し<span>✓ 3社 · 2027年の数値はゴールドマン・サックス1社の見通し</span></div>
+      <h3 class="hl">ゴールドマン・サックス「来年の韓国成長率を3.2%に上方修正」…基準金利の上限3.5%、年末の為替レート1,280ウォンと予想</h3>
+      <div class="body">
+        <p>ゴールドマン・サックスは24日、ソウルで開いた「2027年韓国マクロ経済見通し」のブリーフィングで、来年の韓国経済が3.2%成長すると明らかにした。従来の見通しより引き上げた数値だという報道がある。半導体・人工知能の投資ブームが輸出を押し上げるが、民間消費を中心とした内需は温もりが限られるという指摘も同時に出た。輸出企業が稼いでも家計の消費がそれだけ増えなければ、一般世帯が体感する景気は違いうるという意味だ。</p>
+        <p>基準金利は上限3.5%と見込んだ。来年下半期に物価が2%台で安定すれば、3.5%を超える理由はないという論理だと伝えられる。来年末のウォン・ドル為替レートは1,280ウォンと予想した。為替レートが下がれば、輸入物価と海外決済の負担が減る方向だ。これは1つの投資銀行の見通しであり、実際の基準金利は韓国銀行の金融通貨委員会が決める。金融通貨委員会は26日に開かれる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s4">
+      <div class="kick">行政 · 世宗移転<span>✓ 3社 · 保留となった13か所の移転時期は未定</span></div>
+      <h3 class="hl">中央行政機関31か所・5,460人の世宗移転が確定…22か所は来年まで、9か所は2031年まで、外交・国防など13か所は保留</h3>
+      <div class="body">
+        <p>行政安全部が24日、中央行政機関の移転計画の変更案を確定告示し、31か所の世宗移転が確定した。先月、政府が移転対象に定めた首都圏の44機関(9,929人)のうち、現行法令で可能な31か所(5,460人)をまず確定したと伝えられる。22か所(1,600人)は民間の建物を借りた賃借庁舎で来年(2027年)まで、監査院・警察庁など9か所(3,860人)は新庁舎を建てて2031年までに移すと伝えられる。国家人権委員会が新築庁舎への移転対象に変わり、2031年まで延びたという報道もある。</p>
+        <p>外交部・統一部・国防部・法務部など13か所(4,469人)は法令の改正が必要なため今回は外れ、改正後に追加で告示されると伝えられる。チョ・サンホ世宗市長は25日に歓迎の立場を出し、賃借庁舎の候補地の確保など支援に乗り出すと明らかにしたほか、年6千戸の住宅供給を約束したという報道もある。医療・大学・放送機関の追加誘致と行政首都特別法の制定は政府に要請した。13か所がいつ移転対象として告示されるかは決まっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>31か所</b><span>今回確定した移転機関(5,460人)</span></div>
+        <div><b>22か所</b><span>来年(2027年)まで賃借庁舎に移転</span></div>
+        <div><b>2031年</b><span>新築庁舎9か所の移転期限</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>南海高速道路6重衝突事故で亡くなった人は1人だけだ</b> <span>初期の速報は1人死亡・2人心肺停止と伝えたが、その後死者がさらに増えたという報道もあり、集計が食い違う。警察の最終集計は確認されていない。</span></div>
+        <div><b>国会がすでにチョ・ヒデ大法院長の弾劾訴追案を議決した</b> <span>25日に民主党代表が行ったのは、5党連帯の正式な提案だ。弾劾訴追案は発議も採決も確定していない。</span></div>
+        <div><b>中央行政機関がすべて来年までに世宗へ移る</b> <span>行政安全部が確定告示したのは31か所と伝えられる。このうち22か所は来年まで賃借庁舎に、9か所は新庁舎を建てて2031年までに移ると伝えられ、外交部など13か所は法令の改正後に追加で告示されるという。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 水 11月25日</b><span>米国のニューヨーク市場が韓国時間の夜に開く。エヌビディアと半導体株が前日の下げを続けるのか、反発するのかが、26日の国内半導体株の出発点になる。</span><b>あす · 木 11月26日</b><span>韓国銀行の金融通貨委員会が開かれ、基準金利を決める。ゴールドマン・サックスの金利見通しは、1つの投資銀行の予測にすぎない。</span><b>今週以降</b><span>米議会のジェンスン・フアンの聴聞会は、日付の表記が報道ごとに異なり確定しにくく、チョ・ヒデ大法院長の弾劾訴追案の発議時期も決まっていない。中央行政機関13か所の追加告示も時期が未定だ。</span><b>読者へ</b><span>事故速報の死者数や取引時間中の下げ幅のような数字は、時間がたつと変わる。引け値と、警察・政府の公式発表が出た後の数字を基準に読もう。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "s0":{"kick": "市場 · 株式市場 · ✓ 4社 · 外国人の純売り越し額と銘柄別の引け値の下げ幅は集計が食い違うため書かず", "title": "KOSPI 6.16%急落の4,697.51で引け…「ジェンスン・フアン相場」を1日で吐き出し、売りサイドカーまで発動", "what": "KOSPIは25日、308.52ポイント(6.16%)下げて4,697.51で引けた。寄り付き直後に下げ幅が4~5%台に広がると売りサイドカーが発動され、プログラム売り注文の効力が5分間止まった。サムスン電子とSKハイニックスは序盤に6~7%台の下げで始まり、引け値の下げ幅と外国人の純売り越し額は集計ごとに異なるため、確定しない。24日(現地)のニューヨーク株式市場でナスダックは1.48%、S&P 500は0.5%下げて引け、前日に30%超急騰していたエヌビディアは下落して始まった。同じ日、日本の日経225は2.78%安の57,011.62で引けた。米国が主要国の関税引き上げを準備中だという報道が出たが、公式発表は確認されていない。", "why": "KOSPIの時価総額でサムスン電子とSKハイニックスが占める割合が大きく、半導体株1つの下げ幅が指数全体を大きく押し下げる。今回は前日に6.32%上げた後に6.16%下げ、2日を合わせると事実上元の位置に戻った。サイドカーは、先物市場の急変が現物市場へ波及する速度を遅らせる仕組みだ。", "me": "年金やファンドで国内株を持っているなら、1日に6%前後の上げ下げが今の局面で実際に起こりうると確認したことになる。大きな金額を一度に売買する前に、保有銘柄の半導体への偏りを点検してみる価値がある。", "a": "一時的な調整とみる見方は、今回の下げ幅が前日の急騰分を戻したもので、指数が2日前の水準に戻っただけだと説明する。半導体の業況そのものが折れた証拠はまだ出ていないという点も根拠に挙げる。", "b": "警戒する見方は、利益確定に加え、関税準備の報道、米議会の聴聞会のような政治・法的な変数が残っているとみる。指数が少数の半導体銘柄に偏っていて変動性が大きくなったという指摘だ。", "say": "確認されたのは、引け値と下落率、サイドカーの発動、ニューヨーク株式市場の下落だ。外国人の純売り越し額とサムスン電子・SKハイニックスの引け値の下げ幅、聴聞会の日付は、報道ごとに食い違うため書かなかった。下落の原因として挙がる利益確定と関税への懸念は解釈だ。きょうは、韓国時間の夜のニューヨーク市場で、エヌビディアと半導体株がどこで止まるかを見ることになる。", "src": "韓国経済(KOSPI急落と売りサイドカー、11/25) · 電子新聞(サムスン電子とSKハイニックスの急落、11/25) · SBS(KOSPI急落、11/25) · 京郷新聞(寄り付き直後の4%急落、11/25)"},
+    "s1":{"kick": "政治 · 司法 · ✓ 2社 · 発議・採決の日程は未確定、政党ごとの反応は一部の報道にのみ出た", "title": "キム・ミンソク民主党代表「チョ・ヒデ大法院長の弾劾の迅速な推進、5党連帯を正式に提案」…国民の力「司法破壊連帯」", "what": "キム・ミンソク共に民主党代表は25日、最高委員会議でチョ・ヒデ大法院長の弾劾を急いで進めるための5党連帯を正式に提案した。対象は祖国革新党・進歩党・基本所得党・社会民主党だ。市民社会へ連帯を広げる意向も示したと伝えられる。民主党は、大法院の全員合議体がさる19日にハン・ドクス前国務総理の事件を無罪の趣旨で破棄差し戻した後、弾劾の推進を党の方針に決めたと伝えられる。国民の力が「司法破壊連帯」だと反発したという報道がある。ハン・ドンフン議員は、弾劾が認容されれば議員職を辞すると述べ、ソ・ヨンギョ・パク・ソヌォン議員にも同じ約束をするよう求めた。", "why": "大法院長の弾劾訴追案は国会の在籍議員の過半数の賛成で議決され、憲法裁判所が認容の可否を判断する。民主党だけでは足りない力を少数政党と分け合おうとする提案なので、5党が同じ日付と同じ文案で合意するかが、実際の推進力を決める。司法府のトップを狙った弾劾は、裁判の独立をめぐる論争に広がりやすい。", "me": "今すぐ暮らしに及ぶことはないが、この論争の結果次第で、大法院の判決の権威とその後の裁判日程が影響を受けうる。政治的な攻防が激しくなるときほど、どの言葉が誰の主張なのかを分けて読むほうがよい。", "a": "推進する側は、大法院がハン・ドクス前総理の事件を無罪の趣旨で差し戻した判断が不当だとみて、憲法が定めた弾劾の手続きで責任を問うという立場だ。5党が力を合わせてこそ速度が出るという論理を挙げる。", "b": "反対する側は、判決に不満があるからと大法院長を弾劾するのは三権分立を揺るがすことだと批判する。弾劾案が強行されれば政治的な対立を深めるだけだという懸念も出ている。", "say": "確認されたのは、25日の5党連帯の正式な提案とハン・ドンフン議員の辞職発言だ。弾劾訴追案の発議・採決日程と5党の共同案の文案、各党の公式の立場は確認されておらず、世論調査の結果も調査ごとに異なるため引用しない。きょうは、4つの政党が公式の立場を出すかと、発議の日付が決まるかを見ることになる。", "src": "朝鮮日報(キム・ミンソクの5党連帯正式提案とハン・ドンフンの発言、11/25) · 東亜日報(5党連帯提案の速報、11/25)"},
+    "s2":{"kick": "社会 · 交通事故 · ✓ 1社 · 死者数は報道ごとに異なり確定できず", "title": "南海高速道路のチルレジャンクションでトレーラー横転後に6重衝突…死者数の報道が食い違う", "what": "25日午前4時56分ごろ、慶尚南道キメ市チルレ面の南海高速道路スンチョン方向チルレジャンクション、チルレ川橋付近の1車線でトレーラーが横転した。後続の乗用車5台が横転したトレーラーに相次いでぶつかった。初期の速報は、トレーラーの運転手1人が死亡、乗用車の乗員2人が心肺停止、3人が重軽傷だった。その後、死者がさらに増えたという報道もあり、死者数は報道ごとに食い違う。トレーラーが横転した原因は調査中と伝えられる。", "why": "大型貨物車が横転すると道路の1車線をふさぎ、後続車が避ける余裕なく追突する連鎖事故につながりやすい。未明は視界と反応時間が短く、被害が大きくなる。速報段階の死者数は、初期の集計と後続の集計が変わりうる。", "me": "未明の時間帯に高速道路を走るなら、前の車との距離を普段より十分にとることが、連鎖追突を避ける最も現実的な方法だ。事故区間を通る道なら、午前の渋滞が解消したか、交通情報を確認してみる価値がある。", "a": "事故の原因を運転と積載に求める見方は、トレーラーがなぜ横転したかが核心だとみる。ドライブレコーダーの映像分析のような原因調査がこの方向につながるという説明だ。", "b": "道路と安全の体制に求める見方は、未明の高速道路で大型貨物車の事故が連鎖追突に広がらないようにする対策が十分だったかを問う。ただし、今回の事故でこうした要因が確認されたわけではない。", "say": "確認されたのは、事故の時刻と場所、トレーラー横転後の乗用車5台の追突だ。死者は、初期の速報の1人と、その後さらに多いという報道が食い違い、確定できておらず、トレーラーが横転した原因と最終的な負傷者数も確認されていない。きょうは、警察の公式集計と原因調査の結果を見ることになる。", "src": "京郷新聞(トレーラー横転6重衝突の速報、11/25)"},
+    "s3":{"kick": "経済 · 見通し · ✓ 3社 · 2027年の数値はゴールドマン・サックス1社の見通し", "title": "ゴールドマン・サックス「来年の韓国成長率を3.2%に上方修正」…基準金利の上限3.5%、年末の為替レート1,280ウォンと予想", "what": "ゴールドマン・サックスは24日、ソウルで「2027年韓国マクロ経済見通し」のブリーフィングを開き、来年の韓国の成長率を3.2%と示した。従来の見通しより引き上げた数値だという報道がある。半導体・人工知能の投資ブームが輸出を押し上げるが、民間消費を中心とした内需は温もりが限られると指摘した。基準金利は上限3.5%と示した。来年末のウォン・ドル為替レートは1,280ウォンと見通した。これは1つの投資銀行の見通しだ。", "why": "輸出が半導体ブームで好調でも、民間消費が弱ければ体感景気は違うという指摘だ。基準金利の上限見通しは、貸出の利子と預金金利の方向を推し量る手がかりで、為替レートの見通しは、輸入物価と海外旅行・海外通販の費用につながる。ただし、1つの投資銀行の予測なので、実際の流れは変わりうる。", "me": "貸出があるなら、金利が3.5%を超えにくいという見通しは、利子負担の上限を見積もる参考になる。海外決済や旅行の計画があるなら、為替レートが下がりうるという見通しと現在の為替レートを一緒に確認しよう。", "a": "楽観する見方は、半導体・人工知能の投資ブームが輸出と成長率を押し上げ、物価が安定すれば金利の負担もこれ以上大きくならないとみる。", "b": "慎重な見方は、成長率が上がっても内需が弱く、家計が体感する回復は遅れうるとみる。同じ日にKOSPIが急落したように、半導体への偏りが変数だという指摘も可能だ。", "say": "確認されたのは、ゴールドマン・サックスが3.2%成長、基準金利の上限3.5%、年末の為替レート1,280ウォンを示したという事実だ。これは1つの機関の予測であり、韓国銀行や政府の公式見通しではない。きょうは、26日の金融通貨委員会の決定を見ることになる。", "src": "聯合ニュース(ゴールドマン・サックスの来年成長率3.2%と基準金利上限3.5%、11/24) · 韓国経済(内需の温もりが限られるとの指摘、11/24) · 東亜日報(為替レート1,280ウォンの予想、11/24)"},
+    "s4":{"kick": "行政 · 世宗移転 · ✓ 3社 · 保留となった13か所の移転時期は未定", "title": "中央行政機関31か所・5,460人の世宗移転が確定…22か所は来年まで、9か所は2031年まで、外交・国防など13か所は保留", "what": "行政安全部は24日、中央行政機関の移転計画の変更案を確定告示し、31か所の世宗移転が確定した。先月、政府が移転対象に定めた首都圏の44機関(9,929人)のうち、現行法令で可能な31か所(5,460人)をまず確定したと伝えられる。22か所(1,600人)は民間の建物を借りて来年(2027年)まで、監査院・警察庁など9か所(3,860人)は新庁舎を建てて2031年までに移すと伝えられる。外交部・統一部・国防部・法務部など13か所(4,469人)は、法令の改正後に追加で告示されるという。チョ・サンホ世宗市長は25日に歓迎の立場を出した。", "why": "移転機関が増えれば、世宗の人口と住宅・交通・医療の需要が一度に大きくなる。賃借庁舎は早く移せるが仮設の性格が強く、新築庁舎は5年近くかかって日程が長い。13か所が外れたということは、外交・国防のような中核省庁の移転が、法令改正という政治の手続きにかかっているという意味だ。", "me": "世宗で働いたり暮らしたりする予定があるなら、移転機関と時期によって、住宅・通勤の需要が変わる。該当機関に勤める公務員の家族なら、所属機関が22か所と9か所、保留の13か所のどこなのかから確認しなければならない。", "a": "歓迎する側は、世宗が行政首都として機能するには機関の移転が必要で、居住・医療・大学の基盤も一緒に育てるべきだとみる。世宗市は行政首都特別法の制定も要請した。", "b": "慎重な側は、移転の確定が公務員の二重生活と住宅需要の不安を大きくしうるし、中核省庁が外れて「半分だけの移転」だという指摘が出うるとみる。ただし、こうした評価は今回の告示自体で確認されたものではない。", "say": "確認されたのは、31か所・5,460人の確定、22か所は来年まで、9か所は2031年までという日程、13か所の保留だ。保留の13か所がいつ告示されるか、年6千戸の住宅供給のような世宗市の支援策が実際に履行されるかは確認されていない。きょうは、行政安全部の機関別の細かな日程の案内が出るかを見ることになる。", "src": "忠南日報(世宗市の歓迎の立場、11/25) · デイリー韓国(世宗市の行政首都支援方針、11/25) · ニュース・イン・ニュース(世宗市長の31か所移転歓迎と支援策、11/25)"},
+    "i1":{"kick": "交通 · ✓ 報道1件", "title": "高速道路の走行補助装置関連事故の致死率62.5%…高速道路事故全体の6倍水準", "what": "韓国道路公社が最近3年間の高速道路の交通事故を分析した結果、走行補助装置(ACC)関連の事故は24件で、15人が死亡し、致死率が62.5%と集計された。これは高速道路事故全体の致死率の約6倍だという比較も一緒に出た。韓国道路公社は、ACCは運転を代わる機能ではなく補助手段だとして、前方の注視を呼びかけたと伝えられる。", "why": "致死率は事故件数に対する死者数であり、事故の原因やACCの使用率を反映した危険度の比較ではない。それでも、装置を信じて前方を見ないまま高速で走り、事故が起きると被害が大きくなるという警告と読める。事故件数が24件と少なく、致死率が大きく動きうる。", "me": "ACCを使うにしても、手をハンドルに置き、視線は前に置く習慣が必要だ。突然の渋滞や停止した車の前では、自分でブレーキを踏む準備ができていなければならない。", "a": "道路公社側は、ACCは補助手段にすぎないので、運転者が前方を注視し、危急のときは自分で制動しなければならないという立場だ。", "b": "別の見方は、装置の限界と運転者の過信を一緒に指摘する。事故件数が24件と少なく致死率が大きく動くため、数字を慎重に読むべきだというものだ。", "say": "確認されたのは、道路公社の分析の24件・15人・62.5%と、全体の約6倍という比較だ。年度別の集計と今年の数値は1社の報道にしかなく、書かなかった。きょうは、道路公社の続報や対策が出るかを見ることになる。", "src": "聯合ニュース(ACC関連事故の致死率62.5%、11/25)"},
+    "i2":{"kick": "教育 · ✓ 報道1件", "title": "最上位圏の受験生、半導体契約学科への志願が2倍に…医学部への集中はやや緩和", "what": "2027学年度の大学入試の随時募集で、最上位圏の受験生の医学部への集中がやや緩み、半導体契約学科への志願が増えたという分析が出た。ジンハクサの分析によると、自然系の内申1.0等級台のうち、半導体契約学科に志願した比率は7.3%から16.3%に高まったと伝えられる。医学部に1か所以上志願した比率は89.8%から87.5%に下がったという。具体的な比率は1社の報道に出た数値だ。", "why": "就職が保証された契約学科と半導体企業の業績が志願を引きつけたという解釈がある。ただし、「2倍」は特定の標本の結果で、医学部への志願比率がなお85%を超えており、集中が大きく解けたとはみにくい。医学部の増員分が地域医師選抜で、一般の随時募集の選抜人数が減ったという分析もある。", "me": "受験生や保護者なら、この数値が全体の志願状況ではなく、1社の最上位圏の標本だという点を考慮して読む必要がある。学科の選択は、募集要項と契約条件を直接確認することが先だ。", "a": "集中の緩和を肯定的にみる見方は、最上位圏が医学部1つに集まっていた構図が、半導体のような別の進路に分散するシグナルだとみる。", "b": "慎重な見方は、医学部への志願比率がなお高く標本が小さいため、一時的な変化かもしれないとみる。選抜人数の変化のような制度要因が影響した可能性も考える必要があるという。", "say": "確認されたのは、半導体契約学科への志願が増え、医学部への集中がいくらか緩んだという分析の方向だ。具体的な志願比率と標本の規模、他機関の分析との違い、志願増加の原因は確認されていない。きょうは、定時募集の志願戦略と、他機関の分析が出るかを見ることになる。", "src": "聯合ニュース(半導体契約学科の志願率2倍、11/25)"},
+    "i3":{"kick": "音楽・技術 · ✓ 報道1件", "title": "音楽ストリーミングのタイダル、AIだけで作った曲の削除・禁止の方針を表明", "what": "音楽ストリーミングサービスのタイダルが、AIだけで作った曲を削除し禁止すると表明したという報道が出た。AIツールの助けを受けた曲は引き続き許可するが、AIだけで作った曲は許可しないという趣旨と伝えられる。削除の開始日と削除した曲数は報道ごとに異なり、確定しない。最近アップロードされた曲のうちAI生成物の割合と再生回数に関する数値もタイダル側の説明として伝えられるが、確認できておらず載せない。", "why": "AIで大量生成された曲がストリーミングの一覧を埋め、実際の創作者の露出と収益配分がぼやけるという問題が大きくなっている。サービスが曲を完全に消すのは、表示とフィルタリングにとどまった他のサービスより強い措置だ。", "me": "音楽をストリーミングで聴く人は、今後、おすすめ一覧でAI曲の割合がサービスごとに変わりうる。好きな音楽がどう作られたかが表示されるかを確認してみる価値がある。", "a": "禁止を歓迎する見方は、著作権と収益配分を守り、プラットフォームの質を保つ措置だとみる。", "b": "慎重な見方は、AI補助とAI単独の境界をどう分けるか、検知技術の誤りをどう扱うかが不明確だとみる。", "say": "確認されたのは、AIだけで作った曲を禁止するという方針が報じられたことだ。削除の開始日と削除した曲数、検知方式は報道ごとに異なり確定しにくく、他のサービスの対応はまだ変わっていない。きょうは、他のストリーミングサービスが似た措置を出すかを見ることになる。", "src": "Variety(タイダルのAI音源禁止、11/24)"},
+    "i4":{"kick": "政治 · ✓ 報道2件", "title": "チョン・チョンレ「口の軽い人」とソン・ヨンギルを名指し…青瓦台会合の発言めぐり応酬", "what": "ソン・ヨンギル議員が、8月の青瓦台会合に関連して、チョン・チョンレ前代表の無念さを4時間聞いたという趣旨で話したと伝えられる。チョン・チョンレ前代表はソン・ヨンギル議員を「口の軽い人」と言い、口を慎めという趣旨の言葉も残した。報道は、今回の争いが党内の対立と絡んでいると伝える。会合の実際の内容は、どちらの話も独立して確認されておらず、大統領室の公式の立場も確認されていない。", "why": "大統領との非公開の会合の内容を一方が明かし、党内の対立が再び公開の言い争いに広がった。同じ場の話をそれぞれ違うように語りうるため、事実関係は当事者の発言に依存する。一方の話だけで会合の雰囲気を断定しにくいことも、攻防の背景だ。", "me": "政治家のSNSや放送での発言は意図を持った主張でありうるので、誰がどんな文脈で話したかを一緒に読む必要がある。党指導部と議員の対立が政策にどう影響するかは、まだ分からない。", "a": "ソン・ヨンギル側は、会合で誤解が解けたという趣旨で話したと伝えられる。", "b": "チョン・チョンレ側は、非公開の会合の内容を明かしたことを問題にして、口を慎めと対抗した。", "say": "確認されたのは、2人の公開発言と反応だ。会合の実際の内容は、どちらの話も独立して確認されていない。きょうは、大統領室や党指導部の立場が出るかを見ることになる。", "src": "朝鮮日報(ソン・ヨンギルの発言とチョン・チョンレの反応、11/25) · エネルギー経済新聞(チョン・チョンレの「口の軽い人」発言、11/25)"},
+    "i5":{"kick": "国際 · ✓ 報道2件", "title": "米連邦陪審、ファーウェイの営業秘密窃取共謀・銀行詐欺で有罪評決…組織犯罪共謀は無罪", "what": "米国の連邦裁判所の陪審は24日(現地)、中国の通信機器メーカーのファーウェイについて、営業秘密窃取共謀と銀行詐欺などを有罪と評決した。組織犯罪共謀の容疑は無罪と評決した。一部の報道は、電信詐欺やイラン制裁違反も有罪だと伝え、有罪・無罪の件数と範囲は報道ごとに異なる。ファーウェイ側が有罪の部分を争う意向だという報道があるが、確認されていない。量刑の言い渡しの時期も確定していない。", "why": "ファーウェイは米国の制裁と輸出統制の中心にある企業なので、刑事の有罪評決は米中技術対立の新たな変数だ。最も重い容疑である組織犯罪共謀が無罪になったのは、双方とも自分の主張を一部認められたという意味だ。", "me": "ファーウェイの装置や半導体のサプライチェーンと絡む韓国企業には、米中対立が長引くというシグナルだ。直接的な国内への影響は、まだ確認されていない。", "a": "米国側は、長い捜査の末に営業秘密の窃取と詐欺が認められたという立場だ。", "b": "ファーウェイ側は、組織犯罪共謀が無罪になった点を挙げて検察の論理が否定されたと主張し、有罪の部分を争う意向だという報道がある。", "say": "確認されたのは、営業秘密窃取共謀と銀行詐欺などの有罪、組織犯罪共謀の無罪だ。全体の有罪・無罪の件数、電信詐欺・イラン制裁違反を含むかどうか、控訴の方針、量刑言い渡しの時期は、報道ごとに異なり確定しにくい。きょうは、ファーウェイの公式の立場と米国政府の反応を見ることになる。", "src": "京郷新聞(ファーウェイの有罪評決、11/25) · BBC(ファーウェイの営業秘密は有罪・組織犯罪は無罪、11/25)"}
+  };
+  const G = {
+    "売りサイドカー":{"f": "金融", "d": "先物価格が大きく急落したとき、プログラム売り注文の効力を5分間止める株式市場の安定装置。", "w": "25日の序盤、KOSPIの急落で発動された。"},
+    "利益確定":{"f": "金融", "d": "上がった株を売って利益を確定すること。一度に集中すると株価が下がる。", "w": "エヌビディアの下落の原因に挙げられた。"},
+    "純売り越し":{"f": "金融", "d": "一定期間に売った金額が買った金額より多いこと。", "w": "外国人の純売り越し額は集計ごとに異なるため載せなかった。"},
+    "全員合議体":{"f": "法律", "d": "大法官全員(裁判長を除く)が一緒に審理する大法院の裁判部。重要な事件や判例の変更のときに使う。", "w": "ハン・ドクス前総理の事件を破棄差し戻した裁判部だ。"},
+    "破棄差し戻し":{"f": "法律", "d": "上級裁判所が原審の判決を破り、改めて審理するよう下級裁判所に戻す決定。", "w": "ハン・ドクス前総理の事件で、無罪の趣旨で出た。"},
+    "弾劾訴追案":{"f": "憲法", "d": "高位公職者を弾劾してほしいと国会が憲法裁判所に求めるために議決する案件。", "w": "チョ・ヒデ大法院長の弾劾訴追案の発議時期が争点だ。"},
+    "金融通貨委員会":{"f": "金融", "d": "韓国銀行の基準金利を決める最高意思決定機関。", "w": "26日の会議で基準金利を決める。"},
+    "基準金利":{"f": "金融", "d": "韓国銀行が定める金利で、市中の貸出・預金金利の基準になる。", "w": "ゴールドマン・サックスは来年の上限を3.5%とみた。"},
+    "民間消費":{"f": "経済", "d": "家計が商品とサービスを買うのに使う支出。内需の大きな柱だ。", "w": "内需の温もりが限られるという指摘に出てくる指標だ。"},
+    "致死率":{"f": "統計", "d": "事故や病気の件数のうち死亡につながった割合。ここでは死者数を事故件数で割った値だ。", "w": "ACC関連事故の致死率が62.5%と集計された。"},
+    "走行補助装置":{"f": "交通・技術", "d": "前の車との距離を保って速度を自動で調節するなど、運転を助ける装置。運転を代わりはしない。", "w": "高速道路事故の致死率が高く出た。"},
+    "契約学科":{"f": "教育", "d": "企業や機関と契約を結び、卒業後の採用を約束する大学の学科。", "w": "半導体契約学科への志願が増えた。"},
+    "聴聞会":{"f": "法律・政治", "d": "議会が重要な案件について、証人と専門家の陳述を公開で聞く手続き。", "w": "米議会がジェンスン・フアンの聴聞会を予定している。"},
+    "組織犯罪共謀":{"f": "法律", "d": "組織的な犯罪活動を一緒に企てた容疑。米国連邦法の最も重い容疑の1つだ。", "w": "ファーウェイはこの容疑で無罪の評決を受けた。"},
+    "賃借庁舎":{"f": "行政", "d": "政府機関が民間の建物を借りて使う庁舎。", "w": "22か所は来年まで賃借庁舎に移る。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
