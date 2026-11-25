@@ -1,0 +1,338 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>4,697.51</b>KOSPI · 11/25終値 · 前営業日比6.16%下落</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>KOSDAQ · 終値の騰落の向きが直前の終値と合わないため掲載せず</div>
+    </div>
+    <div class="dateline"><span>第53号 · 朝刊</span><b>2026年11月26日 木曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s0">
+      <div class="kick">金融 · セキュリティー<span>報道照合 ✓ 4社 · 流出項目・侵入経路・ハッカーの身元は未確認</span></div>
+      <h2 class="hl">韓国投資貯蓄銀行にハッキング、顧客8万6,433人の個人情報が流出…貯蓄銀行業態で最大規模</h2>
+      <p class="deck">22日夜からモバイルホームページに外部からの異常なアクセスがあったと会社が告知し、9月以降にハッキング被害が確認された貯蓄銀行は7社に増えた。</p>
+      <div class="body">
+        <p>韓国投資金融持株の子会社である韓国投資貯蓄銀行でハッキング事故が発生し、顧客8万6,433人の個人情報が流出した。会社は、22日午後10時42分から25日午前10時2分まで2回にわたってモバイルホームページに外部からの異常なアクセスがあり、その過程で顧客情報が抜き取られたと25日に告知した。貯蓄銀行は、市中銀行より敷居が低く、中・低信用の顧客が多く利用する第2金融圏の金融会社だ。業態で確認された個人情報流出としては、今回が最大規模だ。アクセスが初めて始まった22日夜から最後のアクセスが終わった25日午前までは59時間余りである。これまで被害が最も大きかったイェガラム貯蓄銀行が約4万人と推定されると明らかにしたことがあるので、今回の規模はその2倍ほどだ。金融圏の連鎖ハッキングは9月末、イェガラム貯蓄銀行でハッカーのサーバーアクセスが確認されて表面化し、その後、市中銀行とキャピタル会社、セマウル金庫へ被害報告が続いた。今回の件で、9月以降に侵害事故が確認された貯蓄銀行は計7社になった。</p>
+        <p>同じ期間にOK貯蓄銀行は顧客518人、ハナ貯蓄銀行は552人の情報が出たと確認した。韓国投資貯蓄銀行の被害者数は、この2社の150倍を超える。市中銀行では、新韓銀行が約2万5千人、KB国民銀行とハナ銀行がそれぞれ119人と89人の流出を確認したことがある。モバイルホームページはアプリではなく、携帯電話のウェブブラウザーで接続するサイトを指し、会社は外部アクセスが行われた地点をここと特定した。名前・連絡先のような基本情報だけが漏れても金融機関をかたる電話やメッセージに使われうるので、どの項目が抜き取られたかが核心だが、流出項目の範囲は確認されていない。ハッカーの身元と侵入経路、金融当局の点検着手の有無もまだ分かっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s1">
+      <div class="kick">経済 · 金利<span>報道照合 ✓ 4社 · 引き上げの是非・幅・票決結果は未確定</span></div>
+      <h3 class="hl">金融通貨委員会を翌日に控え国庫債券金利が軒並み低下、3年物は年3.583%…韓国銀行が26日に基準金利引き上げの是非を決定</h3>
+      <div class="one">
+        <p>韓国銀行の金融通貨委員会が26日、基準金利を引き上げるかを決める。これを翌日に控えた25日、国庫債券金利は軒並み下がり、指標物である3年物は年3.583%に下がった。債券金利が下がったということは、債券価格が上がったという意味だ。今回の会議は今年最後の金融通貨委員会で、証券会社は基準金利が3.25%に上がるとの見通しを出した。SK証券は、来年2月に3.50%までもう1回上がると見た。同じ日、KOSPIは6.16%下げた4,697.51で取引を終えたが、債券金利低下の原因について韓国銀行や政府が説明した内容はない。金利を上げると、変動金利の貸出利子は増え、預金金利は上がる余地が生まれる。エコノミスト23人を対象にしたある調査では21人が引き上げを予想したとの報道があったが、ほかでは同じ数値は確認されていない。引き上げの是非と幅、委員の票決結果、その後の金利経路についての韓国銀行の説明は26日に公開される。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>昌原地裁の判事会議、チョ・ヒデ弾劾の推進後初の集団声明を出し「深い憂慮」</b><em>昌原地裁の全体判事会議が25日、裁判を理由とした法官弾劾訴追の推進に深い憂慮を示した。30日の全国法官代表会議が分水嶺とされ、司法の独立の議案が採択される見通しは、1社の単独報道にとどまる。</em><span>司法 · ✓ 報道5件</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>忠清南道泰安の沈没漁船ヘグァン号、行方不明の船員7人の捜索難航…26日に海軍艦艇・水中無人探査機を投入予定</b><em>海警は25日、潜水隊員8人を4班に分けて順次投入したが、悪天候で航空・潜水の捜索が難しかった。26日には海軍艦艇が到着し、天候が許せば水中無人探査機を入れる予定だ。</em><span>社会 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>金融委、2027年度公認会計士の最低選抜予定人数を1,100人に50人減らす…3年連続の削減</b><em>金融委員会は24日の資格・懲戒委員会で、来年の選抜人数を今年より50人少ない1,100人と定めた。AI活用による低年次の会計士の代替効果などを考慮したと明らかにした。</em><span>金融 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>LH、5年間で公的住宅50万戸を着工…李大統領「超過達成を」、中間層も選ぶ住まいのはしごに</b><em>李在明大統領は25日、ソウル恩平区の公的住宅の現場を訪れ、LHの5年間50万戸着工計画を超過達成するよう求めた。立地・面積・品質で中間層も選べなければならないとも述べた。</em><span>住居 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>リュ・ジン韓国経済人協会会長、来年2月の任期満了を前に3選の可能性を示唆…「現場が苦労しているのに遊んではいられない」</b><em>来年2月に任期が終わるリュ・ジン韓国経済人協会会長が25日、3選の可能性を示唆し、「現場が苦労しているのに遊んではいられない」と語った。正式な出馬表明や選出日程は確認されていない。</em><span>経済 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s2">
+      <div class="kick">経済 · 財界訴訟<span>報道照合 ✓ 4社 · 和解条件・裁判部の判断は未確認</span></div>
+      <h3 class="hl">ノ・ソヨン館長、チェ・テウォン会長側の和解勧告要請に同意しないとの書面を提出…「真摯さがあるなら直ちに上告の取り下げを」</h3>
+      <div class="body">
+        <p>ノ・ソヨン・アートセンター・ナビ館長側は25日、チェ・テウォンSKグループ会長側の和解勧告要請に同意しないという趣旨の書面を裁判部に提出した。ノ館長の代理人は声明で、チェ会長に早期解決の真摯さがあるなら直ちに上告を取り下げてほしいと述べた。チェ会長は23日、財産分与の再上告審を担当する大法院第2部(主審キム・ソンス大法官)に書面を出しており、今回の拒否はそれに対する答えだ。チェ会長は同じ日、この拒否について真摯さが疑われるという趣旨で反応し、趣旨が貶められて複雑な心境だと明らかにした。</p>
+        <p>和解勧告は、裁判部が判決で終わらせず、双方が合意できるよう案を示したり合意を勧めたりする手続きだ。一方が同意しなければ成立しにくい。上告を取り下げると、大法院はそれ以上判断せず、控訴審判決がそのまま確定する。具体的な和解条件と金額は確認されておらず、裁判部が和解勧告をするのか、宣告をいつ行うのかも明らかにしていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s3">
+      <div class="kick">社会 · 捜査<span>報道照合 ✓ 3社 · チョン牧師の陳述・裁判所の審査日程は未確認</span></div>
+      <h3 class="hl">公訴庁、チョン・グァンフン牧師の拘束令状を請求…教会の資金102億ウォンを自由統一党に寄付した疑い</h3>
+      <div class="body">
+        <p>ソウル北部地方公訴庁は25日、サランジェイル教会のチョン・グァンフン牧師に対する拘束令状を請求した。チョン牧師は、教会資金102億ウォンほどを自由統一党に寄付した疑いが持たれている。これに先立ち、ソウル警察庁広域捜査団反腐敗捜査隊が23日に令状を申請し、公訴庁は25日午前10時から拘束令状請求前の被疑者面談を行い、面談結果と警察の捜査記録を検討して請求の可否を決めると明らかにした。チョン牧師はこの日午前9時43分ごろ庁舎に出頭し、政治資金法違反などの容疑が適用された。</p>
+        <p>令状が請求されたからといって拘束が決まったわけではない。裁判所が令状実質審査を開き、容疑の疎明の程度と逃走・証拠隠滅のおそれを検討して発付の可否を決める。政治資金法は、法人・団体の政治資金の寄付を原則として禁じており、教会資金を政党に出したことがこれに当たるかが争点だ。チョン牧師が面談で、引退した牧師なので知らなかったという趣旨で話したとの報道があるが、ほかでは確認されていない。裁判所の審査日程は明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s4">
+      <div class="kick">安保 · 国会<span>報道照合 ✓ 3社 · 本会議の議決日程は未確認</span></div>
+      <h3 class="hl">清海部隊の派兵延長同意案が国会国防委の小委員会を通過…李大統領「任務は広げるが戦争不介入の原則は守る」</h3>
+      <div class="body">
+        <p>清海部隊のソマリア海域およびオマーン南方外洋への派遣を延長する修正同意案が25日、国会国防委員会の法案小委員会を通過した。作戦範囲をソマリアのアデン湾海域からオマーン南の海上まで広げるのが骨子で、同意案には戦争不介入、将兵の安全最優先、自衛権の原則順守が明記された。李在明大統領は25日、「わが船舶と海上輸送路の安全確保のための清海部隊の任務は広げるが、戦争不介入の原則ははっきりと守る」と述べた。</p>
+        <p>大統領の説明では、清海部隊の活動範囲からホルムズ海峡とその付近は除外される。李大統領は、国民の命と安全を守ることに一寸の疎かさもあってはならず、経済の生命線である海路と船舶の安全を確保することも国家の重要な責務だと述べた。派兵延長同意案は通常、常任委員会の全体会議と本会議の議決を経なければならないので、小委の通過は最初の関門だ。国防委全体会議と本会議の日程は明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>派兵延長同意案<i>安保</i></b><p>海外に送った軍部隊の任務・地域・期間を続けるには国会の同意を受けなければならず、その同意を求める議案だ。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>清海部隊がホルムズ海峡で作戦することになった</b> <span>李在明大統領は25日、ホルムズ海峡とその付近は清海部隊の活動範囲から除外されると述べた。広がる範囲はアデン湾からオマーン南の海上までだ。</span></div>
+        <div><b>チョン・グァンフン牧師が拘束された</b> <span>ソウル北部地方公訴庁が25日に拘束令状を請求しただけで、拘束の可否は裁判所が令状実質審査を経て決める。審査日程は公開されていない。</span></div>
+        <div><b>ノ・ソヨン館長とチェ・テウォン会長が財産分与訴訟で合意した</b> <span>ノ館長の代理人は25日、チェ会長側の和解勧告要請に同意しないという書面を裁判部に出したと明らかにした。合意は成立していない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 木 11月26日</b><span>韓国銀行の金融通貨委員会が今年最後の基準金利の決定を出す。海軍艦艇がヘグァン号の捜索現場に到着し、天候が許せば水中無人探査機が投入される。</span><b>今週</b><span>30日に全国法官代表会議が開かれる。司法の独立の議案が上がるかが注目される。清海部隊の派兵延長同意案は、国防委全体会議と本会議の手続きが残っている。</span><b>その後</b><span>チョン・グァンフン牧師の令状実質審査の日程と、韓国投資貯蓄銀行の流出項目の追加告知が出る予定だ。リュ・ジン韓国経済人協会会長の任期は来年2月に満了する。</span><b>読者へ</b><span>貯蓄銀行の利用者なら、当該会社の個人情報流出確認の案内を確かめ、金融会社をかたるメッセージ・電話と、知らないリンクは開かない。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "s0":{"kick": "金融 · セキュリティー · 報道照合 ✓ 4社 · 流出項目・侵入経路・ハッカーの身元は未確認", "title": "韓国投資貯蓄銀行にハッキング、顧客8万6,433人の個人情報が流出…貯蓄銀行業態で最大規模", "what": "韓国投資金融持株の子会社である韓国投資貯蓄銀行が25日、顧客8万6,433人の個人情報が流出したと告知した。会社は、22日午後10時42分から25日午前10時2分まで2回にわたってモバイルホームページに外部からの異常なアクセスがあったと明らかにした。貯蓄銀行業態で確認された流出規模としては最大だ。これまで最大だったイェガラム貯蓄銀行は、約4万人と推定されると明らかにした。OK貯蓄銀行は518人、ハナ貯蓄銀行は552人の情報が出たとそれぞれ確認した。9月以降に侵害事故が確認された貯蓄銀行は、今回で7社になった。流出した情報の項目、ハッカーの身元、侵入経路は確認されていない。", "why": "貯蓄銀行は個人向けの貸出・預金の顧客が多く、連絡先と取引情報が集まる所だ。名前と連絡先だけが漏れても、金融機関をかたる電話・メッセージの標的になりやすい。同じ類型のアクセスが9月以降、複数の金融会社で続いており、個別の会社の問題なのか業態共通のセキュリティー水準の問題なのかが規制論議の核心になる。", "me": "この銀行の預金・貸出の顧客なら、会社の告知とメッセージ・アプリの通知で自分が対象かを確認しなければならない。情報が露出した場合は、金融機関をかたる電話やメッセージに応じず、知らないリンクは開かないのが基本だ。貸出・カード発行の履歴は、信用情報照会サービスで点検できる。", "a": "被害規模に注目する見方だ。業態最大、直前の最大被害の2倍という数字は、セキュリティー投資と点検体制が十分だったのかを問わせる。連鎖事故が続いている以上、業態レベルの一斉点検が必要だという論理につながる。", "b": "事故の範囲に注目する見方だ。会社は、アクセスが行われた所をモバイルホームページと特定し、流出項目はまだ公開されていない。項目によって被害の性格が大きく変わるので、規模だけで深刻さを断定しにくいという論理だ。", "say": "確認されたのは、流出人数(8万6,433人)、アクセスがあった時間帯、侵害事故があった貯蓄銀行が7社という点だ。確認されていないのは、流出項目、侵入経路、ハッカーの正体だ。きょうは、会社の追加告知に流出項目がどこまで書かれるかと、金融当局の点検着手の有無を見ればよい。", "src": "聯合ニュース(業態最大規模の流出、11/25) · SBS(8万6千余人の個人情報流出、11/25) · 東亜日報(貯蓄銀行7社に拡大、11/25) · 朝鮮日報(顧客8万6000余人の情報流出、11/25)"},
+    "s1":{"kick": "経済 · 金利 · 報道照合 ✓ 4社 · 引き上げの是非・幅・票決結果は未確定", "title": "金融通貨委員会を翌日に控え国庫債券金利が軒並み低下、3年物は年3.583%…韓国銀行が26日に基準金利引き上げの是非を決定", "what": "韓国銀行の金融通貨委員会は26日、今年最後の会議を開き、基準金利を引き上げるかを決める。25日の国庫債券金利は軒並み下落し、3年物は年3.583%に下がった。SK証券は、今回の会議で基準金利が3.25%に上がり、来年2月に3.50%まで上がると見通した。エコノミスト23人を対象にしたある調査では、21人が引き上げを予想したとの報道があるが、ほかでは確認されていない。同じ日、KOSPIは6.16%下げた4,697.51で取引を終えた。韓国銀行は引き上げの是非と幅をまだ明らかにしていない。", "why": "基準金利は貸出・預金金利の出発点だ。金利を上げると、変動金利の貸出利子は増え、預金金利は上がる余地が生まれる。債券金利は市場の金利見通しが先に反映される所なので、決定前日の動きは、投資家がどんな決定を予想しているかを推し量る手がかりになる。", "me": "変動金利の住宅担保貸出や信用貸出があるなら、引き上げ時に利子負担が増えうる。預・積金金利は銀行ごとに反映の時差があり、決定直後にすぐ上がらないこともある。きょうの決定内容と、その後の金利経路についての説明を確認しておけばよい。", "a": "引き上げが既定事実に近いという見方だ。証券会社は3.25%という具体的な目標水準と、来年2月の3.50%までの経路を示し、ある調査でも多数が引き上げを予想した。この場合、決定そのものより、最後の引き上げかどうかが焦点になる。", "b": "引き上げが最後になりうるという見方だ。外国人が決定前に国債先物を大きく買い越したという報道が一つあり、これは引き上げ後の金利低下を期待する動きと読める。ただ、単一の報道なので、市場全体の期待とは見にくい。", "say": "確認されたのは、決定日(26日)と、25日の国庫債券金利の軒並みの低下、3年物3.583%だ。確認されていないのは、引き上げの是非と幅、票決結果だ。きょうは、引き上げの是非そのものより、その後の経路についての韓国銀行の説明がどこまで出るかを見ればよい。", "src": "聯合ニュース(国庫債券金利低下 3年物3.583%、11/25) · 毎日経済(金融通貨委員会前日の国庫債券金利低下、11/25) · ビジネスポスト(11月金融通貨委員会 3.25%引き上げ見通し、11/25) · 中央日報(エコノミスト引き上げ見通し調査、11/25)"},
+    "s2":{"kick": "経済 · 財界訴訟 · 報道照合 ✓ 4社 · 和解条件・裁判部の判断は未確認", "title": "ノ・ソヨン館長、チェ・テウォン会長側の和解勧告要請に同意しないとの書面を提出…「真摯さがあるなら直ちに上告の取り下げを」", "what": "ノ・ソヨン・アートセンター・ナビ館長側が25日、チェ・テウォンSKグループ会長側の和解勧告要請に同意しないという趣旨の書面を裁判部に提出した。ノ館長の代理人は、チェ会長に早期解決の真摯さがあるなら直ちに上告を取り下げてほしいと述べた。チェ会長は23日、財産分与の再上告審の裁判部である大法院第2部(主審キム・ソンス大法官)に書面を提出した。チェ会長は、ノ館長側の拒否について、真摯さが疑われるという趣旨で反応した。チェ会長は、趣旨が貶められて複雑な心境だとも明らかにした。具体的な和解条件と金額、裁判部の判断は確認されていない。", "why": "財産分与訴訟は、再上告審で大法院が控訴審の判断を改めて検討する段階に来ている。和解勧告が成立すれば判決なしに終わるが、一方が同意しなければ成立しにくい。当事者が上告を取り下げると、大法院の判断なしに控訴審の結論がそのまま残るので、取り下げの要求は訴訟の結果に直接影響を与える。", "me": "財界の大株主の訴訟なので直接の影響は大きくないが、財産分与の結果によって、支配構造と株式処分の問題が取り沙汰される事案だ。個人の立場では、離婚の財産分与訴訟で和解勧告がどんな手続きなのかを理解しておけば、似た紛争での参考になる。", "a": "ノ館長側の見方だ。早期解決に真摯さがあるなら上告を先に取り下げるのが順序で、和解勧告の要請は趣旨が違うという立場だ。控訴審判決をそのまま受け入れよという要求につながる。", "b": "チェ会長側の見方だ。和解勧告による早期解決を進めた趣旨があるのに、これを真摯さがないとみるのは趣旨を貶めることだという立場だ。大法院の判断を前に、協議の門を開けておこうとした趣旨だ。", "say": "確認されたのは、ノ館長側の拒否の書面と、チェ会長側の反応だ。確認されていないのは、和解条件と金額、裁判部の次の措置だ。きょうは、裁判部が和解勧告の手続きを続けるのか、チェ会長側が上告を維持するのかを見ればよい。", "src": "聯合ニュース(和解勧告の拒否と真摯さをめぐる攻防、11/25) · 電子新聞(上告の即時取り下げ要求、11/25) · KBS(ノ・ソヨン 和解拒否、11/25) · KBC光州放送(チェ・テウォン 真摯さを疑う反応、11/25)"},
+    "s3":{"kick": "社会 · 捜査 · 報道照合 ✓ 3社 · チョン牧師の陳述・裁判所の審査日程は未確認", "title": "公訴庁、チョン・グァンフン牧師の拘束令状を請求…教会の資金102億ウォンを自由統一党に寄付した疑い", "what": "ソウル北部地方公訴庁が25日、サランジェイル教会のチョン・グァンフン牧師に対する拘束令状を請求した。チョン牧師は、教会資金102億ウォンほどを自由統一党に寄付した疑いが持たれている。ソウル警察庁広域捜査団反腐敗捜査隊は23日、拘束令状を申請した。公訴庁は25日午前10時から、拘束令状請求前の被疑者面談を行った。チョン牧師は午前9時43分ごろ庁舎に到着した。適用された容疑は政治資金法違反などだ。チョン牧師が、引退した牧師なので知らなかったという趣旨で話したとの報道があるが、ほかでは確認されていない。裁判所の令状実質審査の日程は明らかになっていない。", "why": "拘束令状の請求は、拘束が確定したという意味ではなく、裁判所に判断を求めた段階だ。政治資金法は法人・団体の政治資金の寄付を原則として禁じており、教会資金が政党に流れたことがこの規定に触れるかが核心の争点だ。警察が申請し、公訴庁が面談の後に請求するという順序も、捜査手続きの変化を示している。", "me": "一般市民に直接の影響は大きくないが、宗教団体と政党のあいだの資金の流れがどう規律されるかを示す事例だ。団体や集まりの資金を政治活動に使うときに適用される基準を理解するきっかけになる。", "a": "捜査側の見方だ。教会資金約100億ウォンが政党に寄付されたという事実関係と、政治資金法違反の容疑の重大さを根拠に、拘束捜査が必要だとみる。令状請求前の被疑者面談を経た以上、手続きを踏んだという立場だ。", "b": "チョン牧師側の見方だ。報道によると、引退した牧師なので知らなかったという趣旨で説明した。法的責任の範囲と故意の有無を争うもので、令状実質審査で防御の論理がどう示されるかが変数だ。", "say": "確認されたのは、25日の令状請求と102億ウォンほどの寄付の疑い、政治資金法違反などの適用容疑だ。確認されていないのは、チョン牧師の陳述内容、裁判所の審査日程、発付の可否だ。きょうは、裁判所が審査期日をいつ決めるかが最初のシグナルだ。", "src": "聯合ニュース(拘束令状の請求、11/25) · 東亜日報(被疑者面談への出頭、11/25) · チャンネルA(102億の違法政治資金疑惑 令状請求、11/25)"},
+    "s4":{"kick": "安保 · 国会 · 報道照合 ✓ 3社 · 本会議の議決日程は未確認", "title": "清海部隊の派兵延長同意案が国会国防委の小委員会を通過…李大統領「任務は広げるが戦争不介入の原則は守る」", "what": "清海部隊のソマリア海域およびオマーン南方外洋への派遣を延長する修正同意案が25日、国会国防委員会の法案小委員会を通過した。作戦範囲は、ソマリアのアデン湾海域からオマーン南の海上まで広がる。同意案には、戦争不介入、将兵の安全最優先、自衛権の原則順守が明記された。李在明大統領は25日、清海部隊の任務は広げるが戦争不介入の原則ははっきり守ると述べた。大統領は、清海部隊の活動範囲からホルムズ海峡とその付近は除外されると説明した。国防委全体会議と本会議の日程は明らかになっていない。", "why": "派兵の延長は国会の同意が必要なので、小委の通過は最初の関門だ。作戦範囲を広げつつホルムズを除いたのは、海上交通路の保護と紛争に巻き込まれる危険を同時に扱おうとする設計と読める。文言に刻んだ不介入の原則が実際の交戦規則でどう具体化されるかが、今後の争点だ。", "me": "輸出入物量の大部分が海路を通る韓国経済で、中東海域の船舶の安全は運賃とエネルギー価格に関わっている。わが船舶が通る海域が保護範囲に入るのかを確認しておく価値がある。", "a": "範囲拡大に重きを置く見方だ。わが船舶と海上輸送路の安全を確保するには、アデン湾にとどまっていた作戦範囲をオマーン南まで広げなければならないという論理だ。経済の生命線である海路の保護が国家の責務だという大統領の言及と重なる。", "b": "紛争への巻き込まれを警戒する見方だ。範囲を広げると想定外の状況に巻き込まれうるので、戦争不介入と自衛権の原則を文言で明確にしなければならないという論理だ。そのため同意案に不介入の原則が明記され、ホルムズは除外された。", "say": "確認されたのは、小委の通過、作戦範囲(アデン湾からオマーン南の海上)、ホルムズ除外という大統領の説明だ。確認されていないのは、全体会議・本会議の日程と、交戦規則の具体的な内容だ。きょうは、国防委全体会議への上程の有無を見ればよい。", "src": "聯合ニュース(ホルムズ 活動範囲から除外、11/25) · 京郷新聞(国防委小委の通過と戦争不介入の明記、11/25) · 東亜日報(清海部隊の任務拡大発言、11/25)"},
+    "i1":{"kick": "司法 · ✓ 報道5件", "title": "昌原地裁の判事会議、チョ・ヒデ弾劾の推進後初の集団声明を出し「深い憂慮」", "what": "与党側がチョ・ヒデ大法院長の弾劾訴追の推進を公式化した後、判事たちの初の集団的な立場が25日に出た。昌原地裁の全体判事会議は、裁判を理由とした法官弾劾の推進に深い憂慮を表し、憲法の価値を損なうという趣旨の立場を出した。全国法官代表会議は30日に開かれる。法官代表10人が司法の独立の議案に同意し、30日の会議で採択される見通しだという単独報道があるが、ほかでは確認されていない。ほかの裁判所の立場表明は確認されていない。", "why": "法官の弾劾訴追は、国会が議決すれば憲法裁判所が審判する手続きだ。判事たちが裁判の独立を理由に集団的な立場を出すことは、弾劾推進の速度と世論に変数となる。30日の代表会議で議案が採択されるかによって、司法府全体の立場に広がりうる。", "me": "裁判を受ける市民には、事件処理の日程や裁判部の構成が影響を受けるのかが関心事だ。司法府と国会の対立が長引けば、裁判遅延の懸念が伴いうるので、流れを見守る必要がある。", "a": "弾劾を推進する側の見方だ。大法院長の責任を問うことは国会の憲法上の権限の行使であり、判事たちの立場表明はこれに対する政治的反発だという立場だ。", "b": "判事たちの見方だ。裁判を理由に法官を弾劾しようとする試みは、裁判の独立と憲法の価値を損なうという立場だ。個別の裁判結果を弾劾事由とする先例になることを懸念する。", "say": "確認されたのは、昌原地裁の全体判事会議の立場と、30日の全国法官代表会議の日程だ。代表会議の議案採択、ほかの裁判所の立場、弾劾訴追案の発議と採決は確認されていない。きょうは、ほかの裁判所へ声明が広がるかを見ればよい。", "src": "聯合ニュース(判事たち初の集団声明、11/25) · KBS(昌原地裁全体判事会議の立場、11/25) · MBC(裁判を理由とした法官弾劾への憂慮、11/25) · YTN(昌原地裁判事会議の憂慮、11/25) · ハンギョレ(司法の独立の議案 単独、11/25)"},
+    "i2":{"kick": "社会 · ✓ 報道2件", "title": "忠清南道泰安の沈没漁船ヘグァン号、行方不明の船員7人の捜索難航…26日に海軍艦艇・水中無人探査機を投入予定", "what": "忠清南道泰安の西格列飛列島付近の海で、7.93トン級の沿岸かご漁の漁船ヘグァン号が沈没し、船員7人が行方不明になった。海警は25日、潜水隊員8人を4班に分けて順次投入した。航空と潜水の捜索はいずれも悪天候で難航した。26日には海軍艦艇が現場に到着する。気象条件によって水中無人探査機(ROV)を投入する予定だ。海軍は先に、水中無人探査機で沈んだヘグァン号を撮影した。沈没の原因は確認されていない。", "why": "沈没船舶の捜索は、時間が経つほど生存の可能性が低くなる事故なので、天候が回復する時間帯に装備をどれだけ投入するかが鍵だ。水中無人探査機は、潜水隊員が入りにくい深さと潮流で、船体の内部と周辺を確認するのに使われる。", "me": "冬の西海は強風・波浪の注意報が多く、小型漁船の事故の危険が高まる。漁船の従事者と家族は、出港前に気象注意報と救命装備の点検の有無を確認しなければならない。", "a": "捜索現場の見方だ。悪天候で航空と潜水がいずれも難しく、水中無人探査機のような無人装備の到着が重要だという立場だ。", "b": "安全点検の見方だ。7.93トン級の小型漁船が一度に7人を乗せていた点から、乗船人数と装備の基準を見直すべきだという論理が出うる。ただ、原因が確認されていないので、現在は捜索に集中する段階だ。", "say": "確認されたのは、行方不明の船員7人、25日の潜水隊員8人の投入、26日の海軍艦艇の到着予定だ。確認されていないのは、沈没の原因と行方不明者の位置だ。きょうは、水中無人探査機が実際に投入されるかを見ればよい。", "src": "聯合ニュース(水中捜索難航、11/25) · 京郷新聞(潜水隊員投入 26日 水中ロボット到着、11/25)"},
+    "i3":{"kick": "金融 · ✓ 報道2件", "title": "金融委、2027年度公認会計士の最低選抜予定人数を1,100人に50人減らす…3年連続の削減", "what": "金融委員会は24日、公認会計士資格・懲戒委員会を開き、2027年度公認会計士の最低選抜予定人数を、今年より50人少ない1,100人に決めた。金融当局は2024年度に1,250人に増やした後、毎年50人ずつ減らしてきた。金融委は、人工知能の活用拡大による低年次の会計士の代替効果と採用需要、未指定会計士の累積、受験生の認識と予測可能性を総合的に考慮したと明らかにした。試験に合格しても研修先を見つけられない会計士が積み上がっている。", "why": "最低選抜予定人数は、1年間の新規会計士の供給の下限だ。合格しても研修機関を確保できなければ資格取得が遅れるので、選抜規模は採用市場と受験生の進路選択に直結する。", "me": "会計士試験の準備生には、合格の門が狭まる信号だ。会計法人への就職を狙う人は、低年次業務が自動化される流れを考慮して進路を点検しなければならない。", "a": "削減に重きを置く見方だ。合格しても研修先を見つけられない人数が積み上がり、人工知能が低年次業務を代替しているので、選抜を減らさなければならないという論理だ。金融委の説明も同じ方向だ。", "b": "慎重論の見方だ。ある報道によると、会計基準院がビッグ4など5社を調査した結果、新入会計士の採用需要が毎年最大8.5%減り、制度の変化がなければ3年後に23%減少しうるという。この数値は単一の報道で、ほかでは確認されていない。", "say": "確認されたのは、1,100人という決定と3年連続の削減だ。確認されていないのは、採用需要の減少幅だ。きょうは、研修先の確保と制度変化の議論が続くかを見ればよい。", "src": "東亜日報(会計士選抜50人削減、11/25) · 毎日経済(3年連続削減、11/24)"},
+    "i4":{"kick": "住居 · ✓ 報道3件", "title": "LH、5年間で公的住宅50万戸を着工…李大統領「超過達成を」、中間層も選ぶ住まいのはしごに", "what": "李在明大統領は25日、ソウル恩平区の公的住宅の現場を訪れ、品質と条件を調べた。大統領は、政策関係者らと懇談会を開いた。LHは5年間で公的住宅50万戸を着工すると明らかにし、大統領は超過達成するよう求めた。大統領は、立地・面積・品質の面で、中間層もいくらでも選べなければならないと述べた。新しい家を用意する過程の住まいのはしごの役割を果たす選択肢にならなければならないとも述べた。ある報道は、2030年まで毎年平均24万戸の公的住宅の供給に言及したが、ほかでは確認されておらず、着工基準の50万戸とは基準が異なるので直接比較できない。", "why": "公的住宅は、分譲の代わりに公共が賃貸で供給する住宅だ。政府が中間層も選べるよう品質と立地を高めると述べたのは、公共賃貸が低所得層中心だという認識を変えようとするものだ。着工目標が実際の入居につながるには、敷地と財源の確保が伴わなければならない。", "me": "無住宅の若者・新婚夫婦や、チョンセ・月払い家賃の負担が大きい世帯は、公的住宅の入居資格と供給日程を確認しておく価値がある。立地と面積の基準が引き上げられれば、選択肢が広がりうる。", "a": "供給拡大を歓迎する見方だ。5年間で50万戸を着工するという目標と超過達成の指示は、住居安定の意志を示すという立場だ。", "b": "実行可能性を問う見方だ。着工が入居につながるには、敷地と財源、品質管理が伴わなければならないので、目標の数字より履行の過程が重要だという論理だ。", "say": "確認されたのは、LHの5年間50万戸の着工計画と、大統領の超過達成の指示、中間層の選択への言及だ。確認されていないのは、年度別の着工計画と財源調達の方法だ。きょうは、具体的な供給日程が出るかを見ればよい。", "src": "聯合ニュース(5年間で50万戸着工、11/25) · 京郷新聞(公的賃貸 中間層の選択、11/25) · 聯合インフォマックス(公的住宅 住まいのはしご、11/25)"},
+    "i5":{"kick": "経済 · ✓ 報道2件", "title": "リュ・ジン韓国経済人協会会長、来年2月の任期満了を前に3選の可能性を示唆…「現場が苦労しているのに遊んではいられない」", "what": "リュ・ジン韓国経済人協会会長が25日、3選の可能性を示唆した。リュ会長の任期は来年2月に満了する。リュ会長は「現場が苦労しているのに遊んではいられない」と語った。韓国経済人協会の会長選挙の候補登録日程は確認されていない。正式な出馬表明も確認されていない。発言が出た場所と文脈も具体的には明らかになっていない。", "why": "韓国経済人協会は主要な大企業が会員社の経済団体で、会長は財界の対外窓口の役割を果たす。3選の可否は、次期会長団の構成と、経済団体の対政府コミュニケーションの方式に影響を与える。", "me": "経済団体のトップの再任の可否は、日常に直接は触れない。ただ、規制・労働・税制の案件で財界の立場をどんな人物が伝えるかが、政策論議に影響を与えうる。", "a": "再任を支持する見方だ。現場で働き続けなければならないという発言は、経済の懸案が積み上がっていて持続性が必要だという論理と重なる。", "b": "交代の必要性を語る見方だ。3選は、団体の新しいリーダーシップの要求と衝突しうるという論理だ。ただ、現在、公式の反対意見は確認されていない。", "say": "確認されたのは、任期満了の時点(来年2月)と、3選の可能性を示唆した発言だ。確認されていないのは、正式な出馬の有無と選出日程だ。きょうは、候補登録日程の告知の有無と、候補群への言及が出るかを見ればよい。それまでは、示唆発言以上には読まないのが妥当だ。", "src": "聯合ニュース(3選の可能性を示唆、11/25) · 韓国経済(3選への挑戦を示唆、11/25)"}
+  };
+  const G = {
+    "侵害事故":{"f": "セキュリティー", "d": "ハッキングなどで情報システムが破られ、情報の流出・毀損などの被害が生じた事故を、法律で呼ぶ言葉。", "w": "韓国投資貯蓄銀行など貯蓄銀行7社で確認された事故。"},
+    "業態":{"f": "金融", "d": "同じ種類の金融会社が属する業界全体(銀行業態、貯蓄銀行業態など)。", "w": "貯蓄銀行業界全体で最大の流出規模。"},
+    "金融通貨委員会":{"f": "金融", "d": "韓国銀行の基準金利など通貨政策を決める7人の合議制機関。", "w": "26日に今年最後の会議を開く。"},
+    "基準金利":{"f": "金融", "d": "韓国銀行が定める政策金利で、貸出・預金金利の出発点。", "w": "証券会社が3.25%への引き上げを見通している。"},
+    "国庫債券":{"f": "金融", "d": "政府が資金を借りるために発行する債券。金利が下がると債券価格は上がる。", "w": "3年物が年3.583%に下がった。"},
+    "指標物":{"f": "金融", "d": "市場で最も活発に取引され、金利の基準とされる債券。", "w": "国庫債券3年物が指標物として使われる。"},
+    "和解勧告":{"f": "法律", "d": "裁判部が判決の代わりに、双方が合意するよう案を示したり勧めたりする手続き。", "w": "ノ館長側が同意しないと明らかにした。"},
+    "再上告審":{"f": "法律", "d": "破棄差し戻しで控訴審判決を再び受けた後、大法院が判断する上告の再審理段階。", "w": "財産分与訴訟が大法院第2部にかかっている。"},
+    "財産分与":{"f": "法律", "d": "離婚のとき、夫婦が共に築いた財産を分けること。", "w": "訴訟の争点だ。"},
+    "上告":{"f": "法律", "d": "控訴審判決に不服で大法院に判断を求めること。取り下げると控訴審判決がそのまま確定する。", "w": "ノ館長側が即時の取り下げを求めた。"},
+    "拘束令状":{"f": "法律", "d": "被疑者を拘禁して捜査・裁判を受けさせるために、裁判所に請求する許可書。", "w": "チョン・グァンフン牧師について請求された。"},
+    "令状実質審査":{"f": "法律", "d": "判事が被疑者を直接呼び、拘束する必要があるかを検討する手続き。", "w": "請求の後、裁判所で開かれる。"},
+    "政治資金法":{"f": "法律", "d": "政治資金の寄付・使用の範囲と限度、手続きを定めた法。法人・団体の寄付は原則として禁止される。", "w": "チョン牧師に適用された容疑だ。"},
+    "派兵延長同意案":{"f": "安保", "d": "海外に送った軍部隊の任務・期間を続けるために、国会の同意を求める議案。", "w": "国防委の小委員会を通過した。"},
+    "自衛権":{"f": "安保", "d": "攻撃を受けたとき、自らを守るために必要な分だけ武力を使える権利。", "w": "同意案に原則の順守が明記された。"},
+    "法官代表会議":{"f": "法律", "d": "全国の裁判所の判事の代表が集まり、司法行政と独立の問題を論議する会議。", "w": "30日に開かれる。"},
+    "全体判事会議":{"f": "法律", "d": "一つの裁判所に所属する判事全員が集まり、裁判所の運営と立場を論議する会議。", "w": "昌原地裁が立場を出した。"},
+    "弾劾訴追":{"f": "法律", "d": "高位公職者の違法を理由に、国会が罷免を求める議決。その後、憲法裁判所が審判する。", "w": "チョ・ヒデ大法院長に対して推進中だ。"},
+    "司法の独立":{"f": "法律", "d": "裁判が外部の圧力なしに行われなければならないという原則。", "w": "判事たちの声明の根拠だ。"},
+    "水中無人探査機":{"f": "安全", "d": "水中で遠隔操縦して撮影・探索する無人装備(ROV)。", "w": "ヘグァン号の捜索に投入される予定だ。"},
+    "最低選抜予定人数":{"f": "制度", "d": "公認会計士試験で、1年に最低限選ぶとあらかじめ定める合格者数。", "w": "1,100人に決まった。"},
+    "公的住宅":{"f": "不動産", "d": "政府・公共機関が供給する賃貸・分譲住宅を含む言葉。", "w": "LHが5年間で50万戸の着工を明らかにした。"},
+    "住まいのはしご":{"f": "不動産", "d": "マイホームへ向かう段階的な選択肢という意味の、政策表現。", "w": "大統領が公的賃貸の役割として言及した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
