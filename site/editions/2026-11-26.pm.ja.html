@@ -1,0 +1,338 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>4,711.21</b>KOSPI · 11月26日 · 終値 · 前営業日比0.29%上昇</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>KOSDAQ · 直前の終値と騰落の向きを突き合わせられず掲載せず</div>
+    </div>
+    <div class="dateline"><span>第53号 · 夕刊</span><b>2026年11月26日 木曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="p0">
+      <div class="kick">経済 · 金利<span>✓ 3社 · 委員ごとの据え置き理由・追加利上げの時期は未確認</span></div>
+      <h2 class="hl">韓国銀行、基準金利を年3.25%に0.25ポイント引き上げ…金融通貨委員会の委員2人が据え置き意見、来年の成長率見通しは4.1%に上方修正</h2>
+      <p class="deck">朝刊で予告した金融通貨委員会の決定が出た。韓国銀行は26日、基準金利を3.00%から3.25%に上げ、今年に入って3回目の利上げだ。</p>
+      <div class="body">
+        <p>韓国銀行の金融通貨委員会は26日、基準金利を年3.00%から3.25%へ0.25ポイント引き上げた。今年に入って3回目の利上げで、委員7人のうち5人が利上げに賛成し、ファン・ゴンイル、イ・スヒョンの2委員は据え置きの少数意見を出した。少数意見とは、多数と異なる立場を公式の記録に残すものだ。基準金利は銀行の貸出・預金金利の出発点なので、変動金利の貸出を抱える世帯は利子負担が増えうる。追加利上げの文言は維持しつつ、利上げの速度を示す表現は外したという報道が1社で出たが、ほかでは確認されていない。KOSPIは発表後に一時1%前後だった上げ幅を縮め、この日は4,711.21で引けて前営業日より0.29%上がった。</p>
+        <p>韓国銀行はこの日、経済見通しも改めた。今年の成長率は3.3%から3.9%へ、来年は直前の見通し2.9%から4.1%へ引き上げた。物価上昇率は今年が2.7%のままで、来年は2.3%から2.4%に高めた。シン・ヒョンソン総裁は、今年の名目GDPが3000兆ウォンを上回り、半導体の営業利益は700兆ウォンに達すると明らかにした。名目GDPは物価の変動をそのまま含む国内総生産の規模だ。総裁は来年の民間消費が2.4%増えるとみながらも、株式市場の低迷が下半期の消費を鈍らせたと説明し、物価上昇率は2028年の目標水準に収れんするとして、今回の利上げを先制対応だと述べた。次の利上げの時期と幅、据え置き意見を出した2委員の具体的な理由は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="p1">
+      <div class="kick">流通 · 企業再生<span>✓ 4社 · 休業する店舗数・再開時期・買収条件は未確認</span></div>
+      <h3 class="hl">ホームプラス、27日から全店舗を臨時休業…「商品の仕入れ資金が不足」、買収意向者は不動産開発会社主導のコンソーシアム</h3>
+      <div class="one">
+        <p>ホームプラスが27日から全国の店舗の営業を一時止める。会社は理由として、商品を仕入れる資金が不足していることを挙げた。ある報道は営業が止まる店舗を67店と伝えたが、ほかでは数字が確認されず、ここでは「全店舗」と書く。ホームプラスは企業再生手続きを進めている大型スーパーで、裁判所の管理の下で債務を整理しながら営業を続けてきた。ある報道は、最近2000億ウォン規模の資金が入ったのに資金難が続いたと伝えたが、この金額もほかでは確認されていない。休業の期間と再開時期、従業員の給与と納品代金の扱いは分かっていない。同じ日、買収側の動きも出た。ある報道によると、ホームプラスの全体買収を進めているのは、不動産開発会社が主導するコンソーシアムだ。コンソーシアムは、複数の会社が共同で組む買収連合を指す。買収意向書、つまり買収に関心があることを記して出す文書が受け付けられたという報道がある一方、労働組合は受け付けの事実が確認できないとして会社に回答を求めた。買収価格と条件、売却日程は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="q1"><b>ソウルの高校生、期末試験は別の教室で受け金属探知機で全数検査…AIの不正行為を遮断</b><em>ソウルの高校生は今回の期末試験から、自分のクラスではなく別の教室で試験を受け、AIを使った内申試験の不正行為を防ぐため金属探知機の検査を受ける。全北の高校では、スマート機器を使った不正行為があれば当日の全科目を0点とするという報道が1社あるが、ソウルの基準は確認されていない。</em><span>教育 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="q2"><b>キム・ジョングァン産業相「週52時間のR&amp;D特例、あしたからでも半導体から適用すべき」</b><em>キム・ジョングァン産業相は25日、中国との研究開発競争で最も後れをとるのは時間だとして、週52時間制の例外を半導体から適用すべきだと述べた。適用時期と法改正の方式は確認されていない。</em><span>産業 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="q3"><b>スターバックスコリア「第4四半期の黒字転換が目標」…新規出店より内実強化</b><em>今年の第2四半期と第3四半期に続けて赤字を出したスターバックスコリアは、下半期に入って主要な業績指標が改善しているとして、第4四半期の黒字転換を目標に掲げた。南山タワーに韓屋の店舗ができるという報道は1社だけだった。</em><span>流通 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="q4"><b>先月の訪韓外国人216万人、前年比24%増…4か月連続で200万人超え</b><em>10月の訪韓外国人観光客は216万人で、1年前より24%増え、月間200万人突破が4か月連続になった。この集計は1社の報道で、国別の内訳は確認されていない。</em><span>観光 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="q5"><b>アン・ドクス国税庁長候補者「任命されたら税務調査は法と原則に従い公正に」</b><em>アン・ドクス国税庁長候補者は26日、税務調査権が乱用されているという指摘に対し、懸念されることがないよう法と原則に従うと述べた。1社の報道で、任命手続きの日程は確認されていない。</em><span>政府 · ✓ 報道1件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="p2">
+      <div class="kick">司法 · 裁判<span>✓ 4社 · 判決理由の細部・他の裁判への影響は未確認</span></div>
+      <h3 class="hl">大法院、ユン・ソンニョル前大統領の「ハン・ドクス裁判での偽証」容疑の上告を棄却…無罪確定</h3>
+      <div class="body">
+        <p>大法院は26日、ユン・ソンニョル前大統領の「ハン・ドクス裁判での偽証」容疑について上告を棄却し、無罪を確定した。この容疑は、ユン前大統領がハン・ドクス前国務総理の裁判に証人として出て、戒厳当時の国務会議に関して行った陳述が虚偽だというものだ。偽証は宣誓した証人が虚偽の陳述をする罪で、有罪になるには陳述が虚偽だと立証されなければならない。大法院が「国務会議を開こうとした」という趣旨の陳述を偽証とはみなせず、虚偽の陳述が立証されていないと判断したという報道が1社で出たが、判決理由の細部はほかでは確認されていない。</p>
+        <p>上告を棄却したのは、大法院が控訴審の判断をそのまま受け入れたという意味で、したがってこの事件はもう争えない。今回の判断は偽証容疑にだけ当たる。ユン前大統領が受けているほかの裁判にどんな影響を与えるかは確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="p3">
+      <div class="kick">通商 · 関税<span>✓ 4社 · 最終確定・発効時期・適用品目は未確認</span></div>
+      <h3 class="hl">米国、韓国など14の国・地域に過剰生産関税の予告案…韓国には15%の上限を維持、政府「対米黒字への圧力の中でも善戦」</h3>
+      <div class="body">
+        <p>米通商代表部(USTR)が25日(現地時間)、韓国を含む14の国・地域に過剰生産を理由とした追加関税を課すという予告案を出した。韓国には昨年の韓米交渉で合意した15%の上限を維持する方向だと政府が明らかにした。キム・ジョングァン産業相は最後まで守り抜けば善戦だという立場で、政府は対米貿易黒字への圧力がある中でも15%が維持されるなら善戦したとみている。過剰生産関税とは、特定の国の生産能力が需要を上回り、安い品物があふれるという理由で課す追加関税をいう。</p>
+        <p>ただしUSTRは、協議と既存の合意が足りないと判断すれば、韓国への関税率を最大25%まで引き上げる案も検討すると明らかにした。報告書が韓国の半導体など戦略産業の育成を問題視したという報道も出た。税率は国ごとに異なって伝えられる。韓国と日本は15%水準で、中国には追加20%、シンガポールには最大20%が示されたと報じられた。最終確定と発効時期、適用品目、15%の上限が半導体・自動車にも適用されるかは分かっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="p4">
+      <div class="kick">政治 · 世論<span>✓ 2社 · 調査期間・標本誤差は未確認</span></div>
+      <h3 class="hl">イ・ジェミョン大統領の支持率43%、2週間前より1ポイント下落…否定的評価45%、否定が肯定を上回る</h3>
+      <div class="body">
+        <p>定期世論調査である全国指標調査(NBS)の結果、イ・ジェミョン大統領の国政運営を肯定的に評価した回答は43%と集計された。2週間前より1ポイント下がった。否定的評価は45%で、否定が肯定より2ポイント高い。</p>
+        <p>同じ調査で、チョ・ヒデ大法院長の弾劾には反対44%、賛成34%だったという報道があるが、ほかでは確認されていない。調査期間と標本の大きさ、誤差の範囲は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>43%</b><span>国政運営への肯定的評価、2週間前より1ポイント下落</span></div>
+        <div><b>45%</b><span>国政運営への否定的評価</span></div>
+        <div><b>44% 対 34%</b><span>チョ・ヒデ弾劾への反対対賛成(単一の報道)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>韓国銀行の金融通貨委員会が今回も全会一致で金利を上げた</b> <span>韓国銀行は26日に基準金利を0.25ポイント上げたが、委員7人のうち5人が賛成で、ファン・ゴンイル、イ・スヒョンの2委員は据え置きの少数意見を出した。</span></div>
+        <div><b>ユン・ソンニョル前大統領が戒厳関連の裁判ですべて無罪を確定させた</b> <span>大法院は26日、ハン・ドクス裁判での偽証容疑についてだけ上告を棄却して無罪を確定した。ほかの裁判はこの判断とは別で、影響は確認されていない。</span></div>
+        <div><b>ホームプラスが廃業した、または売却が終わった</b> <span>会社は商品の仕入れ資金不足を理由に27日から臨時休業すると明らかにした。廃業や売却の確定ではなく、買収意向書の受け付けの有無は、労組が確認できないと反発している。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>あす · 金 11月27日</b><span>ホームプラスの全店舗の臨時休業が始まる。銀行が貸出金利に基準金利の引き上げ分をどう反映するのか、案内が出るかもしれない。</span><b>今週</b><span>米国の過剰生産関税の予告案をめぐる協議が続く。韓国に15%の上限が維持されるのか、25%への引き上げ案が実際に検討されるのかが焦点だ。</span><b>のちに</b><span>30日に全国法官代表会議が開かれる。韓国銀行の追加利上げの有無は、その後の金融通貨委員会の日程にかかっている。</span><b>読者へ</b><span>変動金利の貸出があるなら金利変更の案内を確認し、ホームプラスの商品券・オンライン注文を使うなら会社の告知を確かめる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "p0":{"kick": "経済 · 金利 · ✓ 3社 · 委員ごとの据え置き理由・追加利上げの時期は未確認", "title": "韓国銀行、基準金利を年3.25%に0.25ポイント引き上げ…金融通貨委員会の委員2人が据え置き意見、来年の成長率見通しは4.1%に上方修正", "what": "韓国銀行の金融通貨委員会は26日、基準金利を年3.00%から3.25%へ0.25ポイント引き上げた。今年に入って3回目の利上げだ。委員7人のうち5人が利上げに賛成し、ファン・ゴンイル、イ・スヒョンの2委員は据え置きの少数意見を出した。韓国銀行は今年の成長率見通しを3.3%から3.9%へ、来年の見通しを直前の2.9%から4.1%へ引き上げた。物価上昇率の見通しは今年2.7%、来年2.4%だ。シン・ヒョンソン総裁は、今年の名目GDPが3000兆ウォンを上回り、半導体の営業利益が700兆ウォンだと述べた。総裁は来年の民間消費を2.4%増とみて、株式市場の低迷が下半期の消費に影響したと説明した。KOSPIはこの日4,711.21で引けて0.29%上がった。", "why": "基準金利は貸出・預金金利の出発点なので、利上げは変動金利の貸出の利子と預金金利の両方に影響する。半導体ブームで成長率見通しが大きく上がり、物価が目標を上回る局面で、韓国銀行は物価に重きを置いた決定をした。総裁が先制対応だと述べたため、次の関心は、その後の金利の道筋を韓国銀行がどんな文言で説明するかだ。", "me": "変動金利の住宅担保貸出や信用貸出があるなら、次の利子算定日に合わせて金利変更の案内を確認しておく価値がある。銀行ごとに反映のずれがあり、決定の直後にすぐ上がらないこともある。ある報道は銀行の家計貸出金利がすでに5%を超えたと伝えたが、ほかでは確認されていない。預金・積立の金利も上がる余地があるが、反映時期は銀行ごとに異なる。", "a": "物価安定を前面に出す見方だ。委員7人のうち5人が利上げに賛成し、総裁は物価が2028年の目標水準に収れんするよう先制的に対応すると説明した。成長率見通しが4%台に上がったので、引き締めを続ける環境が整うという論理だ。", "b": "速度調整を語る見方だ。2委員が据え置き意見を出し、総裁も株式市場の低迷が消費を押さえたと認めた。2委員の具体的な理由は確認されておらず、ある報道が指摘した「利上げ速度の文言の削除」も単一の報道なので、解釈には慎重を要する。", "say": "確認されたのは、3.25%への利上げ決定、5対2の票決、韓国銀行の成長率・物価の見通しだ。確認されていないのは、据え置き委員の理由と次の利上げの時期だ。あすは、銀行が貸出金利に引き上げ分をいつどれだけ反映するか、韓国銀行が追加利上げの文言をどう書くかを見ればよい。", "src": "韓国経済(基準金利3.25%への利上げと成長率見通しの上方修正、11/26) · SBS(半導体ブームと物価負担の中での利上げ、11/26) · 聯合ニュース(総裁の発言 名目GDPと半導体の営業利益、11/26)"},
+    "p1":{"kick": "流通 · 企業再生 · ✓ 4社 · 休業する店舗数・再開時期・買収条件は未確認", "title": "ホームプラス、27日から全店舗を臨時休業…「商品の仕入れ資金が不足」、買収意向者は不動産開発会社主導のコンソーシアム", "what": "ホームプラスが27日から全国の店舗の営業を一時止める。会社は商品の仕入れ資金が不足しているという理由を挙げた。ある報道は営業が止まる店舗を67店と伝えたが、ほかでは確認されていない。ホームプラスは企業再生手続きを進めている。ある報道は、最近2000億ウォン規模の資金が入ったのに資金難が続いたと伝えたが、この金額も単一の報道だ。ある報道によると、全体の買収を進めているのは、不動産開発会社が主導するコンソーシアムだ。買収意向書が受け付けられたという報道があり、労組は受け付けが確認できないとして会社に回答を求めた。休業の期間と再開時期は確認されていない。", "why": "大型スーパーが全店舗の営業を止めると、商品の供給と納品業者への代金、従業員の給与が一度に問題になる。企業再生手続き中の会社は裁判所の管理の下で営業を続けて債務を整理するが、仕入れ資金が尽きればその前提が揺らぐ。買収交渉が実際に進んでいるかどうかが、その後の営業再開と雇用の分かれ道だ。", "me": "ホームプラスで買い物をしたり、オンライン注文・商品券を使ったりする人は、27日以降の利用の可否と払い戻し・配送の方針を会社の告知で確認する必要がある。納品業者とテナントの商人、従業員は、代金と給与の支払い方法を会社に直接問い合わせるのが先だ。店舗数と再開日程は単一の報道が混じっているため、公式の告知が基準だ。", "a": "資金難が構造的だという見方だ。大規模な資金が入ったという報道が事実なら、そうした資金注入があっても仕入れ資金が足りずに全店舗が止まることになり、営業の正常化は容易でないという論理につながる。ただし、その金額は単一の報道だ。", "b": "買収の可能性をみる見方だ。不動産開発会社主導のコンソーシアムが全体の買収を進めているという報道があり、臨時休業は買収交渉の局面の一部かもしれないという論理だ。しかし労組が意向書の受け付けの事実が確認できないと反論しており、交渉の実体は不透明だ。", "say": "確認されたのは、27日からの臨時休業と、会社が明らかにした理由(商品の仕入れ資金不足)だ。確認されていないのは、正確な店舗数、再開時期、買収意向書の受け付けの有無と買収条件だ。あすは、会社の営業再開の案内と、労組・債権団の反応、買収候補についての公式の確認が出るかを見ればよい。", "src": "SBS(27日 全店舗の臨時営業中断、11/25) · 京郷新聞(全売り場の営業中断 事実上のシャットダウン、11/25) · 電子新聞(27日からの営業中断と買収意向書の受け付け、11/26) · 聯合ニュース(買収意向者は不動産開発会社、11/26)"},
+    "p2":{"kick": "司法 · 裁判 · ✓ 4社 · 判決理由の細部・他の裁判への影響は未確認", "title": "大法院、ユン・ソンニョル前大統領の「ハン・ドクス裁判での偽証」容疑の上告を棄却…無罪確定", "what": "大法院は26日、ユン・ソンニョル前大統領の「ハン・ドクス裁判での偽証」容疑に対する上告を棄却し、無罪を確定した。この容疑は、ユン前大統領がハン・ドクス前国務総理の裁判で証人として行った陳述が虚偽だというものだった。陳述は、戒厳当時の国務会議に関するものだ。大法院が「国務会議を開こうとした」という趣旨の陳述を偽証とはみなせず、虚偽の陳述が立証されていないと判断したという報道が1社で出た。判決理由の細部はほかでは確認されていない。今回の判断は偽証容疑にだけ当たる。", "why": "偽証罪は、証人が宣誓したうえで記憶に反する陳述をしたときに成立するが、その陳述が虚偽であることは捜査・裁判の側が立証しなければならない。上告棄却は控訴審の判断がそのまま確定するという意味で、同じ容疑ではもう争えない。戒厳関連の裁判が複数の流れで進んでいるため、1件の確定がほかの裁判の判断基準につながるかが関心だ。", "me": "一般の市民に直接及ぶことではないが、法廷での陳述が偽証になるには虚偽だと立証されなければならないという原則を示す事例だ。刑事裁判で「話が事実と違う」ことと「偽りだと立証された」ことは別の問題だと理解しておくと、似た報道を読むときに役立つ。", "a": "判決を受け入れる見方だ。大法院が虚偽の陳述は立証されていないとみたので、有罪を分ける証拠が足りなかったという説明につながる。ただし、この理由は1件の報道にしか出ていない。", "b": "結果に疑問を示す見方だ。戒厳当時の国務会議をめぐる論争が大きい事案で、偽証容疑が無罪で終わったことに納得しにくいという反応が出うる。判決理由の細部がまだ十分に知られていないため、この見方も判決文の公開後に検証が必要だ。", "say": "確認されたのは、上告棄却と無罪確定だ。確認されていないのは、判決理由の具体的な文言と、ほかの裁判に及ぼす影響だ。あすは、判決文が公開されて虚偽の立証不足の具体的な根拠が分かるか、政界がどんな反応を出すかを見ればよい。", "src": "韓国経済(ユン・ソンニョルの偽証 無罪確定、11/26) · 京郷新聞(ハン・ドクス裁判の偽証 大法院で無罪確定、11/26) · 東亜日報(大法院 偽証の無罪確定、11/26) · KBS(虚偽の陳述の立証不足の判断、11/26)"},
+    "p3":{"kick": "通商 · 関税 · ✓ 4社 · 最終確定・発効時期・適用品目は未確認", "title": "米国、韓国など14の国・地域に過剰生産関税の予告案…韓国には15%の上限を維持、政府「対米黒字への圧力の中でも善戦」", "what": "米通商代表部(USTR)は25日(現地時間)、韓国を含む14の国・地域に過剰生産を理由とした追加関税を予告した。政府は、韓国に15%の上限が維持される方向だと明らかにした。キム・ジョングァン産業相は、最後まで守り抜けば善戦だと述べた。政府は、対米貿易黒字への圧力がある中でも15%の維持を善戦とみている。USTRは、協議と既存の合意が足りないと判断すれば、韓国の関税率を最大25%まで引き上げる案も検討すると明らかにした。韓国と日本は15%水準、中国は追加20%、シンガポールは最大20%と、国ごとに異なって伝えられる。最終確定と発効時期、適用品目は確認されていない。", "why": "韓国の対米輸出で半導体と自動車の比重が大きく、上限が15%に抑えられるかどうかが、そのまま輸出の採算に直結する。過剰生産関税は既存の相互関税とは別に課される可能性があり、上限がどの関税を合わせて適用されるのかが核心の争点だ。対米貿易黒字への圧力があるという点は、交渉の余地が狭いという意味だ。", "me": "米国へ輸出する企業と協力会社は、発表される品目と税率を確認する必要がある。輸出の不振は為替レートと株価にも影響しうるため、対米輸出の比重が大きい会社に投資したり働いたりしている人は、発表の内容を点検しておく価値がある。25%への引き上げは検討するという段階なので、確定とみてはならない。", "a": "善戦とみる見方だ。韓国が15%の上限を維持すれば、ほかの国より低い水準で食い止めたという論理で、政府の説明も同じ方向だ。", "b": "不確実性が大きいとみる見方だ。USTRが25%まで引き上げる案を検討すると明らかにしたため、15%の上限が守られるのかは断言しにくい。最終の税率は、確定した内容をみて判断しなければならない。", "say": "確認されたのは、14の国・地域への予告案、韓国に15%の上限を維持するという政府の説明、25%まで高められるという検討方針だ。確認されていないのは、最終確定と発効時期、適用品目だ。あすは、協議がどう続くか、15%が半導体と自動車にも適用されるかを見ればよい。", "src": "SBS(14の国・地域に過剰生産関税の予告、11/26) · 朝鮮日報(15%の上限を維持 政府は善戦、11/26) · 聯合ニュース(半導体と自動車を狙う、11/26) · 東亜日報(25%まで高められるという圧力、11/26)"},
+    "p4":{"kick": "政治 · 世論 · ✓ 2社 · 調査期間・標本誤差は未確認", "title": "イ・ジェミョン大統領の支持率43%、2週間前より1ポイント下落…否定的評価45%、否定が肯定を上回る", "what": "全国指標調査(NBS)で、イ・ジェミョン大統領の国政運営を肯定的に評価した回答は43%だった。2週間前より1ポイント下がった。否定的評価は45%だった。否定が肯定より2ポイント高い。同じ調査で、チョ・ヒデ大法院長の弾劾に反対するという回答が44%、賛成が34%だったという報道があるが、ほかでは確認されていない。調査期間と標本の大きさ、誤差の範囲は確認されていない。", "why": "大統領の支持率は、国政課題と国会での交渉力のバロメーターとして使われる。肯定と否定が誤差の範囲の内外で割れるときは、1回の1ポイントの変化より流れが重要だ。弾劾の賛否が一緒に出た点は、司法府と国会の対立に対する世論の位置を推し量らせるが、その数値は単一の報道だ。", "me": "世論調査の数値は、調査機関と質問の方式によって変わる。支持率のニュースを見るときは、標本の大きさ、調査期間、誤差の範囲を一緒に確認するのが基本だ。今回は誤差の範囲が確認されておらず、1ポイントの変化を意味のある下落と読むのは難しい。", "a": "支持の下落に注目する見方だ。肯定が2週間前より下がり、否定が上回った点を根拠に、国政の推進力が弱まっているとみる。", "b": "変化は小さいとみる見方だ。1ポイントの下落は通常、誤差の範囲内で、肯定と否定の差も2ポイントなので、方向を断定しにくいという論理だ。誤差の範囲が確認されていない点もこの見方を裏付ける。", "say": "確認されたのは、肯定43%、否定45%、2週間前比1ポイントの下落だ。確認されていないのは、調査期間と誤差の範囲、弾劾の賛否の数値の照合だ。あすは、ほかの調査機関の支持率が同じ方向かを見ればよい。", "src": "聯合ニュース(イ・ジェミョン大統領の支持率43% 否定45%、11/26) · 京郷新聞(チョ・ヒデ弾劾 反対44% 賛成34%、11/26)"},
+    "q1":{"kick": "教育 · ✓ 報道2件", "title": "ソウルの高校生、期末試験は別の教室で受け金属探知機で全数検査…AIの不正行為を遮断", "what": "ソウル地域の高校生は、今回の期末試験から自分のクラスではなく別の教室で試験を受ける。人工知能を使った内申試験の不正行為を防ぐためだ。金属探知機で全数検査をする。全北の高校でも金属探知機の検査をするという報道が1社で出て、スマート機器を使った不正行為が見つかれば当日の全科目を0点にするという内容が含まれていた。ソウルで同じ処罰の基準が適用されるかは確認されていない。", "why": "生成AIとスマート機器が試験の不正行為の手段になり、内申評価の公正さが学校現場の課題になった。教室を替えて金属探知機を使うのは、機器をこっそり使う機会を物理的に減らす方式だ。処罰の水準が市・道ごとに違えば、公平性をめぐる論争が生じうる。", "me": "高校生と保護者は、学校が案内する持ち込み禁止の機器と検査の方式を確認する必要がある。腕時計型の機器とイヤホンも対象に含まれるのか、学校の告知を見るのが先だ。全北の処罰基準は単一の報道なので、ソウルの学校にそのまま適用されるとはみなせない。", "a": "強化した監督を歓迎する見方だ。AIによる不正行為が増えている現実で、物理的な遮断が公正さを守るという論理だ。", "b": "過剰な措置を懸念する見方だ。金属探知機による全数検査は、生徒を潜在的な不正行為者として扱うことなので、人権と学習の雰囲気に負担になるという論理だ。これは一般的な懸念で、報道に具体的な事例が出たわけではない。", "say": "確認されたのは、ソウルの高校の別の教室での試験と、金属探知機による全数検査の導入だ。確認されていないのは、ソウルの不正行為の処罰基準と実施する学校の数だ。あすは、期末試験の現場で実際に運営の混乱があったかを見ればよい。", "src": "聯合ニュース(ソウルの高校 金属探知機の全数検査、11/26) · 京郷新聞(全北の高校 金属探知機と0点の扱い、11/26)"},
+    "q2":{"kick": "産業 · ✓ 報道3件", "title": "キム・ジョングァン産業相「週52時間のR&D特例、あしたからでも半導体から適用すべき」", "what": "キム・ジョングァン産業相は25日、中国との研究開発競争で最も後れをとるのは時間だと述べた。週52時間制を研究開発分野で緩和できなければ未来がないという趣旨の発言もあった。産業相は、研究開発分野の週52時間制の例外を、あしたからでも半導体から適用すべきだと述べた。自動車分野の課題は転換のコストだとして、半導体のように支援が必要だという発言が、1社で別に伝えられた。適用時期と法改正の方式は確認されていない。", "why": "週52時間制は労働時間の上限を定めた制度で、研究開発の特例は、プロジェクトの期間に集中して働くことを認めようという要求だ。半導体から適用しようというのは、競争国との速度の差を縮めるための提案だ。労働界の反発と健康権の問題が同時についてくる。", "me": "研究開発職と半導体業界で働く人は、特例が実際に導入されれば働き方が変わりうる。ただし、施行の方式が決まっていないため、今すぐ変わることはない。発言のあとの政府と国会の後続の議論を確認しておく価値がある。", "a": "産業の競争力を強調する見方だ。中国の研究開発の速度に追いつくには集中して働く時間が必要で、半導体のように急ぐ分野から始めようという論理だ。", "b": "労働者の健康と制度の公平性を懸念する見方だ。特定の産業にだけ例外を設ければ、ほかの業種との公平性の問題が生じ、長時間労働が広がりうるという論理だ。この見方の具体的な反応は、まだ確認されていない。", "say": "確認されたのは、産業相が25日に、半導体から研究開発の特例を適用すべきだと述べた発言だ。確認されていないのは、適用時期、法改正の方式、労働界の反応だ。あすは、政府が具体案を出すかと、労働界の反応が出るかを見ればよい。", "src": "韓国経済(中国の研究開発に後れをとるのは時間、11/25) · 京郷新聞(週52時間の例外 半導体が先、11/25) · 電子新聞(週52時間の特例 半導体から、11/25)"},
+    "q3":{"kick": "流通 · ✓ 報道2件", "title": "スターバックスコリア「第4四半期の黒字転換が目標」…新規出店より内実強化", "what": "今年の第2四半期と第3四半期に続けて赤字を出したスターバックスコリアは、下半期に入って主要な業績指標が改善していると明らかにした。会社は第4四半期の黒字転換を目標として示した。新規出店より内実を強化するという方針も明らかにした。南山タワーに韓屋の店舗ができるという報道が1社で出たが、ほかでは確認されていない。具体的な業績の数値と黒字転換の規模は確認されていない。", "why": "外食・コーヒー業界で、新規出店の競争から店舗の効率へ重心を移すのは、コスト負担と消費の鈍化を反映した動きだ。赤字を出した大手フランチャイズが目標の時点を明らかにしたことは、下半期の業績の改善がどの程度かを推し量らせる。", "me": "スターバックスをよく利用する消費者に、今すぐ変わることはない。新規の店舗数が減り、既存の店舗のサービスとメニューへの投資が増えうる点は、参考になる。韓屋の店舗の報道は単一の報道なので、確定とはみにくい。", "a": "改善の流れをみる見方だ。会社が下半期の指標の改善を掲げたため、第4四半期の黒字転換という目標は現実的だという論理だ。", "b": "慎重な見方だ。黒字転換の目標は会社の計画にすぎず、具体的な数値が公開されていない点で、検証が必要だという論理だ。消費の鈍化が続けば、目標の達成が難しくなりうる。", "say": "確認されたのは、第2・第3四半期の連続赤字、第4四半期の黒字転換の目標、内実強化の方針だ。確認されていないのは、具体的な業績の数値と韓屋の店舗の計画だ。あすは、ほかのフランチャイズの業績発表や、会社の追加の説明が出るかを見ればよい。", "src": "聯合ニュース(第4四半期の黒字転換目標と内実強化、11/26) · 朝鮮日報(南山タワーの韓屋の店舗と黒字転換の目標、11/26)"},
+    "q4":{"kick": "観光 · ✓ 報道1件", "title": "先月の訪韓外国人216万人、前年比24%増…4か月連続で200万人超え", "what": "先月、韓国を訪れた外国人観光客は216万人で、1年前より24%増えた。月間の訪韓客が200万人を超えたのは4か月連続だ。この集計は1社の報道にしか出ておらず、国別の内訳は確認されていない。訪韓客3000万人時代に備えて、ホテルを新しく建てるより既存ホテルの客室稼働率を高め、モーテルを外国人向けの宿に改修すべきだという主張が同じ日に出たが、この主張も単一の報道だ。", "why": "訪韓客が4か月連続で200万人を超えれば、宿泊・小売・交通の需要が増え続けているというシグナルだ。観光需要が宿の供給を追い越せば、客室の価格と地域の商圏に影響する。3000万人の目標を語る段階なので、インフラ投資の論争がついてくる。", "me": "旅行・宿泊業で働く人は、繁忙期の需要と外国人の比重を推し量れる。一般の消費者は、観光地の宿泊料金が上がりうる点を考慮する価値がある。数値は単一の報道なので、公式の統計の確認が必要だ。", "a": "観光の活況を歓迎する見方だ。24%の増加と4か月連続の200万人突破は、観光需要が構造的に大きくなったというシグナルだという論理だ。", "b": "持続可能性を問う見方だ。宿の供給と地域の受け入れ能力が追いつかなければ、価格の上昇と混雑が生じるという論理だ。モーテルの改修を優先する主張もこの文脈だが、単一の報道だ。", "say": "確認されたのは、10月の訪韓客216万人と24%の増加という1社の集計だ。確認されていないのは、国別の内訳とほかの報道による照合だ。あすは、公式の統計の発表や、ほかの集計が同じ数値を確認するかを見ればよい。", "src": "聯合ニュース(先月の訪韓客216万人 24%増、11/26)"},
+    "q5":{"kick": "政府 · ✓ 報道1件", "title": "アン・ドクス国税庁長候補者「任命されたら税務調査は法と原則に従い公正に」", "what": "アン・ドクス国税庁長候補者は26日、税務調査権が乱用されているという指摘に対し、任命されれば懸念されることがないよう法と原則に従って公正に行うと述べた。この発言は1社の報道にしか出ていない。発言が出た具体的な場と、聴聞手続きの日程、任命の時期は確認されていない。", "why": "国税庁長は税務調査の権限を持つ機関の長なので、税務調査が政治的に使われるという疑いが出れば信頼が揺らぐ。候補者が税務調査の原則を述べたのは、人事の検証の過程でこの争点が核心だという意味だ。", "me": "個人と企業は、税務調査の対象を選ぶ基準と手続きの影響を受ける。発言だけで制度が変わるわけではないので、実際の調査慣行の変化を見守る必要がある。この発言は単一の報道なので、文脈の確認が先だ。", "a": "公正さを期待する見方だ。候補者が法と原則を重ねて述べたため、乱用の懸念を減らす方向に進むという論理だ。", "b": "言葉より実践をみようという見方だ。人事の検証で原則を述べるのは形式的かもしれず、実際の調査事例をみなければならないという論理だ。この見方の具体的な反応は確認されていない。", "say": "確認されたのは、候補者が法と原則に従うと述べた発言だ。確認されていないのは、発言の具体的な文脈とその後の日程だ。あすは、聴聞の日程とほかの争点が分かるかを見ればよい。", "src": "聯合ニュース(国税庁長候補者 税務調査は法と原則、11/26)"}
+  };
+  const G = {
+    "基準金利":{"f": "金融", "d": "韓国銀行が定める政策金利で、貸出・預金金利の出発点。", "w": "3.25%に上がった。"},
+    "金融通貨委員会":{"f": "金融", "d": "韓国銀行の通貨政策を決める、7人の合議制の機関。", "w": "26日に利上げを決めた。"},
+    "少数意見":{"f": "法律", "d": "合議制の機関で、多数と異なる立場を公式の記録に残した意見。", "w": "委員2人が据え置き意見を出した。"},
+    "名目GDP":{"f": "経済", "d": "物価の変動を反映しない、そのままの国内総生産。", "w": "今年は3000兆ウォンを上回る。"},
+    "営業利益":{"f": "会計", "d": "本業で稼いだ利益で、売上から営業費用を引いた値。", "w": "半導体の営業利益は700兆ウォン。"},
+    "企業再生手続き":{"f": "法律", "d": "苦境に陥った会社が、裁判所の管理の下で債務を整理しながら立ち直る手続き。", "w": "ホームプラスが進めている。"},
+    "買収意向書":{"f": "金融", "d": "会社を買いたいという関心を、公式の文書で出すこと。", "w": "受け付けの有無をめぐり、報道と労組が食い違う。"},
+    "コンソーシアム":{"f": "金融", "d": "複数の会社が共同で組む、事業・買収の連合。", "w": "開発会社主導のコンソーシアムが買収を進める。"},
+    "上告":{"f": "法律", "d": "控訴審の判決に不服で、大法院に判断を求めること。", "w": "大法院が棄却した。"},
+    "偽証":{"f": "法律", "d": "宣誓した証人が、故意に偽りの陳述をする罪。", "w": "ユン・ソンニョル前大統領の容疑。"},
+    "無罪確定":{"f": "法律", "d": "もう争えない状態で、無罪が固まったこと。", "w": "偽証容疑についての判断。"},
+    "過剰生産関税":{"f": "通商", "d": "特定の国の生産が需要を上回り、品物があふれるという理由で課す追加関税。", "w": "米国が14の国・地域に予告案を出した。"},
+    "上限":{"f": "通商", "d": "税率がこれ以上上がらないよう定めた最高線。", "w": "韓国には15%の上限が維持される。"},
+    "全国指標調査":{"f": "政治", "d": "複数の調査機関が定期的に行う全国世論調査(NBS)。", "w": "支持率43%。"},
+    "否定的評価":{"f": "政治", "d": "国政運営を良くないと答えた回答。", "w": "45%で肯定を上回った。"},
+    "弾劾":{"f": "法律", "d": "高位公職者の違法を理由に、国会が罷免を求める手続き。", "w": "チョ・ヒデ大法院長の弾劾の賛否。"},
+    "週52時間制":{"f": "労働", "d": "1週間の法定労働時間の上限を定めた制度。", "w": "産業相が研究開発の例外に言及した。"},
+    "特例":{"f": "労働", "d": "一般の規定と異なり、特別に認める規定。", "w": "研究開発の特例を半導体から。"},
+    "R&D":{"f": "産業", "d": "研究開発。", "w": "中国との競争で時間が最も後れをとるという発言。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
