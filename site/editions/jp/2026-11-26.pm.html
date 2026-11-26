@@ -1,0 +1,334 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast h1 i{font-style:normal;color:var(--red)}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>57,499.16</b>日経平均 · 11/26終値 · 前日比+0.86%</div>
+      <div class="mast"><h1 lang="en">DailyDrop<i>.</i></h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>TOPIX · 終値の数値が取得できず</div>
+    </div>
+    <div class="dateline"><span>No. 53 · 夕刊</span><b>2026年11月26日(木)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="pm1">
+      <div class="kick">政治 · 国会<span>✓ 4媒体 · 採決の日程と無所属議員の動向は未確認</span></div>
+      <h2 class="hl">野党8党派が関文部科学相の問責決議案を参院に提出、関氏は進退を明言せず</h2>
+      <p class="deck">政治資金パーティーをめぐる指摘が続く関文部科学相に対し、野党8党派が26日、問責決議案を参議院に提出した</p>
+      <div class="body">
+        <p>野党8党派は26日、政治資金パーティーをめぐる指摘が相次ぐ関文部科学相に対する問責決議案を参議院に提出した。野党側は、関氏が国会で事実と異なる説明をするなど閣僚にふさわしくないことと、行政の公平性を損なうことを理由に挙げている。問責決議案は、大臣の責任を問う参議院の意思表示で、可決されても法的に辞任を強いる力はなく、辞めるかどうかは本人と首相の判断になる。問題とされるパーティーは官僚を講師に招いたもので、利益率が92%に達したと伝えられる。利益率92%とは、会費収入100円のうち、経費を引いた92円が手元に残る計算だ。</p>
+        <p>提出を受けて関氏は「丁寧に説明したい」と話したが、進退は明言しなかった。高市政権は25日の時点で、関氏の続投方針を堅持していると伝えられている。決議案が可決されるかどうかは不透明で、無所属議員の対応が採決のカギを握ると伝えられる。参議院で審議中の法案への影響も指摘されている。採決をいつ行うのか、関氏がこの先どこで追加の説明をするのかは、26日夕方の時点で確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="pm2">
+      <div class="kick">経済 · 通商<span>✓ 4媒体 · 日本向け15%は1媒体の報道で未確認、発動時期と法的根拠も未確認</span></div>
+      <h3 class="hl">米国が14カ国・地域に国別の新関税案、日本は15%で違憲判決前の水準と伝えられる</h3>
+      <div class="one">
+        <p>米国が25日(水)、主要な貿易相手14カ国・地域を対象に、国ごとに税率を定めた新たな関税案を示したと伝えられる。日本向けは15%で、米最高裁が関税を違憲とした判決の前と同じ水準に戻る形だという。関税は輸入品にかかる税で、税率が15%なら、100ドルの輸入品に15ドルが上乗せされる計算になる。日本は2025年の日米合意で、相互関税を15%とすることで折り合っていた。 案が示された25日の米国市場では、関税の混乱とハイテク株の下落が重なり、ボラティリティ(価格の変動の大きさ)に疲れた投資家が振り回されたと伝えられる。26日の日経平均の終値は57,499.16円で、前日比0.86%上昇した。ほかの国・地域では、中国に追加20%、シンガポールに最大20%などと伝えられ、税率は国ごとに異なる。発動の時期と法的な根拠は、伝えられた範囲では確認できていない。日米合意の15%との関係や、日本政府の対応も、26日夕方の時点で示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="pn1"><b>衆院特別委員会が定数削減法案の26日採決を見送り、与野党は改めて協議と伝えられる</b><em>与党は26日の採決を再提案したが、野党は質疑時間のさらなる確保を求めて折り合わなかった。改めて協議するという。</em><span>政治 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="pn2"><b>PayPayのクレジット連携決済の障害が26日午前に復旧したと発表されたと伝えられる</b><em>25日午後8時過ぎからクレジットカードと連携したサービスで決済ができなくなっていた。復旧は26日午前4時50分ごろという。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="pn3"><b>相続した住宅を売る際の税の特例を4年延長する方針と伝えられる</b><em>住宅価格の高騰が続くなか、住宅の供給を増やす狙いがあるという。延長される期間は4年間と伝えられる。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="pn4"><b>ヘグセス氏が12月8日に来日し日本の防衛相と会談する可能性と伝えられる</b><em>12月8日の来日が検討されていると伝えられる。在日米軍の駐留経費をめぐる日本側の財政支援などが議題になる見通しという。</em><span>安全保障 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="pn5"><b>みずほがインドのアベンダスとの取引で現地進出を拡大、取引額は最大5億1000万ドルと伝えられる</b><em>アベンダスは独自のブランドを維持するという。同社は4年間で75人のプライベートバンカーを採用すると伝えられる。</em><span>金融 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="pm3">
+      <div class="kick">国際 · 北朝鮮<span>✓ 3媒体 · 視察の日付と場所は未確認</span></div>
+      <h3 class="hl">北朝鮮の金正恩総書記が核関連施設を視察、核保有の承認は「絶対に誰にも求めない」と強調</h3>
+      <div class="body">
+        <p>北朝鮮の金正恩総書記が、核物質の生産工場や核兵器研究所などを視察し、核保有について「絶対に誰の承認も追求しない」と述べたと26日に伝えられた。米国に核保有の承認を求めることはしないという趣旨で、非核化には応じない姿勢を改めて強調した形だ。核物質は、核兵器の材料になるウランやプルトニウムなどを指す。</p>
+        <p>視察の日付や場所、同行した人物、新しく公開された施設が含まれるかどうかは、伝えられた範囲では確認できていない。発言の全文も確認されていない。日本、米国、韓国は北朝鮮に非核化を求める立場を取っており、今回の発言を受けた各国政府の公式な反応は、26日夕方の時点で確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="pm4">
+      <div class="kick">政治 · 地方<span>✓ 3媒体 · 住民投票の日程と区割りの詳細は未確認</span></div>
+      <h3 class="hl">大阪都構想の制度案が固まり3度目の住民投票へ、特別区の5局は要員不足を訴えると伝えられる</h3>
+      <div class="body">
+        <p>大阪都構想の制度案が固まり、日本維新の会の意向を反映した形で3度目の住民投票に向かうと26日に伝えられた。都構想は、大阪市を廃止して複数の特別区に再編し、大阪府との役割を分け直す構想で、過去2回の住民投票ではいずれも否決されている。維新の吉村洋文代表は25日、来春の住民投票の実施を求めたと伝えられる。</p>
+        <p>一方、特別区の中核となる5つの局が、人も時間も足りないとして「サービスの維持は困難」と要員不足を訴えていることが、内部資料から分かったと伝えられる。住民投票の日程、特別区の数や区割り、制度案の具体的な中身は、伝えられた範囲では確認できていない。副首都との関係づけも含め、議会での手続きがどう進むのかが今後の焦点になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="pm5">
+      <div class="kick">技術 · 宇宙<span>✓ 3媒体 · 打ち上げ開始の時期と承認条件は未確認</span></div>
+      <h3 class="hl">米FCCがSpaceXの軌道データセンター用衛星を最大100万基まで承認、科学者らは懸念と伝えられる</h3>
+      <div class="body">
+        <p>米連邦通信委員会(FCC)が、SpaceXの軌道データセンター構想で最大100万基の衛星を打ち上げる計画を承認したと、26日に伝えられた。衛星は「Starmind」と呼ばれ、宇宙空間にAI向けの計算設備を置く構想だという。データセンターは、大量の計算を行うコンピューターを集めた施設で、これを地上ではなく軌道上に置くのがこの計画の特徴だ。</p>
+        <p>計画をめぐっては、科学者などから懸念が出ていると伝えられる。ただ、懸念の具体的な内容は、伝えられた範囲では確認できていない。打ち上げの開始時期、段階的に承認されたのかどうか、承認に付いた条件も、26日夕方の時点で確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>軌道データセンター<i>技術</i></b><p>AIなどの大量の計算を行うコンピューターを、地上の建物ではなく地球の周りの軌道上の衛星に載せる構想。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>関文部科学相はすでに辞任した</b> <span>26日の時点で、関氏は問責決議案の提出を受けて「丁寧に説明したい」と話したが、進退は明言していない。高市政権は続投の方針を堅持していると25日に伝えられており、辞任は確認されていない。</span></div>
+        <div><b>米国の新関税は日本にもう発動された</b> <span>伝えられているのは14カ国・地域への国別の関税案を示した段階で、日本向けは15%とされる。発動の時期や法的な根拠は確認できておらず、正式な決定は確認されていない。</span></div>
+        <div><b>大阪都構想の住民投票の日程が決まった</b> <span>制度案が固まったと伝えられた段階で、吉村洋文代表は来春の実施を求めたと伝えられる。住民投票の日程は確認されておらず、議会での手続きもこれからだ。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今夜 · 木 11月26日</b><span>関文部科学相の問責決議案の採決日程は、26日夕方の時点で確認されていない。衆議院の特別委員会では、定数削減法案の採決時期について与野党が改めて協議するとされる。</span><b>あす · 金 11月27日</b><span>問責決議案が参議院でどう扱われるか、定数削減法案の協議がまとまるかが焦点になる。米国の新関税案で日本向け15%が正式に決まるかと日本政府の対応が示されるかも確認点だ。</span><b>12月8日ごろ</b><span>ヘグセス氏が来日し、日本の防衛相と会談する可能性が伝えられている。在日米軍の駐留経費をめぐる日本側の財政支援が議題になる見通しとされるが、正式な発表は確認されていない。</span><b>読者に</b><span>見出しや本文の「伝えられる」は、確認が一つの情報源にとどまる事柄に付けている。続報で複数の確認が取れたものから、断定の形に改めていく。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "pm1":{"kick": "政治 · 国会 · ✓ 4媒体 · 採決の日程と無所属議員の動向は未確認", "title": "野党8党派が関文部科学相の問責決議案を参院に提出、関氏は進退を明言せず", "what": "野党8党派は26日、関文部科学相に対する問責決議案を参議院に提出した。関氏は政治資金パーティーをめぐる指摘が相次いでおり、野党側は国会で事実と異なる説明をしたことなどを理由に、閣僚にふさわしくないと主張している。野党側は、行政の公平性を損なうとも述べている。関氏は提出を受けて「丁寧に説明したい」と話したが、進退には触れなかった。高市政権は25日の時点で、関氏の続投方針を堅持していると伝えられている。パーティーは官僚を講師に招いたもので、利益率が92%に達したと伝えられる。", "why": "問責決議案は、参議院が大臣の責任を問う意思を示すもので、可決されても法的に辞任を強いる力はない。ただ、可決されれば政権への政治的な圧力が強まり、参議院で審議中の法案の扱いにも影響が出る可能性があると伝えられる。", "me": "文部科学相は学校教育や研究費、大学の運営に関わる政策を担う。大臣が交代するか続投するかで、予算や制度の議論の進み方が変わる可能性がある。パーティーの会費の使い方は、政治資金の透明性に関わる身近な問題でもある。", "a": "野党側は、事実と異なる説明をした大臣が職にとどまることは、国会審議の信頼を損なうと訴える。官僚を講師に招いて高い利益率を得たとされる点も、行政の公平性にかかわると指摘している。", "b": "政権側は続投の方針を堅持しており、関氏本人も説明を続ける姿勢を示している。問責決議案には法的な拘束力がなく、辞任するかどうかは本人と首相の判断になるという立場だ。", "say": "確認できているのは、野党8党派が26日に提出したことと、関氏が進退を明言していないことだ。採決の有無や時期、無所属議員の動向、パーティーの収支の詳細は確認できていない。今夜以降は、与野党がどの日程で扱いを決めるかが焦点になる。", "src": "NHK(問責決議案の提出, 11/26) · 毎日新聞(進退は明言せず, 11/26) · 朝日新聞(パーティー問題の経緯, 11/26) · 時事通信(続投方針の堅持, 11/25)"},
+    "pm2":{"kick": "経済 · 通商 · ✓ 4媒体 · 日本向け15%は1媒体の報道で未確認、発動時期と法的根拠も未確認", "title": "米国が14カ国・地域に国別の新関税案、日本は15%で違憲判決前の水準と伝えられる", "what": "米国は25日(水)、主要な貿易相手14カ国・地域を対象に、国ごとの新たな関税案を示したと伝えられる。日本向けの税率は15%で、米最高裁が関税を違憲とした判決の前と同じ水準だという。日本は2025年の日米合意で、相互関税を15%とすることで折り合っていた。案が示された25日の米国市場では、関税をめぐる混乱とハイテク株の下落が重なったと伝えられる。26日の日経平均の終値は57,499.16円で、前日比0.86%上昇した。ほかの国・地域では、中国に追加20%、シンガポールに最大20%などと伝えられ、税率は国ごとに異なる。発動時期は確認できていない。", "why": "関税は輸入品の価格に上乗せされ、輸出する企業の利益や、輸入する側の物価に影響する。税率が国ごとに変わると、企業は取引先や生産拠点の見直しを迫られることがある。日本向けが従来の合意と同じ15%なら、日本の輸出企業にとっては急な負担増は避けられる形になるが、案の段階で、確定した措置ではない。", "me": "自動車や機械などを米国に輸出する企業の業績、株価、為替は、関税の税率に左右される。輸入品の値段が上がれば、家計の負担にも波及する可能性がある。ただ、26日夕方の時点では案の段階で、すぐ買い物の値段が変わるわけではない。", "a": "市場の側は、関税の見通しが定まらないことを警戒している。変動に疲れた投資家が、関税の混乱とハイテク株の下落で振り回されたと伝えられる。", "b": "関税を重ねる米政権の側は、人気を得るためではなく、権力を行使する手段として関税を使っているとの見方がある。そうした見方も伝えられている。", "say": "確認できているのは、14カ国・地域への国別の案が示されたことと、日本向けが15%と伝えられたことだ。日本向け15%は1媒体の報道にとどまり、発動の時期、日米合意との関係、日本政府の対応は確認できていない。次の焦点は、案が正式に決まるかどうかと、日本政府の反応だ。", "src": "時事通信(新関税案 日本15%, 11/26) · The Japan Times(関税案と市場の動揺, 11/26) · PBS NewsHour(中国への追加20%, 11/25) · The Straits Times(シンガポールへ最大20%, 11/26)"},
+    "pm3":{"kick": "国際 · 北朝鮮 · ✓ 3媒体 · 視察の日付と場所は未確認", "title": "北朝鮮の金正恩総書記が核関連施設を視察、核保有の承認は「絶対に誰にも求めない」と強調", "what": "北朝鮮の金正恩総書記が、核物質の生産工場や核兵器研究所などを視察したと26日に伝えられた。金総書記は核保有について「絶対に誰の承認も追求しない」と述べ、米国に核保有の承認を求めることはしないという趣旨を示したとされる。非核化には応じない姿勢を改めて強調した形だ。視察の日付と場所、同行者は確認できていない。発言の全文も確認されていない。", "why": "核保有の承認を求めない、という発言は、北朝鮮が交渉の条件として核を手放すつもりがないと示すものだ。核物質の生産施設を視察したことは、核兵器の材料を増やす能力を保っていることを示す意味を持つ。日米韓が求める非核化とは、立場が大きく離れたままだ。", "me": "日本は北朝鮮の弾道ミサイルや核開発の射程圏にあり、防衛や安全保障の議論に直結する。発言が続けば、ミサイル発射などの動きに警戒が必要になる場面が増える可能性がある。", "a": "北朝鮮の側は、核保有は自国の安全を守るための当然の権利で、他国の承認を必要としないという立場を示している。非核化を交渉の議題にしないという主張だ。", "b": "日本、米国、韓国などは、北朝鮮の核保有を認めない立場を取ってきた。非核化を求める国際社会の姿勢は、今回の発言でも変わらないとされる。", "say": "確認できているのは、金総書記の視察と「誰の承認も追求しない」との発言が伝えられたことだ。視察の日付、場所、新たな施設の有無、各国政府の公式な反応は確認できていない。今後は、日米韓の反応と北朝鮮の次の動きが焦点になる。", "src": "NHK(核保有「誰の承認も追求しない」, 11/26) · 毎日新聞(核保有の承認は求めない, 11/26) · 朝日新聞(核生産施設の視察, 11/26)"},
+    "pm4":{"kick": "政治 · 地方 · ✓ 3媒体 · 住民投票の日程と区割りの詳細は未確認", "title": "大阪都構想の制度案が固まり3度目の住民投票へ、特別区の5局は要員不足を訴えると伝えられる", "what": "大阪都構想の制度案が固まり、日本維新の会の意向を反映した形で3度目の住民投票に向かうと26日に伝えられた。維新の吉村洋文代表は25日、来春の住民投票の実施を求めたと伝えられる。一方、特別区の中核となる5つの局が、人も時間も足りないとして「サービスの維持は困難」と要員不足を訴えていることが、内部資料から分かったと伝えられる。住民投票の日程と区割りの詳細は確認できていない。", "why": "都構想は、大阪市を廃止して複数の特別区に再編する構想で、住民サービスの担い手や予算の配分が変わる。過去2回は住民投票で否決されており、制度案がどこまで具体化したかが、投票結果を左右する材料になる。要員不足の訴えは、制度の実行力に関わる論点だ。", "me": "大阪市に住む人にとっては、区役所や福祉などの窓口がどう変わるかに直結する。それ以外の地域の住民にとっても、副首都の議論や、自治体の再編を住民投票で決める仕組みの事例として注目される。", "a": "維新の側は、制度案が固まった以上、早く住民投票で住民に問うべきだとの立場だ。吉村代表は来春の実施を求めたと伝えられる。", "b": "慎重な側は、特別区の中核部局が要員不足を訴えている以上、サービスの維持に確証が持てないと指摘する。内部資料は、人も時間も足りないとして、見切り発車を危ぶんでいる。", "say": "確認できているのは、制度案が固まったと伝えられたことと、吉村代表が来春の実施を求めたことだ。住民投票の日程、特別区の数や区割り、要員不足の具体的な規模は確認できていない。次は議会での手続きの進み方が焦点になる。", "src": "毎日新聞(制度案が固まる, 11/26) · 朝日新聞(維新が3回目に挑む理由, 11/26) · 時事通信(来春の住民投票, 11/25)"},
+    "pm5":{"kick": "技術 · 宇宙 · ✓ 3媒体 · 打ち上げ開始の時期と承認条件は未確認", "title": "米FCCがSpaceXの軌道データセンター用衛星を最大100万基まで承認、科学者らは懸念と伝えられる", "what": "米連邦通信委員会(FCC)が、SpaceXの軌道データセンター構想で最大100万基の衛星を打ち上げる計画を承認したと、26日に伝えられた。衛星は「Starmind」と呼ばれ、宇宙空間にAI向けの計算設備を置く構想だという。計画をめぐっては、科学者などから懸念が出ていると伝えられる。懸念の具体的な内容は確認できていない。打ち上げの開始時期と、承認に付いた条件も確認できていない。", "why": "衛星の数が桁違いに増えれば、地球の周りの軌道の混雑や、天体観測への影響、衛星同士の衝突の危険が議論になる。一方で、地上のデータセンターが使う電力や用地の制約を宇宙に移せるのかという、AI時代の計算資源をめぐる議論にもつながる。", "me": "AIサービスを支える計算設備の置き場が変われば、将来の利用料金や通信の質に影響する可能性がある。星空の観測や衛星通信を使う人にとっても、軌道上の衛星の増加は無関係ではない。", "a": "構想を進める側は、宇宙空間に計算設備を置くことで、AIの計算需要に応えられると位置づけている。規制当局の承認は、計画を前に進める根拠になる。", "b": "科学者などは、衛星が最大100万基に達する計画に懸念を示している。観測や軌道の安全への影響を、承認の前に十分に検討すべきだとする立場だ。", "say": "確認できているのは、最大100万基の計画が承認されたと伝えられたことと、科学者などの懸念があることだ。打ち上げの開始時期、承認の条件、懸念の中身は確認できていない。段階的な承認なのかどうかが次の確認点になる。", "src": "The Japan Times(FCCの承認, 11/26) · ITmedia NEWS(Starmind 最大100万基, 11/26) · BBC(100万基の衛星計画の承認, 11/26)"},
+    "pn1":{"kick": "政治 · ✓ 2媒体", "title": "衆院特別委員会が定数削減法案の26日採決を見送り、与野党は改めて協議と伝えられる", "what": "衆議院議員の定数削減法案を審議する衆議院の特別委員会は26日、理事会を開いた。与党側は26日の採決を改めて提案したが、野党側は質疑の時間をさらに確保するよう求め、折り合わなかったと伝えられる。このため26日は採決を行わず、改めて協議することになったと伝えられる。法案の採決日程と、次に理事会が開かれる日は確認できていない。", "why": "定数削減は、衆議院の議員の数を減らす制度の変更で、各党の議席の見通しや選挙の区割りに影響する。採決を急ぐか、審議時間を確保するかをめぐる与野党の対立は、法案の成立時期を左右する。", "me": "議員の数が減れば、地方の声が国会に届きにくくなるのではないかという議論が出る。同時に、議員報酬などの歳費をどう扱うかも、税金の使い道として関心が集まる。", "a": "与党側は、審議が進んでいるとして、26日の採決を求めたと伝えられる。法案を早く成立させたいという立場だ。", "b": "野党側は、質疑の時間がまだ足りないとして、さらに確保するよう求めたと伝えられる。拙速な採決を避けたいという立場だ。", "say": "確認できているのは、26日の採決が見送られ、改めて協議することになった点だ。次の採決の日程、法案の修正の有無、与野党がどこで折り合えるのかは確認できていない。次の理事会の日程が焦点になる。", "src": "NHK(26日は採決行わず, 11/26) · 47NEWS(採決折り合わず, 11/26)"},
+    "pn2":{"kick": "経済 · ✓ 1媒体", "title": "PayPayのクレジット連携決済の障害が26日午前に復旧したと発表されたと伝えられる", "what": "スマホ決済大手のPayPayは、システム障害により25日午後8時過ぎからクレジットカードと連携したサービスで決済ができなくなっていたが、26日午前4時50分ごろに復旧したと発表したと伝えられる。クレジットカード連携の決済は再開された。障害の原因、影響を受けた利用者の数、決済の件数は確認できていない。", "why": "キャッシュレス決済は、店頭の支払い方法として広く使われており、障害が起きると買い物や交通で支払いに困る人が出る。復旧までにおよそ8時間50分かかったとされる点も、決済基盤への依存の大きさを示す。", "me": "PayPayを使う人は、障害の時間帯にクレジット連携の支払いができなかった可能性がある。別の支払い手段を手元に残しておくことが、備えの一つになる。", "a": "利用者の側は、決済が止まると店頭で支払えず、代わりの手段がない場合は困ると受け止めている。", "b": "事業者の側は、復旧を発表し、決済の再開を知らせることで、利用者の不安を和らげたい立場だ。", "say": "確認できているのは、25日午後8時過ぎから26日午前4時50分ごろまで障害があったことと、復旧が発表されたことだ。原因と影響の範囲は確認できていない。再発防止策が示されるかが次の確認点になる。", "src": "NHK(PayPayのクレジット連携決済障害が復旧, 11/26)"},
+    "pn3":{"kick": "経済 · ✓ 1媒体", "title": "相続した住宅を売る際の税の特例を4年延長する方針と伝えられる", "what": "政府は、相続した住宅を売却する際の税の特例を、4年延長する方針だと伝えられる。住宅価格が高騰するなか、住宅の供給を増やす狙いがあるという。延長の対象となる期間は4年間と伝えられる。特例の細かい要件、対象となる売却の期限、実施の時期は、伝えられた範囲では確認できていない。", "why": "相続した住宅を売るときの税の負担が軽くなれば、売却が進み、市場に出る住宅が増える可能性がある。住宅価格の高騰が続く状況で、供給を増やす手段として位置づけられている。", "me": "親から家を相続した人にとっては、売却するタイミングを考える材料になる。ただ、要件や期限の詳細は確認できていないため、実際に使えるかどうかは公式の発表を待つ必要がある。", "a": "延長を求める側は、相続した住宅を手放しやすくなり、空いたまま残る住宅が減って、市場に出る住宅の供給が増えると見る。", "b": "慎重な側は、特例の延長が住宅価格の高騰にどこまで効くのか、税収が減る影響も含めて検討が必要だとの立場だ。", "say": "確認できているのは、4年延長の方針が伝えられたことだ。特例の要件、対象となる売却の期間、実施の時期は確認できていない。税制改正の議論の中で正式に決まるかどうかが焦点になる。", "src": "The Japan Times(相続した住宅の売却の税の特例を4年延長へ, 11/26)"},
+    "pn4":{"kick": "安全保障 · ✓ 1媒体", "title": "ヘグセス氏が12月8日に来日し日本の防衛相と会談する可能性と伝えられる", "what": "米国のヘグセス氏が12月8日に来日し、日本の防衛相との会談を行う可能性があると伝えられる。会談では、在日米軍の駐留経費をめぐる日本側の財政支援などが議題になる見通しだという。来日の正式な発表は確認できていない。会談の場所と、議題の詳細、駐留経費の具体的な金額も、伝えられた範囲では確認できていない。", "why": "在日米軍の駐留経費の分担は、日米同盟の費用負担をめぐる大きな論点だ。米国が日本の負担の増額を求めるのか、日本がどう応じるのかは、予算や防衛政策に影響する。", "me": "防衛費や米軍関連の経費は、税金の使い道として国民の負担に関わる。会談の結果次第で、来年度以降の予算の議論が変わる可能性がある。", "a": "日本側の具体的な発言は確認できていない。日米同盟を維持するための負担のあり方を、会談で説明する場面になると伝えられる。", "b": "米国側の具体的な要求も確認できていない。増額が議題になるかどうかは、会談が近づく中で明らかになるとみられていると伝えられる。", "say": "確認できているのは、12月8日の来日の可能性が伝えられたことだ。正式な日程、議題の詳細、駐留経費の具体的な金額は確認できていない。政府の正式な発表が出るかが次の確認点になる。", "src": "The Japan Times(ヘグセス氏の訪日の可能性, 11/26)"},
+    "pn5":{"kick": "金融 · ✓ 1媒体", "title": "みずほがインドのアベンダスとの取引で現地進出を拡大、取引額は最大5億1000万ドルと伝えられる", "what": "みずほがインドのアベンダスとの取引で、現地での銀行業務を広げると伝えられる。取引額は最大5億1000万ドルとされる。アベンダスは自主性を保ち、独自のブランドを維持するという。同社は4年間で75人のプライベートバンカーを採用すると伝えられる。取引の完了時期と、出資の割合は確認できていない。", "why": "日本のメガバンクは、国内の低金利と人口減少を背景に、成長が見込める海外での事業を広げている。インドは経済が拡大しており、富裕層向けの金融サービスの需要も大きい。", "me": "みずほの海外展開は、日本企業がインドに進出する際の金融サービスの選択肢が増える可能性につながる。個人の暮らしへの直接の影響は大きくないが、銀行の収益構造の変化は預金や融資の条件にも間接的に及ぶことがある。", "a": "取引を評価する側は、成長市場のインドで、独自のブランドを維持する現地の金融会社と組むことは、現地の顧客基盤を取り込む手段になると見る。", "b": "慎重な側は、海外の取引は為替や規制の影響を受けやすく、最大5億1000万ドルという規模に見合う収益が得られるかどうかを見極める必要があると指摘する。", "say": "確認できているのは、取引額が最大5億1000万ドルと伝えられたことと、アベンダスが独自のブランドを保つことだ。取引の完了時期、出資割合、人員の採用計画の詳細は確認できていない。当局の承認の有無が次の確認点になる。", "src": "The Japan Times(みずほとアベンダスの取引, 11/26)"}
+  };
+  const G = {
+    "問責決議案":{"f": "政治", "d": "国会が、特定の大臣などの責任を問い、辞任を促す意思を示す決議案。可決されても法的に辞めさせる力はない。", "w": "野党8党派が関文部科学相について参議院に提出した。"},
+    "政治資金パーティー":{"f": "政治", "d": "政治家や政治団体が、会費を集めて開く催し。集めた会費は政治資金として収支の報告が必要になる。", "w": "関文部科学相のパーティーをめぐる指摘が相次いでいる。"},
+    "利益率":{"f": "経済", "d": "収入に対して、経費を引いた後に残る利益の割合。92%なら、収入100円につき92円が残る。", "w": "関氏のパーティーの利益率が92%と伝えられる。"},
+    "関税":{"f": "経済", "d": "輸入品にかかる税。税率が高いほど、輸入品の値段が上がりやすくなる。", "w": "米国が14カ国・地域に国別の新関税案を示した。"},
+    "違憲判決":{"f": "法", "d": "憲法に反すると裁判所が判断する判決。判断された法律や措置は効力を失うことがある。", "w": "日本向けの15%は、違憲判決の前と同じ水準と伝えられる。"},
+    "ボラティリティ":{"f": "金融", "d": "価格の変動の大きさ。大きいほど値動きが激しく、投資家にとって先の見通しが立ちにくい。", "w": "関税案が示された25日の米国市場で、投資家が変動に振り回されたと伝えられる。"},
+    "核物質":{"f": "安全保障", "d": "核兵器や原子炉の材料になる、ウランやプルトニウムなどの物質。", "w": "金総書記が核物質の生産工場を視察したと伝えられた。"},
+    "非核化":{"f": "安全保障", "d": "核兵器を持たない、または手放すこと。北朝鮮については、核兵器と関連施設をなくすことを指す。", "w": "金総書記は非核化に応じない姿勢を改めて強調した。"},
+    "都構想":{"f": "制度", "d": "大阪市を廃止して複数の特別区に再編し、大阪府と役割を分け直す構想。過去2回の住民投票で否決された。", "w": "制度案が固まり、3度目の住民投票に向かうと伝えられた。"},
+    "特別区":{"f": "制度", "d": "東京23区のように、市町村より広い権限を持つ区。都構想では大阪市を再編して設ける。", "w": "特別区の中核5局が要員不足を訴えていると伝えられる。"},
+    "住民投票":{"f": "制度", "d": "住民が直接、賛成か反対かを投票で決める手続き。都構想では制度の実施の可否を決める。", "w": "来春の実施を維新の吉村代表が求めたと伝えられる。"},
+    "軌道データセンター":{"f": "技術", "d": "AIなどの大量の計算を行うコンピューターを、衛星に載せて地球の周りの軌道上に置く構想。", "w": "SpaceXの計画で最大100万基の衛星が承認されたと伝えられる。"},
+    "定数削減":{"f": "制度", "d": "衆議院などの議員の数を減らす制度の変更。議席の配分や選挙区の区割りに影響する。", "w": "衆議院の特別委員会で法案の採決が26日は見送られた。"},
+    "採決":{"f": "制度", "d": "議案に賛成か反対かを、議員が投票などで決めること。", "w": "定数削減法案の26日の採決は行われなかった。"},
+    "駐留経費":{"f": "安全保障", "d": "在日米軍が日本に駐留するためにかかる費用。日本側が一部を負担している。", "w": "会談の議題になる見通しと伝えられる。"},
+    "プライベートバンカー":{"f": "金融", "d": "富裕層の資産の運用や相続などの相談に乗る、専門の金融担当者。", "w": "アベンダスが4年間で75人採用すると伝えられる。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
