@@ -132,7 +132,7 @@ const handler = {
         const it = J && J.items && J.items[am[2]];
         const tpl = it && await env.ASSETS.fetch(new Request(url.origin + '/_art/' + J.r + '.html'));
         if (tpl && tpl.ok) {
-          const html = (await tpl.text()).split('@@T@@').join(it.t).split('@@D@@').join(it.d).split('@@U@@').join(it.u).split('@@L@@').join(it.ld).split('@@B@@').join(it.b);
+          const html = (await tpl.text()).split('@@T@@').join(it.t).split('@@D@@').join(it.d).split('@@U@@').join(it.u).split('@@L@@').join(it.ld).split('@@B@@').join(it.b).split('@@I@@').join(it.i || 'https://dailydropnewspaper.com/og.png?v=5');
           const out = new Response(html, { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } });
           if (cache) ctx.waitUntil(cache.put(ck, out.clone()));
           return withCC(out, country);

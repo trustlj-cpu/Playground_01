@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """에이전트가 쓴 판을 검증·등록·빌드·push. 사용: finish.py CODE:DATE[:pm] [CODE:DATE[:pm] ...]  (meta: scratchpad 1016/<CODE>_<DATE>_meta.json 또는 DD_META_DIR)
 석간은 CODE:DATE:pm (파일 CODE_DATE_pm_spec.json / _meta.json → site/editions/<prefix><date>.pm.html, publish_at = 현지 18:00, 호수 = 그날 조간과 같음)."""
-import datetime as dt, json, os, sys
+import datetime as dt, json, os, subprocess, sys
 from zoneinfo import ZoneInfo
 sys.path.insert(0, os.path.dirname(__file__))
 import run
@@ -36,6 +36,13 @@ for a in sys.argv[1:]:
     for x in run.jload(os.path.join(run.SITE, 'editions.json')):
         if slot and x['date'] == date and (x.get('region') or 'KR') == code and not x.get('slot'): no = x['no']
     job = {'c': c, 'date': date, 'slot': slot, 'no': no, 'publish_at': six.strftime('%Y-%m-%dT%H:%M:%SZ') if six > now else None}
+    # 판별 공유 이미지(og:image) — site/og/<prefix><dkey>.png. 실패해도 발행은 막지 않는다(build.js 가 /og.png 로 대체). 숨김 나라는 스크립트가 건너뛴다.
+    try:
+        og = subprocess.run(['node', os.path.join(os.path.dirname(__file__), 'og_image.js'), '--force', '--html', path, '--code', code, '--date', date, '--no', str(no)] + (['--slot', 'pm'] if slot else []), capture_output=True, text=True, timeout=180)
+        if og.returncode:
+            print('WARN og_image failed (falls back to /og.png)', a, (og.stderr or og.stdout)[-200:])
+    except Exception as ex:
+        print('WARN og_image skipped (falls back to /og.png)', a, ex)
     snap = run.snapshot(); run.register(job, meta); ok, log = run.build_ok()
     if not ok:
         run.restore(snap); print('BUILD FAIL', a, log); continue
