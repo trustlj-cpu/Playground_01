@@ -1,0 +1,36 @@
+name: feed-backfill
+
+# 새 국가판의 지난 호(1호~)용 기사 채우기. feed/backfill_request.json 을 바꿔 푸시하면 실행.
+on:
+  push:
+    branches: [paycheck-page]
+    paths:
+      - "feed/backfill_request.json"
+      - "feed/backfill_gnews.py"
+  workflow_dispatch:
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve Worker URL and ingest key
+        id: cf
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then echo "secrets 없음"; exit 0; fi
+          SUB=$(curl -sS "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/subdomain" -H "Authorization: Bearer $CF_TOKEN" | python3 -c 'import sys,json;print(json.load(sys.stdin)["result"]["subdomain"])')
+          echo "url=https://dailydrop-feed.$SUB.workers.dev" >> "$GITHUB_OUTPUT"
+          echo "::add-mask::$(printf 'dailydrop-ingest:%s:%s' "$CF_ACCOUNT" "$CF_TOKEN" | sha256sum | cut -c1-48)"
+          echo "key=$(printf 'dailydrop-ingest:%s:%s' "$CF_ACCOUNT" "$CF_TOKEN" | sha256sum | cut -c1-48)" >> "$GITHUB_OUTPUT"
+      - name: Backfill past-date headlines
+        env:
+          FEED_URL: ${{ steps.cf.outputs.url }}
+          INGEST_KEY: ${{ steps.cf.outputs.key }}
+        run: python3 feed/backfill_gnews.py

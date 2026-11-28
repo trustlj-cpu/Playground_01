@@ -1,0 +1,60 @@
+name: feed-worker-deploy
+
+on:
+  push:
+    branches: [paycheck-page]
+    paths:
+      - "feed/worker/**"
+      - ".github/workflows/feed-deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Deploy Worker + set INGEST_KEY
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        working-directory: feed/worker
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "CLOUDFLARE_API_TOKEN 없음 — 저장소 Settings → Secrets 에 등록하면 자동 배포됩니다."; exit 0; fi
+          # 토큰 '형식'만 진단 (값은 절대 출력하지 않음)
+          python3 - <<'PY'
+          import os,re
+          t=os.environ["CLOUDFLARE_API_TOKEN"]; a=os.environ.get("CLOUDFLARE_ACCOUNT_ID","")
+          print(f"[진단] 토큰 길이={len(t)} 공백포함={' ' in t} 줄바꿈포함={chr(10) in t or chr(13) in t} 따옴표포함={any(c in t for c in chr(34)+chr(39))} 'Bearer'포함={'bearer' in t.lower()} 'curl'포함={'curl' in t.lower()} 허용문자만={bool(re.fullmatch(r'[A-Za-z0-9_-]+',t))}")
+          print(f"[진단] 계정ID 길이={len(a)} 16진수32자={bool(re.fullmatch(r'[0-9a-f]{32}',a))}")
+          PY
+          npx --yes wrangler@4 deploy
+          printf 'dailydrop-ingest:%s:%s' "$CLOUDFLARE_ACCOUNT_ID" "$CLOUDFLARE_API_TOKEN" | sha256sum | cut -c1-48 | npx --yes wrangler@4 secret put INGEST_KEY
+      - name: Rebuild last completed hour digest with the new code
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          sleep 20   # 새 버전이 엣지에 퍼질 시간(직후 호출하면 이전 코드로 재생성될 수 있음)
+          H=$(date -u -d '1 hour ago' +%Y-%m-%dT%H)
+          curl -sS -A "Mozilla/5.0 (compatible; DailyDropDeploy/1.0)" "https://dailydrop-feed.trustlj.workers.dev/hourly/$H.json?rebuild=1" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d["hour"], "items", d["n_items"], "clusters", len(d["clusters"])); [print(" ", c["n_sources"], c["n_items"], c["topic"][:80]) for c in d["clusters"][:8]]'
+      - name: Jev shadow scoring check (last completed hour)
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          KEY=$(printf 'dailydrop-ingest:%s:%s' "$CLOUDFLARE_ACCOUNT_ID" "$CLOUDFLARE_API_TOKEN" | sha256sum | cut -c1-48)
+          H=$(date -u -d '1 hour ago' +%Y-%m-%dT%H)
+          curl -sS -X POST -A "Mozilla/5.0 (compatible; DailyDropDeploy/1.0)" -H "Authorization: Bearer $KEY" "https://dailydrop-feed.trustlj.workers.dev/jev/run?hour=$H" | python3 -c 'import sys,json; d=json.load(sys.stdin); print({k:v for k,v in d.items() if k!="rows"}); [print(" ", r["region"], r["front"], r["brk"], (r["err"] or "")[:120], r["title"][:70]) for r in d.get("rows",[])[:40]]' || true
+      - name: Refresh market quotes once and print the result
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          KEY=$(printf 'dailydrop-ingest:%s:%s' "$CLOUDFLARE_ACCOUNT_ID" "$CLOUDFLARE_API_TOKEN" | sha256sum | cut -c1-48)
+          curl -sS -X POST -A "Mozilla/5.0 (compatible; DailyDropDeploy/1.0)" -H "Authorization: Bearer $KEY" "https://dailydrop-feed.trustlj.workers.dev/quotes/refresh" | python3 -c 'import sys,json; d=json.load(sys.stdin); print({k:v for k,v in d.items() if k!="rows"}); [print(" ", r["k"], r["v"], r["chg"], r["err"]) for r in d.get("rows",[])]' || true

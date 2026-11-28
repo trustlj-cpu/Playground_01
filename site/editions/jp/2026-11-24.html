@@ -1,0 +1,334 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>日経平均 · 11/20 · 終値は集計対象の時間外のため掲載せず</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>S&amp;P500種 · 11/23 · 終値は集計対象の時間外のため掲載せず</div>
+    </div>
+    <div class="dateline"><span>No. 51 · 朝刊</span><b>2026年11月24日(火)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="n1">
+      <div class="kick">国際 · 気候<span>✓ 3媒体 · 閉幕後の各国の対応は未確認</span></div>
+      <h2 class="hl">COP31が過去最長の49時間半の延長の末に決裂して閉幕、化石燃料の扱いで合意できず</h2>
+      <p class="deck">各国は包括的な合意に至らず、成果をまとめる文書の採択もできないまま会議は幕を閉じた。</p>
+      <div class="body">
+        <p>トルコで開かれていた国連の気候変動会議COP31は、予定を大きく超える過去最長の約49時間半の延長を重ねたものの、各国が受け入れられる合意をまとめられないまま23日までに閉幕した。化石燃料をめぐる対立を解消できず、会議全体の結論を一つにまとめる包括合意には至らなかったと伝えられている。COPには約200の国と地域が参加し、原則として全会一致で決めるため、強く反対する国が一つでもあれば成果文書(会議の結論をまとめた文書)は採択できない。議長国トルコが成果文書の採択を断念したと伝えられた流れが、そのまま決裂での閉幕につながった形だ。</p>
+        <p>閉幕を受けて各国の反応が相次いで伝えられ、「史上最悪」の決裂とする見方も出ている。一方で、交渉の決裂は必ずしも失敗と同じではないという見方も伝えられている。交渉では、産油国のサウジアラビアが影響力を見せたとする見方もある。何が最後まで折り合わなかったのか、化石燃料の削減にどこまで踏み込む案だったのかといった細部は、確認できた範囲では分かっていない。会議の結論を欠いたまま、各国が自国の削減目標や途上国への支援の約束をどう扱うのか、再協議の場がいつ設けられるのかも、まだ伝えられていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="n2">
+      <div class="kick">スポーツ · プロ野球<span>✓ 3媒体 · 30万人が主催者発表かは未確認</span></div>
+      <h3 class="hl">球団初の連覇を果たした阪神が祝賀のVパレード、藤川監督は来季の日本一を誓う</h3>
+      <div class="one">
+        <p>プロ野球・阪神タイガースの優勝パレードが23日に開かれ、球団初のリーグ連覇を祝うファンが約30万人集まったと伝えられている。藤川球児監督は「最高です」と喜びを語り、「来年は日本一を」と来季の目標を口にした。パレードには藤川監督らが参加した一方、佐藤輝明選手は欠席した。 30万人という数字は報道の中で伝えられたもので、主催者による正式な発表かどうかは確認できていない。佐藤選手の欠席の理由や、沿道の様子、交通への影響の詳しい状況も、確認できた範囲では分かっていない。球団が連覇を果たしたのは今回が初めてで、パレードは日本一を目指す来季へ向けた区切りの行事となった。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="m1"><b>韓国大統領が外相と統一相の交代を決め、対米関係の立て直しが狙いと伝えられる</b><em>外相と統一相の候補らが指名された。統一相は北朝鮮政策を担う閣僚で、対米関係の立て直しが狙いと伝えられる。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m2"><b>「核のごみ」の文献調査が行われる茨城県常陸大宮市で、初の市民向け説明会が開かれたと伝えられる</b><em>高レベル放射性廃棄物の最終処分地の選定をめぐる調査の一環で、市民を対象にした説明会が初めて開かれた。</em><span>社会 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m3"><b>東京電力が福島第一・第二の廃炉部門と賠償・復興部門を統合する方針と伝えられる</b><em>福島県内での廃炉や賠償などの体制強化に向け、3つの部門を統合する方針だと伝えられる。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m4"><b>NATO事務総長が、ロシアの核搭載衛星の報道を受けて対ロ抑止・防衛を常時検証すると述べたと伝えられる</b><em>ドイツのメディアが、ロシアが核を搭載した衛星を打ち上げる構えだとNATOが見ていると報じた。内容は確認されていない。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m5"><b>将棋の王将戦リーグが24日に最終局を迎え、永瀬九段ら3人が挑戦権を争うと伝えられる</b><em>リーグ最終日の24日、永瀬九段を含む3人の棋士が王将への挑戦者の座を懸けて対局する。</em><span>文化 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="n3">
+      <div class="kick">政治 · 国会<span>✓ 2媒体 · 問責決議案の提出の有無・時期は未確認</span></div>
+      <h3 class="hl">関文科相の問責決議案をめぐり野党が24日にも協議、政府・与党は情勢を見極めて対応を検討と伝えられる</h3>
+      <div class="body">
+        <p>政治資金パーティーをめぐる指摘が相次いでいる関文部科学大臣について、野党側は問責決議案(国会で大臣の責任を問い、辞任を促す決議の案)の提出も視野に、24日にも協議を行う方針だと伝えられている。政府・与党は情勢を見極めながら対応を検討している。木原官房長官は、大臣自身の説明が重要だという考えを示している。</p>
+        <p>政府・与党内からは、大臣自身が説明を尽くすよう求める指摘が出ていると伝えられる。「続投させては法案の成立が難しい」とする自民党幹部の声があるとの報道もあるが、発言者は明らかでなく、確認はできていない。問責決議案が実際に提出されるか、いつ採決に進むか、大臣が自ら職を退くかは、24日以降の野党の協議と政府の判断を待つ必要がある。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="n4">
+      <div class="kick">社会 · 防災<span>✓ 1媒体 · 停電の最終的な復旧時期は未確認</span></div>
+      <h3 class="hl">雪の影響で長野・岐阜などで停電が続き、岐阜では約4200戸、携帯大手3社に通信障害も出たと伝えられる</h3>
+      <div class="body">
+        <p>先週末から断続的に降り続いた雪の影響で、各地で停電が続いていると伝えられている。岐阜県では23日午後5時現在、約4200戸で停電が続き、停電などの影響で携帯大手3社の通信にも障害が出たほか、一部の鉄道が運転を見合わせた。長野市などでも停電が続いており、中部電力パワーグリッドは24日中の復旧を目指している。</p>
+        <p>福島県では、雪による倒木の影響で一時500世帯余りが孤立状態となったが、22日までに解消した。停電は一部で続き、復旧作業や雪かきが進められている。一方、24日は低気圧と前線の影響で全国的に大気の状態が不安定になり、日本海側では雨と風が強まる見込みだ。気象庁は強風や大雨による土砂災害に十分注意し、落雷や竜巻などの激しい突風にも注意するよう呼びかけている。復旧の時期は目標であり、確定ではない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="n5">
+      <div class="kick">国際 · ウクライナ情勢<span>✓ 4媒体 · 被害の規模はウクライナ側の主張のみ</span></div>
+      <h3 class="hl">ゼレンスキー大統領、リビア沖でロシア艦艇を無人艇で攻撃したと認める 撃沈はウクライナ側の主張</h3>
+      <div class="body">
+        <p>ウクライナのゼレンスキー大統領は、北アフリカのリビア沖で無人艇を使ってロシア軍の艦艇などを攻撃し、撃沈したと明らかにした。リビア東部ベンガジ近くの港で22日にロシア艦船が爆発し、無人機による攻撃が疑われると伝えられていた件で、ウクライナが作戦の実施を認めた形だ。</p>
+        <p>ウクライナ側は2隻のロシア船を攻撃したと主張しており、ヘリコプターも破壊したとの内容も一部で伝えられている。ただ、被害の規模や攻撃の詳しい経緯はウクライナ側の発表に基づくもので、ロシア側の確認や第三者による裏付けは確認できていない。リビア側の当局の反応も、確認できた範囲では分かっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>無人艇<i>安全保障</i></b><p>人が乗らず、遠隔操作や自動で動かす小型の船。爆薬を積んで艦船に近づける使い方が戦争で注目されている。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>阪神の優勝パレードには、主催者発表で30万人が集まった。</b> <span>30万人という数字は報道で伝えられているが、主催者による正式な発表かどうかは確認できていない。</span></div>
+        <div><b>関文科相への問責決議案は、すでに国会に提出された。</b> <span>野党は24日にも提出を視野に協議するとされる段階で、提出されたとは伝えられていない。政府・与党は情勢を見極めて対応を検討している。</span></div>
+        <div><b>ロシアの艦艇2隻が確実に沈められた。</b> <span>ゼレンスキー大統領は作戦の実施を認め、撃沈したと述べたが、被害の規模はウクライナ側の主張にとどまる。ロシア側の確認や第三者の裏付けは確認できていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 11月24日(火)</b><span>東京の株式市場は取引が再開する。野党が関文科相の問責決議案をめぐる協議を行う予定で、政府・与党の対応が焦点になる。長野の停電は電力会社が24日中の復旧を目指しており、全国的に荒れた天気への注意が呼びかけられている。将棋の王将戦リーグは最終局で挑戦者が決まる。</span><b>今週</b><span>COP31の決裂を受けた各国の対応と、ウクライナが認めたリビア沖の作戦をめぐるロシアや関係国の反応を見たい。</span><b>後で</b><span>核のごみの文献調査を受け入れた自治体での住民説明が続くか、東京電力の部門統合の具体的な組織の形が示されるかを見たい。</span><b>読者へ</b><span>24日は強風や大雨、雷、突風に備え、停電が続く地域の人は電力会社の復旧情報を確かめておきたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "n1":{"kick": "国際 · 気候 · ✓ 3媒体 · 閉幕後の各国の対応は未確認", "title": "COP31が過去最長の49時間半の延長の末に決裂して閉幕、化石燃料の扱いで合意できず", "what": "トルコで開かれた国連の気候変動会議COP31が、23日までに閉幕した。会期は過去最長の約49時間半延長されたが、各国は合意をまとめられなかった。化石燃料をめぐる対立が解消できず、包括合意には至らなかったと伝えられている。議長国トルコは成果文書の採択を断念したと伝えられていた。閉幕後、各国の反応が相次いで伝えられ、「史上最悪」の決裂とする見方も出ている。交渉ではサウジアラビアが影響力を見せたとの見方もある。", "why": "COPは約200の国と地域が参加し、原則として全会一致で決める。そのため、化石燃料のように経済と直結する争点では、一国の反対で全体が止まる。結論が出ないと、各国の削減目標や途上国への資金支援の約束が曖昧なまま次の会議に持ち越される。", "me": "結論が出なかったことで、脱炭素に向けた各国の政策や企業の投資判断が、すぐには変わらない可能性がある。エネルギー価格や、電気自動車・再生可能エネルギーをめぐる政策の動きが、今後の家計や産業にどう響くかを継続して見ておきたい。", "a": "決裂を深刻に受け止める立場は、気候災害が増える中で、最長の延長をしても合意できなかったことを、国際協調の機能不全だと見る。化石燃料の扱いに踏み込めなければ、温暖化対策の実効性が損なわれると考える。", "b": "決裂を失敗とは別のものと見る立場は、全会一致の場で妥協を急げば内容が薄まると捉える。合意を無理にまとめなかったことが、次の交渉で強い案を探る余地を残すと考える。", "say": "確認できているのは、過去最長の延長の末にCOP31が合意なく閉幕したことだ。最後まで折り合わなかった具体的な条文や、各国の次の動きは確認できていない。今日は、各国政府や議長国が再協議の場や次の手順をどう示すかを見たい。", "src": "毎日新聞(COP31決裂し閉幕、過去最長49時間半延長も成果とぼしく、11月23日) · AFP(COP31包括合意に至らず、11月23日) · BBC(COP31失敗の報、11月23日)"},
+    "n2":{"kick": "スポーツ · プロ野球 · ✓ 3媒体 · 30万人が主催者発表かは未確認", "title": "球団初の連覇を果たした阪神が祝賀のVパレード、藤川監督は来季の日本一を誓う", "what": "プロ野球・阪神タイガースの優勝パレードが23日に開かれた。球団初のリーグ連覇を祝うファンが約30万人集まったと伝えられている。藤川球児監督は「最高です」と喜びを語り、「来年は日本一を」と来季の目標を口にした。パレードには藤川監督らが参加し、佐藤輝明選手は欠席した。30万人が主催者の発表かどうかは確認できていない。", "why": "優勝パレードの人数は、球団の人気や地域経済への波及を測る目安として語られる。連覇は球団で初めてで、ファンの熱が数字に表れたと受け止められやすい。ただ、人数の数え方は主催者や報道で異なることがあり、発表主体の確認が欠かせない。", "me": "パレード当日は沿道が混雑し、交通や周辺の店に影響が出やすい。今後の優勝記念のセールやイベントの案内も出る可能性があるため、関連する公式の情報を確かめておくとよい。", "a": "連覇を喜ぶ立場は、球団初の偉業をファンが総出で祝った場面を、地域の盛り上がりの象徴と受け止める。来季の日本一という目標が語られたことも、前向きに捉える。", "b": "冷静に見る立場は、30万人という数字の出どころが明らかでない点に目を向ける。主力選手の欠席の理由も説明されておらず、事実の確認が先だと考える。", "say": "確認できているのは、23日に阪神の優勝パレードが開かれ、藤川監督が来季の日本一に言及したことだ。30万人が主催者発表かどうか、佐藤選手の欠席の理由は確認できていない。今日は、主催者による正式な人数の発表を見たい。", "src": "毎日新聞(阪神優勝パレード、30万人が初連覇祝う、11月23日) · 朝日新聞(球団初の連覇、阪神がVパレード、11月23日) · 時事通信(阪神が優勝パレード、藤川監督「来年は日本一を」、11月23日)"},
+    "n3":{"kick": "政治 · 国会 · ✓ 2媒体 · 問責決議案の提出の有無・時期は未確認", "title": "関文科相の問責決議案をめぐり野党が24日にも協議、政府・与党は情勢を見極めて対応を検討と伝えられる", "what": "政治資金パーティーをめぐる指摘が相次いでいる関文部科学大臣について、野党側は問責決議案の提出も視野に、24日にも協議を行う方針だと伝えられている。政府・与党は情勢を見極めながら対応を検討している。木原官房長官は、大臣自身の説明が重要だと述べた。政府・与党内からは、大臣自身が説明を尽くすよう求める指摘が出ている。野党からは、辞任を求める声が強まっていると伝えられている。", "why": "問責決議案は、可決されても法的な拘束力はないが、大臣の責任を国会が問う政治的な意味を持つ。提出されれば、法案審議の日程や与野党の駆け引きに影響する。大臣の進退が、政権の国会運営全体に波及するかが焦点になる。", "me": "文部科学行政は教育や大学、研究費などの身近な政策につながる。大臣の進退で政策の進め方や国会に出る法案の扱いが変わる可能性があるため、今後の動きを見ておきたい。", "a": "野党の立場は、政治資金をめぐる説明が重ねて修正されたことを重く見て、問責で責任を明確にすべきだと主張する。説明が尽くされない限り、国会審議への信頼が保てないと考える。", "b": "政府・与党の立場は、まず大臣本人が説明を尽くすことが先だとし、情勢を見極めて対応を決めるとする。続投では法案成立が難しいという自民党幹部の声があるとの報道もあるが、発言者は明らかでない。", "say": "確認できているのは、野党が24日にも問責決議案を協議する方針で、政府・与党が対応を検討していることだ。提出の有無や時期、大臣の進退は確認できていない。今日は、野党の協議の結論と、官邸の判断が示されるかを見たい。", "src": "NHK(野党 関大臣の問責決議案協議 政府・与党 情勢見極め対応検討、11月24日) · 朝日新聞(関文科相の進退、与野党攻防が山場、11月23日)"},
+    "n4":{"kick": "社会 · 防災 · ✓ 1媒体 · 停電の最終的な復旧時期は未確認", "title": "雪の影響で長野・岐阜などで停電が続き、岐阜では約4200戸、携帯大手3社に通信障害も出たと伝えられる", "what": "先週末から断続的に降り続いた雪の影響で、各地で停電が続いていると伝えられている。岐阜県では23日午後5時現在、約4200戸で停電が続き、携帯大手3社の通信に障害が出たほか、一部の鉄道が運転を見合わせた。長野市などでも停電が続き、中部電力パワーグリッドは24日中の復旧を目指している。福島県では倒木の影響で一時500世帯余りが孤立状態となったが、22日までに解消した。24日は低気圧と前線の影響で全国的に大気の状態が不安定になる見込みだ。", "why": "雪が木に積もると枝や幹が折れ、電線を切ったり道路をふさいだりする。停電が長引くと、携帯電話の基地局の電源が失われて通信障害にもつながる。復旧作業も、荒れた天気が続くと進みにくくなる。", "me": "停電が続く地域では、暖房や充電、食料の備えが必要になる。24日は強風や大雨、雷、突風にも注意が呼びかけられており、外出や移動の予定は最新の気象情報と鉄道の運行情報で確認したい。", "a": "復旧を急ぐ立場は、停電や通信障害は命や安全に直結するとして、電力会社の目標である24日中の復旧を確実に果たすよう求める。", "b": "慎重に見る立場は、24日の荒れた天気で新たな倒木や停電が起きるおそれがあるとして、復旧の見通しは変わりうると捉える。無理のない安全確保を優先すべきだと考える。", "say": "確認できているのは、岐阜で約4200戸の停電が続き、長野でも24日中の復旧が目標とされていることだ。停電の最終的な解消時期や、24日の天気による被害の広がりは確認できていない。今日は、停電戸数の推移と気象庁の警戒の発表を見たい。", "src": "NHK(岐阜・長野・福島の雪の影響と24日の天気、11月23日)"},
+    "n5":{"kick": "国際 · ウクライナ情勢 · ✓ 4媒体 · 被害の規模はウクライナ側の主張のみ", "title": "ゼレンスキー大統領、リビア沖でロシア艦艇を無人艇で攻撃したと認める 撃沈はウクライナ側の主張", "what": "ウクライナのゼレンスキー大統領は、北アフリカのリビア沖で無人艇を使ってロシア軍の艦艇などを攻撃し、撃沈したと明らかにした。リビア東部のベンガジ近くの港では、22日にロシア艦船が爆発し、無人機による攻撃が疑われると伝えられていた。ウクライナ側は2隻のロシア船を攻撃したと主張している。ヘリコプターも破壊したとの内容も一部で伝えられている。ロシア側の確認は確認できていない。", "why": "黒海から遠く離れた地中海に近い港での攻撃は、戦場がウクライナ周辺の外に広がったことを意味する。リビアは第三国であり、その港が使われたことで、リビア当局や周辺国の対応が焦点になる。艦船の被害が事実なら、ロシアの海上の活動にも影響が出る。", "me": "地中海やリビア周辺の情勢は、原油や海上輸送の価格に影響する可能性がある。エネルギーや物流のニュースと合わせて、続報を確認しておきたい。", "a": "ウクライナ側の主張を重く見る立場は、ロシアの軍事拠点を遠く離れた海域でも攻撃できることを、ウクライナの能力を示す出来事と受け止める。作戦を認めたことで、抑止の効果もあると考える。", "b": "慎重に見る立場は、被害の規模がウクライナ側の発表に基づくもので、独立した裏付けがない点を重く見る。リビアの港が巻き込まれたことで、紛争が広がる危険にも目を向ける。", "say": "確認できているのは、ウクライナ大統領が作戦の実施を認めたことだ。撃沈の規模、2隻という数、ヘリコプターの破壊は、ウクライナ側の主張や一部の報道にとどまる。今日は、ロシアやリビア当局の反応と、独立した確認が出るかを見たい。", "src": "NHK(ゼレンスキー大統領“リビア沖でロシア艦艇を無人艇で攻撃”、11月23日) · 朝日新聞(リビアでロシア軍艦に無人艇攻撃、11月23日) · Japan Times(Ukraine claims strikes on two Russian ships off Libya、11月23日) · 時事通信(ロシア艦船に攻撃 リビア東部の基地停泊中、11月23日)"},
+    "m1":{"kick": "国際 · ✓ 2媒体", "title": "韓国大統領が外相と統一相の交代を決め、対米関係の立て直しが狙いと伝えられる", "what": "韓国大統領が、新しい外相や統一相の候補らを指名した。外相と統一相は交代する。統一相は北朝鮮政策を担う閣僚だ。人事は対米関係の立て直しが狙いと伝えられている。候補者の氏名や経歴、国会での手続きの時期は、確認できた範囲では分からない。", "why": "外相は対米交渉を担い、統一相は北朝鮮との対話や協力の方針を決める。両方の閣僚を替えることは、米国との関係の調整を外交の最優先とする姿勢を示すと受け止められやすい。ただ、狙いは報道上の見方であり、政府の公式の説明ではない。", "me": "日本にとっても、米韓関係や北朝鮮政策の変化は、日米韓の連携や地域の安全保障に関わる。今後の人事の発表や、新しい閣僚の発言を見ておきたい。", "a": "人事を評価する立場は、米韓関係の行き詰まりを打開するための刷新と捉える。外交の顔ぶれを替えて、対話の再開を図る動きとして歓迎する。", "b": "慎重な立場は、人事だけでは両国の溝は埋まらないと見る。狙いは報道上の推測にとどまり、政策の中身が示されるまで評価できないと考える。", "say": "確認できているのは、韓国大統領が外相と統一相の交代を決め、候補らを指名したことだ。候補の氏名や人事の狙いの公式説明は確認できていない。今日は、国会での手続きと、新閣僚が示す対米方針を見たい。", "src": "毎日新聞(韓国大統領、新外相や統一相候補ら指名、11月23日) · 時事通信(外相、統一相が交代へ 対米関係立て直し、11月23日)"},
+    "m2":{"kick": "社会 · ✓ 1媒体", "title": "「核のごみ」の文献調査が行われる茨城県常陸大宮市で、初の市民向け説明会が開かれたと伝えられる", "what": "高レベル放射性廃棄物、いわゆる「核のごみ」の最終処分地の選定をめぐり、文献調査が行われている茨城県常陸大宮市で、市民を対象にした初めての説明会が開かれた。文献調査は、最終処分地の候補として適しているかを、過去の論文や地質のデータなどの資料で調べる段階だ。説明会の参加者数や、出た質問の内容は、確認できていない。", "why": "最終処分地の選定は、文献調査、概要調査、精密調査の順に進む。文献調査は第一段階で、実際に処分場をつくると決まる手続きではない。それでも、住民が情報を得て意見を述べる場が初めて開かれたことは、調査を受け入れた自治体の合意形成の過程として重要になる。", "me": "処分地の問題は、原子力発電を使う電気の利用者全体に関わる。住んでいる地域が候補でなくても、国のエネルギー政策や廃棄物の扱いとして知っておきたい。", "a": "調査を前に進める立場は、情報を公開して住民に説明する場を設けることで、判断の材料が増えると捉える。丁寧な対話が、地域の理解につながると考える。", "b": "懸念を持つ立場は、文献調査が次の段階への足がかりになることを心配する。説明会が一度開かれただけでは、不安や疑問に十分応えられないと考える。", "say": "確認できているのは、常陸大宮市で文献調査をめぐる初の市民説明会が開かれたことだ。参加者の数や意見の内容、調査の期間は確認できていない。今日は、説明会で出た質問と、次回以降の開催予定が示されるかを見たい。", "src": "NHK(「核のごみ」文献調査 茨城 常陸大宮で初の市民説明会、11月23日)"},
+    "m3":{"kick": "経済 · ✓ 1媒体", "title": "東京電力が福島第一・第二の廃炉部門と賠償・復興部門を統合する方針と伝えられる", "what": "東京電力ホールディングスは、福島県内で行う廃炉や賠償などの体制を強めるため、福島第一原子力発電所と福島第二原子力発電所のそれぞれの廃炉部門と、賠償や復興を担う部門の合わせて3つを統合する方針だと伝えられている。統合後の組織の名称や、発足の時期は、確認できていない。", "why": "廃炉と賠償は別々の部門が担ってきたため、現場の作業と被災した住民への対応で、情報や判断が分かれやすい面があった。統合は、福島での取り組みを一つの指揮のもとにまとめる狙いがある。ただし、狙いは報道上の説明にとどまり、組織の効果はこれから見ていく必要がある。", "me": "廃炉の進み方や賠償の手続きは、福島の住民や電気料金を払う利用者にも間接的に関わる。組織の変更が実際の対応にどう表れるかを、続報で確かめたい。", "a": "統合を評価する立場は、廃炉と賠償、復興を一体で進めることで、意思決定が早くなり、福島に向き合う姿勢が明確になると捉える。", "b": "慎重な立場は、組織を変えるだけでは廃炉の遅れや賠償の課題は解決しないと見る。責任の所在が曖昧にならないよう、具体的な計画の説明を求める。", "say": "確認できているのは、東京電力が福島での3つの部門を統合する方針だと伝えられている点だ。新しい組織の名称や発足の時期、人員の規模は確認できていない。今日は、会社が発表する組織の詳細と、地元自治体の受け止めを見たい。", "src": "NHK(東京電力 福島での廃炉と賠償の部門を統合へ、11月23日)"},
+    "m4":{"kick": "国際 · ✓ 1媒体", "title": "NATO事務総長が、ロシアの核搭載衛星の報道を受けて対ロ抑止・防衛を常時検証すると述べたと伝えられる", "what": "ドイツのメディアが、ロシアが核を搭載した衛星を打ち上げる構えだとNATOが見ていると報じた。これを受けて、NATOの事務総長は、対ロ抑止・防衛を常時検証していると述べたと伝えられている。報道の情報源や、衛星の具体的な内容、打ち上げの時期は、確認されていない。", "why": "宇宙に核兵器を置くことは、国際的な取り決めで禁じられているとされる。もし実際に準備が進んでいるなら、衛星の監視や通信、宇宙の安全をめぐる緊張が高まる。ただ、今回は一つの報道に基づく情報で、NATOやロシアが内容を確認したとは伝えられていない。", "me": "衛星は、位置情報や天気予報、通信などの暮らしを支える。宇宙をめぐる安全保障の緊張が高まれば、民間の衛星サービスにも影響が出るかもしれないため、続報を見ておきたい。", "a": "警戒を強める立場は、核を搭載した衛星の話が事実なら、重大な脅威だと捉える。抑止と防衛を常に点検するというNATOの姿勢を、妥当と見る。", "b": "慎重な立場は、情報源が明らかでない報道に基づいている点を重く見る。事実が確認されないまま緊張が高まるのを避けるべきだと考える。", "say": "確認できているのは、ドイツのメディアの報道と、それを受けたNATO事務総長の発言だと伝えられている点だ。ロシアの準備の有無や衛星の中身は確認できていない。今日は、NATOやロシアが報道を認めるか、否定するかを見たい。", "src": "ロイター(NATO、対ロ抑止・防衛を常時検証 ロシア核搭載衛星報道受け、11月23日)"},
+    "m5":{"kick": "文化 · ✓ 1媒体", "title": "将棋の王将戦リーグが24日に最終局を迎え、永瀬九段ら3人が挑戦権を争うと伝えられる", "what": "将棋の王将戦のリーグが24日に最終局を迎え、永瀬九段ら3人が挑戦権を争うと伝えられている。リーグの勝者が、王将への挑戦者となる。最終局の対局の組み合わせや、勝敗の条件の詳細は、確認できていない。", "why": "タイトル戦の挑戦者を決めるリーグでは、最終局まで勝敗が分からない展開が注目を集める。3人が並んだ状況は、直前の成績が拮抗していることを示す。ただ、条件の詳細は確認できていないため、結果は対局を見る必要がある。", "me": "将棋に関心がある人にとっては、24日の対局が今期の挑戦者を決める節目になる。対局の中継や速報で、結果を確かめることができる。", "a": "ファンの立場は、最終局まで挑戦権の行方が分からない展開を、リーグ戦の魅力と受け止める。実力者の対決を楽しみにする。", "b": "冷静に見る立場は、情報が少ない段階では結果の予想を控える。条件や対戦の詳細が明らかになってから判断したいと考える。", "say": "確認できているのは、24日にリーグの最終局があり、永瀬九段ら3人が挑戦権を争うと伝えられている点だ。他の2人の名前や対局の条件は確認できていない。今日は、対局の結果と、挑戦者が決まるかを見たい。タイトル戦の番勝負の日程が示されるかも、あわせて見ておきたい。", "src": "毎日新聞(王将戦リーグ、24日に最終決戦 永瀬九段ら3者で挑戦権争い、11月23日)"}
+  };
+  const G = {
+    "COP31":{"f": "環境", "d": "国連気候変動枠組条約の締約国が集まる、31回目の年次会議。", "w": "過去最長の延長の末に決裂して閉幕した。"},
+    "成果文書":{"f": "外交", "d": "国際会議の結論や合意内容をまとめた文書。", "w": "採択できないまま閉幕した。"},
+    "包括合意":{"f": "外交", "d": "会議の争点全体を一つにまとめた合意。", "w": "化石燃料の対立で成立しなかった。"},
+    "化石燃料":{"f": "エネルギー", "d": "石炭・石油・天然ガスなど、燃やして熱や電気を得る資源。", "w": "その扱いをめぐる対立が解けなかった。"},
+    "問責決議案":{"f": "政治", "d": "国会が大臣の責任を問い、辞任を促す決議の案。法的な拘束力はない。", "w": "野党が24日にも協議する。"},
+    "政治資金パーティー":{"f": "政治", "d": "政治家や政治団体が資金集めのために開く催し。収支の報告が義務づけられている。", "w": "関文科相への指摘が相次いでいる。"},
+    "官房長官":{"f": "政治", "d": "内閣の取りまとめ役で、政府の見解を発表する閣僚。", "w": "大臣自身の説明が重要だと述べた。"},
+    "無人艇":{"f": "安全保障", "d": "人が乗らず、遠隔操作や自動で動かす小型の船。", "w": "ロシア艦艇への攻撃に使われたとされる。"},
+    "文献調査":{"f": "原子力", "d": "最終処分地の候補として適するかを、論文や地質のデータなどの資料で調べる第一段階の調査。", "w": "常陸大宮市で初の市民説明会が開かれた。"},
+    "高レベル放射性廃棄物":{"f": "原子力", "d": "使用済み核燃料の再処理で出る、強い放射線を出す廃棄物。", "w": "最終処分地の選定が進められている。"},
+    "最終処分地":{"f": "原子力", "d": "高レベル放射性廃棄物を地下深くに埋めて長期間管理する場所。", "w": "選定をめぐる調査が行われている。"},
+    "廃炉":{"f": "原子力", "d": "役目を終えた原子力発電所を安全に解体し、片づける作業。", "w": "東京電力が福島の担当部門を統合する。"},
+    "抑止":{"f": "安全保障", "d": "相手が攻撃をためらうよう、反撃の力や備えを示して攻撃を思いとどまらせること。", "w": "NATOが対ロ抑止・防衛を点検すると述べた。"},
+    "統一相":{"f": "外交", "d": "韓国で、北朝鮮との統一や対話の政策を担当する閣僚。", "w": "外相とともに交代するとされる。"},
+    "大気の状態が不安定":{"f": "気象", "d": "上空に冷たい空気が入るなどして、雷や突風、急な大雨が起こりやすい状態。", "w": "24日は全国的にこの状態になる見込み。"},
+    "土砂災害":{"f": "防災", "d": "大雨などで山やがけが崩れ、土砂が流れ出す災害。", "w": "気象庁が十分な注意を呼びかけた。"},
+    "竜巻":{"f": "気象", "d": "積乱雲の下で発生する、強い渦巻き状の風。", "w": "激しい突風の一つとして注意が呼びかけられた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

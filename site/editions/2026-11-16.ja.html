@@ -1,0 +1,336 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>KOSPI · 11/13 · 今号の集計区間より前に終了したため空欄</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ウォン/ドル · 11/15 · 週末のため終値なし</div>
+    </div>
+    <div class="dateline"><span>第43号 · 朝刊</span><b>2026年11月16日 月曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="tax">
+      <div class="kick">社会 · 試験とAI<span>報道照合 ✓ 4社 · 追加の不正合格の事例とA氏の供述の詳細は未確認</span></div>
+      <h2 class="hl">税理士試験の首席合格者が『AI不正行為』を自首…合格取り消し・警察捜査の流れに</h2>
+      <p class="deck">第63回税理士試験の首席合格者が、超小型カメラと生成AIで不正行為をしたと認め、警察に自首した。</p>
+      <div class="body">
+        <p>第63回税理士試験の首席合格者A氏が15日、不正行為をしたと認め、警察に自首書を出した。A氏は弁護人のユーチューブチャンネルに出て、1次と2次の試験で超小型カメラで問題を撮影して生成AIに送り、スマートフォンで答えを受け取って書き写したと語った。公認会計士の1次試験でも同じ方法を使ったが、合格できなかったと明らかにした。『事実上不可能な』高得点だという疑惑が続いてきたが、当人が自ら事実を認めた形だ。同じ試験を受けた受験生たちは、不安と脱力感を訴えた。</p>
+        <p>韓国産業人力公団は、不正行為を見抜けなかったことを謝罪し、A氏を業務妨害の疑いで告訴して、最終合格の取り消しを進めることにした。財政経済部は、合格の効力停止を協議している。業務妨害罪は、5年以下の懲役または1500万ウォン以下の罰金に処される可能性がある罪だ。警察は自首書を受理して捜査に入った。青瓦台は同日午後、政策室長が主宰する対策会議を開き、国家資格試験全体のAI活用による不正行為の疑い事例を全数調査せよと指示したうえ、19日に行われる修能の管理・監督体制も集中点検すると明らかにした。A氏のほかに不正合格者がいるかどうかは、まだ確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="cmh">
+      <div class="kick">政治 · 共に民主党<span>報道照合 ✓ 2社 · チェ最高委員の発言の正確な内容と大統領発言の狙いは未確認</span></div>
+      <h3 class="hl">キム・ミンソク代表、チェ・ミンヒ最高委員の問題を倫理審判院に回付…初当選議員の会合は結論出せず</h3>
+      <div class="one">
+        <p>共に民主党のキム・ミンソク代表は15日、党の最高委員であるチェ・ミンヒ議員の言動をめぐる論議を倫理審判院に回すよう指示した。倫理審判院は党所属の政治家の懲戒を審査する機関であるため、事実上、懲戒手続きの始まりと読める。同日、初当選議員の会合『トミンチョ』は緊急会議を開き、『事案は重大だ』という点で共感したが、対応の度合いについての結論は出さなかった。論議は、チェ最高委員がイ・ジェミョン大統領に関する裁判をめぐって行った発言に端を発したとの報道があるが、発言の正確な内容は確認されていない。イ・ジェミョン大統領は同日、「改革政策の施行で不利益を被る当事者が反発するのは理解できるが、改革と大義を語る公人がそれに付和雷同したり、改革の名を借りて改革を妨げたりすることは容認しがたい」と述べた。この発言がチェ最高委員の問題を狙ったものかどうかは、明らかにされていない。親チョン・チョンレ系が回付に抗議し、親イ・ジェミョン系の一部が懲戒論で対抗したとの報道もあるが、確認されていない。キム代表体制が発足して3カ月目、党内の対立が繰り返されている。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="bb"><b>韓国野球、APBC決勝で日本に1-5で敗戦…3大会連続の準優勝</b><em>チェ・ウォンホ監督の代表チームが15日の決勝で日本に1-5で敗れた。韓国は14日に台湾を破って決勝に進んだが、日本の壁を越えられなかった。</em><span>スポーツ · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="bts"><b>BTS、メロンミュージックアワードで大賞2個を含む6冠…今回の授賞式で最多</b><em>BTSがソウルの高尺スカイドームで開かれた『MMA2026』で、大賞2個を含む6個の賞を受けた。初日には「今年のアルバム」などで3冠に輝いた。</em><span>文化 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="asean"><b>第49回ASEAN首脳会議、フィリピンで開幕…17日にトランプ大統領が出席予定</b><em>東南アジア諸国連合のASEAN第49回首脳会議が15日にフィリピンで開かれ、17日まで続く。トランプ大統領は17日のマニラの会議に、ルビオ国務長官とともに出席する予定だ。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="ukr"><b>ゼレンスキー氏「スターシールドの速度制限は政治的な理由」…スペースXは技術的な問題と説明</b><em>ウクライナが、軍用衛星インターネット『スターシールド』の速度制限が続いていると明らかにした。ゼレンスキー氏は政治的な原因だと述べ、スペースXは技術的な問題だと説明した。</em><span>国際 · ✓ 報道3件</span></div>
+      <div class="it story" tabindex="0" data-id="acc"><b>税理士試験のAI不正、イ・ヒョンイル副首相・ク・ユンチョル前副首相が職務遺棄で告発される</b><em>イ・ヒョンイル経済副首相兼財政経済部長官とク・ユンチョル前副首相が、職務遺棄の疑いで告発された。告発後に捜査に着手したかどうかは伝えられていない。</em><span>政治 · ✓ 報道2件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="faa">
+      <div class="kick">国際 · 米国の航空<span>報道照合 ✓ 4社 · 正確な原因と欠航の規模は未確認</span></div>
+      <h3 class="hl">米航空大混乱、運輸長官「通信網の交換中に発生」…トランプ大統領はバイデン政権のせいに</h3>
+      <div class="body">
+        <p>13日(現地時間)、米国全土で航空機の離陸が一斉に止まった。航空管制の通信システムに障害が生じたためで、離陸が再開された後も、週末じゅう航空便が混乱した。欠航の規模は集計ごとに異なり、数千便から1万便を超える水準まで食い違う。米国の運輸長官は、通信網の業者L3Harrisが通信網を交換している最中に起きたことだとして、作業ミスと機器の欠陥を調べていると明らかにした。公式の原因はまだ出ていない。</p>
+        <p>トランプ大統領は、事態から2日後の15日に初めて立場を表明した。バイデン政権が連邦航空局をだめにしたと主張しつつ、今の管制システムの相当部分は50年ものであり、すでに交換作業を始めたので、議会が予算を早く承認すべきだと述べた。管制通信は、管制官とパイロットがやりとりする交信と航路情報をつなぐ装置であり、止まると安全のためにまず離陸を止めることになる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="safe">
+      <div class="kick">政治 · 治安<span>報道照合 ✓ 2社 · 無期刑の導入時期と適用範囲は未確認</span></div>
+      <h3 class="hl">青瓦台『国民安全プラス』プロジェクト始動…仮釈放なしの無期刑の導入を協議</h3>
+      <div class="body">
+        <p>イム・グァンヒョン大統領秘書室長が15日の青瓦台ブリーフィングで、『私の暮らしを守る政府、国民安全プラスプロジェクト』を進めると明らかにした。国民の安全を脅かす犯罪に、政府全体の力を総動員して強力に対応するというものだ。年末まで、すべての省庁の対応状況と成果を点検し、補完する。</p>
+        <p>青瓦台は、『仮釈放なしの無期刑』の導入を協議していると明らかにした。関係性犯罪・異常動機犯罪への対策の一つとして報じられた。現行の刑法は、無期懲役を受けても20年服役すれば、仮釈放の審査を受けられるようにしている。仮釈放なしの無期刑が導入されれば、事実上の終身刑になる。関係性犯罪は恋人・家族のように近い間柄で起こる犯罪を、異常動機犯罪ははっきりした動機なく不特定多数を狙った犯罪を指す。導入の可否と時期、適用範囲は決まっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="ss">
+      <div class="kick">科学 · 宇宙<span>報道照合 ✓ 3社 · 1段目の回収が失敗した原因とマスクの発言は未確認</span></div>
+      <h3 class="hl">スペースXのスターシップ宇宙船本体、発射台で初めて捕獲…1段目の回収は失敗</h3>
+      <div class="body">
+        <p>スペースXは14日(現地時間)、米国テキサスのスターベース発射場で、スターシップの第15回試験飛行を行った。地球に戻ってきた2段目、つまり宇宙船本体を、発射台の『箸アーム』がつかまえた。宇宙船本体をこのように受け止めたのは初めてだ。一方、1段目ロケットは発射台での回収に失敗し、海に落ちた。回収が失敗した原因は確認されていない。イーロン・マスクが今回の成功を「歴史的な日」と述べたとの報道があるが、ほかでは確認されていない。</p>
+        <p>スターシップはスペースXが開発中の超大型ロケットで、スペースXは1段目と宇宙船の両方を受け止めて再利用することを目指してきた。アームでつかまえる方式は、着陸脚なしで機体を受け止める方法だ。宇宙船までつかまえたことで完全再利用に一歩近づいたが、1回の飛行で1段目と宇宙船の両方を回収したわけではない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>第15回</b><span>今回のスターシップ試験飛行の回次</span></div>
+        <div><b>初の成功</b><span>発射台のアームで宇宙船本体をつかまえたこと</span></div>
+        <div><b>失敗</b><span>1段目ロケットの回収、海に落ちたとの報道</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>税理士試験のほかにも、AIで不正合格した人がさらにいる</b> <span>韓国産業人力公団が国家資格試験全体を全数調査すると明らかにし、青瓦台も疑い事例の全数調査を指示した。まだ、追加の不正合格が確認されたという発表はない。</span></div>
+        <div><b>修能の試験場でも、AI眼鏡と超小型カメラによる不正を防げない</b> <span>青瓦台が、修能のAI不正行為を防ぐため、管理・監督体制を集中点検すると明らかにした。具体的な補強策はまだ出ておらず、修能で実際に摘発された事例も確認されていない。</span></div>
+        <div><b>米国の航空大混乱は、もっぱらバイデン政権のせいだ</b> <span>トランプ大統領はそう主張したが、米国の運輸長官は、通信網の交換作業中に事態が起きたとして、作業ミスと機器の欠陥を調べていると明らかにした。公式の原因は出ていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 月 11月16日</b><span>警察のA氏の調べと人力公団の合格取り消し手続き、倫理審判院の審査日程、16日に始動する国会の予算決算特別委員会の予算案調整小委員会を見ておく価値がある。米国の運輸当局が航空大混乱の原因調査の結果を発表するかも、見守る点だ。</span><b>今週</b><span>17日にトランプ大統領がマニラのASEAN首脳会議に出席する予定で、18日にWKリーグ優勝決定戦第2戦(水原FCウィメン-慶州韓水原)が開かれる。19日には2027年度の修能が行われる。</span><b>その後</b><span>青瓦台は年末まで、全省庁の国民安全の対応状況を点検する。仮釈放なしの無期刑は、まだ協議の段階だ。</span><b>読者へ</b><span>A氏の自首の内容は本人の供述だ。チェ最高委員の発言の内容や大統領発言の狙いのように、確認されていない部分は区別して見ておきたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "tax":{"kick": "社会 · 試験とAI · ✓ 4社 · 追加の不正合格の事例とA氏の供述の詳細は未確認", "title": "税理士試験の首席合格者が『AI不正行為』を自首…合格取り消し・警察捜査の流れに", "what": "第63回税理士試験の首席合格者A氏が15日、警察に自首書を出した。A氏は弁護人のユーチューブチャンネルで、1次と2次の試験とも超小型カメラで問題を撮影して生成AIに送り、スマートフォンで答えを確認したと語った。公認会計士の1次試験でも同じ方法を使ったが、合格できなかったと明らかにした。韓国産業人力公団は謝罪し、A氏を業務妨害の疑いで告訴して、最終合格の取り消しを進めると明らかにした。財政経済部は合格の効力停止を協議している。警察は自首書を受理して捜査に着手した。青瓦台は15日午後、政策室長が主宰する対策会議を開き、国家資格試験全体のAI活用による不正行為の疑い事例を全数調査せよと指示した。受験生たちは不安と脱力感を訴えた。", "why": "国家資格試験の公正性は、合格証を持って働く有資格者への信頼にそのままつながる。不正合格者が税務代理を担えば、被害は納税者が受けるため、合格取り消しと刑事責任をあわせて問うことになる。超小型カメラとAIを組み合わせた手口は、従来の監督方式では見抜きにくく、試験場の探知機器と監督方式をどう変えるかが争点になった。", "me": "税理士・会計士のような資格試験を準備している人は、試験場への持ち込み品と監督方式が変わる可能性がある。税務代理人を使う個人や自営業者は、代理人の資格の履歴に関心を持つとよい。19日に修能を受ける受験生と家族は、持ち込み禁止品の規定をもう一度確認するのがよい。", "a": "厳正対応論: 首席という象徴性が大きいだけに、実刑まで行きうる厳しい処罰が必要だという見方だ。法曹界では、警鐘を鳴らすために実刑が出ることもありうるという見通しが出ている。全数調査とともに、試験場の探知機器と監督人員を急いで補強すべきだという立場だ。", "b": "管理責任論: 個人の逸脱を超えて、試験管理体制の穴として見るべきだという見方だ。今回の不正は、試験当時の監督では見つからず、本人の自首で明らかになったという点を根拠に挙げる。イ・ヒョンイル副首相らが職務遺棄で告発されたのも、同じ流れだ。", "say": "確認されたのは、A氏が自首し、人力公団が合格取り消しと告訴を進め、警察が捜査に入ったという点だ。合格取り消しの確定の有無、A氏のほかの不正合格者の存在、処罰の水準は、まだ決まっていない。きょうは、人力公団の取り消し手続きと全数調査の範囲、修能の監督補強策が具体的に出るかを見ておく価値がある。", "src": "聯合ニュース(人力公団の謝罪と全数調査、11/15) · 東亜日報(告訴と合格取り消しの推進、11/15) · 京郷新聞(自首と処罰の見通し、11/15) · 韓国経済(自白の内容と政府の対応、11/15)"},
+    "cmh":{"kick": "政治 · 共に民主党 · ✓ 2社 · チェ最高委員の発言の正確な内容と大統領発言の狙いは未確認", "title": "キム・ミンソク代表、チェ・ミンヒ最高委員の問題を倫理審判院に回付…初当選議員の会合は結論出せず", "what": "共に民主党のキム・ミンソク代表は15日、党の最高委員であるチェ・ミンヒ議員の言動をめぐる論議を倫理審判院に回すよう指示した。倫理審判院は、党所属の政治家の懲戒を審査する機関だ。同日、初当選議員の会合『トミンチョ』が緊急会議を開き、『事案は重大だ』という共感は得たが、結論は出せなかった。イ・ジェミョン大統領は15日、改革を語る公人が改革の名を借りて改革を妨げることは容認しがたいと述べた。この発言がチェ最高委員を狙ったものかどうかは、明らかにされていない。論議が、チェ最高委員のイ大統領に関する裁判についての発言に端を発したとの報道があるが、発言の正確な内容は確認されていない。キム代表体制は発足して3カ月目だ。", "why": "党代表が最高委員を懲戒審査に回すのは、指導部内の対立を公式の手続きに移すことだ。最高委員は党指導部の構成員であるため、懲戒の水準によって、党職の維持と派閥のバランスが揺らぎうる。大統領が同日、改革の妨害は容認しがたいと述べたことが、論議とあわせて読まれ、波紋が大きくなる。", "me": "民主党を支持するかどうかにかかわらず、与党指導部の対立は、国会日程と改革立法の速度に影響しうる。党員なら、倫理審判院の審査方式と日程を見守ることができる。一般の有権者にとっては党内の手続きであり、結論が出るまで時間がかかることがある。", "a": "厳正対応論: 党指導部と親イ・ジェミョン系の一部は、公人の言動が改革と党への信頼を揺さぶったので、懲戒手続きを踏むべきだとみる。初当選議員の会合が事案は重大だと共感したのも、同じ流れだ。", "b": "慎重・反発論: 親チョン・チョンレ系は回付に抗議し、懲戒が派閥争いに広がりうるとみる。政治で解決すべきことを死活をかけた争いに持ち込むという批判と、指導部こそどうか自重してほしいという声が党内から出たとの報道があるが、確認されていない。", "say": "確認されたのは、キム代表の回付の指示、初当選議員の会合の『重大』という共感と結論の不在、大統領の改革妨害は容認しがたいという発言までだ。チェ最高委員の発言の正確な内容、大統領発言が誰を狙ったのか、党内の反発の具体的な様相は、まだ確認されていない。倫理審判院がいつ審査を開き、どの水準を検討するかが、きょうの注目点だ。", "src": "聯合ニュース(回付の指示と初当選議員の会合、11/15) · 京郷新聞(懲戒の流れと大統領発言、11/15)"},
+    "faa":{"kick": "国際 · 米国の航空 · ✓ 4社 · 正確な原因と欠航の規模は未確認", "title": "米航空大混乱、運輸長官「通信網の交換中に発生」…トランプ大統領はバイデン政権のせいに", "what": "13日(現地時間)、米国全土で航空機の離陸が一斉に中断された。航空管制の通信システムに障害が生じたことがきっかけだ。離陸は再開されたが、週末じゅう航空便が混乱し、欠航の規模は集計ごとに大きく異なり、数千便から1万便を超える水準まで出ている。米国の運輸長官は、通信網の業者L3Harrisが通信網を交換していた最中に起きたことだとして、作業ミスと機器の欠陥を調べていると明らかにした。トランプ大統領は15日、バイデン政権が連邦航空局をだめにしたと主張し、議会が管制近代化の予算を早く承認すべきだと述べた。トランプ氏は、今の管制システムの相当部分が50年ものであり、すでに交換作業を始めたと述べた。公式の原因は、まだ発表されていない。", "why": "航空管制の通信は、一か所が止まると安全のために全国の離陸を止める構造であるため、小さな機器の問題も全国的な混乱に広がりうる。古いシステムを交換する作業自体が、危険な区間になりうることが明らかになった。責任を前政権、業者、予算のどこに置くかによって、議会の予算論議の方向が分かれる。", "me": "米国行きや米国経由の航空便を予約した人は、遅延と欠航の余波が残っているかもしれないので、航空会社の案内を確認するのがよい。韓国の航空会社の運航に直接影響があったという内容は、確認されていない。", "a": "前政権責任論: トランプ大統領は、前政権がシステムを放置したとして、バイデン政権のせいにする。すでに交換作業を始めたので、議会が予算さえ承認すればよいという立場だ。", "b": "管理責任論: 調査の対象が交換作業のミスと機器の欠陥であるという点で、事態を前政権だけの責任にするのは難しいという見方だ。古い設備を交換する最中の管理がずさんだったかを問うべきだというものだ。", "say": "確認されたのは、13日の全国離陸中断、離陸再開、運輸長官の交換作業中に発生したという説明、トランプ氏の15日の発言だ。欠航の規模と正確な原因は確定していない。調査結果と、議会の管制近代化の予算論議が今週出てくるかを見ておく価値がある。", "src": "朝鮮日報(運輸長官の発言と欠航、11/15) · 東亜日報(欠航の集計、11/15) · 聯合ニュース(トランプ氏の発言と機器の交換、11/15) · 京郷新聞(管制網の老朽化、11/15)"},
+    "safe":{"kick": "政治 · 治安 · ✓ 2社 · 無期刑の導入時期と適用範囲は未確認", "title": "青瓦台『国民安全プラス』プロジェクト始動…仮釈放なしの無期刑の導入を協議", "what": "イム・グァンヒョン大統領秘書室長が15日の青瓦台ブリーフィングで、『私の暮らしを守る政府、国民安全プラスプロジェクト』を進めると明らかにした。国民の安全を脅かす犯罪に、政府全体の力を総動員して強力に対応するという内容だ。年末まで、すべての省庁の対応状況と成果を点検し、補完する。青瓦台は、仮釈放なしの無期刑の導入を協議していると明らかにした。現行の刑法は、無期懲役も20年服役すれば仮釈放の審査を受けられるようにしている。仮釈放なしの無期刑が導入されれば、事実上の終身刑になる。導入の可否と時期、適用範囲は決まっていない。", "why": "政府が犯罪対応を省庁合同のプロジェクトとしてまとめ、年末の点検日程を明示したのは、成果の評価を受けるという意味だ。仮釈放なしの無期刑は、刑罰体系の最も重い段階に新しい形を加えることであるため、立法が必要で、刑罰の均衡と誤判の可能性をめぐる論争を呼ぶ。", "me": "凶悪犯罪への対応策は、通報・保護制度と捜査人員の配置につながりうるので、ストーキングや交際相手からの暴力を心配する人に関係がある。刑法の改正は国会の議論を経なければならず、すぐに制度が変わるわけではない。", "a": "強力対応論: 関係性犯罪と異常動機犯罪が続いているため、再犯の可能性を最初から断つ重い刑が必要だという見方だ。国民が体感する安全の成果を出すという政府の立場と、同じ方向だ。", "b": "慎重論: 仮釈放は受刑者の教化と刑の執行管理の手段であるため、これをなくすと矯正の動機が消えるという懸念がある。刑が重くなれば犯罪が減るのか根拠が必要で、十分な議論なしに導入するのは難しいという立場だ。", "say": "確認されたのは、15日のブリーフィング、年末までの全省庁の点検、仮釈放なしの無期刑が協議中という点だ。導入時期と、どの犯罪に適用するかは確認されていない。法務部と国会が具体案を出すか、年末の点検でどんな指標を公開するかを見ておく価値がある。", "src": "京郷新聞(仮釈放なしの無期刑の協議、11/15) · 韓国経済(プロジェクト推進のブリーフィング、11/15)"},
+    "ss":{"kick": "科学 · 宇宙 · ✓ 3社 · 1段目の回収が失敗した原因とマスクの発言は未確認", "title": "スペースXのスターシップ宇宙船本体、発射台で初めて捕獲…1段目の回収は失敗", "what": "スペースXは14日(現地時間)、米国テキサスのスターベース発射場で、スターシップの第15回試験飛行を行った。2段目の宇宙船本体が地球に戻ると、発射台の『箸アーム』がつかまえた。宇宙船本体を発射台のアームでつかまえたのは、初めてだ。1段目ロケットは、発射台での回収に失敗し、海に落ちた。1段目の回収が失敗した原因は確認されていない。イーロン・マスクが今回の成功を「歴史的な日」と述べたとの報道があるが、ほかでは確認されていない。スペースXは、1段目と宇宙船の両方を受け止めて再利用することを目指してきた。", "why": "ロケットを一度使って捨てれば打ち上げ費用が大きくなるため、受け止めて再利用する技術が、打ち上げ市場の競争力を左右する。宇宙船本体まで発射台のアームで受け止めることに成功したのなら、完全再利用という目標の大きな障害の一つを越えたことになる。ただし、1段目の回収が失敗し、1回の飛行で両方を受け止めることは、まだ成し遂げていない。", "me": "一般の消費者に、すぐの影響はない。宇宙の打ち上げ市場や衛星サービスの費用に関心がある人は、再利用技術の進展が、長期的には打ち上げ価格と衛星インターネットのサービスに影響しうる点を、知っておく価値がある。", "a": "技術楽観論: 初めて宇宙船本体をつかまえた点で、再利用の完成に近づいたとみる。試験飛行15回目で得た成果である点を根拠に挙げる。", "b": "慎重論: 1段目の回収が失敗し、宇宙船の捕獲も1回成功しただけなので、繰り返せるかはもう少し見守る必要があるという見方だ。商業運用水準の信頼度に至るには、試験飛行がさらに必要だという立場だ。", "say": "確認されたのは、宇宙船本体を発射台のアームがつかまえたことと、1段目ロケットの回収が失敗したことだ。1段目の失敗の原因、宇宙船の状態、マスクの発言は確認されていない。スペースXの次の飛行日程と、失敗の原因の説明を見ておく価値がある。", "src": "京郷新聞(宇宙船の捕獲成功、11/15) · BBC(2回目の捕獲の試み、11/14) · ブルームバーグ(着陸映像、11/14)"},
+    "bb":{"kick": "スポーツ · ✓ 報道3件", "title": "韓国野球、APBC決勝で日本に1-5で敗戦…3大会連続の準優勝", "what": "韓国野球代表チームが15日に行われた2026アジアプロ野球チャンピオンシップ(APBC)決勝で、日本に1-5で敗れた。大会3連続の準優勝だ。代表チームは12日にオーストラリア、13日に日本に相次いで敗れた。14日に台湾を破って決勝に進んだ。台湾戦では、キム・ドヨンとパク・ジェヒョンが本塁打を放った。チェ・ウォンホ監督は、大会で若い投手たちの国際競争力を確認したと述べた。", "why": "日本戦の不振は、代表チームの投手力と打線の国際競争力をめぐる議論につながってきた。今回の大会は若い選手中心で行われ、今後の代表チーム構成の議論の参考になる。決勝の相手が日本であるため、日韓戦の不振が再び取り沙汰される。", "me": "野球ファンは、今回の結果が次の国際大会の代表選考と投手育成の議論にどう反映されるかを見ることができる。大会を応援した人には、3連続準優勝という結果が残った。", "a": "投手陣の限界論: 打線は熱かったが、マウンドは冷たかったという評価が出ている。日本の投手を攻略できなかった点を敗因に挙げる。", "b": "成果論: チェ監督は、若い投手たちが国際舞台で競争力を確認したと評価した。台湾を破って決勝に進んだ点を、巻き返しの根拠に挙げる。", "say": "確認されたのは、1-5の敗戦と3連続準優勝、チェ監督の評価だ。日韓戦の連敗の数は、集計基準によって報道ごとに異なりうるため、書かなかった。次の代表チームの招集と国際大会の日程で、投手陣の構成がどう変わるかを見ておく価値がある。", "src": "聯合ニュース(決勝の敗戦と監督の評価、11/15) · 韓国経済(3連続準優勝、11/15) · 朝鮮日報(予選の台湾戦、11/15)"},
+    "bts":{"kick": "文化 · ✓ 報道2件", "title": "BTS、メロンミュージックアワードで大賞2個を含む6冠…今回の授賞式で最多", "what": "BTSが14日と15日にソウルの高尺スカイドームで開かれた2026メロンミュージックアワード(MMA2026)で、大賞2個を含む6個の賞を受けた。今回の授賞式で最も多い賞だ。初日の14日には「今年のアルバム」をはじめ3冠に輝いた。3月に発売した5作目のフルアルバム『アリラン』とワールドツアーの成果が評価された。エスパも初日に大賞を受けた。初日の授賞式には1万8000人余りが集まった。", "why": "年末の音楽授賞式は、1年のアルバムの成果とファンダムの規模を一度に見せる場だ。BTSがワールドツアー中にも最多受賞をしたことは、アルバムの成果が評価に大きく反映されたことを示している。", "me": "音楽ファンは、今年のアルバムと大賞受賞作を聴き直すきっかけになる。大衆音楽の消費の流れに関心がある人は、アルバム中心の評価が続くかを見るとよい。", "a": "成果認定論: アルバムとワールドツアーの成果が受賞につながったのは当然だという見方だ。大賞2個と6冠という結果を根拠に挙げる。", "b": "評価方式の議論: 1チームが賞を大きく総なめにすると、授賞式の構成と投票・審査方式が多様性を反映できないという惜しむ声が出うる。同じ授賞式で別のチームも大賞を受けたことが、バランスの根拠として挙げられる。", "say": "確認されたのは、6冠と大賞2個、初日の3冠、エスパの初日の大賞だ。審査と投票方式をめぐる論争は、今回の集計範囲では確認されていない。次の年末の授賞式の日程で、受賞の流れが続くかを見ておく価値がある。", "src": "聯合ニュース(6冠と受賞コメント、11/15) · 東亜日報(初日の3冠、11/14)"},
+    "asean":{"kick": "国際 · ✓ 報道3件", "title": "第49回ASEAN首脳会議、フィリピンで開幕…17日にトランプ大統領が出席予定", "what": "東南アジア諸国連合のASEAN第49回首脳会議と関連の首脳会議が15日にフィリピンで開幕し、17日まで開かれる。インドネシア・タイ・マレーシアの首脳が14日夜、フィリピンに到着した。シンガポールの首相も14日にマニラに到着した。議長国フィリピンは、14日にASEANの閣僚たちがデジタル経済基本協定に署名したと明らかにした。トランプ米大統領は17日のマニラの会議に出席し、ルビオ国務長官が同行する。ミャンマーのASEAN復帰を今回は決めずに先送りするとの報道があるが、確定していない。", "why": "ASEANは、米国と中国がともに力を入れる地域協力体であるため、首脳会議に誰が出席するかが外交のシグナルになる。デジタル経済協定は、加盟国間のデータ・電子商取引のルールをそろえることなので、域内の経済的なつながりに影響を与える。韓国企業の東南アジア事業にも、間接的に及びうる。", "me": "東南アジアに輸出したり進出したりしている企業や、旅行・投資に関心がある人は、会議で出てくるデジタル貿易のルールと米国の通商の立場を見る価値がある。一般の消費者にすぐの変化はない。", "a": "参加拡大論: 米国大統領が直接出席するだけに、ASEANとの経済・安保協力が強まりうるという見方だ。デジタル経済協定を議長国の成果と評価する。", "b": "慎重論: ミャンマー復帰のような争点は、加盟国間の意見の違いが大きく、決定を先送りしうるという見方だ。会議への出席だけで具体的な合意につながるのは難しいという立場だ。", "say": "確認されたのは、15日の開幕、17日までの日程、トランプ氏の17日の出席予定、14日のデジタル経済協定の署名だ。ミャンマー復帰の決定時期は確認されていない。17日のトランプ氏の発言と、会議の共同声明の内容を見ておく価値がある。", "src": "フィリピン・スター(トランプ氏の17日出席、11/15) · GMAニュース(首脳の到着、11/14) · ストレーツ・タイムズ(ミャンマー復帰の決定延期の報道、11/14)"},
+    "ukr":{"kick": "国際 · ✓ 報道3件", "title": "ゼレンスキー氏「スターシールドの速度制限は政治的な理由」…スペースXは技術的な問題と説明", "what": "ウクライナは、スペースXの軍用衛星インターネット『スターシールド』の速度制限が連日続いていると明らかにした。スターシールドは、衛星インターネットのスターリンクの軍用版だ。ゼレンスキー大統領は、速度制限は技術的な問題ではなく政治的な原因によるものだと主張した。スペースXは、技術的な問題だと説明し、ウクライナのアクセスを遮断したという点を否定した。ゼレンスキー氏は、この問題をあらゆるレベルで提起すると述べた。ゼレンスキー氏は、速度制限がロシアのエネルギー施設への攻撃に有利だと主張した。米国の民主党がこの問題の調査に乗り出そうとしているとの報道があるが、確認されていない。", "why": "前線での通信とドローンの運用が衛星インターネットに依存していれば、民間業者の速度制限が、そのまま軍事作戦の変数になる。原因が技術なのか政治なのかによって、責任と対応の主体がまったく変わる。民間企業が戦争のインフラを握っていることが、改めて明らかになった。", "me": "韓国の読者に直接の影響は大きくないが、衛星インターネットと民間の宇宙企業が安全保障に与える影響は、韓国の安保・通信政策の議論にもつながりうる。ウクライナの戦況とエネルギー施設への攻撃のニュースを理解する背景になる。", "a": "政治的原因論: ゼレンスキー氏は、速度制限は技術ではなく政治的な決定だとみる。この制限が、ロシアのエネルギー施設への攻撃にさらに大きな余地を与えるという主張だ。", "b": "技術問題論: スペースXは、速度制限は技術的な問題によるもので、ウクライナのアクセスを遮断してはいないと説明する。サービスの制限は意図した措置ではないという立場だ。", "say": "確認されたのは、ウクライナが障害を伝え、ゼレンスキー氏とスペースXの説明が食い違っているという点だ。速度制限の実際の原因と、米議会の調査の有無は確認されていない。スペースXの追加説明と、障害の解消の有無を見ておく価値がある。", "src": "ANSA(ゼレンスキー氏の発言、11/14) · NU.nl(政治的原因の主張とスペースXの反論、11/14) · TVN24(連日続く障害、11/14)"},
+    "acc":{"kick": "政治 · ✓ 報道2件", "title": "税理士試験のAI不正、イ・ヒョンイル副首相・ク・ユンチョル前副首相が職務遺棄で告発される", "what": "税理士試験の首席合格者のAI不正行為事件に関連して、イ・ヒョンイル経済副首相兼財政経済部長官とク・ユンチョル前副首相が、職務遺棄の疑いで告発された。告発は15日に伝えられた。職務遺棄は、公務員が正当な理由なく担当の仕事をしない罪だ。試験の不正を防ぐために財政経済部がどんな措置をとったかが、争点として取り沙汰されている。告発後に捜査に着手したかどうかは伝えられていない。財政経済部は同日、首席合格の効力停止を協議中だと明らかにした。", "why": "告発は、捜査機関に処罰を求める手続きであるため、試験管理の責任を個人の不正ではなく政府の責任に広げるシグナルだ。ただし、告発がそのまま容疑の認定ではなく、捜査機関が事件を受け入れるかどうかは別の判断だ。政府は、責任論争と再発防止策のあいだで対応しなければならない。", "me": "一般の受験生と納税者は、今回の告発が試験管理方式の改編を早めるかを見ることができる。個人にすぐの変化はない。", "a": "責任追及論: 試験を総括する政府が不正防止の措置を怠ったのなら、責任を問うべきだという見方だ。告発は、その責任を法的に問うてみようという要求だ。", "b": "過度な政治化への懸念: 個別の受験者の計画的な不正を副首相の職務遺棄に結びつけるのは無理があるという見方だ。責任は、試験管理機関の改善と捜査結果で見極めるべきだという立場だ。", "say": "確認されたのは、2人の副首相が職務遺棄の疑いで告発されたという点だ。告発人と具体的な告発の理由、捜査着手の有無は確認されていない。捜査機関の事件の配当と、財政経済部の再発防止策を見ておく価値がある。", "src": "聯合ニュース(副首相の告発、11/15) · 韓国経済(職務遺棄の告発、11/15)"}
+  };
+  const G = {
+    "業務妨害罪":{"f": "法", "d": "偽りや欺き、威力で他人の業務を妨害する罪。5年以下の懲役または1500万ウォン以下の罰金だ。", "w": "人力公団がA氏をこの疑いで告訴する。"},
+    "生成AI":{"f": "技術", "d": "質問や写真を受け取り、文章・答え・絵を新たに作り出す人工知能。", "w": "試験問題を撮って送り、答えを受け取るのに使われた。"},
+    "効力停止":{"f": "法", "d": "合格や処分のような決定の効果を、一時的に止める措置。取り消しと違って暫定措置だ。", "w": "財政経済部が、首席合格の効力停止を協議中だ。"},
+    "全数調査":{"f": "行政", "d": "一部だけを選んで見ず、対象のすべてを調べる方式。", "w": "国家資格試験全体が対象だ。"},
+    "自首":{"f": "法", "d": "捜査機関が気づく前に、犯人が自ら罪を申告すること。刑を軽くしたり免じたりすることがある。", "w": "A氏が警察に自首書を出した。"},
+    "職務遺棄":{"f": "法", "d": "公務員が正当な理由なく、担当の仕事をしない罪。", "w": "副首相2人が、この疑いで告発された。"},
+    "告発":{"f": "法", "d": "被害者でない人が、捜査機関に犯罪の事実を知らせ、処罰を求めること。被害者本人がすれば告訴だ。", "w": "副首相2人に対する告発が受理された。"},
+    "倫理審判院":{"f": "政治", "d": "党所属の政治家の品位の毀損などを審査して、懲戒を決める政党内部の機関。", "w": "キム代表が、チェ最高委員の問題をここに回すよう指示した。"},
+    "最高委員":{"f": "政治", "d": "党代表とともに党の主要な決定を行う、最高指導部の構成員。", "w": "チェ・ミンヒ議員が民主党の最高委員だ。"},
+    "親チョン・チョンレ系":{"f": "政治", "d": "チョン・チョンレ氏に近い党内の人々を指す言葉。", "w": "回付に抗議したとの報道がある。"},
+    "仮釈放":{"f": "法", "d": "刑期を満了する前に、模範的な受刑者を条件付きで釈放する制度。無期懲役は20年服役して初めて審査の対象になる。", "w": "この制度のない無期刑が協議されている。"},
+    "無期刑":{"f": "法", "d": "期間を定めずに服役する刑。現行の無期懲役が代表的だ。", "w": "仮釈放なしの無期刑なら、事実上の終身刑になる。"},
+    "関係性犯罪":{"f": "法", "d": "恋人・家族・知人など近い関係で起こる、暴力・ストーキングのような犯罪をまとめて呼ぶ言葉。", "w": "国民安全対策の対象犯罪として取り沙汰されている。"},
+    "異常動機犯罪":{"f": "法", "d": "はっきりした恨みや利益なしに、不特定多数を狙う犯罪を指す言葉。", "w": "国民安全対策の対象犯罪として取り沙汰されている。"},
+    "航空管制":{"f": "航空", "d": "管制官が航空機の離着陸と航路を通信で指示し、衝突を防ぐ仕事。", "w": "管制通信システムの障害で離陸が中断された。"},
+    "1段目ロケット":{"f": "宇宙", "d": "打ち上げ直後に最初に分離されて落ちる、いちばん下のロケット。スターシップでは、スーパーヘビー・ブースターを指す。", "w": "今回の飛行で、1段目ロケットは回収されなかった。"},
+    "スターシールド":{"f": "技術", "d": "スペースXの衛星インターネットのスターリンクを、軍用にしたサービス。", "w": "ウクライナが速度制限を訴えたサービスだ。"},
+    "ASEAN":{"f": "外交", "d": "東南アジア諸国連合。東南アジアの国々が作った地域協力機構", "w": "第49回首脳会議がフィリピンで開かれる。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

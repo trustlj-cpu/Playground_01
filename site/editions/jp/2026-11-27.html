@@ -1,0 +1,341 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>57,499.16</b>日経平均 · 11/26終値 · 前日比+0.86%</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,182.78</b>S&amp;P500 · 11/25終値(米国は26日休場) · 前日比-0.25%</div>
+    </div>
+    <div class="dateline"><span>No. 54 · 朝刊</span><b>2026年11月27日(金)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="a1">
+      <div class="kick">社会 · 情報セキュリティ<span>✓ 3媒体 · 文部科学省の件は漏えいの有無と原因が未確認</span></div>
+      <h2 class="hl">集英社で会員の生年月日70万件余が流出、四国電力でも新たに25万件、外部サービスへの不正アクセスが相次ぐ</h2>
+      <p class="deck">集英社は26日、販売サイトの会員情報の一部が漏れたと発表した。四国電力は新たに約25万件の流出を明らかにし、文部科学省でも不正アクセスが見つかった</p>
+      <div class="body">
+        <p>集英社は26日(木)、キャラクターグッズを売る「ジャンプキャラクターズストア」の会員情報の一部が外部に漏れたと発表した。漏れたのは生年月日70万7852件などで、氏名・住所・電話番号・メールアドレス・パスワード・クレジットカード情報は含まれないという。原因は、メール配信などに使っていた外部サービス「KARTE」(運営はプレイド社)への不正アクセスだ。集英社がプレイド社から連絡を受けたのは13日(金)、漏えいの範囲の報告を受けたのは24日(火)だった。「KARTE」は、顧客にメールやアプリの通知を送ったり、サイトでの行動を分析したりする企業向けのサービスで、多くの企業が同じ仕組みを使っている。同じ26日には四国電力も、会員制サービス「よんでんコンシェルジュ」で、退会した会員などの約25万件が新たに流出していたと発表した。</p>
+        <p>四国電力は16日(月)に約60万件の流出を公表しており、今回の分を足すと約85万件になる計算だ。流出したのは個人会員の氏名・メールアドレス・住所・性別・生年月日などで、電気料金の支払いに使うカードや口座の情報、ログイン用のパスワードは含まれないとしている。対象は2023年8月末時点で登録していた個人・法人の会員で、利用が終わった情報は消したはずが、委託先のシステムに残っていたという。愛媛県内だけで約6万件にのぼる。企業が自社のサーバーを守っていても、預けた先のデータが抜かれれば流出は起きる。26日には文部科学省も、委託事業の入札情報を公開するシステムへの不正アクセスで、職員のメールアドレスや入札に参加した会社名が漏れた可能性があると発表した。この件が同じ原因かどうかは伝えられておらず、漏えいの範囲は調査中だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="a2">
+      <div class="kick">政治 · 安全保障<span>✓ 4媒体 · 56.3兆円は1媒体の報道で未確認、決定の時期と財源も未確認</span></div>
+      <h3 class="hl">政府が2027〜31年度の防衛費を5年間で56.3兆円とする方向で調整と伝えられる、現行の43兆円から増額</h3>
+      <div class="one">
+        <p>政府が、2027年度から31年度までの5年間の防衛費を総額56.3兆円とする方向で調整していると伝えられる。現行の計画は2023年度から27年度の5年間で43兆円なので、約1.3倍になる。1年あたりにならすと、現行の約8.6兆円から約11兆円に増える計算だ。年末に予定される安全保障関連3文書(国家安全保障戦略など)の改定に合わせて決める見通しだが、26日の時点では政府の正式な決定ではない。 額をめぐる報道は一つではない。13日には60兆円規模で調整に入ったと伝えられ、財務省は50兆円台、防衛省は70兆〜80兆円の必要額を試算していると報じられてきた。56.3兆円は、26日に1媒体が伝えた数字で、ほかに確認は取れていない。自民党の国防部会などの合同会議では25日、「十分な防衛費の確保を」との意見が相次いだ。財政制度等審議会は20日、国債に頼らず財源を確保するよう財務相に建議している。決定の時期と財源は示されていない。年末の改定までに、調整が続く見通しだ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="b1"><b>中国海警局の船2隻が尖閣諸島沖の日本の領海に侵入、海上保安本部が退去を警告</b><em>26日午前、沖縄県の尖閣諸島の沖合で2隻が日本の領海に入った。海上保安本部は、領海から出るよう警告と監視を続けている。</em><span>安全保障 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b2"><b>東京電力が福島での廃炉部門などを統合する新組織を設置へ、専門人材の確保を強化</b><em>福島第一・第二原発の廃炉部門と、賠償・復興を担う福島復興本社を一つにする。専門性の高い人材の確保を強める狙いだ。</em><span>エネルギー · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b3"><b>「独身偽装」で出産した女性への賠償、東京高裁が1審より増やし611万円の支払いを命じる</b><em>妊娠して休業したことによる収入の減少も損害と認めた。1審の賠償額は約466万円と伝えられる。</em><span>社会 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b4"><b>吉野家HDが「第4の肉」と位置づけたダチョウ事業を売却、丼の販売も収益面に課題と伝えられる</b><em>ダチョウの飼育や加工食品の製造・販売を宮崎市の企業に譲渡する。譲渡損として約1.2億円の特別損失を見込むと伝えられる。</em><span>経済 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b5"><b>自民党の税制調査会で、東京と地方の税収格差の是正をめぐり意見が相次ぐ、結論は出ず</b><em>地方選出の議員が具体的な結論を求める一方、東京選出の議員は反対した。来年度の税制改正に向け、議論は続く。</em><span>政治 · ✓ 2媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="a3">
+      <div class="kick">経済 · 金融政策<span>✓ 3媒体 · 12月の利上げ判断は未確定</span></div>
+      <h3 class="hl">日銀の田村審議委員が甲府市で講演、政策金利を中立的な水準へ早く引き上げる必要を強調、12月会合の利上げも否定せず</h3>
+      <div class="body">
+        <p>日本銀行の田村直樹審議委員は26日(木)、山梨県甲府市での講演で、政策金利を「中立的な水準」へ早めに引き上げる必要があるとの考えを示した。中立金利は、景気を熱しも冷ましもしない金利のことで、田村委員は2%程度を念頭に置いていると説明した。日銀は9月に政策金利を1.0%程度から1.25%程度に引き上げ、10月は据え置いている。金利が上がれば、住宅ローンや企業の借入の利払いが増える一方、預金の利息も増える方向に動く。</p>
+        <p>田村委員は、利上げ後の経済や金融環境の見極めは「丁寧に」行うが、「ゆっくり」を意味しないと述べ、物価の上振れリスクにも触れた。基調的な物価上昇率は2%の目標に達した一方、定着の度合いは低いとの認識も示した。次回の金融政策決定会合は12月17〜18日で、記者会見では、9月の利上げから3カ月で判断がつく場合は十分あり得るとの見方を示し、12月の追加利上げの可能性を否定しなかった。利上げの有無は、会合で9人の政策委員が決める。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="a4">
+      <div class="kick">政治 · 国会<span>✓ 3媒体 · 採決の結果は未確定、維新内の棄権の観測は1媒体で未確認</span></div>
+      <h3 class="hl">関文科相の問責決議案、27日の参院本会議で採決へ、賛否が拮抗し可否同数の見方も</h3>
+      <div class="body">
+        <p>野党8党派は26日(木)、関文部科学相に対する問責決議案を参議院に提出した。政治資金パーティーをめぐる問題を理由に、辞任を求めている。関氏は「丁寧に説明したい」と述べ、進退は明言していない。参議院の議院運営委員会の理事会は、27日(金)の本会議で採決することを決めた。提出に先立ち、野党は法案の審議に影響が出うると示唆していた。</p>
+        <p>与党は参議院で過半数を持たず、賛否は拮抗している。可否同数になる見方も出ており、その場合は憲法56条により議長が決する。結果は、日本保守党や無所属などの議員の対応に左右されるとされ、日本維新の会の内部にも棄権の観測があると伝えられる。問責決議に法的な拘束力はなく、可決されても大臣が辞める義務は生じない。高市首相は関氏を擁護し、「違法ではなく、説明責任も果たしている」と述べたと伝えられる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="a5">
+      <div class="kick">社会 · エネルギー<span>✓ 3媒体 · 処分の対象が増えるかは未確認</span></div>
+      <h3 class="hl">中部電力が浜岡原発のデータ不正で13人を処分、勝野前会長ら元役員7人に報酬の自主返納を要請</h3>
+      <div class="body">
+        <p>中部電力は26日(木)、浜岡原子力発電所の地震の想定に関するデータの不正で、関係者13人を処分したと発表した。社長当時の責任を問われた勝野哲前会長を含む退任済みの元役員7人には、報酬の自主返納を要請する。勝野前会長には月額報酬の50%を6か月分求めると伝えられる。社員6人は、2人が諭旨退職、4人が懲戒休職になる。中部電力が不正を公表してから、経営陣の責任のとり方が焦点になっていた。</p>
+        <p>不正は2012年ごろに始まり、原子力規制庁が調査を始めた後も続いたとされる。地震の揺れの大きさの想定(基準地震動)が、小さく見える形で作り替えられていた。中部電力は9月、勝野氏(当時は会長)と林欣吾社長の辞任と、浜岡3・4号機の再稼働審査の申請取り下げを発表した。経済産業省は11月6日に業務改善命令を出し、中部電力は26日に業務改善計画も提出している。処分の対象は、今後の調査で増える可能性があるとされる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>13人</b><span>処分の対象(元役員7人・社員6人)</span></div>
+        <div><b>50%×6か月</b><span>勝野前会長に求める月額報酬の返納</span></div>
+        <div><b>2012年ごろ</b><span>データ不正が始まったとされる時期</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>関文科相の問責決議案はすでに可決された</b> <span>26日の時点で可決された事実はない。参議院の議院運営委員会の理事会が、27日の本会議で採決することを決めた段階だ。与党は過半数を持たず、賛否は拮抗していると伝えられ、結果は確認されていない。</span></div>
+        <div><b>集英社から漏れた情報に、住所やクレジットカード番号も含まれる</b> <span>集英社は、漏れたのは生年月日や性別などで、氏名・住所・電話番号・メールアドレス・パスワード・クレジットカード情報は含まれないと説明している。漏えいの範囲は、26日に同社が発表した内容に基づく。</span></div>
+        <div><b>防衛費5年間で56.3兆円がすでに決まった</b> <span>決まったとは確認されていない。伝えられているのは、政府が56.3兆円で調整しているという1媒体の数字だ。13日には60兆円規模とも伝えられ、財務省は50兆円台、防衛省は70兆〜80兆円を示していると報じられている。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 金 11月27日</b><span>参議院本会議で、関文部科学相への問責決議案が採決される。可決、否決、可否同数のいずれになるかと、関氏が自らの進退をどう語るかが焦点だ。</span><b>今週</b><span>集英社と四国電力のほか、同じ外部サービスを使っていた企業が影響を公表するかを確認したい。文部科学省は、漏えいの範囲を調べている。</span><b>12月17〜18日 ほか</b><span>日銀の金融政策決定会合が開かれ、田村委員が示した早めの利上げの考えが、他の委員にどこまで広がるかが問われる。年末には安全保障関連3文書の改定と来年度の税制改正の大綱が見込まれ、防衛費の総額と税収格差の是正策の中身が確認点になる。</span><b>読者に</b><span>見出しや本文の「伝えられる」は、確認が一つの情報源にとどまる事柄に付けている。続報で複数の確認が取れたものから、断定の形に改めていく。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "a1":{"kick": "社会 · 情報セキュリティ · ✓ 3媒体 · 文部科学省の件は漏えいの有無と原因が未確認", "title": "集英社で会員の生年月日70万件余が流出、四国電力でも新たに25万件、外部サービスへの不正アクセスが相次ぐ", "what": "集英社は26日(木)、「ジャンプキャラクターズストア」など3つのサービスの利用者情報の一部が漏れたと発表した。漏れたのは生年月日が70万7852件、性別が70万7681件で、管理用の符号も最大327件ある。氏名・住所・電話番号・メールアドレス・パスワード・クレジットカード情報は含まれないと説明している。原因は、外部サービス「KARTE」への不正アクセスだ。プレイド社から集英社に連絡があったのは13日で、漏えいの範囲の報告は24日に届いた。四国電力は同じ26日、会員制サービスで退会した会員などの約25万件が新たに流出したと発表した。16日に公表した約60万件と合わせると約85万件になる。文部科学省は、入札情報を公開するシステムへの不正アクセスで、職員のメールアドレスなどが漏れた可能性があると発表した。", "why": "今回の流出は、各社が自前のサーバーを破られたのではなく、顧客への連絡や分析のために預けた外部サービスが破られたことで起きている。預け先が一つ破られると、同じサービスを使う多くの会社に同時に影響が広がる。また、利用目的が終わって消したつもりのデータが預け先に残っていた例があり、削除の確認が会社の外では見えにくいことも分かる。", "me": "会員登録したことのある店や電力会社から、お知らせのメールや書面が届いていないかを確認しておきたい。流出したのが生年月日や住所のような変えられない情報でも、パスワードやカード番号が含まれていなければ、すぐに口座やカードが使われる事態にはなりにくい。ただ、公式を装うメールや電話には注意が要る。", "a": "被害を受けた企業の側は、流出したのは一部の項目に限られ、カード情報やパスワードは含まれないと説明している。預け先の事業者の不正アクセスが原因だとして、調査と再発防止を進める考えだ。", "b": "個人情報の管理を問う側は、預けた先まで含めて管理する責任は企業にあると見ている。消したはずの情報が残っていた点や、公表までの日数が企業ごとにばらつく点を、課題として挙げる見方がある。", "say": "確認できているのは、集英社の生年月日70万7852件と、四国電力の新たな約25万件が、いずれも外部サービスへの不正アクセスに由来することだ。文部科学省の件が同じ原因かどうかは確認できていない。今日は、ほかに影響を公表する会社が増えるか、文部科学省が漏えいの範囲を確定するかを見たい。", "src": "NHK(集英社・四国電力・文部科学省の発表, 11/26) · 朝日新聞(相次ぐ個人情報流出のまとめ, 11/26) · 集英社(お詫びとお知らせ, 11/26)"},
+    "a2":{"kick": "政治 · 安全保障 · ✓ 4媒体 · 56.3兆円は1媒体の報道で未確認、決定の時期と財源も未確認", "title": "政府が2027〜31年度の防衛費を5年間で56.3兆円とする方向で調整と伝えられる、現行の43兆円から増額", "what": "政府が、2027年度から31年度までの5年間の防衛費を総額56.3兆円とする方向で調整していると、26日に伝えられた。現行の計画は2023年度から27年度の5年間で43兆円で、安全保障関連3文書の改定が年末に予定されている。これまでには、13日に60兆円規模で調整に入ったとの報道があった。財務省は50兆円台を基準に示し、防衛省は70兆〜80兆円の必要額を試算していると報じられている。首相は財源確保のための増税に消極的だと伝えられる。25日の自民党の国防部会などの合同会議では、十分な防衛費の確保を求める意見が相次いだ。財政制度等審議会は20日、防衛費の財源を国債に頼らず確保するよう財務相に建議した。56.3兆円は1媒体の報道で、政府の正式な発表はない。", "why": "防衛費の総額は、装備の購入や自衛隊員の待遇を何年先まで決めるかを左右し、財源が増税か歳出の見直しか国債かも決める。5年分をまとめて決めるため、一度決まると毎年の予算の枠が事実上固まる。額が報道ごとに違うのは、防衛省、財務省、与党がそれぞれ違う数字を主張し、最後の調整が続いているためだ。", "me": "防衛費の財源が増税になれば、所得や法人にかかる税の負担に響く可能性がある。国債に頼れば、将来の世代の返済や金利に関わる。ただ、26日の時点では額も財源も決まっておらず、すぐに家計の負担が変わる話ではない。", "a": "防衛力の強化を急ぐ側は、周辺の安全保障環境が厳しい以上、現行の43兆円を上回る規模が必要だとみる。与党内の会議でも、十分な額の確保を求める意見が出ている。", "b": "財政の規律を重く見る側は、額を積み増しても財源の裏づけがなければ将来の負担が膨らむと指摘する。財政制度等審議会の建議のように、国債に頼らない確保を求める声がある。", "say": "確認できているのは、現行が5年で43兆円であること、財務省が50兆円台、防衛省が70兆〜80兆円を示していると伝えられていることだ。56.3兆円は1媒体の数字で、決定ではない。次に見るのは、年末の安保3文書の改定に向けて額が60兆円規模に近づくのか、財源の方針が示されるのかだ。", "src": "朝日新聞(防衛費56.3兆円の調整, 11/26) · NHK(自民の国防部会などの合同会議, 11/25) · 毎日新聞(財政審の建議, 11/20) · 時事通信(次期計画をめぐる攻防, 11/24)"},
+    "a3":{"kick": "経済 · 金融政策 · ✓ 3媒体 · 12月の利上げ判断は未確定", "title": "日銀の田村審議委員が甲府市で講演、政策金利を中立的な水準へ早く引き上げる必要を強調、12月会合の利上げも否定せず", "what": "日本銀行の田村直樹審議委員は26日(木)、山梨県甲府市での金融経済懇談会で講演し、記者会見にも応じた。政策金利を中立的な水準へ早めに引き上げる必要があると述べ、中立金利は2%程度を念頭に置いていると説明した。利上げ後の見極めは丁寧に行うが、ゆっくり進めるという意味ではないとも語った。物価の上振れリスクがうかがわれるとし、基調的な物価上昇率は2%の目標に達したものの定着の度合いは低いとの認識を示した。12月17〜18日の金融政策決定会合については、9月の利上げから3カ月で判断がつく場合は十分あり得ると述べた。日銀は9月に政策金利を1.0%程度から1.25%程度へ引き上げ、10月は据え置いている。", "why": "政策金利は、銀行の貸出金利や預金金利、住宅ローンの金利、円相場に響く。審議委員は9人の政策委員の一人で、会合での議決権を持つため、発言は次の会合の方向を占う材料になる。利上げが続くと見られれば、金利に敏感な株式や円相場が動きやすい。", "me": "変動型の住宅ローンを借りている人は、金利が上がると返済額が増える可能性がある。預金の利息は増える方向で、円相場が動けば輸入品の値段にも響く。ただ、決めるのは12月の会合で、26日の発言だけで金利が変わるわけではない。", "a": "利上げを急ぐべきだとする側は、物価の上振れリスクを重く見る。金融環境がなお緩和的な状態では、物価の上昇が定着する前に手を打つ必要があると考える。", "b": "慎重な側は、利上げの効果が出るまで時間がかかり、景気や企業の収益への影響を見極める必要があるとみる。9月の利上げからまだ3カ月しかたっておらず、判断は早すぎるとの見方もありうる。", "say": "確認できているのは、田村委員が中立金利を2%程度とみて、早めに政策金利を上げるべきだと述べたことだ。12月に利上げするかどうかは、9人の政策委員が会合で決めるもので、未確定だ。次に見るのは、他の委員や総裁の発言と、12月17〜18日の会合までに出る物価の数字だ。", "src": "毎日新聞(田村委員が中立的な水準へ, 11/26) · 日本経済新聞(12月の利上げ判断の発言, 11/26) · 時事通信(中立金利に少しでも早く, 11/26)"},
+    "a4":{"kick": "政治 · 国会 · ✓ 3媒体 · 採決の結果は未確定、維新内の棄権の観測は1媒体で未確認", "title": "関文科相の問責決議案、27日の参院本会議で採決へ、賛否が拮抗し可否同数の見方も", "what": "野党8党派は26日(木)、関文部科学相に対する問責決議案を参議院に提出した。政治資金パーティーをめぐる問題が理由で、野党は辞任を求めている。関氏は提出を受けて「丁寧に説明したい」と述べ、進退は明言しなかった。参議院の議院運営委員会の理事会は、27日(金)の本会議で採決することを決めた。与党は参議院で過半数を持たず、賛否は拮抗している。可否同数の見方も出ている。結果は日本保守党と無所属の議員の対応が左右するとされ、日本維新の会の内部にも棄権の観測があると伝えられる。高市首相は関氏を擁護している。", "why": "問責決議には大臣を辞めさせる法的な力はないが、可決されると野党が審議への協力を拒みやすくなり、参議院での法案の審議に影響が出る可能性がある。可否同数なら議長の判断で結果が決まるため、一人の議員の投票や棄権が結果を左右する。首相が関氏を続投させるかどうかも、可決の有無で重みが変わる。", "me": "国会で審議中の法案の成立が遅れる可能性があり、予算や税の関連の法案が含まれていれば、暮らしに関わる制度の開始時期にも響きうる。ただ、26日の時点では何が遅れるかは示されておらず、結果を見てから確認すれば足りる。", "a": "野党の側は、関氏の対応は行政の公正さを損なうとして、辞任を求めている。説明が不十分なまま職にとどまるのは、大臣としての信頼にかかわると主張する。", "b": "政府・与党の側は、違法ではなく説明責任も果たしているとして、続投させる考えを示している。問責が可決されても法的な拘束力はなく、法案の成立を優先したい立場だ。", "say": "確認できているのは、野党8党派が26日に提出し、27日の参議院本会議で採決することだ。可決か否決かは、27日の時点でも確定していない。今日は、採決の結果と、可否同数になった場合の議長の判断、そして関氏が自らの進退をどう語るかを見たい。", "src": "時事通信(27日採決、賛否拮抗, 11/26) · 毎日新聞(可否同数の見方, 11/26) · NHK(野党側が問責決議案を提出, 11/26)"},
+    "a5":{"kick": "社会 · エネルギー · ✓ 3媒体 · 処分の対象が増えるかは未確認", "title": "中部電力が浜岡原発のデータ不正で13人を処分、勝野前会長ら元役員7人に報酬の自主返納を要請", "what": "中部電力は26日(木)、浜岡原子力発電所の地震の想定に関するデータの不正で、関係者を処分したと発表した。対象は元役員7人と社員6人の計13人だ。退任済みの元役員7人には、社長当時の責任を問われた勝野哲前会長を含め、報酬の自主返納を要請する。勝野前会長には月額報酬の50%を6か月分求めると伝えられる。社員は2人が諭旨退職、4人が懲戒休職になる。林欣吾前社長は、不正への関与がなかったとして要請の対象にならないと伝えられる。不正は2012年ごろに始まり、原子力規制庁の調査が始まった後も続いたとされる。9月には勝野氏と林氏が辞任し、再稼働審査の申請が取り下げられた。経済産業省は11月6日に業務改善命令を出している。", "why": "原発の再稼働の審査は、事業者が出した数字を信頼して進む仕組みだ。地震の揺れの想定が小さく作り替えられていれば、耐震設計の前提が崩れる。経営陣の責任の取り方は、事業者への信頼を戻せるかを左右する。報酬の返納は「要請」で、受けるかどうかは本人の判断になる点も押さえておきたい。", "me": "浜岡原発は静岡県にあり、東海地方の電力供給や電気料金に関わる。再稼働の審査が取り下げられたため、運転再開のめどは立っていない。中部電力の管内に住んでいる人は、今後の安全対策や料金の動きを見ていくことになる。", "a": "処分を受け止める側は、元役員への返納要請と社員の処分は、不正の責任を明確にするものだと受け止める。経済産業省への業務改善計画の提出も、再発防止の一歩と捉える。", "b": "厳しく見る側は、返納は自主的なもので強制力がなく、処分が軽いとみる。不正が規制庁の調査後も続いた以上、経営陣の関与の有無の解明は終わっていないと指摘する。", "say": "確認できているのは、13人が処分され、元役員7人に報酬の自主返納が要請されたことだ。勝野前会長の返納額と林前社長の扱いは、1媒体の報道にとどまる。次に見るのは、元役員が返納に応じるか、処分の対象が増えるか、経済産業省が業務改善計画をどう評価するかだ。", "src": "NHK(元役員7人の処分, 11/26) · 朝日新聞(報酬返納を要求、社員も処分, 11/26) · 日本経済新聞(前会長は報酬5割減6カ月, 11/26)"},
+    "b1":{"kick": "安全保障 · ✓ 3媒体", "title": "中国海警局の船2隻が尖閣諸島沖の日本の領海に侵入、海上保安本部が退去を警告", "what": "26日午前、沖縄県の尖閣諸島の沖合で、中国海警局の船2隻が日本の領海に入った。第11管区海上保安本部によると、侵入は午前7時40分ごろからで、海上保安庁の巡視船は領海から出るよう警告を続けた。海上保安本部は監視を続けている。日本漁船1隻に近づこうとする動きがあったと伝えられ、周辺には巡視船が配備された。中国当局の船が尖閣周辺で確認される日が続いていると伝えられる。日本側は外交ルートで抗議したとされるが、26日の時点で詳細は確認できていない。", "why": "領海は、沿岸から12海里までの海で、他国の船は無害通航を除き、許可なく航行できない。尖閣諸島は日本が実効支配しているが、中国は領有権を主張し、海警局の船が周辺に繰り返し現れる。接近が重なると、漁船や巡視船との衝突の危険が高まり、偶発的な事態にもつながる。", "me": "日常の暮らしにすぐ影響はないが、日中関係の動きは、輸出入や観光、為替に及ぶ可能性がある。海上保安庁の警戒が続く間は、周辺で操業する漁船の安全がまず問題になる。", "a": "日本政府の側は、尖閣は日本の固有の領土で、領海への侵入は主権の侵害だとして、退去を求め続けている。冷静かつ毅然と対応する構えだ。", "b": "中国側の言い分は、尖閣の周辺は中国の管轄の海域で、海警局の活動は正当だというものだ。日本側の対応を批判する発言が出ていると伝えられる。", "say": "確認できているのは、26日午前に2隻が領海に入り、海上保安本部が警告と監視を続けていることだ。漁船への接近の詳細と中国側の主張は、1媒体の報道にとどまるものがある。今日は、2隻が領海を出た時刻と、政府の抗議の内容を見たい。", "src": "NHK(尖閣諸島沖で領海に侵入, 11/26) · 共同通信(中国船2隻が領海侵入, 11/26) · 時事通信(海警船2隻が日本領海に侵入, 11/26)"},
+    "b2":{"kick": "エネルギー · ✓ 2媒体", "title": "東京電力が福島での廃炉部門などを統合する新組織を設置へ、専門人材の確保を強化", "what": "東京電力ホールディングスは26日、福島第一原子力発電所と福島第二原子力発電所の廃炉部門などを統合し、新たな組織を設置すると正式に発表した。統合の対象は、福島第一の廃炉を担う社内組織、福島第二の廃炉部門、被災者への賠償や復興支援を担う福島復興本社の3つと伝えられる。新組織の名称は「福島復興・廃炉本社」と伝えられる。統合によって、廃炉作業にあたる専門性の高い人材の確保を強める。設立の時期は、発表の前には来年4月にもと伝えられたが、26日の発表で示された時期は確認できていない。", "why": "福島第一の廃炉は数十年かかる作業で、燃料デブリの取り出しなど難しい工程が続く。担当が分かれていると、人材や技術の融通がきかない。賠償・復興の部門と一つにすれば、廃炉と地域の復興を同じ体制で進めやすくなる一方、廃炉の責任の所在が見えにくくならないかも問われる。", "me": "福島の廃炉の費用や進み方は、電気料金や国の負担を通じて、全国の電気の利用者に関わる。福島県内に住む人にとっては、地元の雇用や復興の窓口がどう変わるかが関心になる。ただ、組織の統合だけで直ちに暮らしが変わるわけではない。", "a": "統合を前向きに見る側は、廃炉と復興を一体で進めることで、専門人材の確保や意思決定の速さが増すとみる。組織の縦割りを減らす効果を期待する。", "b": "慎重に見る側は、統合しても廃炉の技術や資金の課題は残るとみる。賠償を担う部門と廃炉の部門が一つになることで、被災者への対応が後回しにならないか、注視している。", "say": "確認できているのは、東京電力が26日に福島の廃炉部門などを統合する新組織の設置を正式に発表したことだ。名称と設立の時期は、報道の間で食い違いがあり確定していない。次に見るのは、新組織の責任者と発足の時期、人員の規模が示されるかだ。", "src": "NHK(福島での廃炉部門などを統合, 11/26) · 共同通信(福島復興・廃炉本社の設置, 11/26)"},
+    "b3":{"kick": "社会 · ✓ 3媒体", "title": "「独身偽装」で出産した女性への賠償、東京高裁が1審より増やし611万円の支払いを命じる", "what": "既婚者であることを隠した「独身偽装」の男性との間に子どもを産んだ女性が、男性に賠償を求めた裁判の2審で、東京高等裁判所は26日、約611万円の支払いを命じた。1審より賠償額を増やした。妊娠して休業したことによる収入の減少も、損害だと認めた。金額は、610万円余とも611万円とも伝えられるが、同じ判決の数字だ。1審の東京地裁は6月に、約466万円の支払いを命じたと伝えられる。女性は、男性が独身だと信じて交際し、不妊治療を経て妊娠、出産したとされる。男性が既婚者だと打ち明けたのは妊娠が分かった後だったと伝えられる。", "why": "婚約や交際の相手にうそをつかれて起きた妊娠や出産の被害は、法律上どの損害にあたるかが争われやすい。今回の判断は、休業による収入の減少を賠償の対象に加えた。同じような事情で訴える人にとって、請求できる範囲の目安になる可能性がある。", "me": "結婚や交際の相手の身元は、確かめにくい。ただ、被害にあった場合は、裁判で慰謝料や収入の減少が認められうることを知っておくと、相談の選択肢が広がる。法律相談の窓口は各地にあり、費用を抑えて使える制度もある。", "a": "女性側を支持する立場は、相手のうそで妊娠と出産の重い負担を負った以上、収入の減少も賠償の対象になるのは当然だとみる。判決を前進と受け止める。", "b": "男性側や慎重な立場は、出産するかどうかは本人の意思で決めることで、賠償の範囲が広がりすぎるのは疑問だとみる。上告するかどうかは、26日の時点で確認できていない。", "say": "確認できているのは、2審が1審より賠償額を増やし、約611万円の支払いを命じたことだ。1審の約466万円は1媒体の報道にとどまる。今後は、男性が上告するかと、同種の裁判で休業の損害がどう扱われるかが焦点になる。", "src": "NHK(2審は賠償増額, 11/26) · 朝日新聞(独身偽装の男性に611万円の賠償命令, 11/26) · 弁護士ドットコム(休業補償の一部認定, 11/26)"},
+    "b4":{"kick": "経済 · ✓ 3媒体", "title": "吉野家HDが「第4の肉」と位置づけたダチョウ事業を売却、丼の販売も収益面に課題と伝えられる", "what": "吉野家ホールディングスは26日、牛・豚・鶏に続く「第4の肉」と位置づけてきたダチョウ事業を売却すると発表した。対象は、ダチョウの飼育と加工食品の製造・販売だ。譲渡先は宮崎市の企業で、価格は公表されていないと伝えられる。同社は2024年8月に、ダチョウ事業を本格的に始めると表明していた。スキンケア商品の販売や、一部の店舗での「オーストリッチ丼」の提供を行ってきた。事業の収益には課題があり、譲渡損として約1.2億円の特別損失を計上する見込みと伝えられる。連結の業績予想への影響は軽微とされる。", "why": "外食企業が新しい肉の事業に参入するのは、牛肉や鶏肉の価格や調達の変動に備える狙いがある。ただ、新しい肉は飼育や加工の体制を一から作る必要があり、利益が出るまで時間がかかる。成長事業に経営資源を集めるために手放す判断は、新規事業の採算が厳しいことを示す。", "me": "店で食べられるダチョウ肉のメニューは、今後の扱いが変わる可能性がある。ただ、定番の牛丼などへの影響は伝えられておらず、今すぐの値段や味の変化は確認できていない。", "a": "事業を手放す側の企業は、事業の構造を見直して成長事業に資源を振り向ける必要があると判断した。損失は限定的で、業績への影響は軽微との立場だ。", "b": "新しい肉に期待していた側は、採算の厳しさを指摘する。丼の販売も収益面に課題が残ると伝えられ、第4の肉としての広がりに疑問を持つ見方がある。", "say": "確認できているのは、吉野家HDがダチョウ事業を宮崎市の企業に譲渡すると26日に発表したことだ。価格と約1.2億円の損失は、報道によって扱いが異なる。次に見るのは、店舗のダチョウ肉メニューの扱いと、売却後の吉野家の成長事業が何になるかだ。", "src": "朝日新聞(ダチョウ事業を売却, 11/26) · ロイター(第4の肉ダチョウ事業を売却, 11/26) · 産経新聞(ダチョウ事業売却, 11/26)"},
+    "b5":{"kick": "政治 · ✓ 2媒体", "title": "自民党の税制調査会で、東京と地方の税収格差の是正をめぐり意見が相次ぐ、結論は出ず", "what": "自民党の税制調査会は26日、来年度の税制改正で焦点になっている、東京と地方の税収格差の是正をめぐって議論した。地方選出の議員からは、具体的な結論を出すべきだという意見が出た。東京選出の議員は、これに反対した。結論は出なかったと伝えられる。会合では、東京都と46道府県の間で財政力や行政サービスの差が広がっているとの指摘があったと伝えられる。税調の幹部からは、是正は既定路線だとの発言があったと伝えられる。東京都選出の議員は、都の税収を地方に配っても偏在は解消されていないと主張したと伝えられる。", "why": "税収格差の是正は、東京に集まる税収の一部を国が吸い上げ、地方に配り直す仕組みを広げるかどうかの問題だ。東京都にとっては使える財源が減り、地方にとっては増える。与党の議員の出身地ごとに利害が割れ、結論が出にくい。年末の税制改正の大綱に向けて、調整の山場が近づいている。", "me": "東京都の住民にとっては、都の行政サービスや事業の財源に響く可能性がある。地方の住民には、自治体の財源が増えれば、教育や福祉の事業に回る期待がある。ただ、26日の時点では結論が出ておらず、税の負担が直ちに変わるわけではない。", "a": "是正を求める側は、東京一極集中で税収が偏り、地方との差が広がっていると見る。国が調整して地方に配ることで、住民サービスの格差を縮められると主張する。", "b": "是正に反対する側は、東京は大都市ゆえの行政の費用が大きく、すでに税収の一部を地方に回していると見る。さらに配り直しても偏在は解消されないと反論する。", "say": "確認できているのは、26日の税制調査会で是正への賛否が割れ、結論が出なかったことだ。具体的な是正の方法と規模は、26日の時点で示されていない。次に見るのは、年末の税制改正の大綱に是正策が盛り込まれるか、東京都側がどう反応するかだ。", "src": "NHK(税収格差是正で意見相次ぐ, 11/26) · 共同通信(税収偏在是正で折り合わず, 11/26)"}
+  };
+  const G = {
+    "不正アクセス":{"f": "情報セキュリティ", "d": "IDやパスワードを不正に使うなどして、権限のないシステムに入り込むこと。", "w": "集英社・四国電力・文部科学省の流出の原因として挙げられている。"},
+    "中立金利":{"f": "金融", "d": "景気を熱しも冷ましもしない、ちょうどよいとされる政策金利の水準。", "w": "田村委員は2%程度を念頭に置いていると述べた。"},
+    "政策金利":{"f": "金融", "d": "日銀が金融政策で操作する短期の金利。銀行の貸出や預金の金利の土台になる。", "w": "日銀は9月に1.0%程度から1.25%程度へ引き上げた。"},
+    "金融政策決定会合":{"f": "金融", "d": "日銀の政策委員9人が政策金利などを決める会合。年8回開かれる。", "w": "次回は12月17〜18日に開かれる。"},
+    "審議委員":{"f": "金融", "d": "日銀の政策委員会で、総裁・副総裁とともに政策を決める委員。", "w": "田村直樹氏は審議委員の一人。"},
+    "基調的な物価上昇率":{"f": "経済", "d": "天候や一時的な要因を除いた、物価の根っこの上昇率。", "w": "田村委員は2%の目標に達したが定着度は低いとした。"},
+    "問責決議案":{"f": "国会", "d": "大臣などの責任を問い、辞任を求める国会の決議の案。法的な拘束力はない。", "w": "野党8党派が関文部科学相に対して提出した。"},
+    "可否同数":{"f": "国会", "d": "賛成と反対が同じ数になること。参議院では議長が決する。", "w": "27日の採決で可否同数になる見方も出ている。"},
+    "議院運営委員会":{"f": "国会", "d": "国会の議事の進め方や日程を話し合う委員会。", "w": "理事会が27日の本会議での採決を決めた。"},
+    "基準地震動":{"f": "原子力", "d": "原発の耐震設計の前提にする、想定する最大級の地震の揺れ。", "w": "浜岡原発でこの数字が小さく見えるよう作り替えられていた。"},
+    "業務改善命令":{"f": "行政", "d": "法令違反などがあった事業者に、国が業務のやり方を改めるよう命じる処分。", "w": "経済産業省が11月6日に中部電力へ出した。"},
+    "再稼働":{"f": "エネルギー", "d": "止まっている原発の運転を再び始めること。国の審査を通る必要がある。", "w": "浜岡3・4号機の再稼働審査の申請は取り下げられた。"},
+    "諭旨退職":{"f": "労務", "d": "会社が本人に退職を勧め、本人が応じて辞める形の処分。懲戒解雇より軽い。", "w": "社員2人が諭旨退職になった。"},
+    "懲戒休職":{"f": "労務", "d": "懲戒処分として一定期間、出勤を停止し職務に就かせないこと。", "w": "社員4人が懲戒休職になった。"},
+    "安全保障関連3文書":{"f": "安全保障", "d": "国家安全保障戦略・国家防衛戦略・防衛力整備計画の3つ。防衛費の総額もここで決まる。", "w": "年末の改定に向けて防衛費の額が調整されている。"},
+    "財政制度等審議会":{"f": "財政", "d": "財務相の諮問機関。予算や財政運営について意見をまとめて建議する。", "w": "20日、防衛費の財源を国債に頼らず確保するよう建議した。"},
+    "領海":{"f": "国際法", "d": "沿岸から12海里までの海で、国の主権が及ぶ範囲。", "w": "中国海警局の船2隻が尖閣諸島沖の領海に入った。"},
+    "廃炉":{"f": "原子力", "d": "役目を終えた原発の設備を安全に解体し、燃料などを取り出す作業。", "w": "福島第一・第二原発の廃炉部門が統合される。"},
+    "特別損失":{"f": "会計", "d": "その年だけに起きた、通常の事業とは関係のない大きな損失。", "w": "吉野家HDは譲渡損として約1.2億円を見込むと伝えられる。"},
+    "税制改正":{"f": "税制", "d": "毎年、年末に決める翌年度の税のルールの見直し。", "w": "来年度の税制改正で東京と地方の税収格差の扱いが焦点だ。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

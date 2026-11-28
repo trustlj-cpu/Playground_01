@@ -1,0 +1,340 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>58,711.11</b>日経平均 · 11/27終値 · 前日比+2.11%</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,297.49</b>S&amp;P500 · 11/27終値(短縮取引) · 11/25終値比+1.60%</div>
+    </div>
+    <div class="dateline"><span>No. 55 · 朝刊</span><b>2026年11月28日(土)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="a1">
+      <div class="kick">社会 · 情報セキュリティ<span>✓ 3媒体 · 流出した情報の悪用は確認されていない · 他社分の件数は未確定</span></div>
+      <h2 class="hl">経済紙の電子版会員ら約540万件の個人情報が漏えい、委託先のマーケティングサービスへの不正アクセスで</h2>
+      <p class="deck">経済紙の電子版を運営する大手新聞社は27日、委託先が使うマーケティングサービス「KARTE」への不正アクセスで、会員ら約540万件の個人情報が漏えいしたと発表した。クレジットカード情報は含まれないと説明し、悪用は確認されていない</p>
+      <div class="body">
+        <p>経済紙の電子版を運営する大手新聞社は27日、委託先のマーケティング支援サービス「KARTE」への不正アクセスにより、電子版の会員らの個人情報約540万件が漏えいしたと発表した。対象は電子版の会員のほか、新聞の宅配や専門媒体の購読で同社のIDを登録した人にも及ぶ。流出したのは、元の文字列に戻せない形に変換されたメールアドレスと電話番号、性別、生年月とされる。同社はクレジットカード情報とパスワードは含まれていないと説明しており、27日の時点で情報が悪用された事実や二次被害は確認されていない。氏名や住所は、漏えいした項目に挙げられていない。ただし、連絡先に近い情報が外部に出たことに変わりはなく、同社は対象の利用者に個別に連絡する方針だ。</p>
+        <p>経緯は次のとおりだ。サービスの提供元が13日に不正アクセスを検知したとされ、新聞社は15日に報告を受けた。17日に漏えいの可能性を公表し、その後に提供を受けたデータを解析して、27日に約540万件と確認した。KARTEは多くの企業が顧客の行動分析に使っており、航空会社のピーチ・アビエーションでも最大約944万件の顧客情報が漏えいしたと伝えられている。同じサービスを通じて、ほかの企業の利用者にも影響が広がっている。他社分を含めた被害の全体像は、27日の時点でまだ確定していない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="a2">
+      <div class="kick">政治 · 科学技術<span>✓ 3媒体 · 規制の対象となる性能の線引きは未定 · 提出時期は報道ベース</span></div>
+      <h3 class="hl">高性能AIの事業者に安全確保義務、命令違反には罰則、AI法の改正案の概要が判明</h3>
+      <div class="one">
+        <p>政府がまとめたAI法の改正案の概要が27日、明らかになった。高性能AIを開発・提供する事業者に安全確保義務を課し、重大な事故などを国へ報告させる。国は事業者に勧告や命令を出せるようにし、命令に違反した場合には罰則を科す。現行のAI法は2025年5月に成立したが、罰則の規定はなかった。見直しの背景には、AIを悪用したサイバー攻撃や、人の意図しない動きをするAIの「暴走」への懸念の高まりがある。内閣府の作業部会は11日に、義務、国への報告、勧告、命令の4点を柱とする素案を示しており、今回の概要はその流れを引き継ぐ。 どの性能のAIを対象にするかは、まだ決まっていない。命令は勧告に従わない事業者に出す手段で、罰則はその実効性を支える位置づけだ。政府は2027年の通常国会への改正案提出を目指すと伝えられている。年末までに制度見直しの全体像を示す方針も報じられており、詳細はこれから詰められる。罰則の重さや適用の条件は、27日の時点で明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="b1"><b>12月使用分の電気料金は大手10社すべてで前月より値下がり、政府の補助の再開が背景</b><em>標準家庭の12月使用分は大手10社すべてで前月を下回る。値下がり幅は175〜265円と伝えられ、都市ガスは4社とも8〜11円の小幅な上昇だ。</em><span>経済 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b2"><b>最高検がトクリュウの首謀者特定へ司法取引を活用する基本方針を公表、東京地検は特命捜査班を新設</b><em>最高検は27日、匿名・流動型犯罪グループの中核人物に、これまで以上に厳しい処分や求刑を行う方針を示した。東京地検は刑事部に特命捜査班を設ける。</em><span>社会 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b3"><b>北海道新幹線の札幌延伸、総事業費は約3.4兆円に、国の有識者会議が報告書で示す</b><em>報告書によると、総事業費は約3.4兆円となり、増加額は1兆円規模だ。開業は2038年度末の見込みが維持されたと伝えられる。</em><span>経済 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b4"><b>TPP閣僚級会合、日本に支援事務所を設置へ、インドネシアなど3カ国と加入交渉入り</b><em>TPPの閣僚級会合で、事務局の役割を担う支援事務所を日本に置くことが決まった。インドネシア、フィリピン、UAEの3カ国との加入交渉入りも合意されたと伝えられる。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="b5"><b>政府・与党、短期転売の抑制へマンション売却益への52%課税を検討と伝えられる</b><em>短期の転売を抑える狙いで、売却益への税率を52%とする案が検討されていると伝えられた。決定ではなく、対象や時期はまだ確認されていない。</em><span>経済 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="a3">
+      <div class="kick">社会 · 事故<span>✓ 3媒体 · 台数は10〜12台と報道で幅がある · 事故の原因は未確認</span></div>
+      <h3 class="hl">静岡県清水町の県道で車10台以上が絡む事故、10人が病院に搬送、60代男性の乗用車が次々に衝突か</h3>
+      <div class="body">
+        <p>27日午後3時ごろ、静岡県清水町玉川の県道で、乗用車など10台以上が絡む事故があった。警察によると、60代の男性が運転する乗用車が、自分の車線と対向車線の車などに次々とぶつかったという。10代から70代の男女10人が病院に搬送されたが、いずれも軽傷とみられる。事故の直前には「暴走している車がいる」という110番通報があり、現場付近は一時通行止めになった。</p>
+        <p>関係した車の数は、10台以上、11台、12台と、伝えられ方に幅がある。事故が起きた経緯や、運転していた男性の体調、事故の原因は、27日夜の時点で明らかになっていない。管轄は沼津署で、事故の状況を調べている。「暴走」は通報した人の表現であり、警察は原因を発表していない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="a4">
+      <div class="kick">スポーツ · フィギュアスケート<span>✓ 3媒体 · 男女ともフリーは28日で最終順位は未確定</span></div>
+      <h3 class="hl">フィギュアのグランプリ最終戦、男子SPはマリニンが歴代世界最高の114.81点で首位、女子は千葉百音が77.12点でトップ</h3>
+      <div class="body">
+        <p>グランプリシリーズ最終戦の日本大会が27日、東京の京王アリーナTOKYOで開幕した。男子ショートプログラムでは、アメリカのイリア・マリニンが114.81点をマークし、この種目の世界歴代最高得点で首位に立った。日本の佐藤駿は96.78点で2位につけ、中田璃士が10位、吉岡希が11位だった。首位と2位の差は約18点ある。</p>
+        <p>女子ショートプログラムは、中国杯を制した千葉百音が77.12点で首位に立った。緊張のなかで崩れず、日本女子は今季のグランプリシリーズ全勝に近づいたと報じられている。山下真瑚が5位、青木祐奈が6位だった。順位を決めるフリースケーティングは28日に行われる。アイスダンスの「うたまさ」組は、前日に転倒した森田選手が左膝の靱帯を損傷し、大会を棄権した。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="a5">
+      <div class="kick">安全保障 · AI<span>✓ 3媒体 · 米側AIの目標情報の検証手順などは具体的に示されていない</span></div>
+      <h3 class="hl">防衛省がAI活用の新指針を公表、「判断と責任は人間が持つ」など5原則、特定技術への依存を避けるAI主権も盛り込む</h3>
+      <div class="body">
+        <p>防衛省は27日、AI活用の基本方針を見直し、新たな指針「Defense AI Vision」を公表した。柱は5つの原則で、中心に置いたのは「判断と責任は人間が持つ」という考え方だ。AIにどこまで任せるかをあらかじめ定め、必要な場面では人間が介入できる仕組みにする。AIエージェントには必要最小限の権限だけを与え、重要な操作では人の確認を求める。</p>
+        <p>もう一つの柱がAI主権だ。特定の技術や事業者に過度に頼らず、日本が主導権を失わないようにする考え方で、防衛省は「我が国が主導権を失わない」ことを掲げた。小泉防衛相は27日の記者会見で、判断と責任は人間が持つことを明確にしたと説明した。人間の関与が及ばない完全自律型の致死性兵器を開発する意図はないという従来の立場も示した。AIの提案を無批判に信じてしまう自動化バイアスを防ぐため、教育と訓練を徹底する方針だ。米側のAIが示した目標情報をどう検証するかなど、有事での具体的な手順は示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>5原則</b><span>指針の柱。中心は「判断と責任は人間が持つ」</span></div>
+        <div><b>最小限</b><span>AIエージェントに与える権限の範囲</span></div>
+        <div><b>人の確認</b><span>重要な操作で求める手続き</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>経済紙の電子版会員のクレジットカード情報やパスワードまで流出した</b> <span>同社の説明では、漏えいしたのは元に戻せない形に変換されたメールアドレスと電話番号、性別、生年月で、クレジットカード情報とパスワードは含まれていない。27日時点で悪用も確認されていない。</span></div>
+        <div><b>AIに罰則を科す改正AI法がもう成立した</b> <span>27日に明らかになったのは改正案の概要で、国会への提出はこれからだ。2027年の通常国会への提出を目指すと伝えられており、対象にする性能の線引きも決まっていない。</span></div>
+        <div><b>清水町の事故は運転手がわざと車を暴走させた</b> <span>「暴走している車がいる」は110番通報の表現で、警察は事故の原因を発表していない。運転していた60代の男性の状況も、27日夜の時点で明らかになっていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 土 11月28日</b><span>グランプリシリーズ最終戦のフリースケーティングが行われ、男女の最終順位が決まる。台湾では統一地方選が投開票される。清水町の事故について、警察が原因をどう発表するかも見たい。</span><b>来週</b><span>電子版会員らの漏えいで、対象者への個別連絡と、同じKARTEを使う他社の発表が続くかを見たい。AI法改正案の詳細と、短期転売のマンション売却益への課税案の行方も確認点だ。</span><b>12月17〜18日 ほか</b><span>日銀の金融政策決定会合が開かれる。年末にかけて、政府はAI法の見直しの全体像と、2027年度の税制改正大綱を示す見通しと伝えられている。</span><b>読者に</b><span>電子版や新聞の購読でIDを登録している人は、届く連絡の内容を確認し、心当たりのないメールや電話には応じないようにしたい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "a1":{"kick": "社会 · 情報セキュリティ · ✓ 3媒体 · 流出した情報の悪用は確認されていない · 他社分の件数は未確定", "title": "経済紙の電子版会員ら約540万件の個人情報が漏えい、委託先のマーケティングサービスへの不正アクセスで", "what": "経済紙の電子版を運営する大手新聞社が27日、個人情報の漏えいを確認したと発表した。件数は約540万件で、委託先が使うマーケティングサービス「KARTE」への不正アクセスが原因とされる。対象は電子版の会員のほか、新聞の宅配や専門媒体の購読でIDを登録した人も含まれる。漏えいした項目は、元に戻せない形に変換されたメールアドレスと電話番号、性別、生年月だ。同社はクレジットカード情報とパスワードは含まれないと説明している。サービスの提供元は13日に不正アクセスを検知し、新聞社は15日に報告を受け、17日に漏えいの可能性を公表した。27日時点で、情報の悪用は確認されていない。", "why": "委託先のサービスが破られると、自社のシステムが無事でも利用者の情報が外に出る。KARTEは多数の企業が使っているため、一つの侵入が複数の企業の利用者に広がる構造だ。個人情報を預ける側は、委託先の管理体制にも責任を負うことになる。", "me": "電子版や新聞の購読でIDを登録している人は、個別の連絡が届くかを確認したい。変換された情報でも、電話番号やメールアドレスをもとにした不審な連絡が増える可能性があるため、心当たりのない連絡には応じないのが基本の備えだ。", "a": "同社の説明を踏まえる立場は、漏えいしたのは元に戻せない形に変換された情報で、カード情報やパスワードも含まれず、悪用も確認されていない以上、直接の被害は限られると考える。", "b": "警戒を求める立場は、件数が約540万件と大きく、同じサービスを使う他社でも漏えいが相次いでいる点を重く見る。委託先の管理や、契約終了後のデータの扱いを見直す必要があるとの見方だ。", "say": "確認できているのは、約540万件という件数、漏えいした項目、委託先サービスへの不正アクセスが原因という点だ。悪用の有無と、他社分を含めた被害の全体像はまだ確定していない。今日は、対象者への個別連絡が始まるかと、同じサービスを使う他社の発表が続くかを見たい。", "src": "NHK(日経新聞社 個人情報約540万件漏えい 委託先に不正アクセス, 11/27) · 中日新聞(日経540万件情報漏えい KARTE不正アクセスで, 11/27) · ITmedia NEWS(Peach KARTEから最大約944万件の顧客情報漏えい, 11/27)"},
+    "a2":{"kick": "政治 · 科学技術 · ✓ 3媒体 · 規制の対象となる性能の線引きは未定 · 提出時期は報道ベース", "title": "高性能AIの事業者に安全確保義務、命令違反には罰則、AI法の改正案の概要が判明", "what": "政府がまとめたAI法改正案の概要が27日に明らかになった。高性能AIを手がける事業者に、安全確保の義務を課す。重大な事故などが起きた場合は、国への報告を求める。国は事業者に勧告や命令を出せるようにし、命令に違反した場合の罰則を新設する。現行のAI法は2025年5月に成立したが、罰則の規定はなかった。内閣府の作業部会は11日に、義務、国への報告、勧告、命令の4点を柱とする素案を示している。対象にする性能の線引きは決まっていない。", "why": "AIの能力が上がり、サイバー攻撃への悪用や、人の意図しない動きをする「暴走」への懸念が強まっている。現行法は事業者の協力に頼る仕組みで、応じない事業者に国が動く手段が乏しかった。命令と罰則は、その空白を埋める位置づけだ。", "me": "対話AIなどのサービスを使う人にとっては、提供元が安全対策や事故の報告を求められるようになる。ただし対象や罰則の中身は未定で、利用できるサービスがすぐ変わるわけではない。AIを使って事業をする企業は、対象に入るかどうかの線引きを注視することになる。", "a": "規制を重く見る立場は、AIの悪用や暴走が社会に与える被害が大きく、自主的な取り組みだけでは歯止めにならないと考える。国が命令し、違反には罰則を科せる仕組みがあれば、悪質な事業者への備えになるとの見方だ。", "b": "規制に慎重な立場は、線引きが曖昧なまま罰則を設けると、事業者が開発や国内での提供をためらいかねないと考える。技術の変化が速いため、義務の中身を固定すると対応が遅れるという懸念もある。", "say": "確認できているのは、安全確保義務、国への報告、勧告と命令、命令違反への罰則という骨格だ。対象にする性能の線引きや罰則の重さ、国会への提出時期は、まだ確定していない。今日以降は、内閣府の議論でどの水準のAIを対象にするかが示されるかを見たい。", "src": "毎日新聞(高性能AIに安全確保義務、命令違反には罰則 AI法改正案概要, 11/27) · 時事通信(AI法改正で罰則導入へ サイバー攻撃多発受け, 11/27) · 山陰中央新報(高性能AIの暴走対処へ罰則新設, 11/27)"},
+    "a3":{"kick": "社会 · 事故 · ✓ 3媒体 · 台数は10〜12台と報道で幅がある · 事故の原因は未確認", "title": "静岡県清水町の県道で車10台以上が絡む事故、10人が病院に搬送、60代男性の乗用車が次々に衝突か", "what": "27日午後3時ごろ、静岡県清水町玉川の県道で、乗用車など10台以上が関係する事故が起きた。警察によると、60代の男性が運転する乗用車が、自分の車線と対向車線の車などに次々とぶつかった。10代から70代の男女10人が病院に搬送され、いずれも軽傷とみられる。事故の前には「暴走している車がいる」という110番通報があった。現場付近は一時通行止めになった。関係した車の数は、報道によって10台以上、11台、12台と幅がある。管轄の沼津署が事故の状況を調べている。", "why": "複数の車が連続して衝突する事故は、最初の1台の動きが原因でも、被害が短時間で広がる。台数や負傷者の数は、現場の混乱のなかで集計が変わりやすい。原因を決めるには、運転していた人の状況や車の記録、現場の映像の確認が必要になる。", "me": "事故のあった県道は、近隣の住民や通勤・通学の人が使う道だ。通行止めが解除されたかは、道路の情報や警察の発表で確認したい。運転中に急に体調が悪くなった場合の対処を、家族で確認するきっかけにもなる。", "a": "「暴走」と呼ばれた通報の内容を重く見る立場は、運転者が車を制御できない状態だった可能性を、まず調べる必要があると考える。", "b": "原因の断定は早いとする立場は、「暴走」は通報した人の表現にすぎず、運転ミスか体調の急変か別の事情かは、警察の捜査の結果を待つべきだと考える。", "say": "確認できているのは、10台以上が関係し、10人が搬送され、いずれも軽傷とみられるという点だ。事故の原因と運転していた男性の状況は、まだ明らかになっていない。今日は、警察が原因について何を発表するかと、搬送された人の容体の続報を見たい。", "src": "NHK(乗用車など10台以上絡む事故で10人病院搬送 静岡 清水町, 11/27) · 毎日新聞(静岡・清水町で車11台絡む事故 「暴走している車」と110番, 11/27) · 朝日新聞(車11台絡む事故で10人搬送 1台が次々に衝突か, 11/27)"},
+    "a4":{"kick": "スポーツ · フィギュアスケート · ✓ 3媒体 · 男女ともフリーは28日で最終順位は未確定", "title": "フィギュアのグランプリ最終戦、男子SPはマリニンが歴代世界最高の114.81点で首位、女子は千葉百音が77.12点でトップ", "what": "グランプリシリーズ最終戦の日本大会が27日、東京の京王アリーナTOKYOで開幕した。男子ショートプログラムでは、アメリカのイリア・マリニンが114.81点で首位に立った。ショートプログラムの世界歴代最高得点だ。佐藤駿は96.78点で2位、中田璃士は10位、吉岡希は11位だった。女子ショートプログラムは、中国杯を制した千葉百音が77.12点で首位、山下真瑚は5位、青木祐奈は6位だった。アイスダンスの「うたまさ」組は、森田選手が前日に転倒して左膝の靱帯を損傷し、大会を棄権した。順位を決めるフリースケーティングは28日に行われる。", "why": "ショートプログラムは演技の前半にあたり、ここでの点差がフリーの戦い方を左右する。114.81点は同じ種目の世界最高を塗り替える水準で、2位との差は約18点ある。日本女子は今季のグランプリシリーズで全勝を目指していると報じられており、千葉の首位はその流れを保った。", "me": "28日のフリースケーティングで、男女の最終順位と表彰台が決まる。ショートプログラムの上位の選手には、前半の点差を守る演技が求められ、追う選手にはジャンプの構成を上げる判断が問われる。", "a": "首位に立った選手の安定感を重く見る立場は、ショートプログラムで大きな差をつけた選手がフリーでも優位に立つと考える。特に男子は約18点の差があり、逆転は難しいとの見方だ。", "b": "逆転の余地を見る立場は、フリースケーティングの配点が大きく、ジャンプの失敗ひとつで順位が入れ替わると考える。日本の2位以下の選手にも、演技構成を上げて追う余地があるとの見方だ。", "say": "確認できているのは、男女のショートプログラムの首位と点数、アイスダンスの棄権だ。最終順位は28日のフリースケーティングの結果を待つ必要がある。今日は、マリニンがフリーでも高い点を保つか、千葉が首位を守れるかを見たい。", "src": "NHK(フィギュアNHK杯 女子は千葉 男子はマリニンが首位, 11/27) · 毎日新聞(佐藤駿2位、マリニンは歴代世界最高で首位 NHK杯男子SP, 11/27) · 時事通信(崩れなかった千葉百音 表現も忘れず―NHK杯フィギュア, 11/27)"},
+    "a5":{"kick": "安全保障 · AI · ✓ 3媒体 · 米側AIの目標情報の検証手順などは具体的に示されていない", "title": "防衛省がAI活用の新指針を公表、「判断と責任は人間が持つ」など5原則、特定技術への依存を避けるAI主権も盛り込む", "what": "防衛省は27日、AI活用の基本方針を見直し、新たな指針「Defense AI Vision」を公表した。柱は5つの原則で、「判断と責任は人間が持つ」ことを中心に置く。AIにどこまで任せるかをあらかじめ定め、必要な場面では人間が介入できるようにする。AIエージェントには必要最小限の権限を与え、重要な操作では人の確認を求める。特定の技術や事業者への過度な依存を避ける、AI主権の考え方も盛り込んだ。小泉防衛相は27日の記者会見で、判断と責任は人間が持つことを明確にしたと述べた。人間の関与が及ばない完全自律型の致死性兵器を開発する意図はないという従来の立場も示した。", "why": "AIが目標の情報を示したり、部隊の判断を助けたりする場面が増えるほど、誰が最終的に決め、誰が責任を負うのかが問われる。AIの提案を疑わずに受け入れてしまう自動化バイアスは、時間が限られる有事に強まりやすい。外国の技術に頼る度合いが高いと、供給や仕様を相手に握られる危険もあり、AI主権はその備えにあたる。", "me": "防衛分野のAI利用は、暮らしの中のAIの使われ方とも地続きだ。人間が最終判断を担う原則は、自動運転や医療など他の分野の議論の参考にもなる。今後の防衛予算の議論で、AIの分野にどれだけ配分されるかも注目点になる。", "a": "人間の責任を明確にした点を評価する立場は、AIに任せる範囲を事前に決め、介入できる仕組みを置くことで、誤った判断や暴走への歯止めになると考える。", "b": "実効性に疑問を示す立場は、米側のAIが示した目標情報をどう検証するのかなど、有事での具体的な手順が示されていない点を指摘する。時間が限られる場面で、人間が本当に根拠を確かめて止められるのかは、訓練で確かめる必要があるとの見方だ。", "say": "確認できているのは、5原則、AI主権、完全自律型の致死性兵器を開発する意図はないという立場だ。有事に人間がどう検証し、どう止めるかという具体的な手順は、まだ示されていない。今日以降は、訓練や予算の中でこの原則がどう具体化されるかを見たい。", "src": "朝日新聞(防衛省が新しいAI活用方針を発表 「我が国が主導権を失わない」, 11/27) · 時事通信(防衛省、AI活用で新指針 5原則「判断は人間」, 11/27) · 四国新聞(AI、軍事利用は「人間に責任」, 11/27)"},
+    "b1":{"kick": "経済 · ✓ 2媒体", "title": "12月使用分の電気料金は大手10社すべてで前月より値下がり、政府の補助の再開が背景", "what": "大手電力10社は27日、12月使用分の電気料金を発表した。標準家庭の料金は、10社すべてで前の月より値下がりする。政府による電気・ガス代の補助が再開されることが背景だ。値下がり幅は175〜265円と伝えられている。補助は12月使用分で標準家庭に260円とされ、来年2月分までの3か月で計7千円程度の負担軽減になる見通しと報じられた。大手都市ガス4社の料金は、8〜11円の小幅な上昇となる。東京電力の管内では、標準家庭で前月比175円安の9563円になる見込みとされていた。", "why": "電気料金は、燃料の価格に応じて毎月変わる仕組みで、政府の補助が入ると請求額が下がる。補助の再開で、冬に使用量が増える時期の負担が和らぐ。ただし補助には期限があり、終了すれば元の水準に戻る。", "me": "12月使用分は1月に請求される。暖房で電気やガスの使用量が増える冬は、単価が下がっても請求額が増える場合がある。契約している会社の発表額と、検針票の補助の表示を確認したい。", "a": "家計への効果を評価する立場は、電気とガスの負担が数か月にわたって軽くなり、物価高のなかで冬の負担が和らぐと考える。", "b": "補助に慎重な立場は、期限付きの補助は価格の問題を先送りするだけで、終了後に請求額が戻ると指摘する。省エネや電源の見直しなど、構造的な対策が必要との見方だ。", "say": "確認できているのは、大手10社すべてで12月使用分が値下がりし、補助が再開されるという点だ。実際の請求額は、使用量と契約内容で変わる。今日は、自分の契約会社の12月使用分の単価と、補助の対象期間を見たい。", "src": "NHK(12月使用分の電気料金 大手10社で値下がり 政府の補助再開で, 11/27) · 東京新聞(12月電気代は値下がり 補助金開始、ガス小幅上昇, 11/27)"},
+    "b2":{"kick": "社会 · ✓ 2媒体", "title": "最高検がトクリュウの首謀者特定へ司法取引を活用する基本方針を公表、東京地検は特命捜査班を新設", "what": "最高検察庁は27日、匿名・流動型犯罪グループ、いわゆるトクリュウへの基本方針を公表した。実行役らへの司法取引の活用や、真相の解明にどれだけ寄与したかに応じた処分・求刑などの手段を使い、首謀者など中核を担う人物を特定する。特定した人物には、これまで以上に厳しい処分や求刑を行う。東京地検は刑事部に特命捜査班を新設する。班は、警視庁が2025年10月に発足させた専従部隊から送られる事件をまとめて受ける。", "why": "トクリュウは、SNSなどで集まった実行役が使い捨てにされ、指示役が見えにくい。実行役を捕まえても首謀者に届かないことが、摘発の壁になってきた。司法取引は、捜査への協力と引き換えに処分を軽くする制度で、実行役から上位の人物の情報を引き出す手段になる。", "me": "特殊詐欺や強盗の被害は、身近な住宅や口座にも及ぶ。首謀者の摘発が進めば、被害を生む仕組みへの抑止になる可能性があるが、すぐに被害が減るとは限らない。不審な連絡や高額のアルバイトの誘いには応じないことが、基本の備えだ。", "a": "厳罰化を重く見る立場は、中核の人物に重い処分を科すことが、犯罪グループに加わる側の抑止になると考える。", "b": "慎重な立場は、司法取引で実行役の供述に頼る捜査は、供述の信用性の確認が難しいと指摘する。軽い処分を期待した虚偽の供述が混じる危険も、制度の課題とされる。", "say": "確認できているのは、司法取引の活用、厳しい処分・求刑、東京地検の特命捜査班の新設という3点だ。実際に首謀者の摘発が進むかは、今後の事件を見る必要がある。今日以降は、特命捜査班が最初にどの事件を扱うかを見たい。", "src": "毎日新聞(最高検、トクリュウ首謀者特定へ司法取引を活用 基本方針公表, 11/27) · NHK(最高検 トクリュウ中核担う人物に厳しい処分 求刑行う方針示す, 11/27)"},
+    "b3":{"kick": "経済 · ✓ 2媒体", "title": "北海道新幹線の札幌延伸、総事業費は約3.4兆円に、国の有識者会議が報告書で示す", "what": "国土交通省の有識者会議は27日、北海道新幹線の札幌延伸の事業費について報告書をまとめた。総事業費は約3.4兆円で、現在の見込みから1兆円規模の増加となる。増加額は1兆900億円余と伝えられた。資材価格の高騰や、地質の不良などが要因とされる。昨年末の試算からは、約1000億円の縮減が可能とされた。開業は2038年度末の見込みが据え置かれたと伝えられ、トンネル工事に一定のめどが立った段階で改めて精査するという。建設主体の鉄道・運輸機構は、2026年度中に国交相へ事業費の変更の認可を申請する見通しだ。", "why": "事業費の増加は、国や自治体、沿線の負担の議論に直結する。当初の計画から2倍以上に膨らむと、費用に見合う効果があるかが問われる。開業時期が延びれば、札幌までの利用や観光への期待にも影響する。", "me": "札幌延伸は北海道の観光や物流に関わる大型事業で、費用の増加は国と自治体の負担額に反映される。沿線の自治体や利用者にとって、開業時期が据え置かれるかが当面の関心になる。", "a": "事業の継続を重視する立場は、すでにトンネル工事が進んでおり、費用が増えても完成させることで、北海道と本州の移動が大きく変わると考える。", "b": "費用への批判的な立場は、事業費が当初の2倍以上になった以上、負担の根拠と費用に見合う効果を改めて示すべきだと考える。", "say": "確認できているのは、総事業費が約3.4兆円に膨らむ見通しと、開業時期が2038年度末の見込みで据え置かれたという点だ。増加額の内訳や、負担をどう分けるかは、これから決まる。今日以降は、事業費変更の認可の申請と、沿線自治体の負担の議論を見たい。", "src": "朝日新聞(北海道新幹線の事業費「3.4兆円」 国の有識者会議が報告書, 11/27) · NHK(北海道新幹線の延伸事業費 1兆900億円余増加の見通しに, 11/27)"},
+    "b4":{"kick": "国際 · ✓ 2媒体", "title": "TPP閣僚級会合、日本に支援事務所を設置へ、インドネシアなど3カ国と加入交渉入り", "what": "ベトナムのハノイで開かれていたTPPの閣僚級会合が、27日に閉幕したと伝えられる。会合では、会合日程の調整や文書の管理を担う支援事務所を、日本に暫定的に置くことを決めた。稼働は2027年を目指す。また、新たに3カ国との加入交渉を始めることでも合意した。3カ国はインドネシア、フィリピン、アラブ首長国連邦と伝えられている。すでに加入交渉入りが決まっているウルグアイについては、速やかに交渉をまとめる方針で一致したとされる。", "why": "TPPは、関税の撤廃や貿易のルールを共通にする枠組みで、加盟国が増えると、参加国の間で物やサービスを売り買いしやすくなる。事務局がなかった枠組みに支援事務所が置かれることで、運営の継続性が高まる。日本は、その拠点を担うことで議論の運営に関わる立場になる。", "me": "加入交渉が進めば、これらの国との間で関税などの条件が変わる可能性があるが、加入が決まるまでには年単位の交渉が必要になる。輸出入に関わる企業にとって、ルールの共通化は長期の変化として見守る話だ。", "a": "拡大を歓迎する立場は、参加国が増えるほど貿易のルールが広がり、輸出企業の事業環境が安定すると考える。", "b": "慎重な立場は、加入には市場開放などの高い水準のルールを満たす必要があり、国内の産業や農業への影響を丁寧に見るべきだと考える。", "say": "確認できているのは、日本への支援事務所の設置と、3カ国との加入交渉入りという点だ。交渉の期間や、各国が受け入れるルールの水準は、まだ見えていない。今日以降は、交渉の開始時期と、事務所の具体的な体制を見たい。", "src": "時事通信(日本に支援事務所設置へ ３カ国と加入交渉入り―ＴＰＰ閣僚級会合, 11/27) · 下野新聞(ＴＰＰ、日本に事務局設置 ＵＡＥとも加盟交渉開始, 11/27)"},
+    "b5":{"kick": "経済 · ✓ 1媒体", "title": "政府・与党、短期転売の抑制へマンション売却益への52%課税を検討と伝えられる", "what": "政府・与党が、短期の転売を抑えるため、マンションの売却益への課税を強める案を検討していると27日に伝えられた。検討されているのは、売却益への税率を52%とする案だ。個人が新築マンションを住まずに1年以内に売る場合などを想定した案とも報じられている。現行では、所有期間が5年以内の不動産の売却益に、所得税と住民税で約40%がかかる。2027年度の税制改正大綱への反映を目指す動きとされるが、27日時点で決定はなく、対象や開始時期も確認されていない。", "why": "短期転売は価格を押し上げ、実際に住む人が買いにくくなる原因になるとされる。税率を高くすれば、売却益を狙った短期の取引が減ると期待される。一方で、52%という税率は、売却益の半分以上が税になる水準だ。", "me": "自分が住むためにマンションを買う人は、対象から外れるかどうかが気になる点だ。ただし対象や税率は決まっていないため、購入や売却の判断を急ぐ材料にはならない。年末にかけて示される税制改正の内容を待ちたい。", "a": "課税の強化を支持する立場は、転売による価格の押し上げを抑え、実際に住む人が買いやすくなると考える。", "b": "慎重な立場は、税率が高すぎると、住み替えなど正当な売却まで妨げかねず、不動産市場の取引が冷え込むと考える。", "say": "確認できているのは、売却益への52%課税が検討されていると伝えられた点だけだ。1媒体の報道であり、対象や開始時期は確認できていない。今日以降は、税制調査会の議論と、年末の税制改正大綱に盛り込まれるかを見たい。", "src": "毎日新聞(政府・与党、マンション売却益52％課税を検討 短期転売抑制へ, 11/27)"}
+  };
+  const G = {
+    "不正アクセス":{"f": "情報セキュリティ", "d": "権限のない者がシステムやデータに入り込むこと。", "w": "委託先のサービスへの侵入が、会員情報の漏えいにつながった。"},
+    "委託先":{"f": "契約", "d": "業務やシステムの運用を任せる外部の会社。", "w": "マーケティングサービスの提供元が侵入され、利用企業の情報が出た。"},
+    "二次被害":{"f": "情報セキュリティ", "d": "漏えいした情報が使われて、詐欺や不正ログインなど新たな被害が出ること。", "w": "27日時点では確認されていない。"},
+    "AI法":{"f": "法制度", "d": "AIの研究開発と活用を進めるための法律。", "w": "罰則を加える改正案の概要が明らかになった。"},
+    "高性能AI":{"f": "AI政策", "d": "高度な能力を持ち、悪用や暴走の影響が大きいとされるAI。", "w": "どこまでを対象にするかは未定だ。"},
+    "安全確保義務":{"f": "法制度", "d": "事業者が事故や悪用を防ぐための措置をとる法的な義務。", "w": "高性能AIの事業者に課す方向だ。"},
+    "勧告":{"f": "行政", "d": "国が従うよう促す行政上の働きかけ。強制力は命令より弱い。", "w": "従わない事業者には命令が出せる仕組みになる。"},
+    "自動化バイアス":{"f": "安全保障", "d": "機械の示した答えを疑わずに受け入れてしまう人の傾向。", "w": "防衛省は教育と訓練で防ぐ方針だ。"},
+    "AI主権":{"f": "安全保障", "d": "特定の国や事業者の技術に頼りすぎず、自国でAIの使い方を決められる状態。", "w": "防衛省の新指針の柱の一つとなった。"},
+    "完全自律型の致死性兵器":{"f": "安全保障", "d": "人間の判断を介さずに標的を選んで攻撃できる兵器。", "w": "防衛省は開発する意図はないとの立場を示した。"},
+    "ショートプログラム":{"f": "競技制度", "d": "フィギュアスケートで規定の要素を入れて行う前半の演技。", "w": "男子ではマリニンが世界歴代最高点を出した。"},
+    "フリースケーティング":{"f": "競技制度", "d": "フィギュアスケートで自由に構成する後半の演技。配点が大きい。", "w": "28日に行われ、最終順位が決まる。"},
+    "グランプリシリーズ":{"f": "競技制度", "d": "世界の主要大会を転戦する、フィギュアスケートの年間シリーズ。", "w": "今回の日本大会が最終戦だ。"},
+    "司法取引":{"f": "刑事法", "d": "捜査への協力と引き換えに、処分や求刑を軽くする制度。", "w": "最高検は首謀者の特定に使う方針だ。"},
+    "トクリュウ":{"f": "治安", "d": "匿名・流動型犯罪グループの略。SNSなどで集まった実行役が犯罪を行う。", "w": "最高検が首謀者特定の基本方針を示した。"},
+    "加入交渉":{"f": "通商", "d": "新たに協定に参加するための、既存の参加国との協議。", "w": "3カ国との交渉入りが合意されたと伝えられる。"},
+    "TPP":{"f": "通商", "d": "関税の撤廃やルールの共通化を目指す、環太平洋の経済連携の枠組み。", "w": "閣僚級会合で日本に支援事務所を置くことが決まった。"},
+    "売却益":{"f": "税制", "d": "物件を買った値段より高く売って得た利益。課税の対象になる。", "w": "52%の課税案が検討されていると伝えられた。"},
+    "標準家庭":{"f": "エネルギー", "d": "電気料金の比較に使う、使用量などを決めたモデルの家庭。", "w": "12月使用分は10社すべてで値下がりする。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

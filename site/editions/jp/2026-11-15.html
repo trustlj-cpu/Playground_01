@@ -1,0 +1,333 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>61,142.35</b>日経平均 · 11/13(金)終値 · 前日比+0.53%</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>TOPIX · 11/13(金)終値のデータなし</div>
+    </div>
+    <div class="dateline"><span>No. 42 · 朝刊</span><b>2026年11月15日(日)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="iea">
+      <div class="kick">エネルギー · 外交<span>✓ 1媒体 · 首相の提唱は調整の段階で、枠組みの中身と参加国は未確認</span></div>
+      <h2 class="hl">高市首相、17日の首脳会合で「アジア版IEA」創設を提唱する方向で調整と1媒体が報道 石油備蓄の協調放出のルール作りを検討</h2>
+      <p class="deck">中東情勢でエネルギー不足が起きた東南アジアと、石油備蓄の出し方を前もって決めておく新しい枠組みを作る構想だ。東南アジアの企業の間でも、緊急時の優先購入の仕組みの協議が始まる。</p>
+      <div class="body">
+        <p>高市首相は、17日に開かれる東南アジア各国などとの首脳会合で、石油備蓄の協調放出のルールづくりなどを検討する新しい枠組みの創設を提唱する方向で、調整に入ったという。協調放出とは、複数の国が足並みをそろえて、国が持つ石油の備蓄を市場に出すことだ。国際エネルギー機関(IEA)は、石油の供給が途絶えたときに加盟国が備蓄を出し合うために作られた組織で、今回の構想はそのアジア版にあたる。政府が正式に発表した内容ではなく、枠組みに入る国や、備蓄を融通する具体的な方法は、まだ確認できていない。</p>
+        <p>背景には、中東情勢、とくにイランをめぐる情勢の影響で、東南アジアにエネルギー不足が起きていることがある。14日には、東南アジアの企業の間でも、緊急時に石油製品を優先して購入できる仕組みの導入に向けて、具体的な協議が始まることになった。国どうしの備蓄の融通と、企業どうしの優先購入という二つの動きが、同じ不足に備える形で並んでいる。ただ、どちらも調整や協議の段階で、いつから、どれだけの量が動くのかは確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="brazil">
+      <div class="kick">スポーツ · サッカー<span>✓ 3媒体 · 後半の経過と3点目の得点者は未確認</span></div>
+      <h3 class="hl">サッカー日本代表、シンガポールでブラジルに3対2で勝利 久保建英選手と中村敬斗選手が前半にゴール</h3>
+      <div class="one">
+        <p>サッカー日本代表は14日夜、シンガポールで行われた強化試合でブラジルと対戦し、3対2で勝った。前半15分に久保建英選手が先制し、中村敬斗選手が追加点を挙げた。ブラジルにも1点が入り、前半は2対1で折り返している。日本がブラジルに勝つのは通算2勝目で、1勝目は去年10月だった。 試合前に発表された先発は、守備を4人で組む4バックの布陣で、サイドバックに中野就斗選手を起用し、2列目には中村選手、久保選手、堂安選手が並んだ。後半の経過と、日本の3点目の得点者、ブラジルの2点の内容は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="samurai"><b>侍ジャパンがアジアプロ野球で3連勝 豪州戦は初回に打者15人で11得点</b><em>14日の豪州戦は、初回に打者15人が打席に入り11点を挙げた。宗山塁選手の満塁本塁打などで、井口監督の新チームは3連勝となった。</em><span>野球 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="sumo"><b>大相撲九州場所7日目、大の里が6連勝 豊昇龍は2連勝で4勝目</b><em>横綱の大の里は6連勝で、横綱の豊昇龍は休場の危機から一転して2連勝とした。大関の安青錦は3敗に後退し、1敗の力士は7人になった。</em><span>相撲 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="emperor"><b>天皇・皇后両陛下が大阪入り 海づくり大会を前に小学生と交流</b><em>両陛下は14日に大阪入りし、海づくり大会への出席を前に、大阪の小学生と交流した。「これからも海の学習を大切に」と声をかけたという。</em><span>皇室 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="hosono"><b>細野復興相が就任後初めて福島第一原発を視察 廃炉に「国も責任を持って取り組む」</b><em>細野復興相は、東京電力の福島第一原発を就任後初めて視察した。福島の復興には廃炉の完了が欠かせないとして、会社とともに国も責任を持つ考えを強調した。</em><span>原子力 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="basket"><b>2030年のバスケットボール女子ワールドカップは日本で開催 山本麻衣選手が「見に来て」</b><em>2030年のバスケットボール女子ワールドカップが、日本で開かれることになった。日本代表の山本麻衣選手は、会場に見に来てほしいと呼びかけた。</em><span>バスケ · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="yokota">
+      <div class="kick">社会 · 拉致問題<span>✓ 2媒体 · 日朝首脳会談が実現する見通しは未確認</span></div>
+      <h3 class="hl">横田めぐみさんの拉致から15日で49年 新潟市の集会で家族が日朝首脳会談の開催を求める</h3>
+      <div class="body">
+        <p>横田めぐみさんは、1977年11月、新潟市で中学1年生のときに北朝鮮に拉致された。15日で49年になるのを前に、新潟市では被害者の帰国を願う大規模な集会が開かれ、母の早紀江さんたち家族が、一刻も早い救出に向けて、日朝首脳会談を開くよう訴えた。拉致問題は、北朝鮮が国家として日本人を連れ去った問題で、日本政府が認定している被害者のうち、帰国できていない人がいる。</p>
+        <p>北朝鮮は、めぐみさんは亡くなったと説明しているが、日本側はこの説明に納得しておらず、生存を前提に帰国を求めている。被害者の家族は高齢になっている。日朝首脳会談の日程が決まったという発表は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="trade">
+      <div class="kick">経済 · 米中<span>✓ 2媒体 · 関税引き下げの対象品目と幅は未確認</span></div>
+      <h3 class="hl">米中が関税引き下げを検討する「貿易委員会」の初会合をオンラインで開く</h3>
+      <div class="body">
+        <p>アメリカと中国は、関税の引き下げなどを検討するために設けた「貿易委員会」の初めての会合を、オンライン形式で開いた。米側は、通商代表部と財務省が初の公式な会合を開いたと声明で発表している。両国は来週、中国で開かれるAPEC(アジア太平洋経済協力会議)にあわせて、首脳どうしが会談する予定だ。</p>
+        <p>引き下げの対象になる品目や、下げ幅、実施の時期は、確認できていない。米政府の当局者が、習近平国家主席との会談で貿易委員会に関する発表は見込んでいないと述べたとされるが、これは1媒体の伝える内容で、公式な文書では確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="okinawa">
+      <div class="kick">安全保障 · 沖縄<span>✓ 1媒体 · 逮捕の日時・場所・容疑の詳細は未確認</span></div>
+      <h3 class="hl">沖縄で米空軍の大尉が飲酒運転の疑いで逮捕と1媒体が報道 日米が再発防止策で合意して1週間後</h3>
+      <div class="body">
+        <p>沖縄で、米空軍の大尉が飲酒運転の疑いで逮捕された。日米両政府は、米軍人による事件の再発防止策で、1週間ほど前に合意したばかりだった。今回の逮捕は、その合意の直後に起きた。</p>
+        <p>逮捕した機関、逮捕の日時と場所、アルコールの検出の有無や数値といった詳細は、確認できていない。大尉の名前や所属も明らかになっていない。合意した対策の具体的な中身も、確認できていない。在日米軍の人が事件を起こしたときの扱いは、日米の地位協定をめぐる議論と結びついてきた。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>地位協定<i>安全保障</i></b><p>在日米軍の基地の使い方や、米軍人・軍属が事件を起こしたときの扱いなどを決めた、日米の取り決め。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>「アジア版IEA」は、17日の会合で正式に発足する</b> <span>首相は、枠組みの創設を提唱する方向で調整に入ったとされる段階で、発足が決まったわけではない。参加国と、備蓄を出す条件も確認できていない。</span></div>
+        <div><b>米中の貿易委員会で、関税の引き下げが決まった</b> <span>初会合を開いたのは、関税の引き下げなどを検討するために設けた委員会で、米側は通商代表部と財務省が会合を開いたと声明で述べた。引き下げの対象と幅は確認できていない。</span></div>
+        <div><b>日朝首脳会談の開催が決まった</b> <span>新潟市の集会で、家族が一刻も早い救出に向けた開催を求めた段階で、日程が決まったという発表は確認できていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 日 11月15日</b><span>拉致から49年となる15日、横田めぐみさんの家族や支援団体の動きと、日朝首脳会談をめぐる政府の発言を見る。大相撲九州場所は8日目で、1敗で並ぶ7人の勝ち負けも確かめる。</span><b>今週</b><span>17日に、東南アジア各国などとの首脳会合が開かれる。首相が「アジア版IEA」を提唱するか、参加国と備蓄を出す条件が示されるかを見る。</span><b>あとで</b><span>来週のAPECにあわせた米中の会談で、貿易委員会が何を扱うかが焦点になる。沖縄の飲酒運転の事案は、逮捕の詳細と、日米が合意した再発防止策の運用を確かめる。</span><b>読者へ</b><span>石油の備蓄や供給をめぐる話は、公式の発表を待ってから動けばよい。出どころの分からない「不足する」という投稿は、広げる前に政府や元売り各社の案内を確かめる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "iea":{"kick": "エネルギー · 外交 · ✓ 1媒体 · 首相の提唱は調整の段階で、枠組みの中身と参加国は未確認", "title": "高市首相、17日の首脳会合で「アジア版IEA」創設を提唱する方向で調整と1媒体が報道 石油備蓄の協調放出のルール作りを検討", "what": "高市首相は、17日に開かれる東南アジア各国などとの首脳会合で、新しい枠組みの創設を提唱する方向で調整に入ったという。枠組みでは、石油備蓄の協調放出のルールづくりなどを検討する。アジア版のIEA、つまり国際エネルギー機関にあたる構想とされる。背景には、中東情勢、とくにイランをめぐる情勢の影響で、東南アジアにエネルギー不足が起きていることがある。14日には、東南アジアの企業の間で、緊急時に石油製品を優先して購入できる仕組みの導入に向けた具体的な協議が始まることになった。枠組みの参加国と、協調放出の具体的な方法は、確認できていない。", "why": "石油は、輸入に頼る国にとって、止まると暮らしと産業にすぐ響く。備蓄は国ごとに別々に持つため、ある国で不足が起きても、他の国の備蓄はそのままでは使えない。出し方のルールを前もって決めておけば、緊急時に足並みをそろえやすくなる。企業どうしの優先購入の仕組みは、国の備蓄とは別の層で、民間の調達を支える。", "me": "ガソリンや灯油の値段や供給が、これですぐ変わるという発表は確認できていない。ただ、東南アジアの工場や物流が止まると、部品や製品の値段に回ることがある。17日の首脳会合の結果を見てから判断すればよい。", "a": "構想に前向きな見方は、備蓄の出し方を先に決めておくと、不足が起きた国に素早く石油を回せ、価格の急な上昇を抑えやすいという点を挙げる。日本は国の備蓄を持つため、枠組みづくりで先導する役を担える、という見方もある。", "b": "慎重な見方は、国ごとに備蓄の量も法律も違うため、放出の基準や費用の負担で折り合うのは難しいと指摘する。IEAは加盟国が備蓄を出し合う仕組みで知られるが、同じ強さの取り決めをアジアでまとめられるかは分からないという。", "say": "確認できたのは、首相が提唱する方向で調整に入ったこと、企業の間で協議が始まることの2点だが、どちらも1媒体の内容で、政府の正式な発表は確認できていない。見たいのは、17日に実際に提唱されるか、参加国と放出の条件が示されるかだ。", "src": "NHK(アジア版IEA創設の提唱を調整・東南アジアで石油製品供給安定化へ企業協力、11/14〜15)"},
+    "brazil":{"kick": "スポーツ · サッカー · ✓ 3媒体 · 後半の経過と3点目の得点者は未確認", "title": "サッカー日本代表、シンガポールでブラジルに3対2で勝利 久保建英選手と中村敬斗選手が前半にゴール", "what": "サッカー日本代表は14日夜、シンガポールで行われた強化試合でブラジルと対戦し、3対2で勝った。前半15分に久保建英選手が先制し、中村敬斗選手が追加点を挙げた。前半はブラジルに1点が入り、2対1で折り返した。日本がブラジルに勝つのは通算2勝目で、1勝目は去年10月だった。試合前に発表された先発は4バックで、サイドバックに中野就斗選手を起用し、2列目に中村選手、久保選手、堂安選手が並んだ。後半の経過と、日本の3点目の得点者は、確認できていない。", "why": "ブラジルのような強豪に勝った経験は、世界の強い相手と戦うときの自信と、戦い方の手がかりになる。強化試合は結果そのものより、選手の組み合わせや守備の形を試す場でもある。今回は4バックと2列目の並びが、どう機能したかが見どころになる。", "me": "次の代表戦の日程や招集メンバーは、これから発表される。試合を見ていない人は、前半15分の先制と、2対1で折り返した流れから見ると展開をつかみやすい。", "a": "勝利を前向きに受け止める見方は、強豪から複数の得点を奪い、競り勝った点を評価する。久保選手と中村選手が前半に決めたことで、攻撃の形に手応えが出たという。", "b": "一方で、ブラジルに2点を許した守備には課題が残るという見方がある。強化試合は相手の編成や意気込みが本番とは違うため、1試合の結果で力関係は測れないとも言われる。", "say": "確認できたのは、3対2という結果と、前半の2得点、通算2勝目という点だ。後半の経過と、3点目の得点者は確認できていない。次の代表戦で、今回の布陣が続くかを見たい。", "src": "NHK(日本代表 ブラジルに勝利、11/15) · 時事通信(前半2点、久保・中村がゴール、11/14) · 読売新聞(久保が先制弾、中村が追加点、前半2―1、11/14)"},
+    "yokota":{"kick": "社会 · 拉致問題 · ✓ 2媒体 · 日朝首脳会談が実現する見通しは未確認", "title": "横田めぐみさんの拉致から15日で49年 新潟市の集会で家族が日朝首脳会談の開催を求める", "what": "横田めぐみさんは、1977年11月、新潟市で中学1年生のときに北朝鮮に拉致された。15日で49年になる。新潟市では、被害者の帰国を願う大規模な集会が開かれた。母の早紀江さんたち家族は、一刻も早い救出に向けて、日朝首脳会談を開くよう訴えた。北朝鮮は、めぐみさんは亡くなったと説明している。日本側はこの説明に納得しておらず、帰国を求め続けている。", "why": "拉致問題は、被害者の家族が高齢になるなかで、時間との戦いになっている。首脳どうしの直接の話し合いは、北朝鮮側の説明や被害者の安否を動かす数少ない入口とされてきた。節目の日に家族が声をあげることで、問題が忘れられないようにする意味もある。", "me": "拉致問題は、遠い出来事ではなく、同じ国の家族が長年待ち続けている問題だ。集会や署名などの取り組みは、各地の支援団体が案内している。", "a": "首脳会談の開催を求める家族の側は、政府が前面に立って交渉を動かさなければ、時間が足りなくなるという立場だ。節目の集会は、その切迫感を伝える場になっている。", "b": "一方で、首脳会談を開くには、北朝鮮が拉致問題で誠意ある対応をとるかどうかが前提になるという見方もある。会談を開くこと自体が目的になってはならないという声も根強い。", "say": "確認できたのは、49年の節目に新潟市で集会が開かれ、家族が日朝首脳会談の開催を求めたことだ。日程が決まったという発表は確認できていない。政府がどう応じるかを見たい。", "src": "NHK(横田めぐみさん拉致からあすで49年、新潟集会で家族が訴え、11/14) · 毎日新聞(横田めぐみさん弟・拓也さんが見た父の涙、11/14)"},
+    "trade":{"kick": "経済 · 米中 · ✓ 2媒体 · 関税引き下げの対象品目と幅は未確認", "title": "米中が関税引き下げを検討する「貿易委員会」の初会合をオンラインで開く", "what": "アメリカと中国は、関税の引き下げなどを検討するために設けた「貿易委員会」の初めての会合を、オンライン形式で開いた。米側は、通商代表部と財務省が初の公式な会合を開いたと声明で発表している。両国は来週、中国で開かれるAPECにあわせて、首脳会談を行う予定だ。引き下げの対象になる品目、下げ幅、実施の時期は、確認できていない。米政府の当局者が、会談で貿易委員会に関する発表は見込んでいないと述べたとされるが、1媒体の内容で、公式な文書では確認できていない。", "why": "関税は、輸入品にかかる税で、上がると企業のコストと商品の値段に響く。米中の関税は、世界の貿易や企業の調達に長く影響してきた。専用の委員会を作ったことは、引き下げの協議を継続的に進める場を整えたことを意味する。", "me": "輸入品や、中国で作られる部品を使う商品の値段は、関税が変わると動くことがある。ただ、今回は引き下げの内容が確認できていないため、すぐに値段が変わるとは言えない。", "a": "協議の場ができたことを前向きに受け止める見方は、関税を下げる議論を、首脳会談のたびではなく、定期的に進められる点を挙げる。企業にとっては、先行きを読みやすくなる。", "b": "慎重な見方は、委員会が開かれても、引き下げの中身が決まらなければ実質的な変化はないという点を指摘する。当局者の発言が示すように、会談で成果が発表される保証もない。", "say": "確認できたのは、初会合がオンラインで開かれ、米側が声明を出したことだ。引き下げの対象と幅、時期は確認できていない。来週のAPECでの会談で、委員会の役割が示されるかを見たい。", "src": "NHK(米中、関税引き下げのための「貿易委員会」初会合、11/14) · FinancialJuice(米通商代表部と財務省が初の公式会合、声明、11/13)"},
+    "okinawa":{"kick": "安全保障 · 沖縄 · ✓ 1媒体 · 逮捕の日時・場所・容疑の詳細は未確認", "title": "沖縄で米空軍の大尉が飲酒運転の疑いで逮捕と1媒体が報道 日米が再発防止策で合意して1週間後", "what": "沖縄で、米空軍の大尉が飲酒運転の疑いで逮捕された。日米両政府は、米軍人による事件の再発防止策で、1週間ほど前に合意したばかりだった。逮捕した機関、逮捕の日時と場所、アルコールの検出の有無や数値は、確認できていない。大尉の名前や所属も明らかになっていない。合意した対策の具体的な中身も、確認できていない。内容は1媒体のもので、他の確認は取れていない。", "why": "在日米軍の人が起こす事件は、沖縄で繰り返し問題になってきた。対策を合意した直後の逮捕は、その対策が現場でどう運用されるかに、あらためて目が向く場面になる。飲酒運転は、被害が出やすく、基地の外の暮らしに直結する。", "me": "沖縄に暮らす人や訪れる人にとって、米軍関係者が起こす事件は、身近な安全の問題になりうる。今回の詳細が確認できるまでは、続報を待つのがよい。", "a": "再発防止を求める側は、対策を決めた直後に事件が起きたことを重く受け止め、運用の徹底と、実際に効果が出ているかの検証を求めている。地元の自治体や住民団体は、これまでも事件のたびに抗議してきた。", "b": "一方で、対策は合意されたばかりで、効果が出るまでには時間がかかるし、1件で対策全体の評価は決められないという見方もある。まずは逮捕の詳細が明らかになるのを待つべきだという声もある。", "say": "確認できたのは、米空軍の大尉が飲酒運転の疑いで逮捕されたことと、日米が約1週間前に再発防止策で合意していたことだ。逮捕の詳細は確認できていない。捜査の結果と、合意した対策の運用を見たい。", "src": "The Japan Times(米空軍大尉が沖縄で飲酒運転の疑いで逮捕、11/14)"},
+    "samurai":{"kick": "野球 · ✓ 3媒体", "title": "侍ジャパンがアジアプロ野球で3連勝 豪州戦は初回に打者15人で11得点", "what": "アジアプロ野球で、井口監督が率いる侍ジャパンが、14日の豪州戦に勝ち、3連勝とした。初回に打者15人が打席に入り、1死も取られないまま11点を挙げた。宗山塁選手が満塁本塁打を打った。前日の13日には、宗山選手が決勝の3ランを打っている。1番に正木選手、2番に宗山選手が並ぶ打順が機能しているという。豪州戦の最終的な得点と、先発投手の内容は、確認できていない。", "why": "新しい監督のもとで初めて臨む大会で、3連勝というスタートを切った。初回に大量得点を挙げる展開は、相手の先発投手を早く降ろし、残りの試合を有利に進められる。1・2番の組み合わせが固まれば、チームの攻撃の形が見えてくる。", "me": "試合を見ていない人は、初回の11得点の場面と、宗山選手の満塁本塁打から見ると流れがつかめる。次の試合の日程は、大会の公式な案内で確かめられる。", "a": "好調を前向きに受け止める見方は、若い選手が1番と2番で結果を出し、新監督のもとでチームがまとまり始めていると評価する。", "b": "一方で、初回の大量得点は相手投手の乱れにも左右される。大会の対戦相手は代表のフルメンバーとは限らないため、3連勝だけで強さは測れないという見方もある。", "say": "確認できたのは、3連勝と、初回の11得点、宗山選手の満塁本塁打だ。最終スコアは確認できていない。次戦で、打線が同じ形を保てるかを見たい。", "src": "毎日新聞(3連勝の新生侍ジャパン、正木・宗山の1、2番コンビ、11/14) · Yahoo!ニュース(侍J 初回に1死も取られず11得点、11/14) · 日刊スポーツ(侍ジャパン、初回から歴史的猛攻、宗山満塁弾、11/14)"},
+    "sumo":{"kick": "相撲 · ✓ 2媒体", "title": "大相撲九州場所7日目、大の里が6連勝 豊昇龍は2連勝で4勝目", "what": "大相撲九州場所は14日、7日目の取組が行われた。横綱の大の里は6連勝で、1敗を守った。横綱の豊昇龍は、休場の危機から一転して2連勝とし、4勝目を挙げた。大関の安青錦は3敗に後退した。1敗で並ぶ力士は、大の里を含めて7人になった。豊昇龍は、出場を師匠に直訴して、連敗を止めている。", "why": "優勝争いは、1敗の7人が並ぶ大混戦で、終盤まで先が読めない。連覇を目指す大の里が、そのなかで連勝を保っていることが、場所の中心になっている。休場の危機にあった横綱が持ち直したことも、土俵の厚みにつながる。", "me": "取組は、15日の日曜も続く。8日目以降の勝敗表は、日本相撲協会の公式な案内で確かめられる。観戦に行く人は、当日の取組の時間と会場の案内を、事前に確かめるとよい。", "a": "大の里の連勝を評価する見方は、横綱として安定した相撲を取れている点を挙げる。連覇に向けて、大きな流れをつかみつつあるという。", "b": "一方で、1敗が7人もいるため、1番の取りこぼしで順位が大きく入れ替わる。終盤は直接対決が増え、勝ち残る力士は絞られるという見方もある。", "say": "確認できたのは、大の里の6連勝、豊昇龍の4勝目、安青錦の3敗、1敗が7人という星取りだ。優勝争いは、8日目以降の直接対決を見たい。", "src": "時事通信(大の里6連勝、豊昇龍は白星先行、大相撲九州場所7日目、11/14) · スポーツ報知(豊昇龍、休場危機から一転2連勝で4勝目、11/14)"},
+    "emperor":{"kick": "皇室 · ✓ 2媒体", "title": "天皇・皇后両陛下が大阪入り 海づくり大会を前に小学生と交流", "what": "天皇・皇后両陛下は14日、大阪入りした。海づくり大会に出席するための訪問で、大阪の小学生とも交流した。交流のなかで、「これからも海の学習を大切に」と声をかけたという。海づくり大会は、水産資源を守り、海の恵みを育てることを訴える全国的な行事とされる。大会の日程と、両陛下の全体の行程は、確認できていない。", "why": "海づくり大会は、漁業や水産資源の大切さを、地域の子どもたちを含めて伝える場になっている。小学生との交流は、海について学ぶ取り組みが、次の世代に受け継がれていく様子を示す。", "me": "大阪では、両陛下の移動にあわせて、警備や交通の規制が行われることがある。移動の予定がある人は、自治体や警察の案内を確かめるとよい。", "a": "交流を好意的に受け止める見方は、子どもたちが海の学習を続ける励みになるという。地域の漁業や環境への関心を高める機会になるとされる。", "b": "一方で、行事は儀礼的な面が大きく、水産資源の減少など、海の現実の課題に、どれだけ踏み込めるかは別の問題だという見方もある。", "say": "確認できたのは、両陛下が14日に大阪入りし、小学生と交流したことだ。大会の日程と行程は確認できていない。大会当日の様子を見たい。", "src": "時事通信(両陛下が大阪入り 海づくり大会出席へ、11/14) · 朝日新聞(「これからも海の学習を大切に」両陛下、大阪の小学生と交流、11/14)"},
+    "hosono":{"kick": "原子力 · ✓ 1媒体", "title": "細野復興相が就任後初めて福島第一原発を視察 廃炉に「国も責任を持って取り組む」", "what": "細野復興相は、就任後初めて、東京電力の福島第一原発を視察した。福島の復興には廃炉の完了が欠かせないとして、会社とともに、国も責任を持って取り組む考えを強調した。視察の日付や、視察した場所、、廃炉の工程についての具体的な発言は、確認できていない。内容は1媒体のもので、他の確認は取れていない。", "why": "福島第一原発の廃炉は、長い年月がかかる作業で、国と会社のどちらが責任を持つかが問われ続けてきた。閣僚が就任後すぐに現場を訪れ、国の責任を言葉にしたことは、今後の取り組みの方向を示す。", "me": "福島の復興や廃炉の進み方は、電気料金や地域の暮らしに長く影響する。工程の見直しや費用の説明が出たときは、公式な発表で確かめるとよい。", "a": "国が前面に出る姿勢を評価する見方は、費用や工程の負担を、会社に任せきりにしない点を挙げる。地元の復興と廃炉を結びつける発言は、地元の不安に応える面もある。", "b": "一方で、言葉だけではなく、具体的な工程や費用の分担を示してほしいという見方がある。廃炉の完了時期が示されていないことへの懸念も根強い。", "say": "確認できたのは、就任後初の視察と、国も責任を持つという発言だ。具体的な工程や費用は確認できていない。今後の政府の方針と、廃炉の工程の説明を見たい。", "src": "NHK(細野復興相「福島第一原発廃炉へ国も責任を持って取り組む」、11/14)"},
+    "basket":{"kick": "バスケ · ✓ 1媒体", "title": "2030年のバスケットボール女子ワールドカップは日本で開催 山本麻衣選手が「見に来て」", "what": "2030年のバスケットボール女子ワールドカップが、日本で開かれることになった。日本代表の山本麻衣選手は、会場に見に来てほしいと呼びかけた。開催する都市や会場、日程は、確認できていない。内容は1媒体のもので、他の確認は取れていない。", "why": "世界大会が日本で開かれると、代表の選手が国内で大観衆の前で戦える。競技の人気や、若い選手の育成にも波及する。開催には、会場の確保や運営の体制づくりが必要になる。大会の準備は、日本のバスケットボール界にとっても大きな仕事になる。", "me": "観戦を考える人は、開催都市と日程の発表を待つことになる。チケットの案内は、公式な発表で確かめられる。試合の中継の予定も、大会が近づくと案内される。", "a": "開催を歓迎する見方は、国内の注目が高まり、女子バスケットボールの競技人口と観客が増えると期待する。選手の言葉も、その高まりを後押しする。", "b": "一方で、開催の準備には費用がかかり、大会後に人気をどう保つかが課題になるという見方もある。会場の規模や、観客の集め方も問われる。", "say": "確認できたのは、2030年大会が日本で開かれることと、代表選手の呼びかけだ。開催都市と日程は確認できていない。今後の発表を見たい。", "src": "毎日新聞(2030年バスケ女子W杯は日本開催、代表・山本麻衣「見に来て」、11/14)"}
+  };
+  const G = {
+    "IEA":{"f": "エネルギー", "d": "国際エネルギー機関。石油の供給が途絶えたときに、加盟国が備蓄を出し合うことなどを決めた国際機関。", "w": "首相は、アジア版のIEAにあたる枠組みの創設を提唱する方向で調整に入ったという。"},
+    "協調放出":{"f": "エネルギー", "d": "複数の国が足並みをそろえて、国が持つ石油の備蓄を市場に出すこと。", "w": "新しい枠組みでは、石油備蓄の協調放出のルールづくりなどを検討するという。"},
+    "石油備蓄":{"f": "エネルギー", "d": "供給が止まったときに備えて、国や企業があらかじめ持っておく石油。", "w": "首脳会合で、石油備蓄の出し方を検討する枠組みの創設が提唱される方向だという。"},
+    "融通":{"f": "エネルギー", "d": "足りないところに、余っているところから回すこと。", "w": "備蓄を融通する具体的な方法は、確認できていない。"},
+    "中東情勢":{"f": "国際", "d": "中東地域の紛争や外交の動き。原油の供給や価格に影響する。", "w": "中東情勢、とくにイランをめぐる情勢の影響で、東南アジアにエネルギー不足が起きている。"},
+    "優先購入":{"f": "エネルギー", "d": "不足したときに、決めた企業が先に買える仕組み。", "w": "東南アジアの企業の間で、緊急時の優先購入の仕組みの導入に向けた協議が始まることになった。"},
+    "拉致問題":{"f": "外交・人権", "d": "北朝鮮が日本人を連れ去った問題。日本政府が認定した被害者のうち、帰国できていない人がいる。", "w": "新潟市の集会で、家族が拉致問題の解決に向けた首脳会談の開催を求めた。"},
+    "日朝首脳会談":{"f": "外交・人権", "d": "日本と北朝鮮の首脳が直接行う話し合い。", "w": "家族は日朝首脳会談の開催を求めたが、日程が決まったという発表は確認できていない。"},
+    "関税":{"f": "貿易", "d": "輸入品にかかる税。上がると、輸入する側のコストと商品の値段に響く。", "w": "米中は、関税の引き下げなどを検討するために貿易委員会を設けた。"},
+    "貿易委員会":{"f": "貿易", "d": "関税の引き下げなどを継続的に話し合うために設けた、米中の協議の場。", "w": "貿易委員会の初会合がオンラインで開かれたが、引き下げの中身は確認できていない。"},
+    "通商代表部":{"f": "貿易", "d": "アメリカの通商交渉を担当する政府機関。", "w": "米側は、通商代表部と財務省が初の公式な会合を開いたと声明で述べた。"},
+    "APEC":{"f": "貿易", "d": "アジア太平洋経済協力会議。アジア太平洋の国と地域が、貿易や投資を話し合う会議。", "w": "米中は来週、中国で開かれるAPECにあわせて会談する予定だ。"},
+    "地位協定":{"f": "安全保障", "d": "在日米軍の基地の使い方や、米軍人が事件を起こしたときの扱いなどを決めた日米の取り決め。", "w": "今回の逮捕について、地位協定の扱いは確認できていない。"},
+    "再発防止策":{"f": "安全保障", "d": "同じ問題が起きないようにするために決める対策。", "w": "日米は米軍人による事件の再発防止策で、1週間ほど前に合意していた。"},
+    "廃炉":{"f": "原子力", "d": "役目を終えた原発から燃料などを取り出し、解体して片づける作業。長い年月がかかる。", "w": "細野復興相は、福島第一原発の廃炉に国も責任を持って取り組む考えを強調した。"},
+    "復興相":{"f": "行政", "d": "東日本大震災からの復興を担当する閣僚。", "w": "細野復興相は、就任後初めて福島第一原発を視察した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

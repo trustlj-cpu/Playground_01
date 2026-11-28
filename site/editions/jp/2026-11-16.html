@@ -1,0 +1,341 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>日経平均 · 13日終値は対象期間外のため掲載なし</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ドル円 · 対象期間内の確定終値なし</div>
+    </div>
+    <div class="dateline"><span>No. 43 · 朝刊</span><b>2026年11月16日(月)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="senkyo">
+      <div class="kick">政治 · 地方選挙<span>✓ 4媒体 · 得票数・投票率は未確認、尼崎市長選と新宿区長選の推薦は1媒体のみ</span></div>
+      <h2 class="hl">熊本市長・愛媛県知事・新宿区長で現職が当選　松山市長選は新人の中野氏が初当選</h2>
+      <p class="deck">15日に投開票された各地の首長選で、現職の当選が相次いだ。熊本市長は4回目、愛媛県知事は5回目の当選で、松山市長は新人が初当選した。</p>
+      <div class="body">
+        <p>15日に投開票された首長選で、現職の当選が相次いだ。熊本市長選は大西一史氏が4回目の当選を果たし、現職と新人の計5人が争った選挙を制した。愛媛県知事選は無所属の現職、中村時広氏が5回目の当選を決め、現職と新人の3人の争いを勝ち抜いた。東京の新宿区長選も、現職の吉住健一氏が新人3人を破って4選を決めた。同じ人が首長を4期、5期と続けて務めることは、多選と呼ばれる。</p>
+        <p>一方、愛媛県の松山市長選は、新人の中野泰誠氏が初めての当選を確実にした。立候補したのは新人3人で、現職の名前はなかった。新宿区長選では、自民・公明が推薦した候補として組織戦を展開したと伝えられた。兵庫県の尼崎市長選では、現職の松本真氏が再選し、新顔の福永活也氏を破ったと伝えられた。得票数や投票率の確定値は、選挙管理委員会の発表がそろうまで確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="bahrain">
+      <div class="kick">国際 · 中東情勢<span>✓ 4媒体 · 被害・死傷者と米側の反応は未確認、3日間で2度目との点は1媒体のみ</span></div>
+      <h3 class="hl">イランの革命防衛隊、バーレーンの米軍基地を攻撃したと発表　サウジなど4カ国が非難</h3>
+      <div class="one">
+        <p>イランの革命防衛隊は15日、中東の島国バーレーンにある米軍基地を攻撃したと発表した。革命防衛隊は、米国の「敵対的な行為」への報復だと主張している。バーレーンの当局は、9月以来初めてとなる脅威警報を出した。サウジアラビア、カタール、ヨルダン、エジプトの4カ国は、バーレーンの国営通信を通じて、攻撃を非難する声明を出した。攻撃には無人機が使われたと伝えられたが、手段や被害の規模は確認できていない。 米国とイランはホルムズ海峡をめぐる対立が続き、事態は膠着している。これに先立ち、トランプ米大統領はSNSへの投稿で、イランとの合意は必要ないとの考えを示し、合意を目指す段階は「とっくに過ぎ去った」とも書いたと伝えられた。バンス副大統領をイランとの交渉から外し、内政を担当させる指示も出したと伝えられている。今回の攻撃は3日間で2度目だったと伝えられたが、この点はほかでは確認できていない。米国側の反応と死傷者の有無も確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="koizumi"><b>小泉防衛相、防衛省・自衛隊のAI活用の新たな基本方針を11月末をめどに公表へ</b><em>安全保障分野でAIの技術開発が急速に進んでいることを受け、防衛省が方針をつくる。小泉防衛相が15日、11月末をめどに公表すると明らかにした。</em><span>安全保障 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="hands"><b>ハンズ渋谷店が15日で営業を終了　48年の歴史に幕、店内は別れを惜しむ客でにぎわう</b><em>15日、48年あまりにわたり流行を発信してきた雑貨店が閉店日を迎えた。店内は多くの客でにぎわい、閉店を惜しむ声が聞かれた。</em><span>社会 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="kuwaki"><b>桑木志帆が初の年間女王に　女子ゴルフ国内ツアー、2位の選手に逆転される可能性がなくなる</b><em>年間ポイントランキングで首位の桑木選手が、2位の選手に逆転される可能性がなくなった。初めての年間女王が決まった。</em><span>スポーツ · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="drone"><b>北京市で15日、ドローンの所有を禁じる規則が施行されたと伝えられる</b><em>北京市でドローンの所有を禁じる規則が15日に施行されたと伝えられた。禁止は市街地だけでなく農村部を含む市全域に及ぶという。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="robocon"><b>全国高専ロボコンの全国大会が都内で開かれたと伝えられる　学生が自作ロボットで雑巾を投げ合う</b><em>15日、全国高等専門学校ロボットコンテストの全国大会が都内で開かれたと伝えられた。学生が自作のロボットを操作して雑巾を投げ合い、アイデアと技術を競った。</em><span>教育 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="asean">
+      <div class="kick">国際 · 東南アジア<span>✓ 4媒体 · ミャンマーの先送りは関係者の話、行動規範・旗・議長国の点は1媒体のみ</span></div>
+      <h3 class="hl">ASEAN首脳会議がマニラで開幕　ミャンマーの本格復帰をめぐる議論は先送りと伝えられる</h3>
+      <div class="body">
+        <p>ASEAN(東南アジア諸国連合)の首脳会議が15日、議長国フィリピンのマニラで始まった。焦点は、南シナ海の領有権をめぐる中国とフィリピンなどの対立と、ミャンマー情勢だった。ミャンマーをめぐっては加盟国の意見が分かれ、本格的な復帰に向けた議論は先送りされたと、関係者への取材として伝えられた。軍政側の指導者が首脳級の会議に出席できない措置は5年続いていると伝えられ、会議はミャンマーとの対話を続ける姿勢と、和平計画を進める方針を改めて示したとも伝えられた。</p>
+        <p>ASEANと中国による南シナ海の行動規範づくりは、今回も取りまとめに至らなかったと伝えられた。行動規範は、衝突を避けるために当事国が守る行動のルールを定める文書で、交渉は長く続いている。東ティモールの加盟を受けて、ASEANの旗に稲の穂が加わり、東ティモールが2029年に議長国を務めるとも伝えられた。会議の成果文書の内容は、まだ確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="samurai">
+      <div class="kick">スポーツ · 野球<span>✓ 3媒体 · 決勝の得点経過は未確認、個人成績と無敗の点は1媒体のみ</span></div>
+      <h3 class="hl">侍ジャパンがアジアプロ野球チャンピオンシップで3連覇　最優秀選手は宗山塁</h3>
+      <div class="body">
+        <p>アジアプロ野球チャンピオンシップは15日に決勝があり、侍ジャパンが韓国を破って3連覇を果たした。大会は負けなしの優勝だったと伝えられている。最優秀選手には、宗山塁選手が選ばれた。井口監督が率いる日本代表の新体制にとって、五輪に向けた好発進になったと伝えられた。</p>
+        <p>宗山選手は大会4試合で4本塁打、11打点を挙げたと伝えられた。正木智也選手が4試合連続で本塁打を放ち、先発の高橋宏斗投手は7回を1失点、7奪三振の投球を見せたとも伝えられた。3位決定戦では、オーストラリアが台湾を逆転で破ったと伝えられた。決勝の得点経過は確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="shuri">
+      <div class="kick">社会 · 文化財<span>✓ 2媒体 · 工事完了は1媒体のみ、完成式・公開の日程は政府の発表を引用した報道</span></div>
+      <h3 class="hl">首里城正殿の復元工事が完了と伝えられる　22日に完成式、23日から内部を公開予定</h3>
+      <div class="body">
+        <p>沖縄・那覇市の首里城で、正殿の復元工事が完了し、内部は深みのある朱色の空間になったと伝えられた。正殿は琉球王国の政治と儀式の中心だった建物で、2019年10月の火災で焼け、再建が進められてきた。復元には漆塗りや彩色など、伝統の技術が使われると伝えられている。</p>
+        <p>政府は6月、復元の完成式を22日に首里城公園で開くと発表していた。正殿内部の一般公開は、23日(月・祝)から始まる予定とされる。完成式の様子や公開の詳しい運営は、これから確認が必要になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>2019年</b><span>正殿が火災で焼けた年</span></div>
+        <div><b>22日</b><span>完成式が予定される日(政府の発表)</span></div>
+        <div><b>23日</b><span>正殿内部の公開が始まる予定の日</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>ホルムズ海峡で、機雷に触れたタンカー2隻が炎上した。</b> <span>イランの国営メディアが伝えたとされる内容で、船会社や周辺国の当局による確認は見つかっていない。独立した裏づけがないため、事実としては扱えない。</span></div>
+        <div><b>トランプ大統領がイランをめぐる戦争から手を引く。</b> <span>トランプ氏はイランとの合意は必要ないと投稿したが、撤退を表明したわけではない。湾岸諸国が警戒していると伝えられるが、米政府の公式な方針は確認されていない。</span></div>
+        <div><b>ミャンマーがASEANの首脳会議に正式に復帰した。</b> <span>関係者の話として、本格復帰の議論は先送りされたと伝えられた。ASEANによる復帰の正式な発表は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 月 11月16日</b><span>バーレーンへの攻撃を受けた米国の公式な反応と、トランプ氏が示した「合意不要」の姿勢が実際の対応につながるかが焦点になる。ASEAN首脳会議の成果文書の内容も注目される。</span><b>今週</b><span>22日に首里城公園で正殿の復元の完成式が開かれる予定で、23日から正殿内部の一般公開が始まる予定とされる(政府の発表)。</span><b>その後</b><span>防衛省が11月末をめどに、AI活用の新たな基本方針を公表する。</span><b>読者へ</b><span>首長選の得票数や投票率は、各自治体の選挙管理委員会が公表する確定値で確かめられる。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "senkyo":{"kick": "政治 · 地方選挙 · ✓ 4媒体 · 得票数・投票率は未確認、尼崎市長選と新宿区長選の推薦は1媒体のみ", "title": "熊本市長・愛媛県知事・新宿区長で現職が当選　松山市長選は新人の中野氏が初当選", "what": "15日に熊本市長選、愛媛県知事選、松山市長選、東京都新宿区長選などが投開票された。熊本市長選は現職の大西一史氏が4回目の当選で、現職と新人の計5人が立候補していた。愛媛県知事選は無所属の現職、中村時広氏が5回目の当選を決め、候補者は3人だった。新宿区長選は現職の吉住健一氏が新人3人を破って4選を決めた。松山市長選は新人の中野泰誠氏が初当選し、立候補したのは新人3人だった。兵庫県の尼崎市長選では現職の松本真氏が再選したと伝えられたが、これは1媒体の報道にとどまる。得票数と投票率の確定値は確認できていない。", "why": "首長選は、予算の使い道や公共施設、福祉、防災の優先順位を決める人を選ぶ選挙で、結果は住民の暮らしに直結する。現職が続けて当選すると、すでに進めている計画が途切れにくい。一方で、同じ人が長く務める多選については、見方が分かれやすい。新人が初当選した自治体では、前の体制の事業が見直されるかどうかが次の焦点になる。", "me": "自分の街の選挙でなくても、同じ日の首長選の結果は、地方政治の動きをつかむ手がかりになる。住んでいる自治体の首長が何期目か、直近の投票率はどうだったかを調べると、地域の関心の度合いが見えてくる。", "a": "現職の当選を肯定的に見る立場では、進行中の事業を同じ首長が続けられる点が利点として挙げられる。災害対応や再開発のように何年もかかる仕事では、責任者が替わらない安定感が重視される。", "b": "多選に慎重な立場では、現職が強い選挙では対立候補が育ちにくく、有権者の選択肢が狭まると指摘される。投票率が低い場合は、結果が住民の意思をどこまで映しているのかという疑問も出る。", "say": "確認できたのは、現職が3つの選挙で勝ち、松山市長選だけは新人が初当選したという点までだ。得票差や投票率は確定値を待つ必要がある。今日は各自治体の確定発表と、当選者が最初に掲げる方針を見たい。", "src": "NHK(熊本・愛媛・松山の当選, 11/15) · 毎日新聞(熊本・愛媛・新宿の結果, 11/15) · 朝日新聞(新宿・尼崎の結果, 11/15) · 読売新聞(新宿区長選の開票結果, 11/15)"},
+    "bahrain":{"kick": "国際 · 中東情勢 · ✓ 4媒体 · 被害・死傷者と米側の反応は未確認、3日間で2度目との点は1媒体のみ", "title": "イランの革命防衛隊、バーレーンの米軍基地を攻撃したと発表　サウジなど4カ国が非難", "what": "イランの革命防衛隊は15日、バーレーンにある米軍基地を攻撃したと発表し、米国の「敵対的な行為」への報復だと主張した。バーレーンの当局は、9月以来初めてとなる脅威警報を出した。サウジアラビア、カタール、ヨルダン、エジプトは、バーレーンの国営通信を通じて攻撃を非難した。無人機が使われたと伝えられたが、詳細は確認できていない。これに先立ち、トランプ米大統領はSNSへの投稿でイランとの合意は必要ないとの考えを示し、バンス副大統領を交渉から外したと伝えられた。被害の規模と死傷者の有無は確認できていない。", "why": "バーレーンは米海軍の拠点を置く国で、ここへの攻撃は米国とイランの対立が湾岸全体に広がるかどうかを占う材料になる。ホルムズ海峡は世界の石油輸送の要所で、緊張が続くと原油価格と海運の保険料に響く。交渉の担当者が外れたと伝えられた点も、対話の先行きを不透明にしている。", "me": "日本は原油の大半を中東に頼っており、ホルムズ海峡の緊張はガソリンや電気代の動きに影響しうる。今後のニュースでは、原油価格と海峡を通る船の動きに注目すると、変化に早く気づける。", "a": "強硬な対応を重んじる立場では、攻撃には抑止力を示す対応が必要で、交渉を急がない姿勢が米国の立場を強めると主張される。", "b": "外交を重んじる立場では、交渉の窓口を絞ると誤算による衝突の危険が高まるとして、湾岸諸国を巻き込む前に対話を再開すべきだと訴えられる。", "say": "確認できたのは、革命防衛隊が攻撃を発表し、周辺国が非難した点までだ。実際の被害、使われた兵器、米軍の対応はまだ分からない。今日は米側の公式な反応と、原油価格の動きを見たい。", "src": "BBC(Iran targets US base in Bahrain, 11/15) · The Guardian(Gulf states condemn attack, 11/15) · The Japan Times(Bahrain threat alerts, 11/15) · 読売新聞(トランプ氏の対イラン投稿, 11/15)"},
+    "asean":{"kick": "国際 · 東南アジア · ✓ 4媒体 · ミャンマーの先送りは関係者の話、行動規範・旗・議長国の点は1媒体のみ", "title": "ASEAN首脳会議がマニラで開幕　ミャンマーの本格復帰をめぐる議論は先送りと伝えられる", "what": "ASEANの首脳会議が15日、議長国フィリピンのマニラで始まった。焦点は南シナ海の領有権をめぐる対立とミャンマー情勢だった。ミャンマーをめぐっては加盟国の意見が分かれ、本格的な復帰に向けた議論は先送りされたと、関係者への取材として伝えられた。軍政側の指導者が首脳級の会議に出席できない措置は5年続いていると伝えられた。南シナ海の行動規範は取りまとめに至らなかったと伝えられた。東ティモールの加盟を受け、旗に稲の穂が加わり、同国が2029年の議長国になると伝えられた。成果文書の内容は確認できていない。", "why": "ミャンマーの軍政は国内の混乱が続くなかで、地域の枠組みに受け入れられるかどうかが課題になっている。ASEANは全会一致で物事を決めるため、加盟国の意見が割れると議論が先送りされやすい。南シナ海の行動規範がまとまらない状態が続くと、衝突を防ぐ共通のルールがないまま、各国が個別に対応することになる。", "me": "日本は東南アジアに多くの企業が進出し、海上交通も南シナ海に頼っている。この地域の対立や政情の変化は、物流費や現地の事業環境を通じて、日本の企業活動や身近な輸入品の価格に響く可能性がある。", "a": "関与を続ける立場では、ミャンマーを会議から外し続けると対話の窓口が閉じ、和平の働きかけもできなくなると指摘される。", "b": "慎重な立場では、軍政側の復帰を進めると国民を弾圧している勢力に正当性を与えることになり、和平計画の信頼を損なうと訴えられる。", "say": "確認できたのは、会議が始まり、ミャンマーの本格復帰の議論が先送りされたと伝えられた点までだ。ただし先送りの内容は関係者の話で、公式な発表はまだ見当たらない。会議の成果文書と議長声明の言葉づかいを見たい。", "src": "NHK(ミャンマー復帰の議論は先送り, 11/15) · The Japan Times(ASEAN reaffirms engagement with Myanmar, 11/15) · 朝日新聞(東ティモール加盟と旗, 11/15) · Reuters(南シナ海の行動規範, 11/15)"},
+    "samurai":{"kick": "スポーツ · 野球 · ✓ 3媒体 · 決勝の得点経過は未確認、個人成績と無敗の点は1媒体のみ", "title": "侍ジャパンがアジアプロ野球チャンピオンシップで3連覇　最優秀選手は宗山塁", "what": "アジアプロ野球チャンピオンシップは15日に決勝があり、侍ジャパンが韓国を破って3連覇を果たした。最優秀選手には宗山塁選手が選ばれた。大会は負けなしの優勝だったと伝えられている。宗山選手は大会4試合で4本塁打、11打点を挙げたと伝えられた。正木智也選手の4試合連続本塁打や、高橋宏斗投手の7回1失点、7奪三振も伝えられた。3位決定戦はオーストラリアが台湾を逆転で破ったと伝えられた。決勝の得点経過は確認できていない。", "why": "代表チームにとって、国際大会の連覇は選手起用と戦い方の方向性が機能している目安になる。遊撃手の定着は守備の要の問題で、世代交代の進み具合を測る材料になる。五輪に向けた新体制の初期の結果は、強化の方針を保つか見直すかの判断にも関わる。", "me": "大会の結果は、次の代表活動やプロ野球での選手の起用にもつながる。注目した選手の活躍を、所属球団の来季の試合で追うと、代表との違いも見えてくる。", "a": "好意的な見方では、全勝での優勝は選手層の厚さを示し、新しい顔ぶれが育っていることの表れだとされる。", "b": "慎重な見方では、アジアの大会は世界の強豪が出そろう舞台ではなく、この結果だけで五輪の実力を測るのは早いという指摘がある。", "say": "確認できたのは、決勝で韓国に勝ち、3連覇を果たしたことと、最優秀選手が宗山選手だった点までだ。個人の成績は1媒体の報道に頼っており、数字の確認が必要だ。今日は決勝の得点経過と、代表が次に集まる日程を見たい。", "src": "毎日新聞(3連覇と最優秀選手, 11/15) · 日刊スポーツ(侍ジャパン3連覇, 11/15) · スポーツ報知(宗山塁が最優秀選手, 11/15)"},
+    "shuri":{"kick": "社会 · 文化財 · ✓ 2媒体 · 工事完了は1媒体のみ、完成式・公開の日程は政府の発表を引用した報道", "title": "首里城正殿の復元工事が完了と伝えられる　22日に完成式、23日から内部を公開予定", "what": "沖縄・那覇市の首里城で、正殿の復元工事が完了したと伝えられた。内部は深みのある朱色の空間になったという。正殿は2019年10月の火災で焼け、再建が進められてきた。政府は6月、復元の完成式を22日に首里城公園で開くと発表していた。正殿内部の一般公開は、23日(月・祝)から始まる予定とされる。工事の完了そのものの報道は1媒体にとどまる。", "why": "首里城は沖縄の歴史と文化の象徴で、正殿の復元は観光だけでなく、伝統の技術を次の世代に伝える取り組みでもある。漆塗りや彩色など、手間のかかる作業の完了は、復元が計画どおりに進んだかどうかを測る節目になる。公開が始まると、来場者の受け入れ方も課題になる。", "me": "沖縄を旅行する予定があれば、23日以降の正殿内部の公開に合わせて計画を立てられる。見学の手順や予約の有無は公式の案内で確認する必要がある。", "a": "復元を歓迎する立場では、焼失から立ち直った姿を見せることが、地域の誇りと観光の回復につながると評価される。", "b": "慎重な立場では、復元の考証や建材の調達、来場者が集中したときの混雑と保全の両立が、引き続き課題になるという指摘がある。", "say": "確認できたのは、完成式が22日、正殿内部の公開が23日の予定という点までだ。工事が完了したという一報は1媒体の報道で、完成式での政府や県の発表を待つ必要がある。今週末の式典の内容と、公開時の入場の仕組みを見たい。", "src": "毎日新聞(復元工事の完了, 11/16) · 熊本日日新聞(完成式は22日の予定, 11/22予定)"},
+    "koizumi":{"kick": "安全保障 · ✓ 2媒体", "title": "小泉防衛相、防衛省・自衛隊のAI活用の新たな基本方針を11月末をめどに公表へ", "what": "小泉防衛相は15日、防衛省・自衛隊のAI活用に関する新たな基本方針を、11月末をめどに公表すると明らかにした。安全保障の分野でAIの技術開発が急速に進んでいることを受けた対応である。方針の具体的な中身は、現時点では確認できていない。", "why": "AIは情報の分析や警戒監視など、防衛の現場で使い道が広い一方、誤作動や判断の責任の所在が問題になる。基本方針は、どこまでAIに任せ、どこから人が判断するのかという線引きを示す文書になる。他国が運用を進めるなかで、日本の考え方を整理する意味がある。", "me": "直接の影響は小さいが、AIの使い方のルールは、民間の技術や研究にも波及する。防衛のAIが公開される基準を見れば、国がAIをどう扱う考えかを知る手がかりになる。", "a": "活用を急ぐ立場では、周辺国がAIを軍事に取り入れるなか、日本も人手不足に対応し、判断を速くする備えが必要だと主張される。", "b": "慎重な立場では、人の関与を欠いた判断や誤作動の危険を重くみて、運用の範囲と責任の所在を事前に明確にするよう求められる。", "say": "確認できたのは、基本方針を11月末をめどに公表するという時期までだ。中身はまだ示されていない。公表された時に、人が最終判断を担う場面の定義と、AIの使い方を点検する仕組みがあるかを見たい。", "src": "NHK(防衛省の新たなAI活用方針, 11/15) · 朝日新聞(AI活用方針を11月末に策定, 11/15)"},
+    "hands":{"kick": "社会 · ✓ 3媒体", "title": "ハンズ渋谷店が15日で営業を終了　48年の歴史に幕、店内は別れを惜しむ客でにぎわう", "what": "ハンズ渋谷店が15日で営業を終えた。48年あまりにわたって流行を発信してきた雑貨店である。閉店日は店内に多くの客が訪れ、閉店を惜しむ声が聞かれた。開店前に行列ができたと伝えられ、看板の文字が感謝を伝える言葉に変えられたとも伝えられた。閉店の理由は確認できていない。", "why": "渋谷の中心にある大型店の閉店は、長く親しまれた場所が街から消える出来事として注目された。雑貨や生活用品は、実店舗で手に取って選ぶ買い方と、ネット通販の併存が続いている。店舗の役割がどう変わるかを考える材料になる。", "me": "近所の長く続く店が閉まる前に足を運ぶ人が増えるのは、よくある動きだ。通い慣れた店の営業情報は、閉店が決まる前から公式の案内で確認しておくと、慌てずに済む。", "a": "惜しむ立場では、世代を超えて思い出がある店が消えることは、街の記憶が薄れることだと受け止められる。", "b": "冷静な見方では、店舗は時代に応じて入れ替わるもので、街の姿が変わることは避けられないという意見がある。", "say": "確認できたのは、15日で営業を終え、店が多くの客でにぎわったという点までだ。閉店の理由や跡地の使い道は確認できていない。次の動きとして、跡地の発表を見たい。", "src": "NHK(閉店の様子, 11/15) · シブヤ経済新聞(開店前の行列, 11/15) · TOKYO MX(48年の歴史に幕, 11/15)"},
+    "kuwaki":{"kick": "スポーツ · ✓ 3媒体", "title": "桑木志帆が初の年間女王に　女子ゴルフ国内ツアー、2位の選手に逆転される可能性がなくなる", "what": "女子ゴルフの国内ツアーで、年間ポイントランキング首位の桑木志帆選手が、2位の選手に逆転される可能性がなくなり、初めての年間女王が決まった。桑木選手は「もう考えなくていいんだ」と話したと伝えられた。自信が持てなかった時期があったとも伝えられた。今季5勝目を挙げていたと伝えられたが、この点は1媒体の報道にとどまる。", "why": "年間女王は、1年を通じて安定して成績を残した選手に贈られるもので、1試合の勝利とは違う評価を受ける。ポイントで決まるため、最終戦を待たずに確定することもある。追われる立場の重圧を乗り越えたという点が、本人の言葉に表れている。", "me": "好きなスポーツの選手の成績は、1試合の結果だけでなく、1年のポイントで見ると流れがつかめる。ランキングの見方を知ると、中継や記事の見どころが分かりやすくなる。", "a": "称賛する立場では、首位を守り抜いた精神面の強さと、1年を通した安定感が評価される。", "b": "冷静な見方では、年間の順位は出場する大会数の影響を受けるため、単純な比較には注意が必要だという指摘がある。", "say": "確認できたのは、2位に逆転される可能性がなくなり、初の年間女王が決まった点までだ。最終的なポイント差と今季の勝利数は、公式の集計で確認したい。", "src": "NHK(桑木志帆が初の年間女王, 11/15) · 読売新聞(初の年間女王に, 11/15) · GDOゴルフニュース(猛追と女王決定, 11/15)"},
+    "drone":{"kick": "国際 · ✓ 1媒体", "title": "北京市で15日、ドローンの所有を禁じる規則が施行されたと伝えられる", "what": "北京市で15日、ドローンの所有を禁じる規則が施行されたと伝えられた。禁止は市街地だけでなく農村部を含む市全域に及ぶという。規則の対象になる機種や罰則、例外の扱い、すでに所有している人への対応は確認できていない。禁止の理由についての中国当局の説明も、確認できていない。", "why": "ドローンは撮影や物流で身近になったが、飛行制限や安全管理の対象にもなりやすい。市全域で所有そのものを禁じる規則は、飛行の規制より踏み込んだ内容で、実際の適用の仕方によって影響が大きく変わる。", "me": "北京に出張や旅行で行く場合、ドローンを持ち込めるかどうかは事前に確認が必要になる。規則の対象や例外は公式な案内を確認してから判断したい。撮影を仕事にしている人は、手続きの有無も調べておきたい。", "a": "規制を支持する立場では、都市の安全を守るため、所有の段階から管理する対応が必要だと主張される。", "b": "慎重な立場では、撮影や研究、農業などの正当な利用まで妨げられるおそれがあり、例外の線引きが明確でないと指摘される。", "say": "確認できたのは、規則が施行されたと伝えられた点までだ。対象や罰則は確認できておらず、1媒体の報道に頼っている。中国側の公式な説明が出るかを見たい。", "src": "The Japan Times(Drone ownership ban in Beijing, 11/15)"},
+    "robocon":{"kick": "教育 · ✓ 1媒体", "title": "全国高専ロボコンの全国大会が都内で開かれたと伝えられる　学生が自作ロボットで雑巾を投げ合う", "what": "「全国高等専門学校ロボットコンテスト」の全国大会が15日、都内で開かれたと伝えられた。学生たちが自作のロボットを操作して雑巾を投げ合い、アイデアや技術力を競ったという。優勝校や参加校の数、競技の細かな規則は確認できていない。会場の場所や観客の数も分かっていない。", "why": "高専のロボコンは、機械、電気、制御を組み合わせて課題を解く力を競う場で、技術者の育成の舞台として知られる。毎年違う競技が設けられ、学生が設計から製作までを自分たちで担う点に特徴がある。", "me": "技術系の進路に関心がある家庭や学生にとって、高専の学びの内容を知る手がかりになる。大会は公開されることが多く、実際の競技を見ると、ものづくりの雰囲気がよく分かる。学校説明会や過去の映像も、進路を考える材料になる。", "a": "教育面を重んじる立場では、チームで課題を解く経験が、設計力と協力する力を伸ばすと評価される。", "b": "冷静な見方では、大会の準備に多くの時間と費用がかかり、学業との両立や学校ごとの環境の差が課題になるという指摘がある。", "say": "確認できたのは、15日に都内で全国大会が開かれ、学生が雑巾を投げ合う競技に挑んだ点までだ。結果は1媒体の報道に頼っており、優勝校は確認できていない。結果の発表を見たい。", "src": "NHK(高専ロボコン全国大会, 11/15)"}
+  };
+  const G = {
+    "ASEAN":{"f": "国際", "d": "東南アジア諸国連合の略。東南アジアの国々が政治・経済・安全保障で協力する地域の枠組み。", "w": "今回はマニラで首脳会議が開かれた。"},
+    "議長国":{"f": "国際", "d": "国際会議や組織の運営を一定期間引き受け、日程や議題の調整を担う国。", "w": "今年のASEANの議長国はフィリピンで、東ティモールが2029年の議長国になると伝えられた。"},
+    "領有権":{"f": "国際法", "d": "ある島や海域を自国のものとして支配する権利。複数の国が主張すると争いになる。", "w": "南シナ海の領有権をめぐり、中国とフィリピンなどが対立している。"},
+    "行動規範":{"f": "国際", "d": "紛争を避けるために、当事国が守る行動のルールを定める文書。", "w": "ASEANと中国による南シナ海の行動規範は、今回もまとまらなかったと伝えられた。"},
+    "軍政":{"f": "政治", "d": "軍が政権を握って国を統治する体制。", "w": "ミャンマーは軍政側の指導者が首脳級の会議に出席できない状態が続いている。"},
+    "革命防衛隊":{"f": "安全保障", "d": "イランの体制を守る目的でつくられた精鋭の軍事組織。正規軍とは別に指揮系統を持つ。", "w": "革命防衛隊がバーレーンの米軍基地を攻撃したと発表した。"},
+    "ホルムズ海峡":{"f": "エネルギー", "d": "ペルシャ湾の出入り口にあたる狭い海峡。世界の石油輸送の大きな通り道。", "w": "米国とイランはホルムズ海峡をめぐる対立が続いている。"},
+    "脅威警報":{"f": "安全保障", "d": "攻撃などの危険が高まった時に、当局が住民に出す注意の知らせ。", "w": "バーレーンは9月以来初めて脅威警報を出した。"},
+    "国営通信":{"f": "国際", "d": "政府が運営し、公式の発表や声明を伝える通信社。", "w": "周辺国の非難声明は、バーレーンの国営通信を通じて伝えられた。"},
+    "膠着":{"f": "外交", "d": "状況が動かず、どちらにも進まない状態。", "w": "米国とイランの対立は、海峡をめぐって膠着している。"},
+    "報復":{"f": "安全保障", "d": "相手から受けた行為への仕返しとして行う攻撃や措置。", "w": "革命防衛隊は米国の行為への報復だと主張した。"},
+    "無人機":{"f": "安全保障", "d": "人が乗らずに遠隔や自動で飛ぶ航空機。偵察や攻撃に使われる。", "w": "攻撃には無人機が使われたと伝えられた。"},
+    "首長選":{"f": "政治", "d": "知事や市区町村長など、自治体の長を選ぶ選挙。", "w": "15日に各地で首長選が投開票された。"},
+    "多選":{"f": "政治", "d": "同じ人が首長などの職を、何期も続けて務めること。", "w": "愛媛県知事の中村氏は5回目の当選になった。"},
+    "無所属":{"f": "政治", "d": "どの政党にも属さない立場で立候補すること。", "w": "愛媛県知事選の中村氏は無所属の現職だった。"},
+    "推薦":{"f": "政治", "d": "政党や団体が、ある候補を支持すると公式に表明すること。", "w": "新宿区長選では自民・公明が推薦した候補が組織戦を展開したと伝えられた。"},
+    "正殿":{"f": "文化財", "d": "城や宮殿の中心にある、最も重要な建物。", "w": "首里城の正殿は2019年の火災で焼け、復元が進められた。"},
+    "基本方針":{"f": "行政", "d": "ある分野の取り組みの大きな考え方と方向性を示した文書。", "w": "防衛省はAI活用の新たな基本方針を11月末をめどに公表する。"},
+    "安全保障":{"f": "安全保障", "d": "国の独立や国民の安全を、軍事や外交などで守ること。", "w": "安全保障分野でAIの技術開発が急速に進んでいる。"},
+    "年間ポイントランキング":{"f": "競技制度", "d": "1年間の大会の成績をポイントに換算して順位を決める仕組み。", "w": "年間ポイントランキングの首位が2位に逆転されなくなり、年間女王が決まった。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

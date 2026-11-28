@@ -1,0 +1,345 @@
+<title>DailyDrop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクのチャート。記事クリックで展開。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクのチャート */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 空きスペースの埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>KOSPI · 11/18 · 終値が確認できないため空欄</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ウォン/ドル相場 · 11/18 · 終値が確認できないため空欄</div>
+    </div>
+    <div class="dateline"><span>第45号 · 夕刊</span><b>2026年11月18日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="kcs">
+      <div class="kick">政治 · 韓中首脳会談<span>✓ 5社 · 西海・FTAに関する発言は1社の報道</span></div>
+      <h2 class="hl">イ大統領・習近平主席、深圳で35分の首脳会談…青瓦台「習主席、米朝対話など緊張緩和の努力を支持」</h2>
+      <p class="deck">APEC首脳会議が開かれた中国・深圳で、韓中の首脳が3度目に向かい合い、青瓦台は朝鮮半島の緊張緩和の努力に対する習主席の支持表明を伝えた。</p>
+      <div class="body">
+        <p>イ・ジェミョン大統領と習近平中国国家主席が18日、中国・深圳で首脳会談を開いた。アジア太平洋経済協力(APEC)首脳会議に出席するため深圳を訪れた場で、青瓦台によると、会談は午前11時5分から35分間、チリン山荘で同時通訳により行われた。ウィ・ソンラク国家安保室長は書面ブリーフィングで、両首脳が韓中関係を「全面復元」を超えて、より成熟した関係へ発展させる方策を話し合ったと明らかにした。朝鮮半島情勢について、イ大統領は南北間の緊張緩和と平和共存の実現に言及し、習主席は米朝対話など朝鮮半島の緊張緩和に向けた様々な努力を支持すると述べた。両首脳が会うのは今回が3回目だ。</p>
+        <p>経済分野では、イ大統領が互恵的な経済協力を、習主席が多国間主義に基づく貿易を土台にしたサプライチェーン協力を、それぞれ強調した。来年は韓中国交樹立35周年だ。イ大統領が西海問題の根本的な解決に向けて共に努力しようと述べ、習主席が両国は戦略的自律性を堅持すべきだと述べ、両首脳が自由貿易協定(FTA)のサービス・投資交渉の妥結を機に協力を広げることにしたという内容は、1社の速報にしか出ておらず、青瓦台のブリーフィング全文で確認する必要がある。西海問題の具体的な議題や合意の有無、協力拡大の範囲は伝えられていない。同じAPECの機会に米国・中国・ロシアの首脳が一堂に会するなかで開かれた会談であり、朝鮮半島に関する後続のメッセージが続くかが残された関心事だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="chk">
+      <div class="kick">政治 · 司法<span>✓ 6社 · 判断理由の詳細と控訴の有無は未確認</span></div>
+      <h3 class="hl">チュ・ギョンホ大邱市長、「戒厳解除の採決妨害」で1審無罪…特検は懲役20年を求刑していた</h3>
+      <div class="one">
+        <p>ソウル中央地裁は18日、12・3非常戒厳の際に国民の力の議員らの戒厳解除の採決を妨害した容疑(内乱重要任務従事)で起訴されたチュ・ギョンホ大邱市長に、1審で無罪を言い渡した。特検は懲役20年を求刑していた。裁判部は、内乱に加担した事実が立証されておらず、尹氏の要請があったという点も立証が十分でないと判断したと報じられた。有罪が言い渡されていれば市長職を失いかねなかったという報道もある。チュ市長は宣告後、大邱市政に全力を尽くすと述べた。国民の力のチャン・ドンヒョク代表は「こういうのが捏造起訴だ」と述べ、国民の力が特検を法歪曲罪で告発する案を検討しているという報道が出た。ハン・ドンフンは特検の無理な捜査・起訴の当然の帰結だと述べ、イ・ジュンソクは憲法を否定した政治だと批判したと伝えられた。反対側ではチョン・チョンレがチョ・ヒデを弾劾せよと主張し、キム・ミンソクは「あきれた」と反応したという。特検の控訴の有無は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="fx"><b>ウォン/ドル相場、ソウル外国為替市場の午後3時30分の基準値は1,333.0ウォンで5.2ウォン下落</b><em>18日のソウル外国為替市場の午後3時30分の基準値は1,333.0ウォンで、前営業日より5.2ウォン下がった。17日の基準値1,338.2ウォンから下がったものだ。</em><span>経済 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="us"><b>米国でシステム障害相次ぐ…国内セキュリティー株が堅調、ルビオ氏「悪意ある勢力との関連情報はない」</b><em>18日、国内のセキュリティー株と通信機器株が堅調で、米国ではシステム障害が相次いだ。ルビオ氏は、障害が互いに関連しているか悪意ある勢力によるものだという情報は「まったく」ないと述べた。</em><span>国際 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="lig"><b>LIG D&amp;A、裁判所の執行停止決定で入札参加資格を維持…1審で敗訴なら2年間制限</b><em>裁判所が防衛事業庁の入札参加資格制限処分の執行停止を認め、訴訟中も入札資格が維持される。1審で負ければ、宣告の30日後の翌日から2年間、入札が制限される。</em><span>産業 · ✓ 報道2件</span></div>
+      <div class="it story" tabindex="0" data-id="hw"><b>ファーウェイの米国刑事裁判、1審の弁論終結…「20年の犯罪」対「有罪を決めて起訴」という報道</b><em>中国の通信機器メーカー、ファーウェイに対する米国の刑事裁判の1審の弁論が17日(現地時間)に終わったという報道が出た。一方は「20年の犯罪」を、他方は「有罪を決めたうえで起訴した」と主張したという。</em><span>国際 · ✓ 報道1件</span></div>
+      <div class="it story" tabindex="0" data-id="sc"><b>国家スーパーコンピューター6号機「ハンガン」、実測性能は世界12位との報道</b><em>韓国科学技術情報研究院が今月初めに稼働を始めた国家スーパーコンピューター6号機「ハンガン」の実測性能が世界12位だと明らかにしたという報道が出た。国家の研究開発(R&amp;D)を率いる基盤だという説明だ。</em><span>科学 · ✓ 報道1件</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="ecs">
+      <div class="kick">政治 · 選挙捜査<span>✓ 4社 · 8人の身元と令状審査の日程は未確認</span></div>
+      <h3 class="hl">選管委特検、職員ら8人の拘束令状を請求…「投票率の虚偽入力・公文書の偽変造」容疑</h3>
+      <div class="body">
+        <p>イ・テハン特別検察官チームは18日、中央選挙管理委員会など各級の選管に所属する職員ら8人について拘束令状を請求したと明らかにした。キム・ジヌ特検補がソウル瑞草区の特検事務所でブリーフィングを行った。容疑は、投票率を虚偽で入力し、投票録などの公文書を偽造・変造したというものだ。6・3地方選挙で投票用紙が不足した事態から5カ月余りで出た令状請求である。投票録は、投票所で投票用紙の交付と投票の進行状況を記しておく公文書だ。</p>
+        <p>拘束するかどうかは裁判所の令状審査を経て決まり、審査の日程と8人の具体的な身元・職級は確認されていない。投票率の虚偽入力と投票録の偽変造がどの投票所でどのような方法で行われたというのかも、公開された内容はない。今回の請求に対する選管側の公式の立場は確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="ses">
+      <div class="kick">経済 · 半導体部品<span>✓ 4社 · 契約規模と供給開始の時期は未確認</span></div>
+      <h3 class="hl">エヌビディア暫定CEO「サムスン電機と半導体基板の新規供給契約」…MLCCまで協力拡大</h3>
+      <div class="body">
+        <p>エヌビディアのコレット・クレス暫定最高経営責任者(CEO)が17日(米国時間)、サムスン電機と半導体パッケージ基板の新規供給契約を結んだと明らかにした。パッケージ基板は、半導体チップを載せて回路基板とつなぐ部品だ。両社は基板の供給に続き、積層セラミックコンデンサー(MLCC)まで協力の範囲を広げることにし、サムスン電機は次世代のグラフィック処理装置(GPU)向け基板の供給を増やすと伝えられた。MLCCは、電気をいったんためてから送り出して電流を安定させる小さな部品で、スマートフォンやサーバーに幅広く使われる。</p>
+        <p>18日のサムスン電機の株価は7%超上昇し、場中には6%台の上昇が報じられた。契約の規模と供給開始の時期は公開されていない。今回の発表は、ジェンスン・フアンが辞任したあと、エヌビディアが初めて出した業績と同じ日に出た。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="sn">
+      <div class="kick">社会 · 修能<span>✓ 4社 · 1億ウォンの報奨金の詳細は未確認</span></div>
+      <h3 class="hl">イ大統領「修能中に災害メッセージで妨げられたら試験時間の延長を検討」…修能の前日に後続の指示</h3>
+      <div class="body">
+        <p>イ・ジェミョン大統領は、修能を翌日に控えた18日、試験中に緊急災害メッセージが鳴って受験生が妨げられれば、その分だけ試験時間を延ばす案を検討すると明らかにした。政府は、携帯電話を提出しなかった受験生を見つけ出すため、試験中に災害メッセージを予告なしに追加で送る案も検討している。イ大統領は、修能の問題用紙がAIにアップロードされたかを全数調査し、不正行為を厳しく取り締まる考えも明らかにした。17日にハン・ソンスク首相が発表した対策の後続措置だ。</p>
+        <p>修能は19日に行われ、18日の予備召集の対象の受験生は55万人余りだ。イ大統領が不正行為に1億ウォンの報奨金を推進するという報道が出たが、詳細は確認されていない。ナ・ギョンウォンは、対策が「受験生同士で互いに監視しろということだ」と批判したと伝えられ、政府は延期せず予定どおり実施する立場だ。先に、税理士試験の首席合格者がAIによる不正行為をしたと自白したことが知られたという報道もある。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>55万</b><span>18日の予備召集の対象の受験生(報道ベース)</span></div>
+        <div><b>10.5秒</b><span>試験開始前に災害メッセージが鳴る時間(17日の政府発表)</span></div>
+        <div><b>19日</b><span>2027学年度の修能の実施日</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>チュ・ギョンホ大邱市長が無罪を得て、戒厳解除の採決妨害の疑惑がすべて片づいたという話が出回っている。</b> <span>ソウル中央地裁は18日、チュ市長の容疑に1審で無罪を言い渡した。これは1審の判断であり、特検の控訴の有無は確認されていない。</span></div>
+        <div><b>韓中首脳が西海問題の解決で合意したという話が出回っている。</b> <span>1社の報道は、イ・ジェミョン大統領が西海問題の根本的な解決に向けて共に努力しようと述べたと伝えたにすぎない。青瓦台のブリーフィングで合意や解決が発表された内容は確認されていない。</span></div>
+        <div><b>米国で相次ぐシステム障害は外部の攻撃によるものだという話が出回っている。</b> <span>ルビオ氏は、障害が互いに関連しているか悪意ある勢力によるものだという情報は「まったく」ないと述べた。原因についての公式の説明は確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>きょう · 水 11月18日</b><span>夜には、選管職員ら8人の拘束令状を裁判所がいつ審査するかと、特検の追加説明が出るかが注目点だ。米国のシステム障害の原因についての公式の説明と、韓中首脳会談の青瓦台のブリーフィング全文も続く。</span><b>今週</b><span>修能が19日に行われる。政府が検討している災害メッセージの追加送信と試験時間の延長案が実際に適用されるかが焦点だ。</span><b>その後</b><span>チュ・ギョンホ大邱市長の1審無罪に特検が控訴するか、国民の力が検討するという特検の告発が実際に行われるかは決まっていない。</span><b>読者へ</b><span>1社にしか出ていない発言と数字は、公式のブリーフィングや公示が出て確定する。判決文と令状審査の結果は、裁判所の公式の判断として確認される。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集・点線の語 — 経済・法・安全保障・科学の用語を記事の文脈とともに説明する。毎日増える。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = {
+    "kcs":{"kick": "政治 · 韓中首脳会談 · ✓ 5社 · 西海・FTAに関する発言は1社の報道", "title": "イ大統領・習近平主席、深圳で35分の首脳会談…青瓦台「習主席、米朝対話など緊張緩和の努力を支持」", "what": "イ・ジェミョン大統領と習近平中国国家主席は18日、中国・深圳で韓中首脳会談を行った。青瓦台によると、会談は午前11時5分から35分間、チリン山荘で同時通訳により開かれた。一部の報道は会談時間を34分と伝えており、表記が1分異なる。ウィ・ソンラク国家安保室長は書面ブリーフィングで、両首脳が韓中関係を全面復元を超えて、より成熟した関係へ発展させる方策を話し合ったと明らかにした。習主席は米朝対話など朝鮮半島の緊張緩和に向けた様々な努力を支持すると述べた。イ大統領は互恵的な経済協力を、習主席は多国間主義に基づく貿易を土台にしたサプライチェーン協力を強調した。イ大統領が西海問題の根本的な解決に共に努力しようと述べたという内容と、FTAのサービス・投資交渉の妥結を機に協力を広げることにしたという内容は、1社の速報にしか出なかった。両首脳が会うのは今回が3回目だ。", "why": "韓中首脳の対話は、朝鮮半島情勢と交易環境に同時に影響を与える。中国は北朝鮮と国境を接する隣国であり韓国の主要な交易相手でもあるため、習主席の米朝対話支持の表明は、対北朝鮮外交の方向を見極める手がかりになる。西海問題とFTAの後続交渉は、具体的な合意が出てはじめて実際の変化につながる。", "me": "中国との交易・観光・サプライチェーンにかかわる家計や事業者は、協力拡大の方針が実際の規制緩和や手続きの変化につながるかを見ておきたい。ただし、西海とFTAに関する内容は1社の報道であり、確定した政策として受け取るのは早い。", "a": "政府側の説明は、3回目の首脳会談まで続いた会談が、関係復元後の安定局面を示しているという見方だ。習主席が米朝対話の支持を直接述べた点を外交的な前進とみる。経済協力の拡大への言及も、後続の協議で具体化しうるという期待が込められている。", "b": "ほかの報道は、西海問題のような敏感な懸案は共に努力しようという提案の段階で、合意は発表されていない点を指摘する。習主席が戦略的自律性の堅持に言及したという内容が1社にしか出ていない点もある。成果を評価するには、ブリーフィング全文と後続の措置が必要だという見方だ。", "say": "確認されたのは、会談の日時と時間、青瓦台が伝えた習主席の朝鮮半島の緊張緩和の努力への支持の表明だ。西海問題の提案とFTA交渉の妥結を機にした協力拡大は、1社の速報であり、確定とはみなしにくい。きょうは、青瓦台のブリーフィング全文にこの文言がそのまま出てくるかを見ておきたい。", "src": "聯合ニュース(韓中首脳会談の速報、11/18) · 京郷新聞(習近平の米朝対話支持、11/18) · 東亜日報(青瓦台のブリーフィング、11/18) · 電子新聞(経済協力の強調、11/18) · 朝鮮日報(会談34分、11/18)"},
+    "chk":{"kick": "政治 · 司法 · ✓ 6社 · 判断理由の詳細と控訴の有無は未確認", "title": "チュ・ギョンホ大邱市長、「戒厳解除の採決妨害」で1審無罪…特検は懲役20年を求刑していた", "what": "ソウル中央地裁は18日、12・3非常戒厳の際に国民の力の議員らの戒厳解除の採決を妨害した容疑(内乱重要任務従事)で起訴されたチュ・ギョンホ大邱市長に、1審で無罪を言い渡した。特検はこの事件で懲役20年を求刑していた。裁判部は、内乱への加担が立証されておらず、尹氏の要請があったという点も立証が十分でないと判断したと報じられた。チュ市長は宣告後、大邱市政に全力を尽くすと述べた。国民の力のチャン・ドンヒョク代表は「こういうのが捏造起訴だ」と述べ、国民の力が特検を法歪曲罪で告発する案を検討しているという報道が出た。ハン・ドンフン、イ・ジュンソク、チョン・チョンレ、キム・ミンソクの反応は、それぞれ1社の報道で伝えられた。特検の控訴の有無は確認されていない。", "why": "戒厳解除の採決を妨害したかどうかは、12・3事態の事件で責任の範囲を分ける争点だ。1審の無罪は、同じ事態の別の裁判で似た容疑を判断する基準をめぐる論争を大きくする。1審であるため、控訴審で判断が変わる余地が残っている。", "me": "大邱市政は、有罪の可能性による市長職の空白への懸念から抜け出したという報道がある。政治日程がかかる有権者は、判決の理由が公開された判決文で確認されるまで、断定的な解釈を割り引いて読む必要がある。", "a": "国民の力とハン・ドンフン、イ・ジュンソクは、無罪が特検の無理な捜査・起訴の結果だとみる。チャン・ドンヒョク代表は捏造起訴という表現を使い、特検を法歪曲罪で告発する案も取り沙汰された。この見方は、立証不足が判決で確認されたと強調する。", "b": "チョン・チョンレはチョ・ヒデを弾劾せよと主張し、キム・ミンソクは「あきれた」と反応したと伝えられた。この見方は、判決が12・3事態の責任を軽くしかねないと懸念する。控訴によって再び判断を受けるべきだという要求につながる。", "say": "確認されたのは、ソウル中央地裁の1審の無罪宣告と、特検の懲役20年の求刑だ。裁判部の判断理由の詳細と控訴の有無は、判決文と特検の立場が出てはじめて確認される。政界の反応はそれぞれの立場であり、判決の根拠とは区別して読む必要がある。", "src": "韓国経済(チュ・ギョンホ1審無罪、11/18) · SBS(チュ・ギョンホ1審無罪、11/18) · 京郷新聞(大邱の公職社会の反応、11/18) · 中央日報(立証不十分との判断、11/18) · 毎日新聞(政界の反応、11/18) · ザ・ファクト(チャン・ドンヒョク、キム・ミンソクの反応、11/18)"},
+    "ecs":{"kick": "政治 · 選挙捜査 · ✓ 4社 · 8人の身元と令状審査の日程は未確認", "title": "選管委特検、職員ら8人の拘束令状を請求…「投票率の虚偽入力・公文書の偽変造」容疑", "what": "イ・テハン特別検察官チームは18日、中央選管委など各級の選管に所属する職員ら8人について拘束令状を請求したと明らかにした。キム・ジヌ特検補がソウル瑞草区の特検事務所でブリーフィングを行った。挙げられた容疑は、投票率を虚偽で入力し、投票録などの公文書を偽造・変造したというものだ。6・3地方選挙で投票用紙が不足した事態から5カ月余りで出た令状請求である。拘束するかどうかは裁判所の令状審査を経て決まる。8人の具体的な身元と職級、令状審査の日程は確認されていない。", "why": "選挙管理の記録の正確さは、開票結果を信頼する土台だ。特検が拘束令状まで請求したことは、捜査が参考人の調べの段階を超え、身柄確保を判断する段階へ進んだという意味だ。ただし令状の請求は容疑の確定ではなく、裁判所の判断が出てはじめて事実関係が分かれる。", "me": "投票所で投票用紙を受け取って投票した有権者に、直接の法的な変化はない。選挙管理の手続きを正す制度改善の議論が続く可能性があり、このあと公開される捜査結果と選管の立場を確認しておきたい。", "a": "捜査を支持する見方は、投票率の入力と投票録は選挙管理の核心の記録であり、虚偽入力や変造の疑いは厳正に問うべきだとみる。拘束令状の請求は、証拠隠滅のおそれなどを裁判所が判断する手続きだという説明だ。", "b": "慎重論は、令状請求の段階では容疑が確定したわけではない点を指摘する。8人の役割と容疑ごとの証拠は公開されておらず、選管側の立場も確認されていないため、具体的な評価は早いという見方だ。", "say": "確認されたのは、18日に特検が8人について拘束令状を請求したこと、容疑が投票率の虚偽入力と公文書の偽造・変造であることだ。拘束の可否と具体的な容疑事実は、裁判所の審査結果とその後の起訴状で確認される。きょうは、令状審査の日程が公開されるかを見ておきたい。", "src": "聯合ニュース(選管職員8人の拘束令状、11/18) · 韓国経済(選管委特検の令状請求、11/18) · 京郷新聞(特検のブリーフィング、11/18) · ソウル新聞(投票録の偽変造容疑、11/18)"},
+    "ses":{"kick": "経済 · 半導体部品 · ✓ 4社 · 契約規模と供給開始の時期は未確認", "title": "エヌビディア暫定CEO「サムスン電機と半導体基板の新規供給契約」…MLCCまで協力拡大", "what": "エヌビディアのコレット・クレス暫定最高経営責任者(CEO)は17日(米国時間)、サムスン電機と半導体パッケージ基板の新規供給契約を結んだと明らかにした。両社は基板の供給に続き、積層セラミックコンデンサー(MLCC)まで協力の範囲を広げることにした。サムスン電機は次世代のGPU向け基板の供給を増やすと伝えられた。18日のサムスン電機の株価は7%超上昇し、場中には6%台の上昇が報じられた。契約の規模と供給開始の時期は公開されていない。今回の発表は、ジェンスン・フアン前CEOの辞任後、エヌビディアが初めて出した業績と同じ日に出た。", "why": "AIアクセラレーターはチップ一つだけでは完成せず、パッケージ基板やMLCCのような部品がともに供給される必要がある。大口の顧客が供給契約を公開すれば、その部品メーカーの仕事量とサプライチェーンでの位置が具体的に見えてくる。ただし契約規模がなく、業績への影響は確定できない。", "me": "サムスン電機の株式や関連ファンドを持つ投資家は、このあとの公示で契約の規模と期間が確認されるかを見ておきたい。1日の株価の動きは、契約の効果の全体を意味しない。", "a": "前向きな見方は、エヌビディアが基板とMLCCまで協力を広げたことを、供給関係が一段深まった合図とみる。次世代GPU向け基板の供給が増えるという点を根拠に挙げる。", "b": "慎重な見方は、契約の規模と開始の時期が公開されていない点を指摘する。1日の株価上昇が契約の実際の利益を反映しているかは、このあとの公示と業績で確認すべきだという立場だ。", "say": "確認されたのは、エヌビディアの暫定CEOによる新規供給契約の発表とMLCCの協力拡大、18日のサムスン電機の株価上昇だ。契約の規模と供給の時期は確認されていない。きょうは、サムスン電機の公示や説明で具体的な数値が出るかを見ておきたい。", "src": "朝鮮日報(エヌビディアとサムスン電機の契約、11/18) · 聯合ニュース(GPU向け基板の供給拡大、11/18) · ニュース1(新規契約の速報、11/18) · アジア経済(基板の新規契約、11/18)"},
+    "sn":{"kick": "社会 · 修能 · ✓ 4社 · 1億ウォンの報奨金の詳細は未確認", "title": "イ大統領「修能中に災害メッセージで妨げられたら試験時間の延長を検討」…修能の前日に後続の指示", "what": "イ・ジェミョン大統領は、修能を翌日に控えた18日、試験中に緊急災害メッセージが鳴って受験生が妨げられれば、その分だけ試験時間を延ばす案を検討すると明らかにした。政府は、携帯電話を提出しなかった受験生を見つけ出すため、試験中に災害メッセージを予告なしに追加で送る案を検討している。イ大統領は、修能の問題用紙がAIにアップロードされたかを全数調査し、不正行為を厳しく取り締まると明らかにした。17日にハン・ソンスク首相は、電子機器の持ち込み禁止や試験前の10.5秒の災害メッセージなどの対策を発表した。修能は19日に行われ、18日の予備召集の対象は55万人余りだ。1億ウォンの報奨金の推進は、2社の報道にしか出なかった。", "why": "修能は1回の試験で結果が分かれるため、妨げとなる要因も不正行為も、どちらも公正さの問題につながる。災害メッセージを試験中に使う方式には、携帯電話の所持を見つけ出す効果と、受験生の集中を損なう負担がともにある。試験時間の延長は、その負担を補うための仕組みだ。", "me": "受験生と保護者は、試験場での携帯電話の提出方法や服のボタンのステッカーなど、確認の手続きをあらかじめ知っておくほうがよい。災害メッセージが鳴っても、試験監督の案内に従って落ち着いて対応できるよう備えておきたい。", "a": "政府側の見方は、AI眼鏡など先端機器を使った不正行為が懸念される以上、強い対策が必要だとみる。災害メッセージと全数調査、処罰の強化を組み合わせて抑止力を高めるという説明だ。", "b": "野党と一部の受験生・保護者は、対策の実効性に疑問を示す。ナ・ギョンウォンは、受験生同士で互いに監視しろということだと批判したと伝えられ、一部は修能の延期を求めたが、教育当局は予定どおり実施する立場だ。", "say": "確認されたのは、大統領の時間延長の検討発言と、政府の追加の災害メッセージの不意の送信の検討、修能が19日に行われることだ。1億ウォンの報奨金は、詳細が確認されていない。きょうは、試験時間の延長の具体的な基準と、不意の送信が確定するかを見ておきたい。", "src": "聯合ニュース(試験時間の延長検討と不意の送信の検討、11/18) · 京郷新聞(修能の前日の予備召集、11/18) · 政策ブリーフィング(問題用紙のAIアップロードの全数調査、11/18) · 創業日報(1億ウォンの報奨金の推進、11/18)"},
+    "fx":{"kick": "経済 · ✓ 報道2件", "title": "ウォン/ドル相場、ソウル外国為替市場の午後3時30分の基準値は1,333.0ウォンで5.2ウォン下落", "what": "18日のソウル外国為替市場の午後3時30分の基準値は1,333.0ウォンで、前営業日より5.2ウォン下がった。17日の同じ時刻の基準値は1,338.2ウォンだった。基準値は、ソウル外国為替市場の日中取引が終わる午後3時30分の為替レートだ。17日にはドルが19カ月ぶりの高値をまた更新したと報じられた。今回の下落は、その流れのあとに出た。", "why": "為替レートが下がれば、1ドルを買うのに要するウォンが減り、輸入原材料や海外決済のコストの負担が軽くなる。逆に、海外資産をウォンに換算した価値は減る。1日の動きは方向を確定しない。", "me": "海外通販や旅行、留学費の送金の計画がある家計は、為替の変動をすぐに実感する。両替の時期を決めるときは、1日の基準値ではなく、銀行ごとの売買基準レートを確認するほうがよい。", "a": "楽観的な見方は、1日5.2ウォンの下落がドル高の一息かもしれないとみる。17日に新たに記録した19カ月ぶりの高値が短期的な頂点だったかを確かめようという見方だ。", "b": "慎重な見方は、17日の1,338.2ウォンから下がった幅が大きくないため、トレンドの転換と断定しにくいとみる。ドル高の流れが続きうるので、次の取引日の動きを見守る必要があるという立場だ。", "say": "確認されたのは、18日午後3時30分の基準値1,333.0ウォンと、前営業日比5.2ウォンの下落だ。下落の原因は確認されていない。きょうは、夜間取引で1,330ウォン台が保たれるかを見ておきたい。", "src": "聯合ニュース(ウォン/ドル相場の基準値、11/18) · 毎日経済(為替の基準値、11/18)"},
+    "us":{"kick": "国際 · ✓ 報道2件", "title": "米国でシステム障害相次ぐ…国内セキュリティー株が堅調、ルビオ氏「悪意ある勢力との関連情報はない」", "what": "18日、国内のセキュリティー株と通信機器株が堅調だった。同じころ、米国ではシステム障害が相次いだ。ルビオ氏は、米国の障害が互いに関連しているか悪意ある勢力によるものだという情報はまったくないと述べた。障害の具体的な原因についての公式の説明は確認されていない。米国の航空機の運航が通信の問題で止まったという報道も出た。", "why": "システム障害は、航空・通信のような基盤サービスに直接影響を与える。原因が公開されていない間は、外部の攻撃の可能性をめぐる憶測が広がりやすい。責任ある当局者の発言が、事実関係を分ける基準になる。", "me": "米国の航空便を利用する予定のある旅行者は、航空会社の運航案内を確認しておきたい。セキュリティー株の投資家は、1日の堅調が原因の確定を意味しない点を踏まえる必要がある。", "a": "ルビオ氏の発言は、現時点で外部の攻撃を裏づける情報がない点を強調する。この見方は、障害を根拠なく攻撃に結びつけることを戒める。", "b": "別の見方は、原因が公式の説明で確認されておらず、障害が相次いだ点から、調査結果が出るまで可能性を残しておくべきだとみる。", "say": "確認されたのは、18日の国内セキュリティー株・通信機器株の堅調と、ルビオ氏の「まったくない」という発言だ。障害の原因は確認されていない。きょうは、米国当局の原因の説明が出るかを見ておきたい。", "src": "聯合ニュース(セキュリティー株・通信機器株が堅調、11/18) · AP(米国のシステム障害に関するルビオ氏の発言、11/18)"},
+    "lig":{"kick": "産業 · ✓ 報道2件", "title": "LIG D&A、裁判所の執行停止決定で入札参加資格を維持…1審で敗訴なら2年間制限", "what": "裁判所は、LIG D&Aが出した防衛事業庁の入札参加資格制限処分の執行停止の申し立てを認めた。LIG D&Aは17日の公示でこれを明らかにした。これにより、訴訟が進む間、入札への参加資格に制限はない。1審で敗訴すれば、宣告日から30日がたつ翌日から2年間、入札が制限される。この処分は小型無人機の事業に関連している。LIG D&A側は、訴訟で処分の不合理さを積極的に釈明すると明らかにした。", "why": "防衛企業にとって入札の制限は、新規受注の機会を塞ぐ制裁だ。執行停止は、本案の判断が出る前に処分の効力をいったん止める手続きであり、会社の営業は続く。本案の訴訟で負ければ、制限が再び適用される。", "me": "この会社の株式を持つ投資家にとっては、訴訟の結果が変数として残る。一般の家計には直接の影響は大きくないが、防衛事業の入札に関する制裁がどう適用されるかを示す事例だ。", "a": "会社側の見方は、処分は不合理であり、執行停止の決定がそれを一部裏づけているとみる。訴訟で積極的に釈明するという立場だ。", "b": "慎重な見方は、執行停止が本案の勝敗を意味しないとみる。1審で敗訴すれば2年間の入札制限が適用されるため、不確実性が残るという立場だ。", "say": "確認されたのは、執行停止の決定とそれによる入札資格の維持、1審で敗訴した場合の2年間の入札制限の条件だ。本案の訴訟の判断時期と結果は確認されていない。", "src": "聯合ニュース(入札資格の維持、11/17) · 東亜日報(入札制限の執行停止、11/17)"},
+    "hw":{"kick": "国際 · ✓ 報道1件", "title": "ファーウェイの米国刑事裁判、1審の弁論終結…「20年の犯罪」対「有罪を決めて起訴」という報道", "what": "中国の通信機器メーカー、ファーウェイに対する米国の刑事裁判の1審の弁論が17日(現地時間)に終わったという報道が出た。一方は「20年の犯罪」を、他方は「有罪を決めたうえで起訴した」と主張したという。この内容は1社の報道でしか確認されない。判決の宣告日程は確認されていない。", "why": "弁論終結は、双方の主張の提出が終わり、判決の段階へ移るという意味だ。米中の技術対立のなかで、通信機器メーカーを狙った事件であるため、判決の結果が注目される。", "me": "通信機器を使う一般の消費者に、すぐ変わることはない。裁判は米国の裁判所で進行中の案件だ。ただし、判決がサプライチェーン規制の議論に影響しうるため、後続の報道を見ておきたい。", "a": "一方の主張は、長期にわたって続いた犯罪行為があったという見方だ。この見方は「20年」という期間を掲げて、行為が反復的だったと強調する。", "b": "他方の主張は、有罪を決めたうえで起訴したという見方で、捜査と起訴の公正さを問題にする。両方の主張とも、1社の報道で伝えられた。", "say": "確認されたのは、弁論が17日に終わったという報道と、双方の相反する主張だ。判決が出るまでは、どちらの主張も事実として確定したわけではない。主張の主体と具体的な容疑、宣告の時点は確認されていない。判決の日程が公開されるかを見ておきたい。", "src": "聯合ニュース(ファーウェイの米国裁判、弁論終結、11/18)"},
+    "sc":{"kick": "科学 · ✓ 報道1件", "title": "国家スーパーコンピューター6号機「ハンガン」、実測性能は世界12位との報道", "what": "韓国科学技術情報研究院が今月初めに稼働を始めた国家スーパーコンピューター6号機「ハンガン」の実測性能が世界12位だと明らかにしたという報道が出た。研究院は、この装置が国家の研究開発(R&D)を率いる基盤だと説明したという内容だ。この内容は1社の報道でしか確認されない。具体的な性能の数値は確認されていない。", "why": "スーパーコンピューターは、気象予測、新薬開発、人工知能の学習のように計算量の大きい研究に使われる。実測性能の順位は、国家の研究インフラの水準を測る指標として使われる。", "me": "一般の市民が直接使う装置ではないため、すぐに感じる変化はないが、大学や研究機関が利用して得た研究成果が、気象・保健・産業の技術につながりうる。", "a": "前向きな見方は、世界12位という順位が、国内の研究インフラの競争力を示しているとみる。今月初めに稼働を始めた装置がすぐ上位に入った点を根拠に挙げる。", "b": "慎重な見方は、順位が研究成果につながるかは別であり、利用の方式と資源の配分が重要だとみる。この内容も1社の報道でしか確認されない。", "say": "確認されたのは、6号機「ハンガン」の稼働開始と、世界12位という実測性能の順位の報道だ。性能の数値と公式の順位表は確認されていない。順位表の発表元で同じ順位が確認されるかを見ておきたい。", "src": "聯合ニュース(スパコン6号機ハンガンの実測性能、11/18)"}
+  };
+  const G = {
+    "APEC":{"f": "外交", "d": "アジア・太平洋地域の21の経済体が、貿易・投資の協力を話し合う首脳会議の枠組み。", "w": "今回の韓中首脳会談が開かれた国際会議。"},
+    "戦略的自律性":{"f": "外交", "d": "大国のあいだで特定の陣営に縛られず、独自の判断を守ろうとする外交の方向。", "w": "習近平主席の発言として、1社の速報にしか出ていない表現。"},
+    "FTA":{"f": "経済", "d": "国どうしが関税などの貿易障壁を下げることを決める協定。", "w": "サービス・投資交渉の妥結に関する内容が1社にしか報じられていない。"},
+    "国交樹立":{"f": "外交", "d": "国どうしが公式の外交関係を結ぶこと。", "w": "来年が韓中国交樹立35周年。"},
+    "多国間主義":{"f": "外交", "d": "多くの国が共にルールをつくって問題を解こうという取り組み方。", "w": "習主席が貿易協力で強調した概念。"},
+    "サプライチェーン":{"f": "経済", "d": "原料の調達から生産・流通まで続く物資の流れ。", "w": "韓中協力の強調分野であり、半導体部品の取引の背景。"},
+    "内乱重要任務従事":{"f": "法律", "d": "内乱で重要な役割を担って遂行した容疑で、刑法上の重大犯罪。", "w": "チュ・ギョンホ市長の事件の公訴容疑。"},
+    "戒厳解除の採決":{"f": "法律", "d": "宣布された非常戒厳を、国会が採決で解くようにする手続き。", "w": "チュ市長が妨害したという容疑がかけられた採決。"},
+    "求刑":{"f": "法律", "d": "裁判で検察官が被告人にどのような刑が適当か意見を述べること。", "w": "特検が懲役20年を求刑。"},
+    "1審":{"f": "法律", "d": "裁判の最初の段階で、結果に不服なら控訴できる。", "w": "チュ市長の無罪判決は1審。"},
+    "法歪曲罪":{"f": "法律", "d": "裁判官や検察官が法をわざと歪めて適用したという容疑で告発する趣旨の罪名。", "w": "国民の力が特検の告発を検討するという報道。"},
+    "拘束令状":{"f": "法律", "d": "被疑者の身柄を確保するために裁判所が発付する令状。", "w": "選管職員ら8人について請求された。"},
+    "投票録":{"f": "制度", "d": "投票所で投票用紙の交付と進行状況を記す公文書。", "w": "偽変造容疑の対象の文書。"},
+    "パッケージ基板":{"f": "技術", "d": "半導体チップを載せて回路基板と電気的につなぐ部品。", "w": "エヌビディアとサムスン電機の新規供給契約の品目。"},
+    "MLCC":{"f": "技術", "d": "電気をいったんためて送り出し、電流を安定させる小さな部品(積層セラミックコンデンサー)。", "w": "協力拡大の対象と報じられた部品。"},
+    "GPU":{"f": "技術", "d": "グラフィックスやAIの演算に使う、並列計算の半導体。", "w": "サムスン電機の基板の供給が増える用途。"},
+    "緊急災害メッセージ":{"f": "制度", "d": "災害・安全の状況を携帯電話で一斉に知らせる警報のメッセージ。", "w": "修能中の送信案が議論されている。"},
+    "全数調査":{"f": "制度", "d": "一部ではなく、対象のすべてを漏れなく調べる方式。", "w": "修能の問題用紙のAIアップロードの調査に使われた表現。"},
+    "予備召集":{"f": "制度", "d": "試験の前日に受験生が試験場を確認し、注意事項を聞く手続き。", "w": "18日は受験生55万人余りが対象。"},
+    "執行停止":{"f": "法律", "d": "本案の判決の前に、行政処分の効力をいったん止める裁判所の決定。", "w": "LIG D&Aの入札資格が維持された理由。"},
+    "入札参加資格":{"f": "制度", "d": "公共事業の入札に参加できる資格。", "w": "防衛事業庁の制裁処分の対象。"},
+    "弁論終結":{"f": "法律", "d": "裁判で双方の主張と証拠の提出が終わり、判決の段階へ移ること。", "w": "ファーウェイ裁判の1審の弁論が終わった。"},
+    "基準値":{"f": "経済", "d": "ソウル外国為替市場の日中取引が終わる午後3時30分の為替レート。", "w": "18日は1,333.0ウォン。"},
+    "外国為替市場":{"f": "経済", "d": "ウォンやドルなどの通貨を売り買いする市場。", "w": "ソウル外国為替市場の基準値が下落。"},
+    "セキュリティー株":{"f": "経済", "d": "サイバーセキュリティーのサービス・機器に関連する銘柄。", "w": "18日に堅調だった業種。"},
+    "スーパーコンピューター":{"f": "技術", "d": "大規模な計算をきわめて速く処理する超高性能のコンピューター。", "w": "国家スーパーコンピューター6号機ハンガン。"},
+    "R&D":{"f": "経済", "d": "研究開発の活動全般を指す略語。", "w": "ハンガンが率いる国家の研究開発。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、モーダルの上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

@@ -1,0 +1,337 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>日経平均 · 11月18日 · 完了した終値を確認できず</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>ドル円 · 11月18日 · 完了した終値を確認できず</div>
+    </div>
+    <div class="dateline"><span>No. 45 · 夕刊</span><b>2026年11月18日 水曜日</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="s1">
+      <div class="kick">社会 · 司法<span>✓ 3媒体 · 判断の理由と裁判官の意見の内訳は未確認</span></div>
+      <h2 class="hl">受刑者の投票を認めない公職選挙法の規定は「合憲」、最高裁大法廷が初判断</h2>
+      <p class="deck">服役中の受刑者の投票を一律に認めない公職選挙法の規定について、最高裁判所大法廷が憲法に違反しないとする初めての判断を示した。</p>
+      <div class="body">
+        <p>最高裁判所の大法廷は18日、服役中の受刑者の投票を一律に認めない公職選挙法の規定は、選挙権を保障した憲法に違反しないとして「合憲」と判断した。この規定が憲法に違反するかどうかが争われた裁判で、最高裁が判断を示すのは初めてである。大法廷は、最高裁の裁判官15人全員で審理する法廷で、憲法判断や過去の判例の変更といった重い事件で開かれる。合憲とは、法律の規定が憲法に反しないと裁判所が認めることを指す。</p>
+        <p>問題になったのは、刑務所などで服役している間は一律に投票できないという仕組みである。今回の判断により、この規定は有効であるという扱いが最高裁で示された。ただし、合憲と結論づけた理由の詳しい中身や、裁判官の意見が分かれたかどうかは、現時点の報道では確認できていない。違憲と判断されていれば、国会が法律を見直すかどうかが問われるところだったが、そうはならなかった。今後、規定をめぐる議論が国会などで続くかどうかも、まだ分かっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="s2">
+      <div class="kick">国際 · 外交<span>✓ 2媒体 · 米中ロ会談の議題と高市首相の接触は未確認</span></div>
+      <h3 class="hl">APEC首脳会議が深圳で18日夜に開幕、あすは米中ロ首脳会談の予定と伝えられる</h3>
+      <div class="one">
+        <p>アジア太平洋経済協力会議（APEC）の首脳会議が、中国の深圳で18日夜に開幕する。会議に出席する各国の首脳らが続々と到着しており、2国間の首脳会談なども予定されている。高市首相はフィリピンでの一連の日程を終えて中国に向けて出発した。18日夜には習近平国家主席から出迎えを受けることが想定されているほか、ロシアのプーチン大統領との接触が調整されている。 あす19日には、トランプ米大統領を交えた米中ロ3首脳の会談が開かれる予定と伝えられている。習氏とプーチン氏が事前に考えをすり合わせたとも伝えられたが、会談の議題や結論は確認できていない。日中の首脳会談が開かれるかどうかや、高市首相とプーチン氏の接触が実現するかどうかも、まだ分かっていない。APECは、アジア太平洋の国と地域が貿易や投資の自由化などを話し合う枠組みである。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>愛子さま、外交樹立60周年でシンガポールを訪問し大統領を表敬訪問</b><em>愛子さまは大統領主催の昼食会でおことばを述べ、戦争の苦難を忘れてはならないと語った。訪問は外交樹立60周年の招待による。</em><span>皇室 · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>岩手の県立高校で16歳の男子生徒が今月死亡、7月にいじめの重大事態と認定と伝えられる</b><em>県教育委員会の発表として、学校は7月にいじめの重大事態と認定していたという。生徒は今月、自殺したと伝えられている。</em><span>社会 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>兵庫県警が3歳の娘を死亡させた疑いで29歳の父親を逮捕、否認と伝えられる</b><em>兵庫県警は、兵庫県伊丹市で3歳の娘に暴行して死亡させた疑いで29歳の父親を逮捕した。父親は否認しているという。</em><span>事件 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>KDDI、ネットにつながらず機能を絞った携帯電話の発売へ</b><em>通話やメッセージなど機能を最小限にした携帯電話で、ネットから一時的に離れたい需要を狙う。発売時期や価格は確認できていない。</em><span>通信 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>山口・長生炭鉱で見つかった遺骨とみられる骨、警察が遺族への呼びかけを開始と伝えられる</b><em>戦時中の水没事故で183人が亡くなった炭鉱で、見つかった骨の身元を調べるため、警察庁と山口県警が遺族を探し始めたという。</em><span>社会 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="s3">
+      <div class="kick">政治 · 国会<span>✓ 2媒体 · 採決の時期と修正の有無は未確認</span></div>
+      <h3 class="hl">衆院定数31削減法案が実質審議入り、提出した3党は今国会での成立を目指す</h3>
+      <div class="body">
+        <p>衆議院議員の定数を比例代表で31議席削減する法案が、衆議院の特別委員会で実質的な審議に入った。法案を提出した自民、維新、国民の3党は意義を強調し、今国会での成立を目指している。定数とは、法律で決められた議員の数のことである。比例代表は、政党の得票に応じて議席を配分する選挙の仕組みを指す。実質審議入りとは、提出された法案について、各党が中身に踏み込んだ質疑や意見表明を始める段階をいう。</p>
+        <p>これに対し、ほかの野党からは、比例代表だけで削減することに否定的な意見が出た。野党は反対しており、「裏金問題のすり替えだ」とする批判も出たと伝えられている。法案の採決の時期や、修正が加えられるかどうかは、現時点では確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="s4">
+      <div class="kick">政治 · 政治とカネ<span>✓ 3媒体 · 問責の提出は1媒体のみで伝えられた</span></div>
+      <h3 class="hl">関文科相、2024年3月にも官僚を招いた会費9万円のパーティーを開いたと認める</h3>
+      <div class="body">
+        <p>関文部科学大臣は、2024年3月に東京都内のホテルで開いた政治資金パーティーに、バイオ関係の企業が出席し、経済産業省の担当者から政策の説明を受けていたことを明らかにした。会費は1人9万円だった。関氏は17日には、2024年6月に開いた別の政治資金パーティーについて、法的に問題はないとの認識を示していた。今回の説明は、その別会合にも広がった形である。</p>
+        <p>会費9万円は寄付にはあたらないというのが関氏の説明だと伝えられている。野党の立憲民主党は9万円のパーティー券を問題視し、関氏への問責を提出する構えを示唆したと伝えられている。問責は、国会が大臣の責任を問う意思を示す手続きである。ほかに同様の会合があったかどうかや、参加した企業の数は、現時点では確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="s5">
+      <div class="kick">社会 · 暮らし<span>✓ 3媒体 · 交代の日程と愛称募集は1媒体のみ</span></div>
+      <h3 class="hl">Suicaのペンギンの後継は紫色のウサギに決定、ネット投票で最多得票</h3>
+      <div class="body">
+        <p>JR東日本は、交通系ICカード「Suica」の新しいキャラクターを紫色のウサギに決めたと発表した。「Suicaのペンギン」の後継にあたり、候補の中からネット投票で最も多くの票を集めたという。ペンギンは2001年に誕生し、25年にわたり親しまれてきたと伝えられている。Suicaは、カードやスマートフォンで電車やバスの運賃、店での支払いに使える仕組みである。</p>
+        <p>ペンギンは来年3月に卒業し、来年4月1日に新キャラクターへ正式に交代すると伝えられている。新キャラクターの愛称の募集も始まったと伝えられた。ペンギンが卒業する理由や、新キャラクターの制作者については、現時点で確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>紫色</b><span>新キャラクターの色(複数の報道)</span></div>
+        <div><b>2001年</b><span>ペンギンの誕生年(1媒体の報道)</span></div>
+        <div><b>来年4月1日</b><span>正式な交代日(1媒体の報道)</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>最高裁が受刑者の投票を認める判断をした</b> <span>最高裁大法廷が18日に示したのは、受刑者の投票を一律に認めない規定は「合憲」とする判断で、認める方向の判断ではない。</span></div>
+        <div><b>衆院定数31削減法案はすでに成立した</b> <span>法案は18日に衆議院の特別委員会で実質審議に入った段階で、提出した3党は今国会での成立を目指すと述べている。成立したとの発表は確認できていない。</span></div>
+        <div><b>関文科相が辞任した</b> <span>関氏は17日に、パーティーについて法的に問題はないとの認識を示している。辞任を表明したとの発表は確認できておらず、野党は問責の提出を示唆したと伝えられている。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今夜 · 水 11月18日</b><span>APEC首脳会議が深圳で開幕する。高市首相が習近平国家主席から出迎えを受けるか、プーチン大統領と接触するかが焦点になる。</span><b>明日 · 木 11月19日</b><span>トランプ米大統領を交えた米中ロ3首脳の会談が予定されていると伝えられる。議題や結果が公表されるかを確認したい。</span><b>20日</b><span>岐阜県の陸上自衛隊の小銃発砲事件の初公判が開かれる予定と伝えられる。量刑が争点になるという。</span><b>読者へ</b><span>「と伝えられる」と書いた項目は、1つの報道だけで確認できたもの。公式発表や続報が出るまで確定扱いにしない。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "s1":{"kick": "社会 · 司法 · ✓ 3媒体 · 判断の理由と裁判官の意見の内訳は未確認", "title": "受刑者の投票を認めない公職選挙法の規定は「合憲」、最高裁大法廷が初判断", "what": "最高裁判所の大法廷は18日、服役中の受刑者の投票を一律に認めない公職選挙法の規定について、選挙権を保障した憲法に違反しないとして「合憲」と判断した。この規定が憲法に違反するかどうかが争われた裁判で、最高裁が判断を示したのは初めてである。大法廷は最高裁の裁判官15人全員で審理する法廷である。判断の理由の詳しい中身と、裁判官の意見の内訳は確認できていない。", "why": "選挙権は、憲法が国民に保障する政治参加の基本的な権利である。その権利を一部の人について法律で制限できるかどうかは、制限に合理的な理由があるかで判断される。最高裁の判断は、同種の訴訟や国会の議論の前提になる。", "me": "刑事事件で有罪になり服役することと、選挙権を持つことの関係は、普段は意識されにくい。今回の判断で、服役中は投票できないという現行の扱いが当面続くことを知っておきたい。出所後の選挙権は別の話である。", "a": "受刑者であっても選挙権は国民の基本的な権利であり、制限は最小限にとどめるべきだとする見方がある。投票の機会を奪うことは社会復帰の妨げにもなりうると考える立場である。", "b": "刑罰を受けている間は一定の権利が制限されてもやむを得ず、一律の扱いは公平だとする見方がある。選挙の公正を保つうえで、明確な線引きが必要だと考える立場である。", "say": "確認できたのは、最高裁大法廷が合憲と判断したことと、この規定をめぐる判断は初めてだということまでである。理由の詳細と裁判官の意見の分かれ方は確認できていない。判決文が公表されたあと、どの点を根拠にしたのかを確かめたい。", "src": "NHK(受刑者の選挙権制限は合憲、11/18) · 朝日新聞(受刑者の投票を認めないのは合憲、11/18) · 毎日新聞(公選法規定は合憲、11/18)"},
+    "s2":{"kick": "国際 · 外交 · ✓ 2媒体 · 米中ロ会談の議題と高市首相の接触は未確認", "title": "APEC首脳会議が深圳で18日夜に開幕、あすは米中ロ首脳会談の予定と伝えられる", "what": "アジア太平洋経済協力会議（APEC）の首脳会議が、中国の深圳で18日夜に開幕する。各国の首脳らが到着し、2国間の首脳会談なども予定されている。高市首相はフィリピンの日程を終えて中国へ出発した。18日夜に習近平国家主席から出迎えを受けることが想定され、ロシアのプーチン大統領との接触が調整されている。19日にはトランプ米大統領を交えた米中ロ3首脳の会談が予定されていると伝えられている。", "why": "APECは、貿易や投資の自由化を話し合う場として、各国の首脳が顔を合わせる機会になる。会議の場で個別の会談が重なると、枠組みの本題とは別に、2国間の関係が動くことがある。今回は米中ロの首脳が同じ場に集まる点が目を引く。", "me": "貿易や投資をめぐる各国の合意は、輸出入の条件や物価、企業の海外展開に影響する。日本が会議でどう立ち回るかは、輸出入に関わる事業者や、海外旅行をする人にとっても無縁ではない。", "a": "首脳が直接会って話すことで、対立する国どうしでも対話の窓口が保たれるという見方がある。会談を重ねること自体に意味があると考える立場である。", "b": "会談が開かれても、具体的な合意や成果につながるとは限らないという見方がある。日本が主要な会談の枠から外れるのではないかと懸念する立場もある。", "say": "確認できたのは、会議の開幕予定、高市首相の出発、19日に米中ロの会談が予定されていると伝えられている点までである。会談の議題と、日中首脳の接触や、高市首相とプーチン氏の接触が実現するかは確認できていない。今夜の出迎えの様子と、明日の会談の発表を見たい。", "src": "NHK(今夜APEC首脳会議、11/18) · 毎日新聞(習氏とプーチン氏が会談へ、11/18)"},
+    "s3":{"kick": "政治 · 国会 · ✓ 2媒体 · 採決の時期と修正の有無は未確認", "title": "衆院定数31削減法案が実質審議入り、提出した3党は今国会での成立を目指す", "what": "衆議院議員の定数を比例代表で31議席削減する法案が、衆議院の特別委員会で実質的な審議に入った。法案を提出した自民、維新、国民の3党は意義を強調し、今国会での成立を目指している。ほかの野党からは、比例代表だけで削減することに否定的な意見が出た。野党は反対しており、「裏金問題のすり替えだ」とする批判が出たと伝えられている。採決の時期は確認できていない。", "why": "定数は、国会の議席の総数と、各地域や政党への配分に直結する。比例代表は小政党にも議席が回りやすい仕組みであり、ここだけを減らすと議席の配分に偏りが出るという懸念が生じやすい。会期内に成立させるには、委員会と本会議の日程を詰める必要がある。", "me": "議員の数が減ると、自分が投票する政党の議席のあり方が変わりうる。議員の報酬や国会の費用にも関わる話であり、今後の審議の経過を知っておくことが、選挙での判断材料になる。", "a": "議員の数を減らすことは、身を切る改革として国民に理解されやすく、国会の効率化につながるという見方がある。提出した3党がそのように説明している。", "b": "削減を比例代表に限ることは、多様な民意が議席に反映されにくくなるという見方がある。政治とカネの問題への対応が先で、定数の話にすり替えるべきでないと考える立場である。", "say": "確認できたのは、実質審議に入ったことと、提出3党が今国会の成立を目指していること、ほかの野党が批判していることまでである。採決の日程と修正の有無は確認できていない。今後は、与野党の協議と委員会の日程を見たい。", "src": "NHK(定数31削減法案、特別委で各党が意見表明、11/18) · 朝日新聞(定数31減法案が実質審議入り、11/18)"},
+    "s4":{"kick": "政治 · 政治とカネ · ✓ 3媒体 · 問責の提出は1媒体のみで伝えられた", "title": "関文科相、2024年3月にも官僚を招いた会費9万円のパーティーを開いたと認める", "what": "関文部科学大臣は、2024年3月に東京都内のホテルで開いた政治資金パーティーに、バイオ関係の企業が出席し、経済産業省の担当者から政策の説明を受けたことを明らかにした。会費は1人9万円で、寄付にはあたらないというのが関氏の説明だと伝えられている。関氏は17日には、2024年6月の政治資金パーティーについて法的に問題はないとの認識を示していた。立憲民主党が問責の提出を示唆したと伝えられている。", "why": "政治資金パーティーは、会費の形で政治家が資金を集める手段であり、会費と寄付の線引きは資金の透明性に関わる。行政の担当者が企業向けに政策を説明する場であれば、政策と資金の関係に疑問が向けられやすい。問責は、国会が大臣の責任を問う意思を示す手続きである。", "me": "政治資金の集め方は、政策の決まり方への信頼に影響する。大臣の説明が今後どう変わるか、ほかの会合が明らかになるかは、続報で確かめられる。", "a": "法的に問題がなければ、パーティーの開催自体は許されるという見方がある。説明を重ねた関氏の対応を、まずは見守るべきだと考える立場である。", "b": "官僚を招き、企業から高額の会費を集める形には、政策への影響が疑われるという見方がある。法的に問題がなくても、説明責任は別に問われるべきだと考える立場である。", "say": "確認できたのは、2024年3月のパーティーの開催と、会費9万円、バイオ関係の企業の出席と経産省の担当者の説明までである。問責の提出は1つの報道でしか確認できていない。ほかの会合の有無と、野党の次の動きを見たい。", "src": "NHK(関文科相、別会合にもバイオ企業、11/18) · 毎日新聞(官僚を招いた別の1人9万円パーティー、11/18) · 時事通信(立民、関文科相問責の提出示唆、11/17)"},
+    "s5":{"kick": "社会 · 暮らし · ✓ 3媒体 · 交代の日程と愛称募集は1媒体のみ", "title": "Suicaのペンギンの後継は紫色のウサギに決定、ネット投票で最多得票", "what": "JR東日本は、交通系ICカード「Suica」の新しいキャラクターを紫色のウサギに決めたと発表した。「Suicaのペンギン」の後継にあたり、ネット投票で最多の票を集めた。ペンギンは2001年に誕生し、25年にわたり親しまれたと伝えられている。ペンギンは来年3月に卒業し、来年4月1日に正式に交代すると伝えられ、愛称の募集も始まったと伝えられた。", "why": "駅や電車で目にするキャラクターは、サービスの顔として長く使われる。後継の決定は、ネット投票という形で利用者を巻き込んで進められた。", "me": "Suicaを日常的に使う人にとっては、カードや駅の表示のデザインが少しずつ変わる。愛称の募集に応募できるかどうかは、公式の案内で確認するとよい。", "a": "親しまれたペンギンの卒業を惜しむ声があるという見方がある。新しいキャラクターにも愛着が育つかを見守る立場である。", "b": "新しいキャラクターで駅や商品の展開が広がり、話題づくりにもなるという見方がある。変化を前向きに受け止める立場である。", "say": "確認できたのは、紫色のウサギに決まったこととネット投票で最多得票だったことまでである。交代の日程や愛称募集は1つの報道でしか確認できていない。JR東日本の公式発表で日程と愛称の募集の方法を確かめたい。", "src": "朝日新聞(Suica2代目キャラはウサギ、11/18) · 毎日新聞(新キャラは紫色のウサギ、11/18) · 日本経済新聞(Suicaペンギン後継は紫のウサギ、11/18)"},
+    "i1":{"kick": "皇室 · ✓ 3媒体", "title": "愛子さま、外交樹立60周年でシンガポールを訪問し大統領を表敬訪問", "what": "愛子さまは、外交樹立60周年の招待を受けてシンガポールを訪れ、大統領を表敬訪問した。大統領主催の昼食会でおことばを述べ、両国の友好を受け継ぎ交流を広げる一助にしたいと語った。戦争の苦難を忘れてはならないとも語った。訪問の日程の詳細や、ほかの訪問先は確認できていない。", "why": "皇室の海外訪問は、相手国との友好関係を示す機会になる。外交樹立の節目には、過去の歴史への言及が注目される。今回の訪問は、外交樹立60周年の招待に応じたものである。", "me": "海外の国との関係が、歴史と交流の積み重ねで続いていることを知るきっかけになる。訪問先の様子は、現地の報道でも確かめられる。皇室の外国訪問は、国どうしの節目の年に重なることが多く、各国の歴史認識への言及も注目される。", "a": "節目の訪問が両国の友好を深めるという見方がある。若い世代の交流を広げる意義を重く見る立場である。", "b": "おことばで歴史に触れた点を、慎重に受け止めるべきだという見方がある。言葉の一つ一つが外交上の意味を持つと考える立場である。", "say": "確認できたのは、訪問と、昼食会でのおことばの内容までである。訪問中の他の日程は確認できていない。続報で日程と現地の反応を見たい。", "src": "NHK(愛子さま、シンガポール大統領を表敬訪問、11/18) · 朝日新聞(愛子さま、昼食会でのおことば、11/18) · 毎日新聞(愛子さまのおことば、11/18)"},
+    "i2":{"kick": "社会 · ✓ 1媒体", "title": "岩手の県立高校で16歳の男子生徒が今月死亡、7月にいじめの重大事態と認定と伝えられる", "what": "岩手県の県立高校に通っていた16歳の男子生徒が、ほかの生徒から「汚い」などと言われ、学校はことし7月にいじめの重大事態と認定していたと、県教育委員会が発表したと伝えられている。生徒は今月、自殺したと伝えられている。重大事態は、いじめで生命や心身に重大な被害が生じた疑いがある場合などに、学校が調査する扱いである。詳しい経緯は確認できていない。", "why": "重大事態の認定後に生徒が亡くなったと伝えられており、学校と教育委員会の対応が検証されることになる。認定から死亡までの間に、どんな支援や対応が行われたかが焦点になる。", "me": "つらいときは一人で抱え込まず、身近な人や、お住まいの自治体、よりそいホットラインなどの相談窓口に連絡してほしい。子どもの様子の変化に気づいたときは、学校や専門の窓口に早めに相談する。", "a": "学校が認定した後の対応が十分だったかを調べるべきだという見方がある。再発防止の仕組みを整える必要があると考える立場である。", "b": "原因を一つに決めつけず、事実を丁寧に確かめるべきだという見方がある。遺族や関係者への配慮を優先する立場である。", "say": "確認できたのは、重大事態の認定、県教育委員会の発表、生徒の死亡までで、1つの報道でしか確認できていない。経緯と原因は確認できていない。続報では、県教育委員会の調査の方針を見たい。", "src": "NHK(岩手の県立高校でいじめ重大事態、11/18)"},
+    "i3":{"kick": "事件 · ✓ 2媒体", "title": "兵庫県警が3歳の娘を死亡させた疑いで29歳の父親を逮捕、否認と伝えられる", "what": "兵庫県警は、兵庫県伊丹市で3歳の娘に暴行して死亡させた疑いで、29歳の父親を逮捕した。父親は容疑を否認していると伝えられている。暴行の内容や、娘が亡くなった日時は確認できていない。逮捕の容疑は暴行と、それによる死亡である。県警は、暴行に至った経緯などを調べていると伝えられる。", "why": "幼い子どもが亡くなる事件では、家庭内の状況や周囲の関わりが調べられる。逮捕後の捜査で、暴行の経緯と死亡との関係が明らかになるかが焦点になる。", "me": "子育てで悩んだときは、自治体の相談窓口や児童相談所の全国共通ダイヤルなどに早めに相談できる。近所で子どもの様子が心配なときの通報先も、あらかじめ確認しておきたい。", "a": "家庭内の事件を早期に把握する仕組みが必要だという見方がある。周囲の気づきと行政の連携を重く見る立場である。", "b": "逮捕は捜査の入り口で、事実は今後の捜査で確かめるべきだという見方がある。容疑を否認している点を踏まえ、断定を避ける立場である。", "say": "確認できたのは、逮捕、29歳の父親、3歳の娘の死亡の疑い、否認と伝えられている点までである。経緯は確認できていない。続報では、捜査の進展と、行政の関わりの有無を見たい。", "src": "朝日新聞(3歳娘に暴行、29歳父親を逮捕、11/18) · 毎日新聞(3歳娘に暴行、父親逮捕、11/18)"},
+    "i4":{"kick": "通信 · ✓ 2媒体", "title": "KDDI、ネットにつながらず機能を絞った携帯電話の発売へ", "what": "KDDIは、通話やメッセージのやりとりなど機能を最小限にした携帯電話を発売すると発表した。ネットにはつながらない設計である。インターネットから一時的に離れたい需要を取り込むねらいとされる。発売の時期や価格は確認できていない。", "why": "スマートフォンが広がり、常にネットにつながる生活が当たり前になった。つながらない端末は、通話や連絡だけを残す選択肢として位置づけられる。大手が出すこと自体が、需要の存在を示す動きになる。ただし、どの機能が使えてどの機能が使えないのか、具体的な範囲は確認できていない。", "me": "スマートフォンの使いすぎが気になる人や、子どもやお年寄りに持たせる端末を探す人は、選択肢が増える。メインの端末と別に持つ使い方もある。", "a": "ネットから離れたい人の受け皿になるという見方がある。使い方を選べる商品が増えることを歓迎する立場である。", "b": "買い物や支払いなど、ネットに頼る場面が多い中で、どれだけ使われるかは分からないという見方がある。需要は限られると考える立場である。", "say": "確認できたのは、KDDIが機能を絞った携帯電話を発売する方針を発表したことまでである。価格や発売日は確認できていない。続報で、対象の利用者と使える機能の範囲を見たい。", "src": "NHK(ネットにつながらない携帯電話発売へ、11/18) · ITmedia NEWS(ネットにつながらない携帯、KDDIが発売へ、11/18)"},
+    "i5":{"kick": "社会 · ✓ 1媒体", "title": "山口・長生炭鉱で見つかった遺骨とみられる骨、警察が遺族への呼びかけを開始と伝えられる", "what": "山口県宇部市の長生炭鉱は、戦時中の水没事故で183人が亡くなった炭鉱である。この炭鉱で見つかった犠牲者の遺骨とみられる骨の身元を調べるため、警察庁と山口県警は、ホームページやSNSで遺族を探す呼びかけを始めたと伝えられている。呼びかけの対象や連絡の方法の詳細は確認できていない。", "why": "身元を特定するには、遺族からの情報や、DNA型などの照合が必要になる。事故から長い年月がたち、遺族を探す作業は難しくなっている。呼びかけを広く届けるため、公式サイトやSNSといった複数の手段が使われている。", "me": "この炭鉱に家族や親族が関わっていた心当たりがある人は、警察の案内を確認できる。戦時中の出来事を、地域の歴史として知る機会にもなる。", "a": "遺族への呼びかけが、身元の特定と返還につながるという見方がある。時間が経つほど手がかりが失われると考える立場である。", "b": "遺骨かどうかの確認や、身元の特定には慎重さが必要だという見方がある。確認の手順を丁寧に示すべきだと考える立場である。", "say": "確認できたのは、骨が見つかっていることと、警察庁と山口県警が遺族を探す呼びかけを始めたことまでで、1つの報道でしか確認できていない。身元がいつ分かるかは確認できていない。続報を見たい。", "src": "NHK(長生炭鉱の遺骨、身元特定へ呼びかけ、11/18)"}
+  };
+  const G = {
+    "大法廷":{"f": "法・制度", "d": "最高裁の裁判官15人全員で審理する法廷。憲法判断などの重大な事件で開かれる。", "w": "受刑者の選挙権をめぐる判断を示した。"},
+    "公職選挙法":{"f": "法・制度", "d": "選挙のやり方や選挙権・被選挙権のルールを定めた法律。", "w": "受刑者の投票を認めない規定が争われた。"},
+    "合憲":{"f": "法・制度", "d": "法律の規定が憲法に違反しないと裁判所が認めること。", "w": "最高裁が受刑者の投票制限を合憲とした。"},
+    "選挙権":{"f": "法・制度", "d": "選挙で投票できる権利。憲法が保障している。", "w": "受刑者の扱いが争われた。"},
+    "APEC":{"f": "国際経済", "d": "アジア太平洋の国と地域が貿易や投資の自由化を話し合う協力の枠組み。", "w": "首脳会議が深圳で開幕する。"},
+    "2国間":{"f": "外交", "d": "2つの国だけで行う話し合いや協議。", "w": "首脳会議の場で2国間会談が予定される。"},
+    "定数":{"f": "政治", "d": "法律で決められた議員の数。", "w": "衆院の比例代表で31議席の削減が提案された。"},
+    "比例代表":{"f": "政治", "d": "政党の得票に応じて議席を配分する選挙の仕組み。", "w": "削減の対象とされた枠。"},
+    "特別委員会":{"f": "政治", "d": "特定の議題を審議するために国会が設ける委員会。", "w": "定数削減法案を審議している。"},
+    "実質審議入り":{"f": "政治", "d": "法案の中身に踏み込んだ質疑や意見表明を始める段階。", "w": "定数31削減法案がこの段階に入った。"},
+    "政治資金パーティー":{"f": "政治", "d": "政治家や政党が会費の形で資金を集めるために開く催し。", "w": "関文科相の会合が問題になっている。"},
+    "問責":{"f": "政治", "d": "国会が大臣などの責任を問う意思を示すこと。", "w": "野党が提出を示唆したと伝えられる。"},
+    "寄付":{"f": "法・制度", "d": "見返りを求めずに金銭などを渡すこと。政治資金では規制の対象になる。", "w": "会費9万円が寄付にあたるかが論点になった。"},
+    "交通系ICカード":{"f": "技術", "d": "電車やバスの運賃などを支払えるICカードの総称。", "w": "Suicaがその一つである。"},
+    "重大事態":{"f": "法・制度", "d": "いじめで生命や心身に重大な被害が生じた疑いがある場合などに、学校が調査する扱い。", "w": "岩手の高校が7月に認定していた。"},
+    "表敬訪問":{"f": "外交", "d": "敬意を表すために相手を訪ねること。", "w": "愛子さまが大統領を表敬した。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

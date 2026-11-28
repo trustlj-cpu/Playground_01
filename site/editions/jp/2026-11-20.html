@@ -1,0 +1,344 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>日経平均 · 11/19 · 終値は確認できず</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>円相場 · 11/19 · 終値は確認できず</div>
+    </div>
+    <div class="dateline"><span>No. 47 · 朝刊</span><b>2026年11月20日(金)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="a1">
+      <div class="kick">国際 · 外交<span>✓ 5媒体 · 合意の中身と履行は未確認</span></div>
+      <h2 class="hl">米中ロ首脳が初の3カ国会談 高市首相は習氏と握手、正式会談はなかったと伝えられる</h2>
+      <p class="deck">深圳のAPEC首脳会議に合わせ、トランプ氏・習氏・プーチン氏が初めて同席した。日本は会談の外側に置かれた。</p>
+      <div class="body">
+        <p>中国・深圳でのAPEC首脳会議に合わせ、トランプ米大統領、習近平国家主席、プーチン露大統領の3人が19日、初めて3カ国で会談した。トランプ氏は核軍縮の議論を提起し、習氏とプーチン氏は「戦勝国」としての立場を強調したと伝えられる。中国とロシアは、3カ国が国連改革、燃料供給の拡大、核をめぐる対話で一致したと説明している。ロシア外務省は、3首脳による平和に関する宣言の全文を公表した。精製油の供給を増やすことで3者が合意したとの報道もあるが、量や時期は示されていない。トランプ氏は会談後、深圳を離れた。</p>
+        <p>日本の高市早苗首相は初めて訪中し、APEC首脳会議に出席した。習氏とは18日と19日の2度握手し、19日は十数秒ほど言葉をかけたと伝えられる。一方で日中の正式な首脳会談は設定されず、主要国のなかでは異例とされる。やりとりの中身は、「外交上のやりとりはなかった」とする報道と、短い声かけがあったとする報道で食い違っている。官房長官は中国側の接遇を「例年通り」と述べた。高市氏は首脳会議で「ルールに基づく国際経済秩序」の重要性を訴え、閉幕後の記者会見では台湾有事を問われ「日本の立場に変わりない」と答えたと伝えられる。プーチン氏とも会場で言葉を交わし、日ロ首脳の接触は約7年ぶりとされる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="a2">
+      <div class="kick">マーケット · IPO<span>✓ 6媒体 · 調達額は813億ドルと約1073億ドルで食い違い</span></div>
+      <h3 class="hl">アンソロピックがナスダック上場、公開価格83ドルに対し初値は111.5ドル</h3>
+      <div class="one">
+        <p>米AI企業のアンソロピックが19日(米東部時間)、ナスダック市場に上場した。IPO(新規株式公開)の公開価格は1株83ドルで、評価額は約1兆5千億ドル(約239兆円)とされる。初値は111.5ドルで、公開価格を3割強上回ったと伝えられるが、その後は値を下げる場面もあったという。調達額は約13兆円、813億ドルとする報道がある一方、約1073億ドルとする集計もあり、数字は食い違っている。ことし6月に上場した宇宙開発企業を上回る過去最大規模とされる。 同じ日のニューヨーク株式市場では、AI開発の先行きへの不透明感などを背景に売りが広がり、ダウ平均が前日終値比で一時1100ドルを超えて下落し、5万ドルを割り込んだと伝えられる。前日の18日には、S&amp;P500種が7月以来の安値まで下げたとの報道もある。日本時間19日の前場では日経平均が続伸し、アンソロピック上場への期待が支えになったとされる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="i1"><b>韓国最高裁、非常戒厳をめぐる元首相の審理を差し戻し</b><em>前大統領の非常戒厳をめぐる事件で、元首相の裁判のやり直しが命じられた。判断は19日に示されたと伝えられる。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i2"><b>JT、ロシア管理下の子会社を連結除外し1兆3700億円超の損失計上へと報じられる</b><em>損失は1兆3700億円から1兆3770億円と伝えられ、赤字転落の見通し。ロシアの管理下に入った子会社を連結除外する。</em><span>企業 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i3"><b>脊髄損傷の再生医療「ステミラック」、条件付き承認を経て本承認と報じられる</b><em>脊髄損傷を対象とする再生医療製品について、本承認が出たと1媒体が伝えた。価格や適応条件の詳細は確認されていない。</em><span>医療 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i4"><b>日印2プラス2で合意、自衛隊がインドでミサイル発射訓練を行えるようになると報じられる</b><em>日本とインドの外務・防衛閣僚協議で、自衛隊がインドでミサイルの発射訓練を行えるようにすることで合意したと1媒体が伝えた。</em><span>安保 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="i5"><b>COP31の改定案文から化石燃料への言及が消えたと報じられる</b><em>最初の案文には化石燃料と使用の抑制に触れた箇所が2か所あったが、改定案には言及がないという。各国の意見が割れる論点である。</em><span>環境 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="a3">
+      <div class="kick">国際 · 司法<span>✓ 3媒体 · 賠償・執行の内容は未確認</span></div>
+      <h3 class="hl">国際司法裁判所、ミャンマーのロヒンギャ迫害をジェノサイドと認定</h3>
+      <div class="body">
+        <p>国連の最高司法機関である国際司法裁判所(ICJ)は19日、ミャンマーによるロヒンギャへの迫害をジェノサイド(集団殺害)と認定する判決を言い渡した。ロヒンギャはミャンマーに住むイスラム教徒の少数民族で、判決はジェノサイド条約に基づく国家間の訴訟で出された。国家の責任をジェノサイドで認めた判決は、初めてと伝えられる。</p>
+        <p>判決は当事国を法的に拘束するが、強制的に執行する仕組みは限られている。南アフリカがイスラエルを訴えたガザをめぐる訴訟に影響するとの見方も出ている。賠償の額や再発防止の具体策は、現時点で明らかになっていない。ミャンマー側の反応も確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="a4">
+      <div class="kick">経済 · 金融<span>✓ 4媒体 · 漏えい件数と手口は未確認</span></div>
+      <h3 class="hl">金融庁が楽天証券に報告徴求命令、不正アクセスをめぐり異例の対応とされる</h3>
+      <div class="body">
+        <p>金融庁は19日、楽天証券に報告徴求命令を出した。不正アクセスによる顧客情報の漏えいをめぐる措置で、異例の対応とされる。報告徴求命令は、問題の経緯や再発防止策を行政に報告させるための手続きである。</p>
+        <p>楽天証券は漏えいへの対応を急いでいる。顧客情報がテスト用の環境に置かれていたと一部で報じられ、専門家は一般的でない運用だと指摘している。ただ、漏えいした件数や情報の種類、不正アクセスの手口は、現時点で確認されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="a5">
+      <div class="kick">政治 · 国会<span>✓ 2媒体 · 関文科相の件は1媒体の報道</span></div>
+      <h3 class="hl">消費税減税法案の審議が続く参院、関文科相のパーティーめぐり与野党の協議が続く</h3>
+      <div class="body">
+        <p>参議院の特別委員会で、食料品の消費税を減らす関連法案の審議が続いている。与党は今国会の会期内に法案を成立させるよう求め、野党は関文部科学大臣が開いた政治資金パーティーをめぐる追及を強めていると伝えられる。19日の理事会では、政府側が関連する資料を示したが、野党側は「不十分」と指摘し、引き続き協議することになった。</p>
+        <p>高市首相は中国・深圳での記者会見で、減税法案の審議に「誠意を持って」臨む考えを示した。理事会は協議を続けるとしており、結論は20日以降に持ち越される形になった。パーティーの具体的な問題点や、法案の採決日程は、報道では示されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>特別委員会<i>政治</i></b><p>特定のテーマを集中して審議するために、国会が設ける委員会。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>米中ロの首脳が精製油の供給拡大で合意した。</b> <span>中国とロシアは、3カ国が国連改革、燃料供給の拡大、核をめぐる対話で一致したと説明している。精製油の供給を増やすことで合意したとの報道もあるが、量・時期・方法は公表されておらず、米国側の説明も確認できていない。</span></div>
+        <div><b>高市首相が習主席と会談し、外交上の話し合いをした。</b> <span>日中の正式な首脳会談は設定されず、18日と19日に握手を交わし、短い声かけがあったと伝えられる。やりとりの中身は報道で表現が分かれている。官房長官は中国側の接遇を「例年通り」と述べた。</span></div>
+        <div><b>アンソロピックの調達額は1073億ドルだった。</b> <span>調達額は約13兆円、813億ドルとする報道と、約1073億ドルとする集計に分かれている。どちらを基準とするかは公表されておらず、現時点で確定した数字は確認できない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 11月20日(金)</b><span>参院特別委の理事会で、関文科相の資料をめぐる協議の結果が出る。アンソロピック株は上場2日目の取引に入る。楽天証券は金融庁への報告と会社の説明が焦点になる。</span><b>今週</b><span>深圳でのAPEC首脳会議の閉幕を受け、米中ロの3首脳宣言の文言と各国の受け止めが出そろう見通し。COP31の交渉は改定案文をめぐる協議が続く。</span><b>後で</b><span>ICJ判決を受けたミャンマーの対応や、ガザをめぐる訴訟への影響が論点になる。韓国の非常戒厳をめぐる審理は、差し戻し審の日程が焦点。</span><b>読者へ</b><span>楽天証券に口座がある人は、会社からの通知とログイン履歴を確認しておくと安心。パスワードを他のサービスと使い回している場合は変更を検討したい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "a1":{"kick": "国際 · 外交 · ✓ 5媒体 · 合意の中身と履行は未確認", "title": "米中ロ首脳が初の3カ国会談 高市首相は習氏と握手、正式会談はなかったと伝えられる", "what": "19日、中国・深圳でのAPEC首脳会議に合わせ、トランプ米大統領、習近平国家主席、プーチン露大統領が初めて3カ国で会談した。トランプ氏は核軍縮の議論を提起し、習氏とプーチン氏は「戦勝国」としての立場を強調したと伝えられる。中国とロシアは、3カ国が国連改革、燃料供給の拡大、核をめぐる対話で一致したと説明している。ロシア外務省は、3首脳の平和に関する宣言の全文を公表した。トランプ氏は会談後に深圳を離れた。高市首相は18日と19日に習氏と握手し、日中の正式な首脳会談は設定されなかったと伝えられる。官房長官は中国側の接遇を「例年通り」と述べた。", "why": "米中ロの首脳が同じ席に着くこと自体が異例で、核の枠組みやウクライナ情勢など、日本の安全保障に直結する課題の扱いが左右され得る。日本は会談の当事者ではなく、議論の結果を受け取る立場にある。日中首脳会談が設定されなかったことは、台湾や経済をめぐる両国の距離感を映すものとして注目されている。", "me": "燃料や精製油の供給が増えるという説明が実現すれば、ガソリンや電気料金の先行きに間接的に影響し得る。ただ量や時期は示されておらず、家計への影響は現時点で測れない。", "a": "会談を評価する側は、対立する大国の首脳が直接話し、核軍縮や燃料供給という具体的な議題で一致点を示したこと自体を前進と受け止める。宣言の全文が公表されたことも、検証の材料になると見る。", "b": "懸念する側は、3首脳が「戦勝国」を強調したことや、大国が主導して物事を決める構図が、「力による支配」への不安を強めると見る。各国の思惑は食い違っており、舞台づくりが先行したとの分析もある。", "say": "確認できたのは、3首脳が会談したことと、中国・ロシアがその内容を説明したこと。宣言の全文は公表されているが、合意の履行を裏づける数字や日程は出ていない。今日は、宣言の文言と、米国側が合意をどう説明するかを見たい。高市氏と習氏のやりとりは報道で表現が分かれており、現時点では握手と短い声かけにとどまったと整理するのが妥当だ。", "src": "毎日新聞(高市首相と習氏の握手, 11月19日) · NHK(米中ロ首脳会談の開催, 11月19日) · 朝日新聞(米中ロ会談の演出, 11月19日) · The Japan Times(日ロ首脳の接触, 11月19日) · 時事通信(米中ロ首脳が初会談, 11月19日)"},
+    "a2":{"kick": "マーケット · IPO · ✓ 6媒体 · 調達額は813億ドルと約1073億ドルで食い違い", "title": "アンソロピックがナスダック上場、公開価格83ドルに対し初値は111.5ドル", "what": "アンソロピックは19日、米ナスダック市場に上場した。公開価格は1株83ドルで、評価額は約1兆5千億ドル(約239兆円)とされる。初値は111.5ドルで、公開価格を3割強上回ったと伝えられる。調達額は約13兆円、813億ドルとする報道があり、約1073億ドルとする集計もある。ことし6月に上場した宇宙開発企業の調達額を上回る過去最大規模とされる。同じ日のダウ平均は前日終値比で一時1100ドルを超えて下落し、5万ドルを割り込んだと伝えられる。", "why": "IPOは、企業が株式を市場で売り出して資金を集める仕組みで、価格の付き方はAI関連企業全体の評価の目安になる。AI投資への期待と不安が同時に語られる中での上場で、市場の方向感を左右し得る。調達額の食い違いの理由は確認されていないため、数字を読む際はどの基準かを確かめる必要がある。", "me": "日本株や投資信託を通じてAI関連銘柄を持つ人は、米市場の大きな値動きが基準価額に響く可能性がある。上場直後は値動きが大きくなりやすい。", "a": "強気の見方は、初値が公開価格を大きく上回ったことを、AI企業への需要の強さの表れと受け止める。年末に向けた株高への期待を口にする声もある。", "b": "慎重な見方は、上場後に値を下げる場面があったことや、ダウ平均の大幅な下落を挙げ、期待が先行した評価額には不安が残ると指摘する。", "say": "確認できるのは、上場日と公開価格83ドル、初値の水準まで。調達額は813億ドルと約1073億ドルで割れており、どちらが基準かは公表されていない。ダウの下落幅は単独の報道に依拠している。今日は米国時間の2日目の値動きと、調達額の訂正の有無を見たい。", "src": "毎日新聞(調達額13兆円, 11月19日) · 時事通信(調達額と評価額, 11月19日) · The Japan Times(調達額1073億ドル, 11月19日) · BBC(評価額, 11月19日) · NHK(上場とダウ平均, 11月20日) · 朝日新聞(初値, 11月20日)"},
+    "a3":{"kick": "国際 · 司法 · ✓ 3媒体 · 賠償・執行の内容は未確認", "title": "国際司法裁判所、ミャンマーのロヒンギャ迫害をジェノサイドと認定", "what": "国連の最高司法機関である国際司法裁判所(ICJ)は19日、ミャンマーによるロヒンギャ迫害をジェノサイド(集団殺害)と認定する判決を言い渡した。国家の責任をジェノサイドで認めた判決は、初めてと伝えられる。ロヒンギャはミャンマーに住むイスラム教徒の少数民族である。裁判はジェノサイド条約に基づく国家間の訴訟で、判決は当事国を法的に拘束する。判決がガザをめぐる訴訟に与える影響を指摘する見方も出ている。賠償の額や再発防止の具体策、ミャンマー側の反応は、確認されていない。", "why": "ICJの判決は国家の責任を直接問うもので、個人を裁く国際刑事裁判所の手続きとは別の枠組みである。認定の基準が示されたことで、同じ条約を根拠とする他の訴訟の判断材料になり得る。ただし判決を強制的に執行する仕組みは限られており、実際の効果はまだ分からない。", "me": "日本の外交や難民への対応が議論される場面が増える可能性があるが、日常生活への直接の影響は小さい。", "a": "判決を歓迎する側は、被害を受けたロヒンギャの訴えが国際法の場で認められた意義は大きく、責任追及の出発点になると受け止める。", "b": "慎重な見方は、判決に強制力が乏しく、ミャンマー国内の状況がすぐ変わるとは限らないと指摘する。ガザ訴訟への波及をめぐっても見方が分かれている。", "say": "確認できたのは、ICJがジェノサイドと認定したことと、判決日が19日であること。賠償や再発防止の具体策は今回の報道では示されていない。今日は、ミャンマー側の反応と、判決が求める措置の中身を見たい。", "src": "毎日新聞(ICJの判決, 11月19日) · The Japan Times(国家の責任, 11月19日) · ロイター(判決の速報, 11月19日)"},
+    "a4":{"kick": "経済 · 金融 · ✓ 4媒体 · 漏えい件数と手口は未確認", "title": "金融庁が楽天証券に報告徴求命令、不正アクセスをめぐり異例の対応とされる", "what": "金融庁は19日、楽天証券に対し、不正アクセスによる顧客情報の漏えいをめぐり報告徴求命令を出した。報告徴求命令は、法令に基づき、業務や経緯について報告を求める行政上の措置である。この件での命令は異例の対応とされる。楽天証券は漏えいへの対応を急いでいるという。顧客情報がテスト環境に置かれていたと一部で報じられ、専門家は「一般的でない」と指摘している。漏えいした件数や情報の種類は、確認されていない。", "why": "証券口座には氏名や資産の情報が集まるため、情報が外部に出ると、なりすましによる取引や詐欺に使われる恐れがある。金融庁が命令を出す段階に入ったことは、会社側の説明だけでは経緯が足りないと当局が判断したことを意味する。再発防止の中身が焦点になる。", "me": "楽天証券に口座を持つ人は、会社からの通知を確認し、不審なログインや取引がないか確かめておくとよい。パスワードを使い回している場合は、変更を検討したい。", "a": "当局の厳しい対応を支持する立場は、顧客資産を預かる事業者に、情報管理の実態を速やかに開示させる必要があると考える。", "b": "会社の対応を見守る立場は、命令は調査の第一歩にすぎず、被害の範囲が確定する前に責任を断じるのは早いと見る。", "say": "確認できたのは、報告徴求命令が出たことと、会社が対応を急いでいること。漏えいした人数、情報の種類、不正アクセスの手口は公表されていない。テスト環境の件は一部の報道にとどまる。今日は、会社の公式発表と、金融庁への報告期限の有無を見たい。", "src": "朝日新聞(報告徴求命令, 11月19日) · The Japan Times(会社の対応, 11月19日) · ITmedia(テスト環境の指摘, 11月19日) · Yahoo!ニュース(報告徴求命令の要約, 11月19日)"},
+    "a5":{"kick": "政治 · 国会 · ✓ 2媒体 · 関文科相の件は1媒体の報道", "title": "消費税減税法案の審議が続く参院、関文科相のパーティーめぐり与野党の協議が続く", "what": "参議院の特別委員会は、食料品の消費税減税に関する法案を審議している。19日の理事会では、関文部科学大臣が開いた政治資金パーティーに関連する資料を政府側が示した。野党側は資料を不十分だと指摘し、引き続き協議することになった。与党は法案を今国会の会期内に成立させるよう求め、野党は関氏への追及を強めていると伝えられる。高市首相は中国・深圳の記者会見で、減税法案の審議に「誠意を持って」臨む考えを示した。", "why": "食料品の消費税減税は家計に直接関わる政策で、成立の時期が実施時期を左右する。一方、大臣の政治資金の問題が審議の入り口で争点になると、法案の日程が押される場合がある。理事会は審議の進め方を決める場であり、ここでの合意が委員会の開催を左右する。", "me": "減税が実現すれば、食料品にかかる税負担が下がる見込みだが、開始時期や対象の範囲は法案の審議次第で、まだ決まっていない。", "a": "与党側は、物価高への対応を急ぐ必要があり、会期内の成立を目指して審議を進めるべきだとする。", "b": "野党側は、大臣のパーティーをめぐる説明が尽くされない限り、審議に応じにくいとして、追加の資料提出を求める。", "say": "確認できたのは、理事会で資料が示されたことと、野党が不十分としたこと、協議が続くこと。パーティーの具体的な問題点や、法案の採決日程は、報道では示されていない。関氏の件は1媒体の報道に依拠している。今日は、理事会の協議結果と、追加資料の提出の有無を見たい。", "src": "NHK(理事会と野党の指摘, 11月19日) · The Japan Times(首相の発言, 11月19日)"},
+    "i1":{"kick": "国際 · ✓ 2媒体", "title": "韓国最高裁、非常戒厳をめぐる元首相の審理を差し戻し", "what": "韓国の最高裁は19日、前大統領の非常戒厳をめぐる事件で、元首相に関する審理を差し戻した。2024年に前大統領が出した非常戒厳の宣言は、国内に混乱をもたらしたと伝えられる。差し戻しにより、下級審で審理がやり直される。元首相の有罪・無罪は、まだ確定していない。差し戻しの具体的な理由や、次の審理の日程は、確認されていない。", "why": "非常戒厳をめぐる責任追及は、韓国の政治と司法の信頼に関わる問題である。最高裁が差し戻したことで、事実認定や法律の解釈の一部が見直される。決着の時期は後ろにずれる。差し戻し審の結果が出るまで、元首相の法的な立場は変わらない。", "me": "日本の暮らしへの直接の影響は小さいが、隣国の政治の安定は、日韓関係や北東アジアの安全保障を考える材料になる。", "a": "判断を重く見る側は、非常戒厳の責任を問う司法手続きが続くことが、民主主義の歯止めになると見る。", "b": "批判的な側は、差し戻しで決着が遠のき、韓国政治の対立が長引くことを懸念する。", "say": "確認できたのは、最高裁が差し戻したことと、19日の判断であること。差し戻しの理由と新しい審理の日程は報道に出ていない。今日は、差し戻し審の担当裁判所と日程が示されるかを見たい。", "src": "毎日新聞(最高裁の差し戻し, 11月19日) · The Japan Times(元首相の再審理, 11月19日)"},
+    "i2":{"kick": "企業 · ✓ 2媒体", "title": "JT、ロシア管理下の子会社を連結除外し1兆3700億円超の損失計上へと報じられる", "what": "JTが、ロシアの管理下に入った子会社を連結の対象から外し、損失を計上する見通しだと伝えられた。損失額は1兆3700億円、あるいは1兆3770億円と報じられ、数字が分かれている。この結果、JTは赤字に転落する見通しという。子会社がロシアの管理下に入った経緯や時期は、報道では詳しく示されていない。会社の公式発表の全文は、確認されていない。", "why": "連結除外は、子会社の資産や利益を親会社の決算に含めなくなる会計上の扱いで、損失が一度に表に出る。大規模な損失は、配当や投資計画に影響し得る。数字の差の理由は確認されていない。", "me": "JT株を持つ人は、配当方針や業績予想の修正に注意する必要がある。たばこ価格への直接の影響は、現時点では示されていない。", "a": "冷静に受け止める側は、損失は子会社の扱いに伴う会計上のもので、本業の収益力とは切り分けて見るべきだとする。", "b": "懸念する側は、赤字転落の規模が大きく、海外事業のリスク管理のあり方が問われると指摘する。", "say": "確認できたのは、損失が1兆3700億円台で、赤字転落の見通しと伝えられていること。正確な額は1兆3700億円と1兆3770億円で割れており、会社の発表で確定させたい。今日は、会社の開示資料と株価の反応を見たい。", "src": "毎日新聞(損失と赤字転落, 11月19日) · 朝日新聞(連結除外と損失額, 11月19日)"},
+    "i3":{"kick": "医療 · ✓ 1媒体", "title": "脊髄損傷の再生医療「ステミラック」、条件付き承認を経て本承認と報じられる", "what": "脊髄損傷を対象とする再生医療製品「ステミラック」について、条件付き承認を経て本承認が出たと伝えられた。報道は1媒体にとどまる。承認の具体的な適応条件や使い方は、報道では詳しく示されていない。価格や保険の扱いも、確認されていない。承認日や担当の審議会の議論の内容も、現時点では明らかでない。", "why": "再生医療製品は、効果と安全性を使いながら確かめる条件付き承認の制度が使われることがある。本承認に進むことは、一定の使用実績に基づく評価が行われたことを意味する。患者や医療機関にとっては、使える範囲や費用が焦点になる。", "me": "脊髄損傷の患者や家族にとっては、治療の選択肢に関わる話で、受けられる施設や条件が今後の関心事になる。一般の人の暮らしへの影響は小さい。", "a": "前向きに見る側は、本承認で治療が安定して提供されやすくなり、研究や投資が進むと期待する。", "b": "慎重な見方は、効果の持続や長期の安全性、高額になり得る費用の負担を、引き続き確かめる必要があると指摘する。", "say": "確認できるのは、本承認が出たとの報道があること。適応の範囲、価格、保険の扱いは出ていない。1媒体の報道なので、厚生労働省や企業の発表で裏づけたい。今日は、公式の発表資料が出るかを見たい。", "src": "毎日新聞(ステミラックの本承認を報じた記事, 11月19日)"},
+    "i4":{"kick": "安保 · ✓ 1媒体", "title": "日印2プラス2で合意、自衛隊がインドでミサイル発射訓練を行えるようになると報じられる", "what": "日本とインドは、外務・防衛閣僚協議である2プラス2で、自衛隊がインドでミサイルの発射訓練を行えるようにすることで合意したと伝えられた。報道は1媒体にとどまる。訓練の時期、規模、場所は、報道では示されていない。合意文書の中身や、インド側の発表は、確認されていない。両国の防衛協力を広げる動きの一つとされる。日本とインドの2プラス2は、定期的に開かれる枠組みである。", "why": "自衛隊が海外で発射訓練をできるようになれば、国内では確保しにくい訓練の場を得られる。同時に、相手国との運用の連携が深まる。ただし訓練の内容は安全保障に関わるため、公開される情報は限られる。", "me": "日常生活への直接の影響はないが、日本の防衛協力の広がりは、外交や防衛費の議論に関わる。", "a": "前向きに見る側は、インドとの連携が、地域の安定に向けた抑止力の強化につながると受け止める。", "b": "慎重な見方は、訓練の枠組みの詳細が見えず、近隣国の反応や憲法上の整理を丁寧に説明する必要があると指摘する。", "say": "確認できるのは、2プラス2で合意したとの報道があること。訓練の時期や場所は出ていない。1媒体の報道なので、両国政府の発表で裏づけたい。今日は、外務省と防衛省の公式資料を見たい。", "src": "朝日新聞(日印2プラス2の合意, 11月19日)"},
+    "i5":{"kick": "環境 · ✓ 1媒体", "title": "COP31の改定案文から化石燃料への言及が消えたと報じられる", "what": "COP31の交渉担当者が公表した改定案文に、化石燃料への言及がないと伝えられた。最初の案文には、化石燃料と、その使用を抑えることに触れた箇所が2か所あった。この論点は、各国の意見が大きく割れているとされる。改定案文の全文や、各国の反応は、報道では詳しく示されていない。最終合意の見通しは、確認されていない。", "why": "化石燃料の扱いは、気候変動対策の中心的な論点で、産油国と脱炭素を求める国の対立が表れやすい。案文から言及が消えることは、最終合意の強さに影響し得る。ただし案文は交渉の途中で変わるため、現時点で結論は出ていない。", "me": "エネルギー価格や電力の脱炭素の方針に、中長期で影響し得る。直近の家計への影響は、現時点では示されていない。", "a": "合意を優先する側は、対立の大きい文言を外すことで、より多くの国が参加できる案文になると考える。", "b": "対策の強化を求める側は、化石燃料への言及がない案文は、これまでの合意から後退すると批判する。", "say": "確認できるのは、改定案文に化石燃料への言及がないとの報道があること。最初の案文との差は2か所。1媒体の報道なので、案文の原文で確かめたい。今日は、各国の反応と次の案文が出るかを見たい。", "src": "The Japan Times(COP31の改定案文, 11月19日)"}
+  };
+  const G = {
+    "APEC":{"f": "国際", "d": "アジア太平洋の21の国と地域が、貿易や投資の自由化を話し合う経済協力の枠組み。", "w": "今年は中国・深圳で首脳会議が開かれた。"},
+    "核軍縮":{"f": "安保", "d": "核兵器の数や配備を減らしていくこと。", "w": "トランプ氏が3カ国会談で議論を提起したと伝えられる。"},
+    "国連改革":{"f": "国際", "d": "国連の意思決定や組織のあり方を見直す議論。安全保障理事会の構成などが論点になる。", "w": "中国とロシアが3カ国で一致したと説明した。"},
+    "戦勝国":{"f": "国際", "d": "戦争に勝った側の国。国際秩序の形成で発言力を持つ立場として語られる。", "w": "習氏とプーチン氏が立場を強調したと伝えられる。"},
+    "精製油":{"f": "経済", "d": "原油を精製して作る、ガソリンや軽油などの石油製品。", "w": "3者が供給拡大で合意したとの報道がある。"},
+    "ルールに基づく国際経済秩序":{"f": "国際", "d": "貿易や投資を、各国が合意したルールに沿って運営する考え方。", "w": "高市首相がAPECで重要性を訴えた。"},
+    "台湾有事":{"f": "安保", "d": "台湾をめぐって軍事的な衝突が起きる事態。日本の安全保障にも関わるとされる。", "w": "記者会見で首相が問われた。"},
+    "IPO":{"f": "金融", "d": "新規株式公開。企業が株式を初めて市場で売り出し、資金を集める仕組み。", "w": "アンソロピックの上場が過去最大規模とされる。"},
+    "公開価格":{"f": "金融", "d": "IPOで株式を投資家に売り出すときの価格。", "w": "今回は1株83ドル。"},
+    "評価額":{"f": "金融", "d": "企業の価値を、株価などから算出した金額。", "w": "約1兆5千億ドルとされる。"},
+    "初値":{"f": "金融", "d": "上場後に最初についた株価。", "w": "111.5ドルと伝えられる。"},
+    "ダウ平均":{"f": "金融", "d": "米国を代表する30社の株価から計算する指数。", "w": "19日に一時1100ドル超下落したと伝えられる。"},
+    "S&P500種":{"f": "金融", "d": "米国の主要500社の株価で作る指数。", "w": "18日に7月以来の安値まで下げたとの報道がある。"},
+    "ジェノサイド":{"f": "国際法", "d": "特定の民族や宗教の集団を、破壊する意図で殺害するなどの行為。ジェノサイド条約で禁じられている。", "w": "ICJがロヒンギャ迫害を認定した。"},
+    "国際司法裁判所":{"f": "国際法", "d": "国連の最高司法機関。国家間の紛争を法的に裁く。", "w": "ミャンマーに対する判決を言い渡した。"},
+    "報告徴求命令":{"f": "金融", "d": "行政が事業者に、業務や経緯について報告を求める措置。", "w": "金融庁が楽天証券に出した。"},
+    "不正アクセス":{"f": "技術", "d": "他人のIDやパスワードなどを使い、許可なくシステムに入ること。", "w": "顧客情報の漏えいの原因とされる。"},
+    "特別委員会":{"f": "政治", "d": "特定のテーマを集中して審議するために、国会が設ける委員会。", "w": "消費税減税法案を審議している。"},
+    "理事会":{"f": "政治", "d": "委員会の運営を話し合う、与野党の代表者の会合。", "w": "19日に政府が資料を示した。"},
+    "政治資金パーティー":{"f": "政治", "d": "政治家や政治団体が資金を集めるために開く催し。収入の報告が法律で求められる。", "w": "関文科相が開いたものが追及されている。"},
+    "連結除外":{"f": "会計", "d": "子会社を、親会社の決算の対象から外すこと。", "w": "JTがロシア管理下の子会社に行う見通し。"},
+    "非常戒厳":{"f": "政治", "d": "戦争や非常事態で、軍が行政や司法の権限を一時的に持つ措置。", "w": "韓国の前大統領が2024年に宣言した。"},
+    "差し戻し":{"f": "法", "d": "上級の裁判所が判決を取り消し、下級の裁判所に審理をやり直させること。", "w": "韓国最高裁が元首相の審理を命じた。"},
+    "再生医療":{"f": "医療", "d": "細胞などを使い、損なわれた体の機能を回復させる医療。", "w": "ステミラックが本承認と伝えられた。"},
+    "条件付き承認":{"f": "医療", "d": "効果の確認が途中でも、安全性などを条件に、期限付きで使えるようにする制度。", "w": "本承認の前に受けていた。"},
+    "2プラス2":{"f": "安保", "d": "2国の外務と防衛の閣僚がそろって行う協議。", "w": "日印が開き、訓練で合意したと伝えられる。"},
+    "COP31":{"f": "環境", "d": "気候変動対策を話し合う国連の会議の31回目。", "w": "改定案文から化石燃料への言及が消えたと伝えられる。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

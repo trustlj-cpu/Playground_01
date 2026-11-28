@@ -1,0 +1,3 @@
+import { clusterItems } from '/home/user/Playground_01/feed/worker/src/cluster.js';
+const P=[["Michael Carrick press conference: Manchester United build-up","Xabi Alonso press conference: Real Madrid team news","en","en"],["Homem é preso com 22 kg de maconha em Goiânia","Homem é preso suspeito de fazer ameaças em escola","pt","pt"],["VÍDEOS: Bom Dia Santa Catarina de sexta-feira","VÍDEOS: Bom Dia DF de sexta-feira","pt","pt"],["Liverpool without Isak, Gakpo for Chelsea clash","Liverpool sweat on Isak fitness for Chelsea","en","en"]];
+for(const [a,b,l1,l2] of P){const cl=clusterItems([{title:a,link:'x1',source:'s1',lang:l1},{title:b,link:'x2',source:'s2',lang:l2}]);console.log(cl.length===1?'MERGED':'split',a.slice(0,30),'|',b.slice(0,30))}

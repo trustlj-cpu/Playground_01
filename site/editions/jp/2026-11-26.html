@@ -1,0 +1,340 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>57,011.62</b>日経平均 · 11/25終値 · 前日比-2.78%</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>TOPIX · 終値の数値が取得できず</div>
+    </div>
+    <div class="dateline"><span>No. 53 · 朝刊</span><b>2026年11月26日(木)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="jm1">
+      <div class="kick">政治 · 自治体<span>✓ 3媒体 · 辞職願の提出時期と容疑の詳細は未確認</span></div>
+      <h2 class="hl">詐欺容疑で逮捕の徳島・阿波市長が辞任の意向、今週にも辞職願を出す見通しと伝えられる</h2>
+      <p class="deck">市発注のケーブルテレビ工事をめぐる詐欺容疑で逮捕された市長が、代理人の弁護士を通じて辞任の意向を示したと伝えられた</p>
+      <div class="body">
+        <p>徳島県阿波市の町田寿人市長が辞任する意向を示していることが、25日に代理人の弁護士への取材で分かったと伝えられた。今週にも辞職願を出す見通しだという。町田市長は今月10日、市が発注したケーブルテレビ関連の設備交換工事をめぐり、市から350万円をだまし取った疑いで徳島県警に逮捕されていた。工事代金は7425万円で、そこに自分の交通事故の修理費用を上乗せして業者に請求させ、業者から350万円を振り込ませたというのが容疑の中身だ。詐欺は、人をだまして金品を渡させる罪で、市という組織をだましたかどうかが問われている。市のお金で個人の事故の修理代をまかなったという疑いで、市政への信頼を直接揺るがす事件になっている。市長は阿波市のトップとして、市の予算の執行を最終的に預かる立場にあり、そのトップが自ら工事代金の水増しに関わったとされる点が、事件の重さを形づくっている。</p>
+        <p>市長と一緒に逮捕された市の職員と業者の社員の2人は、13日までに釈放されている。在宅で捜査を受けている市の職員2人は、「市長に頼まれて断り切れなかった」という趣旨の説明をしていると伝えられる。25日には、市長が詐欺の容疑を認める供述をし、修理費は保険でまかなえなかったと話していると伝えられた。ただし供述の細かい内容は、現時点で確認されていない。辞職が成立すれば後任を決める選挙が行われる流れになるが、日程はまだ決まっていない。辞職願がいつ出されて受理されるのか、検察が起訴するかどうかをいつ判断するのかは、まだ示されていない。市政は辞職が成立するまで、実質的に動きにくい状態が続く可能性があり、市民への影響を和らげるための副市長らによる運営の形も、これから確認が必要になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="jm2">
+      <div class="kick">国際 · 太平洋・安全保障<span>✓ 2媒体 · 中国との協定を更新しない点は1媒体の報道で未確認</span></div>
+      <h3 class="hl">ソロモン諸島がオーストラリアと安全保障を含む新条約に署名、中国との安保協定は更新しない見通しと伝えられる</h3>
+      <div class="one">
+        <p>南太平洋のソロモン諸島は25日、オーストラリアとの間で、安全保障の分野を含む包括的な新しい条約に署名した。中国が南太平洋で影響力を強めるなか、ソロモン側が安全保障の面でオーストラリアとの連携を重視する姿勢を示した形だ。ソロモンは2022年に中国と安全保障協定を結んでおり、その扱いが焦点になってきた。25日には、この協定を更新しない見通しだと伝えられたが、これは1つの報道に基づく内容で、両国政府や中国側からの確認は示されていない。 新条約をめぐっては、9月に両国が大筋で合意したと伝えられていた。ソロモンの首相は6月、中国との協定を見直す考えを示している。ただ、新条約の細かい条文や、オーストラリアが示す支援の規模、中国側の反応は、署名の時点で十分に明らかになっていない。条約が発効するまでの手続きや時期も今後の確認事項になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="jn1"><b>陸上自衛隊の長射程ミサイル、来月上旬にも上富良野駐屯地へ搬入し直後に配備開始と伝えられる</b><em>防衛省が来月上旬にも発射装置などを北海道の駐屯地に搬入し、直後に配備を始めると伝えられた。反撃能力にも使うとされる。</em><span>安全保障 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="jn2"><b>分娩を扱う病院の6割超が赤字、出産費用の無料化をめぐる厚生労働省の調査で明らかに</b><em>出産費用の無料化の議論に向けた調査で、分娩を扱う病院の6割を超える施設が赤字だったと伝えられた。</em><span>社会 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="jn3"><b>広島市長が核兵器禁止条約の再検討会議への出席を見合わせ、治療に専念し副市長が代理出席へ</b><em>広島市長は治療に専念するため会議を欠席し、森川副市長が代わりに出席する見通しだと伝えられる。</em><span>政治 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="jn4"><b>中国が有人宇宙船「神舟24号」を打ち上げ、宇宙ステーションにパキスタン人飛行士が初参加と伝えられる</b><em>中国の有人宇宙飛行計画に外国人の飛行士が参加するのは初めてだと伝えられた。打ち上げは25日。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="jn5"><b>東大が全額出資する関連会社の社長、取締役会の承認なく少なくとも5000万円を支出と伝えられる</b><em>広告宣伝費や教員への寄付金などとして社内規定に反して支出したと関係者への取材で分かったと伝えられ、大学は第三者委員会を置く。</em><span>社会 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="jm3">
+      <div class="kick">社会 · 事件<span>✓ 4媒体 · 逃げた男の特定と動機は未確認</span></div>
+      <h3 class="hl">福岡市西区のJR駅の駐輪場で70歳の男性が刺され死亡、逃げた男の行方を警察が捜査</h3>
+      <div class="body">
+        <p>25日午後、福岡市西区のJRの駅の駐輪場で、そこで働く70歳の男性が刺されて亡くなった。駐輪場の近くからは刃物のようなものが見つかっている。防犯カメラの映像などから、刺した男は現場近くの商業施設の中を通り抜けて逃げたことが分かっており、白昼の施設内にいた客らが避難して一時騒然となった。警察は逃げた男の行方を捜査している。現場に近い商業施設は事件の影響で、客の動きが一時乱れた。</p>
+        <p>刺した男が事件のあと、商業施設の近くに約20分間とどまっていた可能性があるとも伝えられたが、この点は1つの報道にとどまり、警察の発表では確認されていない。男の身元、男性との関係、刺した動機はいずれも分かっていない。男は25日の報道の時点で見つかっていないとされる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="jm4">
+      <div class="kick">社会 · 事件<span>✓ 2媒体 · 容疑の認否と動機は未確認</span></div>
+      <h3 class="hl">広島・庄原市で去年起きた84歳女性の殺害事件で、55歳の会社員の男を強盗殺人容疑で逮捕</h3>
+      <div class="body">
+        <p>広島県庄原市の住宅で、1人暮らしだった84歳の女性が去年殺害された事件で、警察は24日夜、55歳の会社員の男を強盗殺人などの疑いで逮捕した。強盗殺人は、金品を奪う目的で人を殺した場合に問われる重い罪だ。</p>
+        <p>逮捕された男は、以前は配送の仕事で女性の自宅を含む地域を回っていたことが、捜査関係者への取材で分かったと伝えられた。そのため、地理に詳しかった可能性があるとされる。ただし、これは1つの報道に基づく内容で、警察は取り調べの内容や容疑の認否をまだ明らかにしていない。事件から逮捕までに約1年かかっており、決め手となった証拠も示されていない。女性がどのような状況で見つかったのか、何が奪われたとされるのかも、伝えられた範囲では明らかになっていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="jm5">
+      <div class="kick">政治 · 司法<span>✓ 3媒体 · 有罪となった罪名の報じ方は異なる</span></div>
+      <h3 class="hl">新潟簡裁の裁判官を罷免、国会の弾劾裁判所が判決 戦後9人目</h3>
+      <div class="body">
+        <p>国会に設けられた弾劾裁判所は25日、新潟簡易裁判所の裁判官を罷免する判決を言い渡した。有罪が確定した裁判官が対象で、罷免は戦後9人目となる。裁判所は「社会に衝撃を与え、司法への信頼を損なわせた」として、職をやめさせると判断した。弾劾裁判は、裁判官が重い非行をした場合に、国会議員が裁判員となってやめさせるかどうかを決める、憲法で定められた制度だ。</p>
+        <p>有罪となった罪名は報道によって異なり、公務員宿舎の共益費の横領と伝えられた一方、賭博の罪で有罪が確定したとも伝えられている。罪名はそれぞれの確定した判決に基づくもので、複数の罪にわたる可能性もあるが、確認できる範囲では整理できていない。罷免された裁判官は、法曹としての資格に関する扱いなども今後の焦点になる。弾劾裁判所の判決は確定判決で、不服を申し立てる手続きは通常の裁判のようには用意されていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>9人目</b><span>戦後に罷免された裁判官の数(報道による)</span></div>
+        <div><b>罷免</b><span>判決の内容。裁判官の職を失う</span></div>
+        <div><b>有罪確定</b><span>罷免の前提になった刑事裁判の結果</span></div>
+      </div></div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>弾劾裁判<i>司法制度</i></b><p>重い非行のあった裁判官を、国会に置かれた裁判所がやめさせるかどうか判断する裁判。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>阿波市長はすでに辞職した</b> <span>25日の時点では、辞職願を今週にも出す見通しと代理人の弁護士への取材で伝えられた段階で、提出や受理は確認されていない。</span></div>
+        <div><b>福岡の駐輪場での事件の犯人はもう捕まった</b> <span>25日の報道の時点で、警察は逃げた男の行方を捜査中で、逮捕は確認されていない。</span></div>
+        <div><b>長射程ミサイルはすでに上富良野に配備された</b> <span>伝えられたのは来月上旬にも搬入し直後に配備を始めるという計画で、25日の時点で配備は始まっていない。防衛省の正式な発表も確認されていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 木 11月26日</b><span>野党が関文部科学相の問責決議案を26日に提出するとされる。阿波市長が辞職願を出すかどうか、福岡の事件で逃げた男が見つかるかどうかも焦点になる。</span><b>今週</b><span>阿波市長の辞職願の提出と、起訴の判断の見通しが明らかになるかが注目される。ソロモン諸島の新条約の条文や中国側の反応も確認事項になる。</span><b>来月</b><span>12月上旬にも、長射程ミサイルの発射装置などが上富良野駐屯地に搬入されると伝えられている。大阪の水族館では12月7日からラッコの公開が始まる。</span><b>読者に</b><span>事件の速報は続報で内容が変わることがある。逃げた人物や容疑者について確定していない情報は、続報や警察の発表を待ってから共有したい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "jm1":{"kick": "政治 · 自治体 · ✓ 3媒体 · 辞職願の提出時期と容疑の詳細は未確認", "title": "詐欺容疑で逮捕の徳島・阿波市長が辞任の意向、今週にも辞職願を出す見通しと伝えられる", "what": "徳島県阿波市の町田寿人市長が辞任する意向を示していることが、25日に代理人の弁護士への取材で分かったと伝えられた。今週にも辞職願を出す見通しとされる。町田市長は今月10日、市発注のケーブルテレビ関連の設備交換工事をめぐり、市から350万円をだまし取った疑いで徳島県警に逮捕された。工事代金は7425万円で、市長の交通事故の修理費用が上乗せされていたとされる。一緒に逮捕された市の職員と業者の社員は13日までに釈放された。25日には市長が詐欺の容疑を認める供述をしたと伝えられた。", "why": "市のお金が市長個人の事故の修理代に回ったかどうかが問われており、公金の扱いへの信頼に関わる。市長が辞職すれば、市政の運営と、後任を決める選挙の準備が動き出す。", "me": "阿波市の住民にとっては、辞職の時期によって市政の空白と選挙の日程が変わる。ほかの自治体の住民も、工事代金のチェックが誰の目で行われているかを考える材料になる。", "a": "早期の辞職を求める見方では、容疑を認める供述が伝えられた以上、市政の停滞を避けるため速やかに職を離れるべきだとする。信頼を失った状態で市政を続けるのは難しいという。", "b": "手続きを重く見る見方では、起訴の判断や供述の中身がまだ確定していないため、事実関係が固まるのを待つ必要があるとする。捜査中の段階で個人を断定的に扱うことには慎重さが要るという。", "say": "確認できているのは、市長の辞任の意向が代理人を通じて伝えられたことと、逮捕の容疑の中身までだ。供述の詳細や辞職願の提出日は未確認で、今週中の動きが焦点になる。起訴の判断も今後の確認事項だ。", "src": "NHK(阿波市長が辞任の意向, 11/25) · 朝日新聞(詐欺容疑を認める供述, 11/25) · Yahoo!ニュース(阿波市長が辞任意向, 11/25)"},
+    "jm2":{"kick": "国際 · 太平洋・安全保障 · ✓ 2媒体 · 中国との協定を更新しない点は1媒体の報道で未確認", "title": "ソロモン諸島がオーストラリアと安全保障を含む新条約に署名、中国との安保協定は更新しない見通しと伝えられる", "what": "南太平洋のソロモン諸島は25日、オーストラリアとの間で、安全保障分野を含む包括的な新しい条約に署名した。中国が南太平洋で影響力を強めるなかでの署名となった。ソロモンは2022年に中国と安全保障協定を結んでいる。この協定を更新しない見通しだと25日に伝えられたが、1つの報道に基づく内容だ。新条約は9月に大筋で合意したと伝えられていた。ソロモンの首相は6月に中国との協定を見直す考えを示していた。", "why": "太平洋の島国が、どの国と安全保障で結びつくかは、航路や資源、周辺の海域の安定に関わる。ソロモンの選択は、周辺国が中国との距離をどう取るかの先例になりうる。", "me": "日本はこの地域で漁業や海上輸送、支援の面で関わりがある。条約の中身次第で、日本を含む周辺国の協力の形も変わる。直接の暮らしへの影響は小さいが、安全保障の地図の変化として押さえたい。", "a": "歓迎する見方では、オーストラリアとの連携が支援や治安の安定につながり、特定の国への依存を減らせるとする。新条約は国の発展に必要な資金や協力を得る手段だという。", "b": "懸念する見方では、安全保障で一つの国に頼りすぎると、他国との関係が難しくなるとする。中国との協定を巡る対立が、地域の緊張を高めかねないという指摘もある。", "say": "確認できているのは、25日に新条約への署名があったことまでだ。中国との協定を更新しない点は1つの報道で、両国政府や中国側の確認はない。条約の条文と支援の規模、中国側の反応が今後の焦点になる。", "src": "NHK(ソロモン諸島が新条約に署名, 11/25) · 毎日新聞(新条約締結と中国との協定, 11/25)"},
+    "jm3":{"kick": "社会 · 事件 · ✓ 4媒体 · 逃げた男の特定と動機は未確認", "title": "福岡市西区のJR駅の駐輪場で70歳の男性が刺され死亡、逃げた男の行方を警察が捜査", "what": "25日午後、福岡市西区のJRの駅の駐輪場で、そこで働く70歳の男性が刺されて亡くなった。駐輪場の近くからは刃物のようなものが見つかっている。防犯カメラの映像などから、刺した男は現場近くの商業施設の中を通り抜けて逃げたことが分かっている。施設内にいた客らが避難し、一時騒然となった。警察は逃げた男の行方を捜査している。男が事件のあと約20分間、近くにとどまっていた可能性があるとも伝えられたが、1つの報道に基づく内容だ。", "why": "白昼の商業施設の近くで起きた事件で、逃げた男が見つかっていない間は、周辺の人が不安を抱え続ける。犯行の動機や被害者との関係が分かれば、無差別かどうかの見方も変わる。", "me": "周辺に住む人や通う人は、警察の呼びかけや続報を確認し、不審な人物を見かけたら110番に通報する。事件の速報は続報で内容が変わるため、確定していない情報を広めない配慮も要る。", "a": "不安を重く見る見方では、日常の場である駅や商業施設で起きた事件は、同じ場所を使う人に強い恐怖を与えるとする。防犯カメラの活用と巡回の強化を求める声が出るという。", "b": "冷静さを求める見方では、男の身元や動機が分かっていない段階で、憶測が広がることを避けるべきだとする。警察の発表を待つのが原則だという。", "say": "確認できているのは、70歳の男性が亡くなったことと、刺した男が逃げたことまでだ。男の身元、動機、被害者との関係は未確認で、行方が分かるかどうかが今日の焦点になる。", "src": "NHK(駐輪場で働く70歳男性が死亡, 11/25) · 朝日新聞(男がイオン通り抜けて逃走か, 11/25) · 毎日新聞(事件後20分間滞在か, 11/25) · 時事通信(駅駐輪場で刺され男性死亡, 11/25)"},
+    "jm4":{"kick": "社会 · 事件 · ✓ 2媒体 · 容疑の認否と動機は未確認", "title": "広島・庄原市で去年起きた84歳女性の殺害事件で、55歳の会社員の男を強盗殺人容疑で逮捕", "what": "広島県庄原市の住宅で、1人暮らしだった84歳の女性が去年殺害された事件で、警察は24日夜、55歳の会社員の男を強盗殺人などの疑いで逮捕した。強盗殺人は、金品を奪う目的で人を殺した場合に問われる罪だ。逮捕された男は、以前は配送の仕事で女性の自宅を含む地域を回っていたことが、捜査関係者への取材で分かったと伝えられた。これは1つの報道に基づく内容で、警察は取り調べの内容や容疑の認否を明らかにしていない。", "why": "事件から約1年たっての逮捕で、時間をかけた捜査が実を結んだ形になる。土地勘という点が事実なら、容疑者と現場を結ぶ手がかりの一つになるが、それだけでは容疑の根拠にはならない。", "me": "高齢者の1人暮らしの世帯が増えるなか、戸締まりや訪問者の確認の習慣が身を守る基本になる。家族や地域は、離れて暮らす高齢者への声かけを続けたい。", "a": "捜査の成果を評価する見方では、長い時間がかかっても逮捕に至ったことは、被害者と遺族にとって意味があるとする。真相の解明につながる可能性があるという。", "b": "慎重な見方では、逮捕は有罪の確定を意味せず、容疑の認否や証拠が示されていない段階で、男を犯人と決めつけるべきではないとする。裁判での審理が前提になるという。", "say": "確認できているのは、55歳の会社員の男が強盗殺人などの疑いで逮捕されたことまでだ。土地勘の話は1つの報道で、容疑の認否と動機、決め手となった証拠は未確認だ。今後の取り調べと起訴の判断が焦点になる。", "src": "NHK(逮捕の会社員 業務で土地勘か, 11/25) · 毎日新聞(55歳男性を強盗殺人容疑で逮捕, 11/25)"},
+    "jm5":{"kick": "政治 · 司法 · ✓ 3媒体 · 有罪となった罪名の報じ方は異なる", "title": "新潟簡裁の裁判官を罷免、国会の弾劾裁判所が判決 戦後9人目", "what": "国会に設けられた弾劾裁判所は25日、新潟簡易裁判所の裁判官を罷免する判決を言い渡した。有罪が確定した裁判官が対象で、罷免は戦後9人目となる。裁判所は「社会に衝撃を与え、司法への信頼を損なわせた」として職をやめさせると判断した。有罪となった罪名は、公務員宿舎の共益費の横領と伝えられた一方、賭博の罪で有罪が確定したとも伝えられていて、報道によって異なる。罷免は、裁判官が職を失う判決だ。", "why": "裁判官は身分が強く守られており、やめさせることができるのは弾劾裁判だけだ。罷免の判決は、司法への信頼をどう守るかという制度の運用を示す。9人目という数は、使われることがまれな制度であることも映す。", "me": "裁判官が公正な判断をする前提は、個人としての行いも信頼されていることだ。裁判を受ける人や利用者にとって、不祥事への対応の仕組みを知る機会になる。", "a": "厳正な対応を評価する見方では、有罪が確定した裁判官を罷免することは、司法への信頼を保つために必要だとする。身分保障の例外を示すことにも意味があるという。", "b": "制度の課題を指摘する見方では、弾劾裁判は有罪確定のあとにしか使えず、非行の兆しの段階で対応する仕組みが乏しいとする。罷免までの手続きが長いことも課題だという。", "say": "確認できているのは、罷免の判決と戦後9人目という点までだ。有罪の罪名は報道ごとに異なり、判決文の整理は未確認だ。今後は罷免された裁判官の扱いと、再発防止の議論が焦点になる。", "src": "NHK(簡裁裁判官を弾劾裁判で罷免, 11/25) · 朝日新聞(簡裁判事を罷免 戦後9人目, 11/25) · 時事通信(新潟簡裁判事を罷免, 11/25)"},
+    "jn1":{"kick": "安全保障 · ✓ 1媒体", "title": "陸上自衛隊の長射程ミサイル、来月上旬にも上富良野駐屯地へ搬入し直後に配備開始と伝えられる", "what": "防衛省が、陸上自衛隊の長射程ミサイルの発射装置などを北海道の上富良野駐屯地に来月上旬にも搬入し、直後に配備を始めることが分かったと伝えられた。このミサイルは「反撃能力」としても使うとされる。伝えられたのは搬入と配備開始の時期で、数や運用の細部は示されていない。防衛省の公式な発表は報道の時点で確認されていない。", "why": "長射程のミサイルの配備は、日本の防衛の考え方の転換を実際の部隊に落とす動きになる。配備先の地域では、安全への不安や攻撃対象になる懸念の声が出やすい。", "me": "配備先の北海道の住民にとっては、暮らしに近い場所の問題になる。それ以外の人にとっても、防衛費や安全保障の議論を考える具体的な材料になる。", "a": "配備を必要とする見方では、周辺の安全保障環境が厳しくなるなか、相手に攻撃をためらわせる抑止力を持つことが必要だとする。", "b": "懸念する見方では、攻撃対象になるリスクが高まり、地域の緊張を増すとする。住民への丁寧な説明が欠かせないという。", "say": "確認できているのは、来月上旬にも搬入と配備開始という時期が伝えられたことまでだ。ただ、1つの報道で公式発表は未確認だ。数や運用方法、地元の反応が今後の焦点になる。", "src": "NHK(長射程ミサイル 上富良野に搬入へ, 11/25)"},
+    "jn2":{"kick": "社会 · ✓ 1媒体", "title": "分娩を扱う病院の6割超が赤字、出産費用の無料化をめぐる厚生労働省の調査で明らかに", "what": "出産費用の無料化をめぐり、厚生労働省が分娩を扱う病院の経営状況を調べ、6割を超える病院が赤字だったと伝えられた。調査は出産費用の無料化の議論に向けたものとされる。出産は現在、原則として保険がきかない自由診療のため、費用は施設ごとに差がある。赤字の程度や調査の対象数、時期などは、伝えられた範囲では示されていない。厚生労働省の公式な公表は報道の時点で確認されていない。", "why": "出産費用を無料にするには、費用を誰が負担するかとともに、分娩を扱う病院が経営を続けられるかが問われる。赤字の病院が多いままでは、受け入れ体制が減る恐れがある。", "me": "これから出産する人や家族にとっては、無料化の中身と、近くで産める病院が維持されるかの両方が関心事になる。地域によって産める場所が少ないことも考えたい。", "a": "無料化を進める見方では、費用の負担が出産をためらう理由になっているとして、国が支えるべきだとする。", "b": "慎重な見方では、病院の赤字を放置したまま無料化を進めれば、分娩をやめる病院が出て、かえって産める場所が減るとする。", "say": "確認できているのは、6割超が赤字という調査結果が伝えられたことまでだ。調査の詳細と無料化の具体案は未確認で、厚生労働省の今後の公表が焦点になる。", "src": "毎日新聞(分娩扱う病院の6割超が赤字, 11/25)"},
+    "jn3":{"kick": "政治 · ✓ 2媒体", "title": "広島市長が核兵器禁止条約の再検討会議への出席を見合わせ、治療に専念し副市長が代理出席へ", "what": "広島市長が、核兵器禁止条約の再検討会議への出席を見合わせ、治療に専念すると伝えられた。会議には森川副市長が代理で出席する見通しだ。市長が出席できない理由は治療のためとされ、病名や期間は示されていない。再検討会議は条約の運用状況を確かめる場で、広島市は被爆地として関わってきた。会議の日程や、副市長が行う発言の内容は、伝えられた範囲では示されていない。", "why": "被爆地の首長が国際会議に出るかどうかは、核兵器をめぐる被爆地の声が会議でどう届くかに関わる。代理出席でも、被爆地の立場を伝える機会は残る。", "me": "核兵器の問題に関心のある人にとっては、会議での被爆地の発言が注目点になる。広島市民にとっては、市長の治療の経過と、市政の運営の体制が関心事になる。", "a": "代理出席を受け入れる見方では、健康を優先すべきで、副市長が被爆地の立場を伝えれば役割は果たせるとする。", "b": "出席を求める見方では、首長が自ら訴えることの重みは大きく、被爆地の発信力が弱まる恐れがあるとする。", "say": "確認できているのは、市長の欠席と副市長の代理出席の見通しまでだ。治療の内容や期間は未確認で、会議で副市長がどのような発言をするかが焦点になる。", "src": "朝日新聞(広島市長 核禁条約再検討会議を欠席へ, 11/25) · 毎日新聞(広島市長 会議の出席見合わせ, 11/25)"},
+    "jn4":{"kick": "国際 · ✓ 1媒体", "title": "中国が有人宇宙船「神舟24号」を打ち上げ、宇宙ステーションにパキスタン人飛行士が初参加と伝えられる", "what": "中国は25日、有人宇宙船「神舟24号」を打ち上げ、独自の宇宙ステーションにパキスタン人の宇宙飛行士を送り込んだと伝えられた。中国の有人宇宙飛行計画に外国人の飛行士が参加するのは初めてだとされる。この宇宙ステーションは中国が独自に運用している。打ち上げの詳しい時刻や滞在の期間、乗組員の構成は、伝えられた範囲では示されていない。パキスタン側の発表の内容も、報道の時点では確認されていない。", "why": "国際宇宙ステーションに代わる宇宙の拠点を、中国が他国との協力の枠組みとしても使い始めたことを示す。参加国が増えれば、宇宙分野での影響力の広がりにもつながる。", "me": "宇宙は通信や測位など暮らしに関わる分野でもある。どの国がどの拠点を使うかは、将来の宇宙の利用ルールの議論にも影響する。", "a": "協力の拡大を評価する見方では、外国の飛行士の参加は、宇宙開発を各国で進める機会になるとする。", "b": "警戒する見方では、宇宙での影響力争いの一部であり、安全保障面の意味も無視できないとする。", "say": "確認できているのは、打ち上げとパキスタン人飛行士の初参加が伝えられたことまでだ。滞在の期間や今後の外国人の参加は未確認で、続報が焦点になる。", "src": "NHK(中国の宇宙ステーションにパキスタン人飛行士初参加, 11/25)"},
+    "jn5":{"kick": "社会 · ✓ 1媒体", "title": "東大が全額出資する関連会社の社長、取締役会の承認なく少なくとも5000万円を支出と伝えられる", "what": "東京大学が全額出資して設立した関連会社の社長が、社内規定に反して、取締役会の承認を得ないまま、広告宣伝費や教員への寄付金などとして、少なくとも約5000万円を支出していたことが関係者への取材で分かったと伝えられた。東京大学は、第三者委員会を設置する方針だ。支出の詳しい内訳や目的、期間は、伝えられた範囲では示されていない。社長が支出した相手先や、支出が始まった時期も明らかになっていない。", "why": "大学が出資する会社の資金の使われ方は、大学の信頼や研究費の透明性に関わる。取締役会の承認を経ない支出は、内部の確認の仕組みが働いていたかの問題になる。", "me": "大学の資金は学費や公的な資金とつながることがある。大学の運営がどう点検されるのかを考える機会になる。", "a": "厳しく見る見方では、承認なしの支出は管理の不備で、第三者の目で原因を徹底して調べるべきだとする。", "b": "事実確認を重く見る見方では、支出の目的や内訳がまだ分かっていないため、調査の結果を待って評価すべきだとする。", "say": "確認できているのは、社長の支出と第三者委員会の設置方針が伝えられたことまでだ。1つの報道で、大学の公式な説明は未確認だ。調査の範囲と報告の時期が焦点になる。", "src": "NHK(東大関連会社の社長が承認なく支出, 11/25)"}
+  };
+  const G = {
+    "弾劾裁判":{"f": "司法制度", "d": "重い非行のあった裁判官を、国会に置かれた裁判所がやめさせるか判断する裁判。", "w": "簡裁の裁判官が対象。"},
+    "罷免":{"f": "司法制度", "d": "職をやめさせること。弾劾裁判では裁判官が職を失う。", "w": "判決の内容。"},
+    "簡易裁判所":{"f": "司法制度", "d": "軽い事件や少額の民事を扱う、最も身近な第一審の裁判所。", "w": "罷免された裁判官の所属。"},
+    "強盗殺人":{"f": "刑事法", "d": "金品を奪う目的で人を殺す罪。重い刑が科される。", "w": "庄原の事件の容疑。"},
+    "詐欺":{"f": "刑事法", "d": "人をだまして金品を渡させる罪。", "w": "阿波市長の容疑。"},
+    "辞職願":{"f": "制度", "d": "辞めたい人が正式に提出する書面。受理されて辞職が成立する。", "w": "市長が出す見通し。"},
+    "供述":{"f": "刑事手続", "d": "取り調べなどで容疑者が話す内容。", "w": "市長が認めたと伝えられる。"},
+    "起訴":{"f": "刑事手続", "d": "検察が刑事裁判を求めて裁判所に訴えること。", "w": "今後の判断が焦点。"},
+    "釈放":{"f": "刑事手続", "d": "身柄を拘束されていた人が自由になること。", "w": "職員と社員が釈放。"},
+    "安全保障協定":{"f": "外交・安全保障", "d": "軍事や治安の協力を取り決める国同士の約束。", "w": "中国との協定の扱い。"},
+    "反撃能力":{"f": "安全保障", "d": "相手の攻撃を受けた際に、相手の拠点を攻撃できる能力。", "w": "長射程ミサイルの用途。"},
+    "長射程ミサイル":{"f": "安全保障", "d": "遠くの目標を攻撃できる射程の長いミサイル。", "w": "配備が伝えられた。"},
+    "核兵器禁止条約":{"f": "国際法", "d": "核兵器の開発や使用などを禁じる条約。", "w": "再検討会議が開かれる。"},
+    "再検討会議":{"f": "国際法", "d": "条約の運用状況を確かめ、見直しを話し合う会議。", "w": "広島市長が欠席へ。"},
+    "第三者委員会":{"f": "ガバナンス", "d": "組織と利害関係のない外部の人が、不祥事の原因などを調べる委員会。", "w": "東大が置く方針。"},
+    "取締役会":{"f": "会社制度", "d": "会社の重要な方針を決める取締役の会議。", "w": "承認がなかったとされる。"},
+    "分娩":{"f": "医療", "d": "子どもを産むこと。", "w": "分娩を扱う病院が赤字。"},
+    "宇宙ステーション":{"f": "宇宙", "d": "宇宙に長期間とどまる有人の施設。", "w": "中国が独自に運用。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

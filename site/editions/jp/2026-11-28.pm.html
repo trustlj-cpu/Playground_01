@@ -1,0 +1,340 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>58,711.11</b>日経平均 · 11/27終値(28日は土曜で休場) · 前日比+2.11%</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>7,297.49</b>S&amp;P500 · 11/27終値(感謝祭翌日の短縮取引) · 11/25終値比+1.60%</div>
+    </div>
+    <div class="dateline"><span>No. 55 · 夕刊</span><b>2026年11月28日(土)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="c2">
+      <div class="kick">国際 · 半導体<span>✓ 4媒体 · 台数・入手経路・2社の特定は未確認</span></div>
+      <h2 class="hl">エヌビディア製の先端半導体が上海の施設で見つかったと報道、禁輸された中国向けの流出の疑い</h2>
+      <p class="deck">米国が中国向けの供給を禁じている高性能の半導体が、上海にあるアリス氏関係の2社のデータセンターに設置されているとの報道が、27日から28日にかけて相次いだ。台数や入手の経路は明らかになっていない</p>
+      <div class="body">
+        <p>エヌビディア製の先端半導体が、中国・上海の施設で見つかったとの報道が27日から28日にかけて相次いだ。報じられたのは、アリス氏が関係する2社のデータセンターに、ブラックウェル世代の高性能半導体が設置されているという内容だ。この種の半導体は、米国の輸出規制で中国向けの供給が禁じられている。禁輸の対象品が中国国内の設置先で確認されたと伝えられるのは、今回が初めてだという。装置は高さ約2メートル、重さ約1.5トンの大型品とされ、2社は長江デルタの事業にかかわる企業だと一部で伝えられている。実際に禁輸品が持ち込まれたのであれば、規制をすり抜けた密輸にあたる可能性がある。ただ、台数や入手の経路、2社の特定は、報道の段階では確定していない。</p>
+        <p>エヌビディアでは、フアン氏が11月12日に辞任を発表し、11日後の23日にCEOへ復帰した経緯がある。今回の報道は、その復帰の直後に出た形だ。米国では議員がエヌビディアの調査やフアン氏への質問を求める動きがあり、フアン氏は米上院の聴取に臨む見通しと伝えられている。聴取の日程や、議会でどんな説明が出るかは、まだ分かっていない。エヌビディアや米政府が今回の報道にどう応じるかが、次の焦点になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="c3">
+      <div class="kick">経済 · AI<span>✓ 4媒体 · 裁判所の判断と主張の裏付けはこれから</span></div>
+      <h3 class="hl">OpenAIがアップルを反訴、端末開発をめぐり「部品の供給元に圧力をかけた」「企業秘密を盗んだ」と主張</h3>
+      <div class="one">
+        <p>米OpenAIは、自社の個人向け端末の開発をめぐってアップルが起こした裁判で、アップルに対する反訴を起こした。OpenAIは、アップルのほうが企業秘密を盗んだと主張している。さらに、アップルが部品の供給元に圧力をかけ、OpenAIの端末を避けさせようとしたとも訴えた。 OpenAIは自社の端末を売り出す計画を持っており、実現すればiPhoneを持つアップルと競う関係になる。今回の裁判は、その計画に影を落としている。反訴の主張が認められるかどうかは、裁判所の判断を待つことになる。アップルがこの反訴にどう反論するかは、まだ伝えられていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="d1"><b>東京電力、資本提携の交渉先に「株式を売るときは国の了承が必要」との条件を示したと伝えられる</b><em>経営の立て直しに向けて資本提携を交渉している東京電力ホールディングスが、出資で得た株式の売却に国の了承を求める条件を示したと伝えられた。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="d2"><b>政府、データセンターの整備で事業者・自治体・電力会社が守る指針を新たにつくる方針を固めたと伝えられる</b><em>全国で整備が進むデータセンターをめぐり、一部の事業者と周辺住民の間で摩擦が起きている。政府は、関係者が守る指針を新たにつくる方針を固めたと伝えられた。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="d3"><b>政府が原子力潜水艦の導入を視野に検討に入ると伝えられる、防衛省内には反対の声、非核三原則の扱いも論点に</b><em>政府が原子力潜水艦の導入を視野に入れた検討に入ると伝えられた。防衛省内には強い反対があるとされ、非核三原則に例外を明記する案の効果にも疑問の声がある。</em><span>安全保障 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="d4"><b>日本ハムの伊藤大海投手がカブス、西武の高橋光成投手がダイヤモンドバックスと合意したと伝えられる</b><em>ポスティングで大リーグ移籍を目指していた伊藤投手が、カブスと契約に合意したと米国の複数のメディアが伝えた。海外FAの高橋投手も、ダイヤモンドバックスと合意したと伝えられた。</em><span>スポーツ · ✓ 3媒体</span></div>
+      <div class="it story" tabindex="0" data-id="d5"><b>広範囲で大気が不安定に、北日本や東日本の山沿いを中心に28日夜から雪の見込みと伝えられる、29日にかけて続く</b><em>低気圧や前線の影響で、北日本や伊豆諸島では局地的に雨雲が発達していると伝えられた。強い寒気も流れ込み、28日夜から山沿いを中心に雪が降る見込みだという。</em><span>社会 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="c4">
+      <div class="kick">国際 · 台湾<span>✓ 3媒体 · 開票結果は28日夜の判明待ち</span></div>
+      <h3 class="hl">台湾で統一地方選の投票が進む、双北の行方が焦点とされる、2028年の総統選挙の前哨戦</h3>
+      <div class="body">
+        <p>台湾では28日、統一地方選の投票が行われている。2028年の総統選挙の前哨戦とされ、大勢は28日夜に判明する見通しだ。焦点の一つが、台北市と新北市を合わせた双北の行方だと伝えられている。中国との関係改善を訴える最大野党の国民党が勢いを保つのか、頼清徳政権の与党・民進党が巻き返すのかで、結果の意味は大きく変わる。</p>
+        <p>結果は、頼清徳政権の今後の運営や、中国の台湾政策への影響という点で注目されている。投票のために故郷へ戻る人の動きも出ていた。開票が進む夜にかけて、双北の勝敗と各党の得票の差が、見どころになる。開票結果は、まだ出ていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="c1">
+      <div class="kick">安全保障 · 中東<span>✓ 4媒体 · 船の所有者・積荷と被害の詳細は未確認</span></div>
+      <h3 class="hl">米軍がイランへの海上封鎖を破ろうとした貨物船を攻撃、船は航行不能になったと報道</h3>
+      <div class="body">
+        <p>米軍が、イランから出港して「海上封鎖」を突破しようとした貨物船を攻撃したと、27日から28日にかけて報じられた。攻撃したのは米中央軍で、船は航行不能になったとされる。船は「パシフィック・アーチャー」と伝えられ、米軍機が精密誘導弾を船尾に撃ち込んだという。米軍が封鎖を破ろうとした船を無力化したのは、今回が初めてではないとも伝えられている。</p>
+        <p>米国がイランに対して敷いている海上封鎖の違反を理由に、実力で船を止めた形だ。イラン側は封鎖に立ち向かう構えを示したと伝えられている。船の所有者や積荷、乗組員の被害、攻撃の正確な時刻は、報道の時点では明らかになっていない。米政府がこの攻撃をどう説明するか、イラン側がどう動くかが、次の焦点になる。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="c5">
+      <div class="kick">安全保障 · サイバー<span>✓ 3媒体 · 情報流出の有無は不明</span></div>
+      <h3 class="hl">米空軍の基幹クラウド基盤「Cloud One」に不正侵入か、戦術・人事・兵站の機微な情報に影響の恐れ</h3>
+      <div class="body">
+        <p>ハッカーが米空軍の基幹的なクラウド基盤「Cloud One」に侵入したと、27日から28日にかけて報じられた。Cloud Oneは、空軍や国防総省の部署が業務のシステムを商用のクラウドで動かすための共通の基盤だ。侵入が事実なら、戦術、人事、兵站(物資や人員の補給)にかかわる機微な情報が危うくなる可能性がある。ただ、情報が実際に流出したかどうかは、現時点で分かっていない。</p>
+        <p>最初の報道は27日に出て、28日にかけて続報が相次いだ。侵入の手口や時期、侵入した側の身元は、報道の時点では明らかになっていない。米空軍や国防総省がどう説明するかが、次の焦点だ。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill"><h5>きょうの数字</h5><div class="nums">
+        <div><b>3分野</b><span>影響が懸念される情報。戦術・人事・兵站</span></div>
+        <div><b>不明</b><span>情報が流出したかどうか</span></div>
+        <div><b>未公表</b><span>侵入の手口・時期・侵入した側の身元</span></div>
+      </div></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>エヌビディアが禁輸の半導体を、中国へ意図して売っていたと確定した</b> <span>確定していない。設置が確認されたとの報道が出たが、台数や入手の経路、関与した主体は、報道の時点では明らかになっていない。</span></div>
+        <div><b>伊藤大海投手のカブス入りはもう正式に決まった</b> <span>合意が伝えられたのは米国の複数のメディアの報道によるもので、正式な契約の発表は、報道の時点では伝えられていない。</span></div>
+        <div><b>米空軍の機密情報がすでに流出した</b> <span>侵入の疑いが報じられた段階で、情報が実際に流出したかどうかは分かっていないとされている。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 土 11月28日</b><span>台湾の統一地方選は、夜に大勢が判明する見通しだ。北日本や東日本の山沿いでは、夜から雪が降る見込みで、29日にかけて大気の不安定な状態が続く。</span><b>来週</b><span>エヌビディアをめぐる米議会の聴取の日程が示されるかを見たい。米軍の対イラン海上封鎖をめぐる動きが続くかも焦点になる。</span><b>その後</b><span>OpenAIとアップルの裁判で、アップルがどう反論するかと、次の日程が示されるかを見たい。</span><b>読者に</b><span>雪が予想される山沿いへ出かける人は、29日にかけて路面の凍結や交通の乱れに備え、天気と道路の情報を確認したい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "c2":{"kick": "国際 · 半導体 · ✓ 4媒体 · 台数・入手経路・2社の特定は未確認", "title": "エヌビディア製の先端半導体が上海の施設で見つかったと報道、禁輸された中国向けの流出の疑い", "what": "エヌビディア製の先端半導体が、中国・上海の施設で見つかったとの報道が27日から28日にかけて相次いだ。報じられたのは、アリス氏が関係する2社のデータセンターに、ブラックウェル世代の半導体が設置されているという内容だ。この種の半導体は、米国の輸出規制で中国向けの供給が禁じられている。禁輸の対象品が中国国内の設置先で確認されたと伝えられるのは、今回が初めてだという。エヌビディアでは、フアン氏が11月12日に辞任を発表し、23日にCEOへ復帰した。フアン氏は米上院の聴取に臨む見通しと伝えられている。台数や入手の経路は、報道の段階では明らかになっていない。", "why": "先端半導体の中国向け輸出規制は、AIの軍事利用や性能競争を抑える米国の安全保障政策の柱だ。規制品が第三国や関係企業を通じて流れれば、制度の実効性が問われる。CEOの復帰直後に出た報道で、会社の統治と議会の監視も同時に問われる。", "me": "エヌビディアは世界のAI投資の中心にあり、株価や半導体関連企業の動きに影響する。日本の半導体や電力関連の銘柄を持つ人は、議会聴取の内容と米当局の対応に目を配りたい。", "a": "規制の強化を求める立場は、禁輸品が実際に上海にあるなら、輸出管理の抜け穴を塞ぐ必要があり、供給元の責任も問うべきだと考える。", "b": "慎重な立場は、報道の段階では台数も経路も不明で、会社が故意に関与したとは言えないと考える。販売先の先で起きた転売や設置まで、供給元がどこまで責任を負うかは別の問題だという見方だ。", "say": "確認できているのは、禁輸対象の半導体が上海の施設にあるとの報道が相次いだこと、その規模や経路が確定していないことだ。今日は、エヌビディアや米政府が事実関係をどう説明するか、議会聴取の日程が示されるかを見たい。", "src": "読売新聞(エヌビディアの高性能半導体を中国・上海に密輸か、2社のデータセンターに設置, 11/28) · 47NEWS(上海の施設にエヌビディア製先端半導体か, 11/28) · Bloomberg Television(Nvidia Blackwell Chips Turn Up at China Site Tied to Alice Huang, 11/27) · 東洋経済オンライン(エヌビディアのフアンCEOに迫る政治介入と統治不全のリスク, 11/28)"},
+    "c3":{"kick": "経済 · AI · ✓ 4媒体 · 裁判所の判断と主張の裏付けはこれから", "title": "OpenAIがアップルを反訴、端末開発をめぐり「部品の供給元に圧力をかけた」「企業秘密を盗んだ」と主張", "what": "米OpenAIは、自社の個人向け端末の開発をめぐってアップルが起こした裁判で、アップルに対する反訴を起こした。OpenAIは、アップルのほうが企業秘密を盗んだと主張している。さらに、アップルが部品の供給元に圧力をかけ、OpenAIの端末を避けさせようとしたとも訴えた。OpenAIは自社の個人向け端末を売り出す計画を持っており、実現すればアップルと競う関係になる。双方の主張は、まだ裁判所の判断を受けていない。", "why": "端末はAIをユーザーに届ける入口で、OpenAIが自社の端末を持てば、アップルのスマートフォンを経由せずに利用者と結びつける道が開ける。その競争が、企業秘密と取引先への働きかけをめぐる法廷の争いに移った形だ。部品の供給元への圧力が認められれば、独占や競争の妨害の問題にもつながる。", "me": "AIの機能を使う場面が、スマートフォンから専用端末へ広がるかが、今後の機器選びに関わる。ただ、裁判には時間がかかり、端末の発売時期は訴訟の行方に左右される。", "a": "OpenAIを支持する立場は、有力な部品の供給元への圧力は、新しい競争相手を排除する行為にあたりうると考える。反訴は、先に訴えたアップルの主張を点検する機会になる。", "b": "アップルの立場は、自社の元の訴えが本筋で、反訴は争点をそらすものだと考える。主張の裏付けは裁判所が判断すべきだという見方だ。", "say": "確認できているのは、OpenAIがアップルを反訴し、企業秘密の盗用と供給元への圧力を主張していることだ。双方の主張はまだ裁判所の判断を受けていない。今日は、アップルがどう反論するか、裁判の次の日程が示されるかを見たい。", "src": "時事通信(米オープンAI、アップル側を反訴 製品開発に圧力, 11/28) · 日本経済新聞(Appleが企業秘密盗用 OpenAI、個人向け端末開発巡り反訴, 11/28) · Reuters(OpenAI countersues Apple for stealing trade secrets, 11/27) · The Japan Times(OpenAI says Apple pressured suppliers to shun its devices, 11/28)"},
+    "c4":{"kick": "国際 · 台湾 · ✓ 3媒体 · 開票結果は28日夜の判明待ち", "title": "台湾で統一地方選の投票が進む、双北の行方が焦点とされる、2028年の総統選挙の前哨戦", "what": "台湾では28日、統一地方選の投票が行われている。2028年の総統選挙の前哨戦とされ、大勢は28日夜に判明する見通しだ。焦点の一つが、台北市と新北市を合わせた双北の行方だと伝えられている。国民党は中国との関係改善を訴えている。結果は頼清徳政権の今後の運営と、中国の台湾政策に影響すると注目されている。開票結果は、まだ出ていない。", "why": "地方選の結果は、2年後の総統選挙に向けて、どの党が地方の組織と勢いを握るかを示す材料になる。双北でどちらが優位に立つかは、頼政権への評価と、中国との距離をめぐる有権者の考えを測る手がかりになる。", "me": "台湾は半導体の大きな供給地で、日本の企業活動にも関わる。結果で台湾政治の流れが変われば、対中関係や地域の緊張に影響しうるため、夜に出る大勢を確認したい。", "a": "与党の民進党の立場は、地方選でも頼政権の政策が支持されるかが問われると考える。中国との距離を保つ路線を、有権者が支持するかを見る機会だという見方だ。", "b": "最大野党の国民党の立場は、中国との関係を改善して緊張を和らげる路線への支持を広げたいと考える。首長ポストの増減で、総統選挙への足がかりを得るという見方だ。", "say": "確認できているのは、28日が投開票日で、大勢が夜に判明する見通しであることだ。勝敗の数や得票差は、開票が進むまで分からない。今日は、双北の勝敗と、各党の首長ポストの増減を見たい。", "src": "NHK(台湾 統一地方選挙投票進む 政権運営や中国の政策への影響注目, 11/28) · 朝日新聞(台湾の統一地方選、きょう投開票 双北に注目、総統選挙に影響も, 11/28) · 毎日新聞(1票を投じるために続々ふるさとへ 台湾統一地方選28日投開票, 11/27)"},
+    "c1":{"kick": "安全保障 · 中東 · ✓ 4媒体 · 船の所有者・積荷と被害の詳細は未確認", "title": "米軍がイランへの海上封鎖を破ろうとした貨物船を攻撃、船は航行不能になったと報道", "what": "米軍が、イランから出港して「海上封鎖」を突破しようとした貨物船を攻撃したと、27日から28日にかけて報じられた。攻撃したのは米中央軍で、船は航行不能になったとされる。船は「パシフィック・アーチャー」と伝えられ、米軍機が精密誘導弾を船尾に撃ち込んだという。米軍が封鎖を破ろうとした船を無力化したのは、今回が初めてではないとも伝えられている。イラン側は封鎖に立ち向かうと表明したと伝えられている。船の所有者や積荷、乗組員の被害は、報道の時点では明らかになっていない。", "why": "海上封鎖は、相手国の港や海路を封じて物や人の出入りを止める措置で、実際に船を止めれば、武力の使用と隣り合わせになる。封鎖を破ろうとする船と米軍の接触が重なれば、偶発的な衝突が広がるおそれがある。", "me": "中東の海上輸送は、エネルギーや物資の流れに関わる。日本は原油の多くを中東に頼るため、封鎖をめぐる緊張が続けば、原油価格や輸送の保険料を通じて、ガソリンや電気料金に影響しうる。続報を確認したい。", "a": "米国の対応を支持する立場は、封鎖は圧力を保つ手段で、破ろうとする船を止めなければ措置が意味を失うと考える。", "b": "慎重な立場は、実力で船を止める手段は緊張を高め、偶発的な衝突や被害の拡大につながると考える。攻撃の根拠や被害の詳細の説明を求める見方だ。", "say": "確認できているのは、米軍が封鎖を破ろうとした貨物船を攻撃し、航行不能にしたと複数の報道が伝えたことだ。船の所有者や積荷、乗組員の被害は分かっていない。今日は、米政府の説明と、イラン側の反応を見たい。", "src": "読売新聞(米中央軍、イランから出港し「海上封鎖」を突破しようとした貨物船を攻撃…航行不能に, 11/28) · The Japan Times(U.S. military fires on ship violating Iran blockade, 11/28) · PBS NewsHour(U.S. military says it disabled another ship that tried to breach naval blockade on Iranian ports, 11/27) · CNA(US disables ship trying to leave Iran, as Tehran vows to confront blockade, 11/28)"},
+    "c5":{"kick": "安全保障 · サイバー · ✓ 3媒体 · 情報流出の有無は不明", "title": "米空軍の基幹クラウド基盤「Cloud One」に不正侵入か、戦術・人事・兵站の機微な情報に影響の恐れ", "what": "ハッカーが米空軍の基幹的なクラウド基盤「Cloud One」に侵入したと、27日から28日にかけて報じられた。Cloud Oneは、空軍や国防総省の部署が業務のシステムを商用のクラウドで動かすための共通の基盤だ。侵入が事実なら、戦術、人事、兵站にかかわる機微な情報に影響が及ぶ可能性がある。ただ、情報が実際に流出したかどうかは、分かっていない。侵入の手口や時期、身元は、報道の時点では明らかになっていない。", "why": "軍の業務システムを一つの共通基盤に集めると、運用は効率化するが、そこが破られたときの影響は広がる。戦術や人事、補給の情報が一度に狙われることになるため、侵入の範囲を早く特定することが重要になる。", "me": "日米は防衛の情報を共有している。米軍の基盤が破られると、日本側が共有する情報の扱いにも関わりうる。日本の防衛や自治体のクラウド利用でも、一か所に情報を集める危うさを考える材料になる。", "a": "警戒を強める立場は、軍の中核の基盤に侵入されたのなら、最悪の場合を想定して、情報の持ち出しを前提に対応すべきだと考える。", "b": "慎重な立場は、報道の段階では流出の有無も侵入の範囲も不明で、被害を断定するのは早いと考える。確認された事実に基づいて、空軍の説明を待つべきだという見方だ。", "say": "確認できているのは、侵入したとの報道が相次いだこと、情報が流出したかどうかは分かっていないことだ。今日は、米空軍が侵入を認めるか、影響を受けた情報の範囲を示すかを見たい。", "src": "毎日新聞(米空軍のクラウドシステムに不正侵入か 情報流出は不明, 11/28) · The Japan Times(Hackers breach U.S. Air Force flagship Cloud One computing platform, 11/28) · Reuters(EXCLUSIVE: Hackers breach US Air Force flagship Cloud One computing platform, 11/27)"},
+    "d1":{"kick": "経済 · ✓ 1媒体", "title": "東京電力、資本提携の交渉先に「株式を売るときは国の了承が必要」との条件を示したと伝えられる", "what": "東京電力ホールディングスは、経営の立て直しに向けて他社と資本提携を交渉していると伝えられている。その交渉相手に対し、出資によって得た株式を売却するときは国の了承が必要だとする条件を示していたことが、新たに分かったとされる。この内容は1件の報道で伝えられたもので、ほかでは確認されていない。交渉の期限や提携の規模、相手先は、明らかになっていない。", "why": "出資した側が株式を自由に売れなければ、投資の出口が限られ、出資に慎重になる可能性がある。一方で国としては、東電の経営への関与を保ちたいという考えがありうる。条件が事実なら、その綱引きの表れとみられる。", "me": "東電は首都圏の電気を担う企業で、経営の方向は電気料金や電力の安定供給に関わる。提携の中身が決まれば、料金や投資の姿勢に影響しうるため、続報に目を配りたい。ただ、今の段階では1件の報道にとどまる。", "a": "国の関与を重くみる立場は、事故処理の責任を果たす企業の株式が、国の目の届かないところへ移ることは避けるべきだと考える。", "b": "出資者の自由度を重くみる立場は、売却のたびに国の了承が要る条件では、資金が集まりにくく、提携の効果が弱まると考える。", "say": "確認できているのは、東電が交渉先に国の了承を求める条件を示したとの報道が1件あることだ。条件の詳しい内容や、交渉先がどう受け止めたかは分かっていない。今日は、ほかの報道で裏付けが出るか、提携の候補や交渉の時期についての続報が出るかを見たい。", "src": "NHK(東電 資本提携の交渉先に「株式売却時は国の了承必要」と提示, 11/28)"},
+    "d2":{"kick": "経済 · ✓ 1媒体", "title": "政府、データセンターの整備で事業者・自治体・電力会社が守る指針を新たにつくる方針を固めたと伝えられる", "what": "政府は、データセンターの整備にあたって、事業者、地元自治体、電力会社が守るべき指針を新たに策定する方針を固めたと伝えられている。全国各地でデータセンターの整備が進む一方、一部の事業者と周辺の住民との間で摩擦も起きているという。この内容は1件の報道で伝えられたもので、ほかでは確認されていない。策定の時期や中身、守られなかった場合の扱いは、明らかになっていない。", "why": "データセンターは大量の電気を使い、冷却や騒音、土地の利用で周辺に影響する。地元の理解を得ずに進めば、計画の中止や遅れにつながりうる。国が共通の指針を示すことが事実なら、事業者と地元の双方にとって、判断の物差しになりうる。", "me": "データセンターが近くにできる地域に住む人は、事業者や自治体から説明を受ける機会が増える可能性がある。ただ、指針の中身は決まっていないため、続報を待ちたい。", "a": "整備を急ぐ立場は、AIの基盤となる設備が国内に必要で、指針が明確になれば事業者が計画を立てやすく、投資も進むと考える。", "b": "地元住民の立場は、騒音や電力、水の使い方への不安があり、事業者に説明と合意の手続きを求めたいと考える。指針が努力目標にとどまらないかを見ている。", "say": "確認できているのは、政府が指針をつくる方針を固めたとの報道が1件あることだ。中身や時期は決まっていない。今日は、ほかの報道で裏付けが出るか、指針に住民への説明の手続きが入るかを見たい。", "src": "NHK(データセンター整備めぐり 政府が関係者向け指針策定へ, 11/28)"},
+    "d3":{"kick": "安全保障 · ✓ 1媒体", "title": "政府が原子力潜水艦の導入を視野に検討に入ると伝えられる、防衛省内には反対の声、非核三原則の扱いも論点に", "what": "政府が、原子力潜水艦の導入を視野に入れた検討を進めると伝えられた。防衛省内には強い反対があり、本音では8割が反対だとの声が出ていると報じられている。導入論については、軍事的な合理性への疑問や、巨額の費用への懸念が出ているという。非核三原則に例外を明記する案の効果をめぐっても、事実上の形骸化を懸念する声があるとされる。この内容は1社の報道に基づくもので、ほかでは確認されていない。導入が決まったわけではなく、検討の段階にとどまる。", "why": "原子力潜水艦は、長く潜ったまま遠くまで動けるため、海の守りの形を変えうる。一方で、原子力を軍事に使うことは、日本の原子力の利用や非核三原則との関係で、長く慎重に扱われてきた。費用も大きく、他の装備の優先度にも関わりうる。", "me": "導入の検討は、事実なら防衛費の使い方や、日本の安全保障政策の前提に関わる。費用の負担は将来の税や予算に及びうるため、議論の経過を知っておきたい。", "a": "導入に前向きな立場は、周辺の軍事力の増強に対し、長く潜航できる能力が抑止力を高めると考える。検討は調査や研究から始めるべきだという見方だ。", "b": "導入に慎重な立場は、運用の人員や基地、技術の面で実現が難しく、費用に見合う効果が見えないと考える。非核三原則の形骸化を招くことへの懸念も強い。", "say": "確認できているのは、政府が導入を視野に検討に入ると伝えられたこと、防衛省内に反対があるとされることだ。政府の公式な説明は示されていない。今日は、ほかの報道で裏付けが出るか、政府や与党が検討の枠組みや時期をどう説明するかを見たい。", "src": "朝日新聞(原潜導入へ政府が検討、防衛省内「本音は8割が反対」四つの問題点, 11/28)"},
+    "d4":{"kick": "スポーツ · ✓ 3媒体", "title": "日本ハムの伊藤大海投手がカブス、西武の高橋光成投手がダイヤモンドバックスと合意したと伝えられる", "what": "プロ野球・日本ハムからポスティングシステムを使って大リーグ移籍を目指していた伊藤大海投手が、カブスと契約に合意したと、米国の複数のメディアが伝えた。西武の高橋光成投手は、海外FAによる移籍で、ダイヤモンドバックスと合意したと伝えられた。伊藤投手は2025年に沢村賞を受賞し、最多勝も2回獲得している。いずれも28日に伝えられた。契約の年数や金額は、ここでは確認できていない。", "why": "ポスティングは、球団の承認を受けて大リーグ球団と交渉する制度で、海外FAは資格を得た選手が自ら移籍先を決める制度だ。日本の先発投手が毎年のように挑戦していて、日本球界の戦力にも影響する。", "me": "日本で見てきた選手が、来季から米国で投げることになる。移籍先の球団の試合を日本で見る機会や、日本の球団の来季の戦力にも関わる。", "a": "挑戦を歓迎する立場は、実績を積んだ投手が最高峰の舞台に進むのは自然で、日本の選手の評価を高めると考える。", "b": "日本球界の立場は、主力の投手が抜けることで、来季の戦力と人気に響くと懸念する。制度の面では、球団への対価の扱いも議論になるという見方だ。", "say": "確認できているのは、米国の複数のメディアが伊藤投手の合意を伝え、高橋投手がダイヤモンドバックスと合意したことだ。伊藤投手の正式な発表や契約の中身は、まだ明らかになっていない。今日は、球団や本人からの発表があるかを見たい。", "src": "NHK(日本ハム 伊藤大海投手がカブスと合意 米メディア伝える, 11/28) · Yahoo!ニュース(伊藤大海がカブスと契約合意 報道, 11/28) · 時事通信(高橋光成投手、Dバックスと合意 西武から海外FA―米大リーグ, 11/28)"},
+    "d5":{"kick": "社会 · ✓ 1媒体", "title": "広範囲で大気が不安定に、北日本や東日本の山沿いを中心に28日夜から雪の見込みと伝えられる、29日にかけて続く", "what": "低気圧や前線の影響で、広い範囲で大気の状態が非常に不安定になっていると伝えられている。北日本や伊豆諸島では、局地的に雨雲が発達しているという。この時期としては強い寒気も流れ込んでいる。このため、28日夜から北日本や東日本の山沿いを中心に雪が降る見込みだとされる。29日にかけて、広い範囲で大気の不安定な状態が続くという。この内容は1件の報道で伝えられたもので、地域ごとの詳しい予報は別に確認する必要がある。", "why": "上空に強い寒気が入ると、地上との気温差が大きくなり、雨雲が急に発達しやすくなる。山沿いでは雨が雪に変わり、路面の凍結や積雪が交通に影響しうる。", "me": "28日夜から29日にかけて山沿いへ出かける人は、気象庁などの予報と道路の情報を確認したい。冬用のタイヤやチェーンの用意がない場合は、予定の変更も考えたい。", "a": "早めの備えを呼びかける立場は、この時期の雪は予想よりも道路に影響しやすく、早めの対策が事故を減らすと考える。", "b": "過度に構えない立場は、山沿いが中心で、平地では雨が主になる地域も多いため、地域ごとの予報を確認して判断すればよいと考える。", "say": "確認できているのは、広範囲で大気が不安定で、28日夜から山沿いを中心に雪が降る見込みだと伝えられたことだ。雪の量は地域で大きく変わる。今日は、自分の地域の最新の予報と、夜の交通情報を見たい。", "src": "NHK(広範囲で大気不安定 北日本や東日本の山沿い中心に今夜から雪, 11/28)"}
+  };
+  const G = {
+    "反訴":{"f": "民事訴訟", "d": "訴えられた側が、同じ裁判のなかで相手に対して起こす訴え。", "w": "OpenAIがアップルに対して反訴を起こした。"},
+    "企業秘密":{"f": "法律", "d": "会社が秘密として管理する、事業に役立つ情報。盗用は不正競争や窃盗にあたりうる。", "w": "双方が企業秘密の盗用を主張している。"},
+    "禁輸":{"f": "貿易", "d": "特定の国や製品について、輸出や輸入を禁じること。", "w": "中国向けの供給が禁じられた半導体が報じられた。"},
+    "輸出規制":{"f": "貿易", "d": "安全保障上の理由から、特定の製品や技術の輸出を制限する制度。", "w": "先端半導体の中国向け供給は米国の輸出規制で禁じられている。"},
+    "先端半導体":{"f": "技術", "d": "高い計算性能を持つ最先端の半導体。AIの開発や運用に欠かせない。", "w": "エヌビディア製の先端半導体が上海の施設で報じられた。"},
+    "統一地方選":{"f": "台湾政治", "d": "台湾で全国の県・市の首長や議員を同じ日に選ぶ選挙。", "w": "28日に投票が行われている。"},
+    "総統選挙":{"f": "台湾政治", "d": "台湾の総統(国家元首にあたる役職)を選ぶ選挙。", "w": "2028年の総統選挙の前哨戦とされる。"},
+    "双北":{"f": "台湾政治", "d": "台北市と新北市を合わせた呼び名。人口が多く、選挙の焦点になる。", "w": "双北の行方が注目されている。"},
+    "不正侵入":{"f": "情報セキュリティ", "d": "権限のない者がシステムに入り込むこと。", "w": "米空軍の基盤への不正侵入が報じられた。"},
+    "クラウド":{"f": "情報技術", "d": "インターネット経由で借りて使う、計算機やデータの保管の仕組み。", "w": "Cloud Oneは商用クラウドを使う共通の基盤だ。"},
+    "兵站":{"f": "軍事", "d": "前線の部隊に物資や人員を送り届ける後方支援。", "w": "戦術・人事・兵站の情報への影響が懸念されている。"},
+    "資本提携":{"f": "金融", "d": "他社が出資して株式を持ち、結びつきを強める提携。", "w": "東電が複数の相手と資本提携を交渉している。"},
+    "ポスティング":{"f": "制度", "d": "日本の球団の承認を受けて、選手が大リーグ球団と交渉できる制度。", "w": "伊藤投手はポスティングで移籍を目指していた。"},
+    "海外FA":{"f": "制度", "d": "一定の年数を満たした選手が、自らの意思で海外の球団へ移籍できる権利。", "w": "高橋投手は海外FAで移籍する。"},
+    "データセンター":{"f": "情報技術", "d": "サーバーなどの計算機を大量に置き、データを処理・保管する施設。", "w": "整備にあたっての指針が策定される。"},
+    "原子力潜水艦":{"f": "安全保障", "d": "原子炉を動力にした潜水艦。長く潜ったまま遠くまで動ける。", "w": "政府が導入を視野に検討に入る。"},
+    "非核三原則":{"f": "安全保障", "d": "核を持たず、つくらず、持ち込ませないという日本の原則。", "w": "例外を明記する案の効果が疑問視されている。"},
+    "大気が不安定":{"f": "気象", "d": "上空と地上の気温差が大きく、雨雲が急に発達しやすい状態。", "w": "広範囲で大気が不安定になっている。"},
+    "海上封鎖":{"f": "安全保障", "d": "相手国の港や海路を軍の力で封じ、船や物の出入りを止める措置。", "w": "米軍が、封鎖を破ろうとしたとされる貨物船を攻撃したと報じられた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>

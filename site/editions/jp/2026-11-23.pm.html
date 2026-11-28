@@ -1,0 +1,332 @@
+<title>DailyDrop 日本版</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 紙の新聞の一面。6段グリッド、二重罫の題字、明朝の見出し、写真の代わりにインクの図表。記事を押すと開く。 */
+:root{
+  --paper:#f3eee2; --paper-2:#ebe4d3; --ink:#1b1a17; --ink-2:#3d3a33; --mute:#7b7569; --rule:#b9b1a0; --rule-2:#d8d1c1; --red:#8d2f22;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif; --sans:"Noto Sans JP","Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#1d1b17;--paper-2:#24211c;--ink:#ece6d8;--ink-2:#cfc8b8;--mute:#8e877a;--rule:#4a443a;--rule-2:#332f28;--red:#d2654f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:3px 3px;color:var(--ink);font-family:var(--serif);font-size:15px;line-height:1.6;padding-block:18px;padding-inline:16px}
+.sheet{max-width:1180px;margin:0 auto}
+/* 題字 */
+.ears{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
+.ear{font-family:var(--sans);font-size:11.5px;color:var(--mute);line-height:1.5;border:1px solid var(--rule);padding:6px 10px;max-width:220px}
+.ear b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;letter-spacing:-.02em}
+.ear.r{justify-self:end;text-align:right}
+.mast{text-align:center}
+.mast h1{margin:0;font-weight:900;font-size:clamp(40px,8vw,84px);letter-spacing:-.05em;line-height:1}
+.mast .sub{font-family:var(--sans);font-size:11px;letter-spacing:.32em;color:var(--mute);margin-top:4px}
+.dateline{display:flex;justify-content:space-between;align-items:center;border-top:3px double var(--ink);border-bottom:1px solid var(--ink);padding:5px 0;margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.06em;color:var(--ink-2)}
+.dateline b{font-family:var(--serif);font-weight:700;letter-spacing:0}
+/* グリッド */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px;margin-top:14px}
+.col{min-width:0}
+.c3{grid-column:span 3}.c2{grid-column:span 2}.c1{grid-column:span 1}.c6{grid-column:span 6}.c4{grid-column:span 4}
+.vr{border-left:1px solid var(--rule-2);padding-left:22px;margin-left:-11px}
+.story{cursor:pointer;position:relative}
+.story:hover h2,.story:hover h3{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--red)}
+.story:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--red);font-weight:700;text-transform:uppercase}
+.kick span{color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:8px}
+h2.hl{font-weight:900;font-size:clamp(28px,3.6vw,46px);line-height:1.12;letter-spacing:-.04em;margin:6px 0 8px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+h3.hl{font-weight:700;font-size:clamp(20px,2.2vw,27px);line-height:1.22;letter-spacing:-.03em;margin:6px 0 6px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.deck{font-size:16.5px;line-height:1.5;color:var(--ink-2);margin:0 0 10px;font-weight:400;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.body{columns:2;column-gap:22px;column-rule:1px solid var(--rule-2);text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.72}
+.body p{margin:0 0 8px}
+.body p:first-child::first-letter{float:left;font-size:3.1em;line-height:.85;padding:4px 7px 0 0;font-weight:900;color:var(--red)}
+.one{text-align:left;word-break:normal;overflow-wrap:anywhere;line-break:strict;font-size:14.5px;line-height:1.7}
+.one p{margin:0 0 8px}
+.more{font-family:var(--sans);font-size:12px;color:var(--red);letter-spacing:.06em;margin-top:4px}
+.more::after{content:""}
+/* インクの図表 */
+figure{margin:12px 0 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:8px 0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-family:var(--sans);font-size:11.5px;color:var(--mute);margin-top:4px;line-height:1.4}
+/* 索引・短信 */
+.index h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px;margin:0 0 8px}
+.index .it{padding:8px 0;border-bottom:1px dotted var(--rule)}
+.index .it:last-child{border-bottom:0}
+.index .it b{display:block;font-size:15.5px;line-height:1.35;letter-spacing:-.02em;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.index .it span{font-family:var(--sans);font-size:11.5px;color:var(--mute)}
+.rule-h{border:0;border-top:1px solid var(--ink);margin:14px 0 12px}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0 22px}
+.rumor h4,.next h4{font-family:var(--sans);font-size:11px;letter-spacing:.26em;margin:0 0 6px;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:4px}
+.rumor div{font-size:13.5px;line-height:1.55;padding:5px 0;border-bottom:1px dotted var(--rule);word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.rumor div:last-child{border-bottom:0}
+.rumor b{font-weight:700}
+.rumor span{color:var(--mute);font-family:var(--sans);font-size:12px}
+.next div{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.next b{color:var(--red);white-space:nowrap}
+.colophon{border-top:3px double var(--ink);margin-top:16px;padding-top:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em}
+/* ポップアップ */
+.ov{position:fixed;inset:0;background:rgba(20,18,14,.55);display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:9}
+.ov[hidden]{display:none}
+.pop{background:var(--paper);color:var(--ink);max-width:820px;width:100%;border:1px solid var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);padding:28px 32px 26px;position:relative}
+.pop #popBody>.kick{padding-right:96px}
+.pop .x2{display:block;margin:26px auto 0;font-family:var(--sans);font-size:13px;letter-spacing:.1em;background:transparent;border:1px solid var(--ink);color:var(--ink);padding:10px 26px;cursor:pointer}
+.pop .x2:hover{background:var(--ink);color:var(--paper)}
+.pop .x{position:absolute;top:10px;right:12px;z-index:2;font:inherit;font-family:var(--sans);font-size:12px;letter-spacing:.1em;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 9px;cursor:pointer}
+.pop .kick{margin-bottom:4px}
+.pop h2{font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:0 0 12px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .lab{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--red);font-weight:700;margin:16px 0 4px}
+.pop p{margin:0 0 8px;font-size:15.5px;line-height:1.72;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.pop .vw{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:6px 0}
+.pop .vw p{font-size:14px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:8px}
+.pop .vw b{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--mute);margin-bottom:3px}
+.pop .say{border-left:3px solid var(--red);padding:4px 0 4px 14px;margin:8px 0;font-size:16px;line-height:1.65}
+.pop .src{font-family:var(--sans);font-size:12px;color:var(--mute);border-top:1px solid var(--rule);padding-top:8px;margin-top:14px;line-height:1.5}
+
+/* 用語集 */
+.term{border-bottom:1px dotted var(--red);cursor:help;text-decoration:none;color:inherit}
+.term:hover{background:rgba(141,47,34,.08)}
+.tip{position:absolute;z-index:20;max-width:340px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25);padding:12px 14px 10px;font-family:var(--sans);font-size:13.5px;line-height:1.55;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+.tip[hidden]{display:none}
+.tip .tk{font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.02em;display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px}
+.tip .tk span{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.2em;color:var(--red)}
+.tip .tx{color:var(--ink-2)}
+.tip .tw{margin-top:6px;padding-top:6px;border-top:1px dotted var(--rule);font-size:12.5px;color:var(--mute)}
+.tip .tw b{color:var(--red);font-weight:700}
+.glos{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.04em;margin-top:6px}
+@media (max-width:860px){
+  .grid,.strip{grid-template-columns:1fr}
+  .c3,.c2,.c1,.c4,.c6{grid-column:auto}
+  .vr{border-left:0;padding-left:0;margin-left:0;border-top:1px solid var(--rule);padding-top:12px;margin-top:12px}
+  .body{columns:1}
+  .ears{grid-template-columns:1fr}
+  .ear{max-width:none}.ear.r{justify-self:stretch;text-align:left}
+  .pop{padding:50px 18px 22px}
+  .pop #popBody>.kick{padding-right:0}
+  .pop .x{top:12px;right:12px;padding:7px 12px;font-size:12.5px}
+  .pop .x .esc{display:none}
+  .pop .vw{grid-template-columns:1fr}
+}
+
+/* 余白埋め: 記事欄の底に付く補助ブロック */
+.fill{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2)}
+.fill h5{font-family:var(--sans);font-size:10.5px;letter-spacing:.22em;color:var(--mute);margin:0 0 8px;font-weight:700}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nums div{border-left:2px solid var(--ink);padding-left:9px}
+.nums b{display:block;font-size:19px;letter-spacing:-.02em;line-height:1.1}
+.nums span{font-family:var(--sans);font-size:11px;color:var(--mute);line-height:1.35;display:block;margin-top:3px}
+.word b{font-size:16px}.word b i{font-style:normal;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--red);margin-left:7px;font-weight:700}
+.word p{font-size:13px;line-height:1.55;margin:5px 0 0;color:var(--ink-2)}
+.briefs{list-style:none;margin:0;padding:0}
+.briefs li{font-size:13.5px;line-height:1.5;padding:5px 0;border-bottom:1px dotted var(--rule-2)}
+.briefs li:last-child{border-bottom:0}
+.briefs li span{font-family:var(--sans);font-size:11px;color:var(--mute);margin-left:6px}
+.house{margin-top:10px;font-family:var(--sans);font-size:12px;letter-spacing:.04em;color:var(--red);border:1px solid var(--red);padding:7px 10px;text-align:center}
+@media (max-width:760px){.nums{grid-template-columns:repeat(3,1fr);gap:8px}.nums b{font-size:17px}}
+@media (prefers-reduced-motion:no-preference){.story h2,.story h3{transition:text-decoration-color .15s}}
+.index .it em{display:block;font-style:normal;font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink-2);margin:4px 0 3px;word-break:normal;overflow-wrap:anywhere;line-break:strict}
+</style>
+
+<div class="sheet">
+  <header>
+    <div class="ears">
+      <div class="ear"><b>—</b>日経平均 · 11/20 · 終値は集計対象の時間外のため掲載せず</div>
+      <div class="mast"><h1 lang="en">DailyDrop</h1><div class="sub">DAILY DROP · 国内外 全分野 · 毎日一枚</div></div>
+      <div class="ear r"><b>—</b>S&amp;P500種 · 11/20 · 終値は集計対象の時間外のため掲載せず</div>
+    </div>
+    <div class="dateline"><span>No. 50 · 夕刊</span><b>2026年11月23日(月)</b><span>記事を押すと開き、<u style="text-decoration:dotted underline var(--red)">点線の語</u>を押すと意味が出る</span></div>
+  </header>
+
+  <main class="grid">
+    <article class="col c3 story" tabindex="0" data-id="n1">
+      <div class="kick">社会 · 沖縄<span>✓ 4媒体 · 公開初日の来場者数は未確認</span></div>
+      <h2 class="hl">首里城正殿の復元が完成、23日正午に一般公開 焼失から7年</h2>
+      <p class="deck">青空の下で完成式典が開かれ、朱塗りの正殿が7年ぶりに姿を現した。</p>
+      <div class="body">
+        <p>沖縄県那覇市の首里城正殿が、2019年10月の火災で焼失してから約7年を経て復元され、国が主催する完成式典が22日に開かれた。式典ではテープカットが行われ、23日午前には沖縄県主催の祝賀の式典も開かれた。正殿の一般公開は23日正午に始まる。正殿は琉球王国の政治と儀式の中心だった建物で、火災では正殿を含む9棟が失われた。今回の復元では、古い文書や明治期の写真の研究が反映され、正面の向拝(建物の入り口に張り出した屋根の下の部分)の奥にある彫刻が、従来の「1つの牡丹と唐草」から、3つの牡丹と唐草に1対の獅子を組み合わせた文様に改められたと報じられている。</p>
+        <p>復元をめぐっては、正殿の前に立つ「大龍柱」の向きをどう定めるかという点で、歴史認識も絡んだ議論が続いてきた。大龍柱は、正殿前の石の柱に龍の彫刻を施したもので、向きの判断が研究者の間でも分かれている。正殿の公開で首里城の復興は一つの区切りを迎えるが、琉球王国の世継ぎが暮らした屋敷にあたる建物なども今後復元される予定で、整備は続く。公開初日の来場者数や入場の方法、混雑の状況は確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <article class="col c2 vr story" tabindex="0" data-id="n2">
+      <div class="kick">経済 · 米国企業<span>✓ 3媒体 · 取締役会の後任人事は未確認</span></div>
+      <h3 class="hl">米財務長官、エヌビディア前CEOの復帰には「責任の所在の見極めが必要」 トランプ氏と立場に違い</h3>
+      <div class="one">
+        <p>アメリカのベッセント財務長官は22日、半導体大手エヌビディアのジェンスン・フアン前CEOの復帰について、責任の所在を見極める必要があるとの考えを示した。フアン氏の復帰を認めてもよいとするトランプ大統領とは立場が異なる。ベッセント氏は、同社の中国向けの半導体販売について、どの階層の経営陣が事情を知っていたのかを確認する必要があるとも述べた。 フアン氏は先週CEOを退き、現在はコレット・クレス最高財務責任者(CFO)がCEO代行を務めている。ベッセント氏はこれまでに、同社に10日以内に説明を出すよう求めており、期限は25日とされる。論点は、輸出規制の対象となる先端半導体が中国に流れた経緯と、社内のコンプライアンス(法令順守)を誰が統括していたかだ。取締役会が後任に社内外のどちらを選ぶのかは、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+
+    <aside class="col c1 vr index">
+      <h4>短く見るきょう</h4>
+      <div class="it story" tabindex="0" data-id="m1"><b>英国人男性がホルムズ海峡を3日間で15キロ泳ぎ切り「戦争をやめるべき」と訴え</b><em>緊張が続く海峡で3日間、計15キロを泳いだ。船舶への攻撃が海洋生物などに深刻な影響を及ぼすおそれがあると訴えた。</em><span>国際 · ✓ 2媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m2"><b>北九州でフィジカルAIの初の公道実験、歩行者を避け時速5キロで走ったと伝えられる</b><em>実験は北九州市の公道で行われ、歩行者を避けながら時速5キロで走ったと伝えられる。公道での実験は初めてという。</em><span>科学技術 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m3"><b>米国の報道、トランプ氏のアジア訪問で米朝首脳会談を探るも条件で折り合わず</b><em>訪問に合わせて米朝の双方が首脳会談の可能性を探ったが、金総書記が示した条件を米国が受け入れられなかったと伝えられる。</em><span>国際 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m4"><b>ドイツ最大の労組、メルセデスの工場で22日から24時間の警告ストと伝えられる</b><em>賃上げなどをめぐり、大手自動車メーカーの従業員が入る労組が新たにメルセデス・ベンツの工場で24時間のストを始めると伝えられた。</em><span>経済 · ✓ 1媒体</span></div>
+      <div class="it story" tabindex="0" data-id="m5"><b>前橋の住宅街に出没したクマ、地下水路に潜む可能性があるとして出入り口を封鎖と伝えられる</b><em>市や警察は22日、地下水路の出入り口を土のうなどで封鎖したと伝えられる。23日も警戒を続ける方針という。</em><span>社会 · ✓ 1媒体</span></div>
+    </aside>
+  </main>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c3 story" tabindex="0" data-id="n3">
+      <div class="kick">国際 · 中東<span>✓ 2媒体 · 再攻撃の時期と規模は未確認</span></div>
+      <h3 class="hl">トランプ氏、イランと合意なければ年明け再攻撃を検討と伝えられる</h3>
+      <div class="body">
+        <p>トランプ米大統領は、イランとの間で合意ができなければ、年明け以降にイランへの再攻撃を検討する考えを示したと伝えられる。米国は現在、海上封鎖と経済的な圧力を続けているとされ、イスラエルと共同で大規模な軍事作戦を再開するかどうかが選択肢に挙がっていると伝えられる。標的の候補には核関連の施設や橋、発電所などがあるとされる。イスラエルのネタニヤフ首相が攻撃の再開を求める一方、米政権の側近や湾岸諸国の指導者は、経済的な圧力が効くまで時間を与えるよう助言しているとされる。</p>
+        <p>イランはカタールの仲介を通じて、核問題と和平に関する新たな提案を示したとされ、米国が内容を検討していると報じられている。トランプ氏は決定を急がないと述べたとされる。再攻撃の時期や規模、合意の条件は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+    <article class="col c3 vr story" tabindex="0" data-id="n4">
+      <div class="kick">国際 · 米国政治<span>✓ 3媒体 · 議席数の最終確定は未確認</span></div>
+      <h3 class="hl">米民主党、下院で258議席の見通し(集計中) 1992年以来の大勝と伝えられる</h3>
+      <div class="body">
+        <p>11月初めに行われたアメリカの中間選挙で、民主党が下院で258議席に達する見通し(集計中)と伝えられる。中間選挙は、大統領の任期の途中に行われる議会選挙で、下院は全435議席が改選される。過半数は218議席のため、民主党は大きく上回る見通しだ。1992年以来の大勝との報道があり、1991年から1993年の議会以来の多さになる見通しだ。</p>
+        <p>集計は報道ごとに250台後半の数字が示されており、勝敗が決まっていない選挙区の結果次第で最終の議席数は変わる。新しい議会は来年1月3日に招集され、民主党が下院の多数を握る見通しだ。トランプ政権の下で、与党が議会の両院を完全には支配できなくなる見通しだ。最終の議席数は、確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+    </article>
+  </section>
+
+  <hr class="rule-h">
+
+  <section class="strip">
+    <article class="col c4 story" tabindex="0" data-id="n5">
+      <div class="kick">国際 · ロシア・リビア<span>✓ 3媒体 · 攻撃の主体は未確認</span></div>
+      <h3 class="hl">リビア東部の港でロシア艦船が爆発、無人機による攻撃の疑い</h3>
+      <div class="body">
+        <p>リビア東部のベンガジの港に停泊していたロシアの艦船で22日、爆発が起き、炎上した。リビア東部の政府は、予備的な調査の結果、艦船内で起きた爆発の原因として無人機による攻撃の疑いがあるとする声明を出した。無人機は、人が乗らずに遠隔や自動で飛ぶ機体をいう。</p>
+        <p>一部の報道では、ウクライナの海上無人機による攻撃との見方が出ている。ただし、攻撃を実行した主体は特定されておらず、ロシア側の説明や被害の規模、死傷者の有無も報じられた範囲では確認できていない。</p>
+      </div>
+      <div class="more">記事とDailyDropの考えを開く</div>
+      <div class="fill word"><h5>きょうの言葉</h5><b>無人機<i>安全保障</i></b><p>人が乗らず、遠隔操作や自動で飛ぶ機体。偵察のほか、爆発物を積んだ攻撃にも使われる。</p></div>
+      <div class="house">毎朝7分、一面を一枚</div>
+    </article>
+    <div class="col c2 vr">
+      <div class="rumor">
+        <h4>うわさの温度 — 未確認のもの</h4>
+        <div><b>エヌビディアのフアン前CEOの復帰はすでに決まった。</b> <span>確認できていない。トランプ大統領が復帰を認めてもよいと述べた一方、ベッセント財務長官は責任の所在の見極めが先だと述べており、取締役会が復帰を決めたとの発表は伝えられていない。</span></div>
+        <div><b>アメリカは近くイランへの攻撃を再開する。</b> <span>報じられているのは、合意がなければ年明け以降に再攻撃を検討するという段階だ。トランプ氏は決定を急がないと述べたとされ、攻撃の日時は決まっていない。</span></div>
+        <div><b>リビアのロシア艦船の爆発は、ウクライナが認めた攻撃だ。</b> <span>リビア東部の政府は無人機攻撃の疑いを示したが、攻撃の主体は特定されておらず、ウクライナ側が関与を認めたとの報道は報じられた範囲では確認できていない。</span></div>
+      </div>
+      <div class="next" style="margin-top:14px">
+        <h4>きょう見るもの</h4>
+        <div><b>今日 · 11月23日(月)</b><span>勤労感謝の日で東京の株式市場は休場となり、取引は24日(火)に再開する。首里城正殿の公開初日の様子と、ベッセント財務長官が求めたエヌビディアの回答期限の25日に向けた動きが焦点になる。</span><b>今週</b><span>エヌビディアの説明の内容と、取締役会が後任のCEOをどう選ぶかを見たい。イランへの米国の対応と、リビアで起きたロシア艦船の爆発の続報も注目される。</span><b>後で</b><span>米国の新しい議会は来年1月3日に招集される。トランプ氏が年明けに検討するとしたイランへの対応も、その前後に動く可能性がある。</span><b>読者へ</b><span>連休中に首里城を訪れる人は、入場の方法と混雑を公式の案内で確かめておきたい。前橋市の周辺に住む人は、クマの目撃情報と自治体の案内に注意してほしい。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="glos">用語集 · 点線の語 — 政治・市場・法・国際情勢の用語を記事の文脈とともに説明する。毎日積み上がる。</div>
+  <footer class="colophon">
+    <span>DailyDrop · 原資料 ✓ = 発表機関の原文確認、報道照合 ✓ = 異なる2社以上が一致 · 『考え』はDailyDropの意見</span>
+    <span>記事本文は転載しない。要約と出典のみ。· © 2026</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip" hidden role="tooltip"></div>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="pop">
+    <button class="x" id="close" type="button" aria-label="閉じる">閉じる <span class="esc">ESC</span></button>
+    <div id="popBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const A = {
+    "n1":{"kick": "社会 · 沖縄 · ✓ 4媒体 · 公開初日の来場者数は未確認", "title": "首里城正殿の復元が完成、23日正午に一般公開 焼失から7年", "what": "沖縄県那覇市の首里城正殿は、2019年10月の火災で焼失した。火災では正殿を含む9棟が失われた。約7年を経て復元が完成し、国が主催する完成式典が22日に開かれ、テープカットが行われた。23日午前には沖縄県主催の祝賀の式典があり、正午から一般公開が始まる。復元では古い文書や明治期の写真の研究が反映され、向拝の奥の彫刻の文様が改められたと報じられている。大龍柱の向きをめぐっては議論が続いてきた。世継ぎの屋敷にあたる建物も今後復元される予定だ。", "why": "首里城は琉球王国の政治と儀式の中心で、沖縄の歴史の象徴とされてきた。正殿の復元は、焼失からの復興計画の大きな節目にあたる。大龍柱の向きのように、史料の読み方が分かれる点は、どの説を採るかで歴史の見方が表れるため、復元の判断が注目される。", "me": "訪れる予定がある人は、入場の方法や混雑の見通しを、沖縄県や首里城の公式の案内で確かめておくとよい。連休の初日は人出が多くなりやすい。", "a": "復元を喜ぶ立場は、焼失から7年で正殿がよみがえったことを、地域の誇りの回復と受け止める。古い文書や写真の研究を反映した点を、史実に近づける努力として評価する。", "b": "慎重な立場は、大龍柱の向きなど意見の分かれる点が残ることに目を向ける。復元の判断の根拠を丁寧に説明し続けることが、今後の整備でも求められると考える。", "say": "確認できているのは、焼失から約7年で正殿の復元が完成し、23日正午に一般公開が始まることだ。公開初日の来場者数や混雑は確認できていない。今日は、公開初日の様子と、世継ぎの屋敷など次の復元の予定が示されるかを見たい。", "src": "NHK(首里城正殿が復元 きょう正午から一般公開、11月23日) · 朝日新聞(首里城正殿で復元完成式、11月22日) · 毎日新聞(復元された首里城正殿 一般公開に向けオープニングセレモニー、11月21日) · 琉球新報(首里城正殿で国主催の完成式典、11月22日)"},
+    "n2":{"kick": "経済 · 米国企業 · ✓ 3媒体 · 取締役会の後任人事は未確認", "title": "米財務長官、エヌビディア前CEOの復帰には「責任の所在の見極めが必要」 トランプ氏と立場に違い", "what": "アメリカのベッセント財務長官は22日、エヌビディアのフアン前CEOの復帰には、責任の所在を見極める必要があるとの考えを示した。フアン氏は先週CEOを退いた。トランプ大統領はフアン氏の復帰を認めてもよいと述べている。現在はクレスCFOがCEO代行を務める。ベッセント氏は、中国向けの半導体販売について、どの階層の経営陣が事情を知っていたのかを確認する必要があるとし、同社に10日以内の説明を求めている。期限は25日とされる。", "why": "論点は、輸出規制の対象となる先端半導体が中国に流れた経緯と、社内のコンプライアンスの責任だ。経営トップの交代は、取引先の管理や調査への対応が変わるかどうかに直結する。財務長官と大統領で立場が分かれると、取締役会が後任を決めるうえで政治の圧力が強まる。", "me": "エヌビディアは世界のAI向け半導体の中心にあり、株価や半導体関連の銘柄を持つ人、投資信託で米国株に投資している人に影響しうる。25日前後の回答の内容と、株価の反応を見ておくとよい。", "a": "責任の追及を重く見る立場は、輸出規制の違反の疑いがある以上、誰が何を知っていたかを調べずにトップが戻るべきではないと考える。復帰を急ぐことは、調査への信頼を損なうと見る。", "b": "復帰を認める立場は、フアン氏が同社の成長を主導してきたことを重く見る。輸出管理をめぐる調査の結果を待って判断すればよいと考える。", "say": "確認できているのは、財務長官が責任の見極めを復帰の条件のように述べ、大統領とは立場が異なることだ。取締役会の後任人事は確認できていない。今日は、25日の回答期限に向けて同社が何を公表するか、取締役会が社内外のどちらから後任を選ぶかを見たい。", "src": "TBS NEWS DIG(米財務長官 エヌビディア前CEOの復帰には責任の見極めが必要、11月23日) · ロイター(米、エヌビディアに対中半導体販売の説明要求、11月23日) · Financial Times(Bessent refuses to rule out Huang's return to Nvidia、11月22日)"},
+    "n3":{"kick": "国際 · 中東 · ✓ 2媒体 · 再攻撃の時期と規模は未確認", "title": "トランプ氏、イランと合意なければ年明け再攻撃を検討と伝えられる", "what": "トランプ米大統領は、イランと合意ができなければ、年明け以降にイランへの再攻撃を検討する考えを示したと伝えられる。米国は現在、海上封鎖と経済的な圧力を続けているとされる。イスラエルと共同で大規模な軍事作戦を再開するかどうかが選択肢に挙がっていると伝えられる。標的の候補には核関連の施設や橋、発電所などがあるとされる。ネタニヤフ首相は攻撃の再開を求めているとされる。トランプ氏は決定を急がないと述べたとされる。イランはカタールの仲介を通じて新たな提案を示し、米国が内容を検討していると報じられている。", "why": "海上封鎖と経済的な圧力は、相手の譲歩を引き出すための手段で、効果が出るまでに時間がかかる。再攻撃を示すことで、交渉の場で譲歩を迫る狙いがあると読める一方、実際に踏み切れば原油の供給や周辺国の安全に大きく響く。決定を年明けに置いたことで、当面は交渉と圧力が並行して続く。", "me": "中東の緊張は原油価格を通じて、ガソリン代や電気料金に影響する。直近のWTI原油は1バレル83ドル前後で動いている。年明けに向けて、原油の動きと、日本が輸入する原油の調達の話題を見ておくとよい。", "a": "強い圧力を支持する立場は、軍事行動の選択肢を残すことが、イランに譲歩を促す最大の材料になると考える。期限を示さない構えも、交渉を有利に進める手段になると見る。", "b": "慎重な立場は、再攻撃は中東全体に被害を広げ、原油価格や周辺国の安全に深刻な影響を与えると考える。経済的な圧力が効くまで時間を与え、仲介による交渉を優先すべきだと見る。", "say": "確認できているのは、トランプ氏が決定を急がず、合意がなければ年明けに再攻撃を検討するとしたことだ。攻撃の時期と規模は確認できていない。今日は、イランが示した新たな提案への米国の返答と、原油価格の動きを見たい。", "src": "毎日新聞(トランプ氏、イランと合意なければ年明けの再攻撃検討 譲歩迫る、11月23日) · Al-Monitor(Trump eyes 2027 to see what happens on Iran、11月)"},
+    "n4":{"kick": "国際 · 米国政治 · ✓ 3媒体 · 議席数の最終確定は未確認", "title": "米民主党、下院で258議席の見通し(集計中) 1992年以来の大勝と伝えられる", "what": "11月初めに行われたアメリカの中間選挙で、民主党が下院で258議席に達する見通し(集計中)と伝えられる。下院は全435議席で、過半数は218議席だ。1992年以来の大勝との報道がある。1991年から1993年の議会以来の多さになる見通しとされる。報道ごとに250台後半の数字が示されており、勝敗が決まっていない選挙区の結果次第で最終の議席数は変わる。新しい議会は来年1月3日に招集され、民主党が下院の多数を握る見通しだ。", "why": "下院は予算案を先に審議する権限を持ち、多数党が委員会の議長を握る。民主党が多数になれば、大統領の政策に関する調査や、予算の審議で主導権を取りやすくなる。議席差が大きいほど、少数の造反では結果が揺らぎにくい。", "me": "米国の予算や関税、対外政策が議会で止まりやすくなると、為替や株価の動きに影響する。円相場は1ドル159円前後で動いており、米国の政策の見通しが変わるニュースを見ておくとよい。", "a": "大勝を重く見る立場は、有権者が現政権に歯止めを求めた結果だと受け止める。議会が調査や予算で政権を牽制する力を持つ点に注目する。", "b": "冷静に見る立場は、議席数は最終集計で変わり、中間選挙は与党に不利になりやすい傾向もあると考える。政策が動くかどうかは、上院との関係や大統領の拒否権を含めて見るべきだと見る。", "say": "確認できているのは、民主党が下院で大きく議席を伸ばして多数を握る見通しだということだ。258議席という数字と、1992年以来という表現は、集計中の数字に基づく報道にとどまる。今日は、最終議席数の確定と、民主党が1月に何から着手するかを見たい。", "src": "朝日新聞(米民主、258議席確保 下院で34年ぶり大勝、11月23日) · Yahoo!ニュース(米民主党が下院で258議席 報道、11月23日) · 47NEWS(米民主、下院で1992年以来の大勝、11月23日)"},
+    "n5":{"kick": "国際 · ロシア・リビア · ✓ 3媒体 · 攻撃の主体は未確認", "title": "リビア東部の港でロシア艦船が爆発、無人機による攻撃の疑い", "what": "リビア東部のベンガジの港に停泊していたロシアの艦船で22日、爆発が起き、炎上した。リビア東部の政府は、予備的な調査で、艦船内の爆発の原因として無人機による攻撃の疑いがあるとする声明を出した。一部の報道は、ウクライナの海上無人機による攻撃との見方を伝えている。攻撃を実行した主体は特定されていない。ロシア側の説明、被害の規模、死傷者の有無は、報じられた範囲では確認できていない。", "why": "リビアは東西に政権が分かれ、ロシアは東部の港や基地の利用で関係を深めてきたとされる。地中海に面した港で艦船が攻撃を受けたなら、ウクライナでの戦闘が黒海の外に広がったことになりうる。ただし主体が確認されない以上、広がりを断定はできない。", "me": "日本の暮らしへの影響は直接にはないが、リビアは産油国で、周辺の緊張は原油価格に響きやすい。地中海やアフリカ北部の情勢のニュースは、エネルギー価格の背景として見ておくとよい。", "a": "ウクライナの関与を想定する立場は、ロシアの軍事力を黒海の外でも削ぐ動きだと見る。無人機の技術が長距離の攻撃に使われるようになったとの見方もある。", "b": "慎重な立場は、攻撃の主体が確認されていないことを重く見る。東部政府の声明も予備的な調査で、事故や内部の爆発の可能性も含め、さらなる調査を待つべきだと考える。", "say": "確認できているのは、ロシアの艦船がベンガジの港で爆発し、東部政府が無人機攻撃の疑いを示したことだ。攻撃の主体と被害の規模は確認できていない。今日は、ロシア国防省の説明と、リビア東部政府の調査の続報、ウクライナ側の反応を見たい。", "src": "時事通信(ロシア艦船に攻撃 リビア東部の基地停泊中、11月23日) · BBC(Explosion on Russian ship at Libya port likely caused by drone attack、11月22日) · Guardian(Russian ship hit in Benghazi by suspected Ukrainian drone attack、11月22日)"},
+    "m1":{"kick": "国際 · ✓ 2媒体", "title": "英国人男性がホルムズ海峡を3日間で15キロ泳ぎ切り「戦争をやめるべき」と訴え", "what": "イギリス人の男性スイマーが、緊張が続く中東のホルムズ海峡で、3日間にわたってあわせて15キロを泳ぎ切った。泳ぎの中で、戦争をやめるべきだと訴えた。船舶への攻撃が、海洋生物などに深刻な影響を及ぼすおそれがあると指摘した。ホルムズ海峡は、ペルシャ湾の出口にあたる海峡で、世界の原油輸送の要所とされる。男性は被害が壊滅的だと話したと伝えられる。", "why": "ホルムズ海峡は、中東の産油国が原油を運び出す主要な航路で、攻撃の頻度が上がると船舶の保険料や運賃に影響する。環境への影響は戦闘の被害として数字に表れにくく、このような訴えで注目される場合がある。", "me": "ホルムズ海峡の緊張は原油の輸送費を通じてガソリン代や電気料金の背景になる。日本は原油の多くを中東から輸入しており、海峡の動きを知っておくと家計のニュースが読みやすくなる。", "a": "訴えを支持する立場は、船舶への攻撃が人や海の生き物の被害を広げるとして、戦闘の停止を求める声を重く見る。個人の行動が関心を呼ぶ点に意味があると考える。", "b": "冷静に見る立場は、一人の訴えで状況が変わるわけではなく、停戦は国家間の交渉で決まると考える。環境の被害を調べる公的な調査が先だと見る。", "say": "確認できているのは、男性が3日間で15キロを泳ぎ、戦争の停止と環境への影響を訴えたことだ。海洋生物への影響の具体的な数字は示されていない。今日は、海峡周辺で船舶への攻撃が続くかどうかを見たい。", "src": "NHK(イギリス人スイマー ホルムズ海峡を遠泳「戦争をやめるべき」、11月23日) · 時事通信(ホルムズ海峡で15キロ遠泳 英国人男性、「被害壊滅的」、11月22日)"},
+    "m2":{"kick": "科学技術 · ✓ 1媒体", "title": "北九州でフィジカルAIの初の公道実験、歩行者を避け時速5キロで走ったと伝えられる", "what": "北九州市で、フィジカルAIの初めての公道での実験が行われたと伝えられる。フィジカルAIは、人工知能が機械の体を通じて現実の空間で動くものをいう。実験では、歩行者を避けながら時速5キロで走行した。参加した事業者や実験の距離、使われた機体の種類は、報じられた範囲では確認できていない。", "why": "人の多い公道は、歩行者や自転車が予想しない動きをするため、AIが周囲を読み取る能力が問われる。時速5キロは歩く速さに近く、安全を重視した条件で試験を始めたことを示す。公道での実績は、今後の配送や移動の支援の導入の前提になる。", "me": "近い将来、配送ロボットなどが街中で見られる場面が増える可能性がある。歩道ですれ違うときの決まりや、自治体の実験の案内に目を向けておくとよい。", "a": "実用化を期待する立場は、公道での実験が実用に向けた具体的な一歩だと受け止める。人手不足の分野での活用が進むことを望む。", "b": "安全を重視する立場は、実験の結果や事故時の責任の所在が示されていない点を気にする。歩行者との接触のリスクが十分に検証されるべきだと考える。", "say": "確認できているのは、北九州市の公道で、歩行者を避けて時速5キロで走る初の実験が行われたと伝えられたことだ。実験の詳細は確認できていない。今日は、実験を行った事業者の発表と、今後の実験の予定を見たい。", "src": "毎日新聞(フィジカルAI、初の公道実験 歩行者避け時速5キロで 北九州、11月20日)"},
+    "m3":{"kick": "国際 · ✓ 1媒体", "title": "米国の報道、トランプ氏のアジア訪問で米朝首脳会談を探るも条件で折り合わず", "what": "アメリカの有力紙の報道として、トランプ大統領が先週アジアを訪れたのにあわせて、アメリカと北朝鮮の双方が首脳会談の可能性を探ったと伝えられた。しかし、北朝鮮の金正恩総書記が示した条件を、アメリカが受け入れられず、会談は実現しなかったという。条件の内容、交渉の経路、今後の予定は、報じられた範囲では確認できていない。報道は一つの媒体にとどまり、両国の公式な説明は伝えられていない。", "why": "首脳会談が実現するかどうかは、核問題や制裁の扱いで折り合えるかにかかる。条件が合わなかったという報道は、今後の接触が簡単には進まないことを示す。アジアの安全保障は日本にも直結する。", "me": "北朝鮮の動きは、ミサイル発射の警報や、拉致問題の交渉の見通しにも関わる。米朝の接触の話題は、日本の外交の方針を考える手がかりにもなる。", "a": "接触を評価する立場は、会談が実現しなくても、水面下で対話の可能性が探られたこと自体に意味があると考える。", "b": "慎重な立場は、報道の内容が公式に確認されていないとして、条件の中身が分かるまで評価を避けるべきだと考える。", "say": "確認できているのは、米紙が会談の模索と条件の不一致を伝えたことだ。条件の中身は確認できていない。今日は、米国と北朝鮮の双方が報道に反応するかを見たい。", "src": "NHK(“会談模索もキム総書記の条件を米が受け入れられず”米報道、11月23日)"},
+    "m4":{"kick": "経済 · ✓ 1媒体", "title": "ドイツ最大の労組、メルセデスの工場で22日から24時間の警告ストと伝えられる", "what": "ドイツ最大の労働組合は、賃上げなどをめぐり、22日から新たにメルセデス・ベンツグループの工場で24時間のストライキに入ると伝えられた。この労組は、金属・電機産業の労使交渉で、短時間の警告ストから、丸一日のストへと段階を引き上げている。労組は12カ月で5%の賃上げを求めているのに対し、経営側は2028年7月に1.3%を示していると報じられている。地元メディアは、影響が広い範囲に及ぶ可能性を伝えている。", "why": "自動車産業はドイツ経済の柱で、1日のストでも部品の供給や生産ラインに影響する。賃上げをめぐる溝が大きいと、ストが続くか広がる可能性がある。", "me": "日本の自動車メーカーにとって、ドイツ車の生産の遅れは、販売面や部品の取引に波及する場合がある。輸入車の納期を気にする人は、販売店の案内を確かめておくとよい。", "a": "労組を支持する立場は、物価の上昇に見合う賃上げが必要で、経営側の提示は低すぎると考える。ストの段階を引き上げるのは、交渉を前に進めるためだと見る。", "b": "経営側を重く見る立場は、自動車産業が厳しい競争にさらされており、高い賃上げは経営の余力を奪うと考える。ストは生産と顧客に悪影響を与えると見る。", "say": "確認できているのは、労組が22日からメルセデスの工場で24時間のストを始めると伝えられたことだ。影響の範囲は確認できていない。今日は、ストの規模と、労使の交渉再開の動きを見たい。", "src": "NHK(ドイツ最大労組 メルセデスの工場でも24時間ストライキ、11月23日)"},
+    "m5":{"kick": "社会 · ✓ 1媒体", "title": "前橋の住宅街に出没したクマ、地下水路に潜む可能性があるとして出入り口を封鎖と伝えられる", "what": "住宅街にクマが出没した群馬県前橋市で、22日、クマが潜んでいる可能性がある地下水路の出入り口が、土のうなどで封鎖されたと伝えられる。市や警察は23日も警戒を続け、居場所の特定を進めるという。前橋市では17日に住宅街で50代の男性がクマに襲われてけがをし、親子とみられるクマ2頭が目撃されていた。19日には通学中の高校生が追いかけられたと通報があった。クマは現在も捕獲されていない。", "why": "地下水路は人が入りにくく、クマが身を隠しやすい。出入り口を封鎖すれば、住宅街へ出てくるのを防げる一方、中にいる場合は居場所の確認が難しい。住宅街で追跡が長引くと、学校や通勤通学に影響する。", "me": "前橋市などの周辺に住む人は、自治体の防災メールや広報で、目撃情報と警戒のお願いを確認しておく。早朝や夕方に外出するときは、周囲に注意する。", "a": "安全を優先する立場は、住宅街での出没が相次いでいる以上、捕獲に向けた取り組みを急ぐべきだと考える。", "b": "慎重な立場は、クマの居場所が分からないなかで、水路への立ち入りなどは危険が大きいと考える。専門家の助言を受けて進めるべきだと見る。", "say": "確認できているのは、22日に地下水路の出入り口が封鎖され、23日も警戒が続くことだ。クマが水路にいるかは確認できていない。今日は、居場所の特定と捕獲の状況、学校の対応を見たい。", "src": "NHK(住宅街にクマ出没の前橋 地下水路に潜んでいる可能性 警戒続く、11月23日)"}
+  };
+  const G = {
+    "向拝":{"f": "建築", "d": "社殿や正殿の正面に張り出した屋根と、その下の部分。", "w": "復元で奥の彫刻の文様が改められたと報じられた。"},
+    "大龍柱":{"f": "建築", "d": "正殿の前に立つ、龍の彫刻を施した石の柱。", "w": "向きをめぐる議論が続いてきた。"},
+    "中間選挙":{"f": "政治制度", "d": "米国で大統領の任期の中間に行われる議会選挙。", "w": "民主党が下院で大きく議席を伸ばしたと伝えられる。"},
+    "下院":{"f": "政治制度", "d": "米国の議会の一院で、全435議席。予算案を先に審議する。", "w": "民主党が258議席に達する見通し(集計中)と伝えられる。"},
+    "過半数":{"f": "政治制度", "d": "議席全体の半分を超える数。下院では218議席。", "w": "民主党は過半数を大きく上回る見通しだ。"},
+    "輸出規制":{"f": "経済安保", "d": "安全保障上、先端の製品や技術の輸出を制限する制度。", "w": "先端半導体の中国への流れが論点になった。"},
+    "コンプライアンス":{"f": "企業統治", "d": "法令や社内の規則を守る体制のこと。", "w": "社内で誰が統括していたかが問われている。"},
+    "取締役会":{"f": "企業統治", "d": "会社の経営の方針を決め、経営陣を監督する機関。", "w": "後任のCEOを社内外のどちらから選ぶかが焦点だ。"},
+    "CEO代行":{"f": "企業統治", "d": "最高経営責任者が不在の間、その職務を一時的に務める人。", "w": "クレスCFOが務めている。"},
+    "海上封鎖":{"f": "安全保障", "d": "相手国の港や航路を軍の艦船で押さえ、船の出入りを止める措置。", "w": "米国がイランに続けている圧力の一つだ。"},
+    "仲介":{"f": "外交", "d": "対立する当事者の間に第三者が入り、話し合いをとりもつこと。", "w": "カタールがイランの提案を仲介している。"},
+    "無人機":{"f": "安全保障", "d": "人が乗らず、遠隔や自動で飛ぶ機体。", "w": "ロシア艦船の爆発の原因として疑いが示された。"},
+    "フィジカルAI":{"f": "科学技術", "d": "人工知能が機械の体を通じて、現実の空間で動くもの。", "w": "北九州の公道で初の実験が行われたと伝えられる。"},
+    "首脳会談":{"f": "外交", "d": "国のトップ同士が直接話し合う会談。", "w": "米朝の首脳会談の模索が報じられた。"},
+    "警告スト":{"f": "労働", "d": "労使交渉の途中で、短い時間や1日、仕事を止めて圧力をかけること。", "w": "ドイツの労組が24時間に引き上げた。"}
+  };
+  const tip=document.getElementById('tip');
+  function linkTerms(root){
+    const keys=Object.keys(G).sort((a,b)=>b.length-a.length);
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{
+      const p=n.parentElement; if(!p||p.closest('.term,.tip,h1,.ears,.kick,.src,.mast,.dateline,.colophon,.lab,.glos,figure,.more')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    const used=new Set();
+    nodes.forEach(n=>{
+      let txt=n.nodeValue, pos=0, frag=null;
+      const re=new RegExp('('+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&')).join('|')+')','g');
+      let m, last=0; const parts=[];
+      while((m=re.exec(txt))){ if(used.has(m[1])) continue; used.add(m[1]); parts.push([last,m.index,m[1]]); last=m.index+m[1].length; }
+      if(!parts.length) return;
+      frag=document.createDocumentFragment(); let cur=0;
+      parts.forEach(([s,e,k])=>{ frag.appendChild(document.createTextNode(txt.slice(cur,e))); const a=document.createElement('a'); a.className='term'; a.href='#'; a.dataset.term=k; a.textContent=k; frag.appendChild(a); cur=e+k.length; });
+      frag.appendChild(document.createTextNode(txt.slice(cur))); n.parentNode.replaceChild(frag,n);
+    });
+  }
+  function showTip(el){
+    const g=G[el.dataset.term]; if(!g) return;
+    tip.innerHTML=`<div class="tk">${el.dataset.term}<span>${g.f}</span></div><div class="tx">${g.d}</div><div class="tw"><b>この記事では</b> ${g.w}</div>`;
+    tip.hidden=false;
+    const r=el.getBoundingClientRect(), sx=window.scrollX, sy=window.scrollY, vw=document.documentElement.clientWidth;
+    let left=r.left+sx, top=r.bottom+sy+8; const w=Math.min(340,vw-32); tip.style.maxWidth=w+'px';
+    if(left+w>sx+vw-16) left=sx+vw-16-w; if(left<sx+16) left=sx+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+    // ポップアップ（モーダル）内なら、その上に浮かべる
+    if(el.closest('.ov')){ tip.style.position='fixed'; tip.style.left=Math.max(16,Math.min(r.left,vw-16-w))+'px'; tip.style.top=(r.bottom+8)+'px'; tip.style.zIndex=30; } else { tip.style.position='absolute'; tip.style.zIndex=20; }
+  }
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('a.term');
+    if(a){ e.preventDefault(); e.stopPropagation(); if(!tip.hidden && tip.dataset.for===a.dataset.term){ tip.hidden=true; tip.dataset.for=''; return; } tip.dataset.for=a.dataset.term; showTip(a); return; }
+    if(!e.target.closest('.tip')){
+      if(!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopPropagation(); e.preventDefault(); } // 用語カードだけ閉じ、そのクリックは消費 — 記事ポップアップはそのまま
+    }
+  },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!tip.hidden){ tip.hidden=true; tip.dataset.for=''; e.stopImmediatePropagation(); } },true);
+  window.addEventListener('scroll',()=>{ if(!tip.hidden && !tip.closest('.ov')){} },{passive:true});
+  linkTerms(document.querySelector('.sheet'));
+  const ov=document.getElementById('ov'), body=document.getElementById('popBody');
+  let last=null;
+  function open(id){
+    const a=A[id]; if(!a) return;
+    body.innerHTML=`<div class="kick">${a.kick}</div><h2 id="popTitle">${a.title}</h2>
+      <div class="lab">何があった</div><p>${a.what}</p>
+      <div class="lab">なぜ重要か</div><p>${a.why}</p>
+      <div class="lab">あなたには</div><p>${a.me}</p>
+      ${a.a||a.b?`<div class="lab">二つの見方</div><div class="vw"><p><b>こう見る側</b>${a.a||''}</p><p><b>ああ見る側</b>${a.b||''}</p></div>`:''}
+      ${a.say?`<div class="lab">DailyDropの考え</div><div class="say">${a.say}</div>`:''}
+      <div class="src">出典 · ${a.src}</div>
+      <button class="x2" type="button" aria-label="閉じる">閉じる</button>`;
+    body.querySelector('.x2').addEventListener('click', close);
+    linkTerms(body);
+    ov.hidden=false; document.body.style.overflow='hidden'; document.getElementById('close').focus();
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  function close(){ tip.hidden=true; ov.hidden=true; document.body.style.overflow=''; if(last) last.focus(); try{history.replaceState(null,'',location.pathname)}catch(e){} }
+  document.querySelectorAll('.story').forEach(el=>{
+    const go=()=>{last=el; open(el.dataset.id)};
+    el.addEventListener('click',e=>{ if(e.target.closest('.fill')) return; go(); });
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  document.getElementById('close').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov) close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden) close();});
+  const h=location.hash.replace('#',''); if(h&&A[h]) open(h);
+})();
+</script>
